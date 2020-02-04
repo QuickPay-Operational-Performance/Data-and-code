@@ -7,9 +7,6 @@ Created on Sat Feb  1 19:12:48 2020
 """
 import quickpay_datacleaning as qpc
 import matplotlib.pyplot as plt 
-import pandas as pd
-import numpy as np 
-
 ######################
 # Get filtered files #
 ######################
@@ -161,6 +158,10 @@ plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.title('Average across PSC codes')
 # Save figure
 plt.savefig('/Users/vibhutidhingra/Desktop/graph_both_contracts.png', bbox_inches = "tight")
+
+
+
+
 
 
 ###################
