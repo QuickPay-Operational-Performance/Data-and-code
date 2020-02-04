@@ -7,6 +7,9 @@ Created on Sat Feb  1 19:12:48 2020
 """
 import quickpay_datacleaning as qpc
 import matplotlib.pyplot as plt 
+import pandas as pd
+import numpy as np 
+
 ######################
 # Get filtered files #
 ######################
@@ -149,8 +152,8 @@ fp_contracts=pd.DataFrame([['2010', average_winsorized_delay_fp_2010],['2013',av
 # Adjust numticks to increase or decrease the number of ticks visible on x-axis
 #plt.gca().xaxis.set_major_locator(LinearLocator(numticks=25))  
 ## Choose x and y axes for plot
-plt.plot(cost_contracts.fiscal_year,cost_contracts.average_delay, label="FY 2010")
-plt.plot(fp_contracts.fiscal_year,fp_contracts.average_delay, label="FY 2013")
+plt.plot(cost_contracts.fiscal_year,cost_contracts.average_delay, label="Cost contracts")
+plt.plot(fp_contracts.fiscal_year,fp_contracts.average_delay, label="Fixed price contracts")
 ## Labels, Legend, and Title
 plt.ylabel('Delay days \n (5% winsorized average)',fontsize='x-large')
 plt.xlabel('Fiscal Year',fontsize='x-large')
@@ -158,11 +161,6 @@ plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.title('Average across PSC codes')
 # Save figure
 plt.savefig('/Users/vibhutidhingra/Desktop/graph_both_contracts.png', bbox_inches = "tight")
-
-
-
-
-
 
 ###################
 # FP 2010 to 2013 #
