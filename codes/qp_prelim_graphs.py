@@ -38,11 +38,11 @@ df_cost_2013=qpc.query_multiple_csvs(path_2013,query_osb_cost)
 # get dataframe corresponding to query
 
 ## Save files to pickle format 
-df_fp_2010.to_pickle('~/Desktop/df_fp_2010.pkl')
-df_fp_2013.to_pickle('~/Desktop/df_fp_2013.pkl')
+df_fp_2010.to_pickle('/Users/vibhutidhingra/Desktop/research/sc_quickpay/code/df_fp_2010.pkl')
+df_fp_2013.to_pickle('/Users/vibhutidhingra/Desktop/research/sc_quickpay/code/df_fp_2013.pkl')
 
-df_cost_2010.to_pickle('~/Desktop/df_cost_2010.pkl')
-df_cost_2013.to_pickle('~/Desktop/df_cost_2013.pkl')
+df_cost_2010.to_pickle('/Users/vibhutidhingra/Desktop/research/sc_quickpay/code/df_cost_2010.pkl')
+df_cost_2013.to_pickle('/Users/vibhutidhingra/Desktop/research/sc_quickpay/code/df_cost_2013.pkl')
 
 ## Get contract IDs that have both fixed price and cost components
 
@@ -111,7 +111,7 @@ plt.xlabel('Product or service code',fontsize='x-large')
 plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.ylim(0,700)
 plt.title('DOD transactions FY2010')# Save figure
-plt.savefig('/Users/vibhutidhingra/Desktop/graph_FY2010.png', bbox_inches = "tight")
+plt.savefig('/Users/vibhutidhingra/Desktop/research/sc_quickpay/code/graph_FY2010.png', bbox_inches = "tight")
 
 ###########
 # FY 2013 #
@@ -130,7 +130,7 @@ plt.xlabel('Product or service code',fontsize='x-large')
 plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.ylim(0,700)
 plt.title('DOD transactions FY2013')# Save figure
-plt.savefig('/Users/vibhutidhingra/Desktop/graph_FY2013.png', bbox_inches = "tight")
+plt.savefig('/Users/vibhutidhingra/Desktop/research/sc_quickpay/code/graph_FY2013.png', bbox_inches = "tight")
 
 
 # Plotting the average delays across psc codes
@@ -160,7 +160,7 @@ plt.xlabel('Fiscal Year',fontsize='x-large')
 plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.title('Average across PSC codes')
 # Save figure
-plt.savefig('/Users/vibhutidhingra/Desktop/graph_both_contracts.png', bbox_inches = "tight")
+plt.savefig('/Users/vibhutidhingra/Desktop/research/sc_quickpay/code/graph_both_contracts.png', bbox_inches = "tight")
 
 ###################
 # FP 2010 to 2013 #
@@ -180,7 +180,7 @@ plt.xlabel('Product or service code',fontsize='x-large')
 plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.ylim(0,700)
 plt.title('Fixed price contracts')# Save figure
-plt.savefig('/Users/vibhutidhingra/Desktop/fp_2010_to_2013.png', bbox_inches = "tight")
+plt.savefig('/Users/vibhutidhingra/Desktop/research/sc_quickpay/code/fp_2010_to_2013.png', bbox_inches = "tight")
 
 
 ###################
@@ -201,7 +201,7 @@ plt.xlabel('Product or service code',fontsize='x-large')
 plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.ylim(0,700)
 plt.title('Cost contracts')# Save figure
-plt.savefig('/Users/vibhutidhingra/Desktop/cost_2010_to_2013.png', bbox_inches = "tight")
+plt.savefig('/Users/vibhutidhingra/Desktop/research/sc_quickpay/code/cost_2010_to_2013.png', bbox_inches = "tight")
 
 
 

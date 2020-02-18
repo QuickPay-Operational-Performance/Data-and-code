@@ -21,7 +21,7 @@ def filter_file(path,column_name,column_value):
 def filter_file_query(path,query_detail):
         chunk_list=[]
         for chunk in pd.read_csv(path, chunksize=10000): 
-            chunk_list.append(chunk.query(query_detail))
+            chunk_list.append(chunk.query(query_detail,engine='python'))
         filtered_df=pd.concat(chunk_list) #returns the dataframe 
         return filtered_df
 # we can use python queries if filtering on more than one column
@@ -55,7 +55,7 @@ def create_combined_prime_id(df): # input dataframe
 
 def convert_to_date_time(df): # input dataframe
     df = df.copy(deep=True)#copy so that the input dataframe is not altered
-    date_cols=df.columns[df.columns.str.contains('_date')].tolist() #get columns that have dates
+    date_cols=df.columns[df.columns.str.endswith('_date')].tolist() #get columns that have dates
     if date_cols: #If the list is non-empty, execute the following code
         df[date_cols]=df[date_cols].apply(pd.to_datetime, errors='coerce')
         #pandas requires dates to be in some range, coercing errors will set weird dates like year 2919 to NaT
@@ -106,9 +106,6 @@ def calculate_delays(df):#,path_to_dictionary_csv):
     delays_df=pd.merge(df_subset_latest,df_subset_earliest,on=id_name)
     delays_df["days_of_change_in_deadline_overall"]=(delays_df.eventual_end_date-delays_df.initial_end_date).dt.days
     
-    df_subset=df.drop_duplicates(subset=id_name)
-    delays_df=delays_df.merge(df_subset,on=id_name)
-    # to get all other columns 
     return delays_df
 
 def winsorize_columns(df,column_name,limits_to_set):
@@ -117,3 +114,12 @@ def winsorize_columns(df,column_name,limits_to_set):
     #copy so that the input dataframe is not altered
     df_winsorized[column_name+'_'+'winsorized']=mstats.winsorize(df_winsorized[column_name],limits=[limits_to_set,limits_to_set])
     return df_winsorized
+
+def assign_broad_pricing_code(df):
+    df = df.copy(deep=True) #copy so that the input dataframe is not altered
+    if {'type_of_contract_pricing_code'}.issubset(df.columns):
+        df.loc[df.type_of_contract_pricing_code.isin(['A','B','J','K','L','M']),"price_structure"]='FIXED PRICE'
+        df.loc[df.type_of_contract_pricing_code.isin(['R','S','T','U','V']),"price_structure"]='COST PRICE'
+        df.loc[df.type_of_contract_pricing_code=='Y',"price_structure"]='TIME AND MATERIALS'
+        df.loc[df.type_of_contract_pricing_code=='Z',"price_structure"]='LABOUR HOURS'
+    return df
