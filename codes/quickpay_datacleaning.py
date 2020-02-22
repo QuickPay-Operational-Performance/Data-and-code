@@ -2,6 +2,30 @@
 import pandas as pd
 import numpy as np
 
+def filter_naics_code(path):
+    eligible_naics=['3366','1153','5612','3162','2379',\
+                    '3159','5629','3149','2362','4831','6114',\
+                    '3112','4812','4247','5311','3169','3333','3329','5415','3325']
+    chunk_list=[]
+    for chunk in pd.read_csv(path, chunksize=10000):
+        chunk_list.append(chunk[(chunk.naics_code.astype(str).apply(lambda x: x[0:4]).isin(eligible_naics))\
+                                &(chunk.type_of_contract_pricing_code=='J')\
+                                &(chunk.small_disadvantaged_business=='f')\
+                                &((chunk.contract_bundling_code.fillna('').isin(['H','D']))\
+                                  |(chunk.contract_bundling_code.isnull()))])
+    filtered_df=pd.concat(chunk_list) #returns the dataframe 
+    return filtered_df
+
+def naics_filter_multiple_csvs(path_to_folder):
+    import glob, os
+    all_files = glob.glob(os.path.join(path_to_folder, "*.csv"))  
+    # create a list of path for each file in the folder
+    df_from_each_file = (filter_naics_code(f) for f in all_files)
+    # query each file in the folder and save as generator
+    df = pd.concat(df_from_each_file, ignore_index=True)
+    # convert to dataframe 
+    return df
+
 def filter_file(path,column_name,column_value):
     chunk_list=[]
     for chunk in pd.read_csv(path, chunksize=10000):
@@ -108,6 +132,7 @@ def calculate_delays(df):#,path_to_dictionary_csv):
     
     return delays_df
 
+# The function below also replaces NaN with values unlike R -- use with caution 
 def winsorize_columns(df,column_name,limits_to_set):
     from scipy.stats import mstats
     df_winsorized=df.copy(deep=True)
