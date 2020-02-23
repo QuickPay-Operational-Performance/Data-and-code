@@ -67,15 +67,20 @@ qp_data["action_date_ym"]=qp_data.action_date.apply(lambda x: x.year*100+x.month
 sb_data=qp_data[qp_data.small_business==1]
 lb_data=qp_data[qp_data.small_business==0]
 
-sb_data_obligation=sb_data.groupby(['action_date_ym'])['federal_action_obligation'].nunique().reset_index()
-lb_data_obligation=lb_data.groupby(['action_date_ym'])['federal_action_obligation'].nunique().reset_index()
+sb_data_obligation=sb_data.groupby(['action_date_ym'],as_index=False).\
+                    agg({'federal_action_obligation':'count','contract_award_unique_key':'nunique'})
+lb_data_obligation=lb_data.groupby(['action_date_ym'],as_index=False).\
+                    agg({'federal_action_obligation':'count','contract_award_unique_key':'nunique'})
+
+sb_data_obligation["normalized_federal_obligations"]=sb_data_obligation.federal_action_obligation/sb_data_obligation.contract_award_unique_key
+lb_data_obligation["normalized_federal_obligations"]=lb_data_obligation.federal_action_obligation/lb_data_obligation.contract_award_unique_key
 
 fig = plt.figure()
 plt.xticks(rotation=90)
 plt.gca().xaxis.set_major_locator(LinearLocator(numticks=20))  
-plt.plot(sb_data_obligation.action_date_ym.astype(str),sb_data_obligation.federal_action_obligation,label="small_business")
-plt.plot(lb_data_obligation.action_date_ym.astype(str),lb_data_obligation.federal_action_obligation,label="large_business")
+plt.plot(sb_data_obligation.action_date_ym.astype(str),sb_data_obligation.normalized_federal_obligations,label="small_business")
+plt.plot(lb_data_obligation.action_date_ym.astype(str),lb_data_obligation.normalized_federal_obligations,label="large_business")
 plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
-plt.ylabel('Number of unique\nfederal action obligations', fontsize=16)
+plt.ylabel('Number of federal \naction obligations\n(per contract)', fontsize=16)
 plt.xlabel('action_date_year_month', fontsize=16)
 plt.savefig('/Users/vibhutidhingra/Dropbox/data_quickpay/did_sample_dist_federal_obligation.png', bbox_inches = "tight")
