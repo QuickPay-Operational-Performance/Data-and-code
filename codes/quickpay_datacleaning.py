@@ -132,6 +132,43 @@ def calculate_delays(df):#,path_to_dictionary_csv):
     
     return delays_df
 
+def calculate_percentage_delays(df):#,path_to_dictionary_csv):
+    df=df.copy(deep=True)#copy so that the input dataframe is not altered
+    ###########################
+    # Clean transactions file #
+    ###########################
+    df=df.drop_duplicates()
+    df=clean_text_columns(df)
+    df=convert_to_date_time(df)
+    if not 'contract_award_unique_key' in set(df.columns): # if column does not exist
+        df=create_combined_prime_id(df)    
+        id_name='combined_id_prime_contract'
+    else: 
+        id_name='contract_award_unique_key'
+    ##############
+    # Get Delays #
+    ##############
+    df_subset_earliest=df.sort_values(by='action_date').drop_duplicates(subset=id_name)
+    # get columns corresponding to earliest action date for each contract
+    df_subset_earliest=df_subset_earliest.rename(columns={'period_of_performance_current_end_date':'initial_end_date',\
+                                                          'period_of_performance_start_date':'initial_start_date'})
+
+    # rename completion date column to denote the initial end date of the project
+    df_subset_earliest=df_subset_earliest[[id_name,'initial_end_date','initial_start_date']]
+
+    df_subset_latest=df.sort_values(by='action_date',ascending=False).drop_duplicates(subset=id_name)
+    # get columns corresponding to latest action date for each contract
+    df_subset_latest=df_subset_latest.rename(columns={'period_of_performance_current_end_date':'eventual_end_date'})
+    # rename completion date column to denote the eventual end date of the project
+    df_subset_latest=df_subset_latest[[id_name,'eventual_end_date']]
+
+    delays_df=pd.merge(df_subset_latest,df_subset_earliest,on=id_name)
+    delays_df["days_of_change_in_deadline_overall"]=(delays_df.eventual_end_date-delays_df.initial_end_date).dt.days
+    delays_df["initial_completion_time_in_days"]=(delays_df.initial_end_date-delays_df.initial_start_date).dt.days
+    delays_df["eventual_completion_time_in_days"]=(delays_df.eventual_end_date-delays_df.initial_start_date).dt.days
+    delays_df["percentage_delays"]=(delays_df.eventual_completion_time_in_days-delays_df.initial_completion_time_in_days)*100/delays_df.initial_completion_time_in_days
+    return delays_df
+
 # The function below also replaces NaN with values unlike R -- use with caution 
 def winsorize_columns(df,column_name,limits_to_set):
     from scipy.stats import mstats
