@@ -87,7 +87,7 @@ large_business_group.columns=pd.Index([e[0] +'_'+ e[1] for e in large_business_g
 fig = plt.figure()
 plt.xticks(rotation=90)
 #plt.gca().xaxis.set_major_locator(LinearLocator(numticks=25))  
-plt.title('0.1% Winsorized average delays (in days)')
+plt.title('Average delays (in days) -- winsorized (0.1%)')
 plt.plot(small_business_group.action_date_year_quarter_.astype(str),\
          small_business_group.winsorized_delay_mean,label="small business",\
          marker='o', markersize=5)
@@ -101,6 +101,28 @@ text(7.5, 1.5,'Quickpay implemented\n (Apr 27, 2011)',
 plt.xlabel("Year-Quarter",fontsize=14)
 #plt.axvline(x=6)
 savefig('/Users/vibhutidhingra/Desktop/research/Git:Github/qp_data_and_code/img/trends_winsorized.png', bbox_inches='tight')
+
+### Winsorized std dev ###
+
+fig = plt.figure()
+plt.xticks(rotation=90)
+#plt.gca().xaxis.set_major_locator(LinearLocator(numticks=25))  
+plt.title(' Std Dev of delays (in days) -- winsorized (0.1%)')
+plt.plot(small_business_group.action_date_year_quarter_.astype(str),\
+         small_business_group.winsorized_delay_std,label="small business",\
+         marker='o', markersize=5)
+plt.plot(large_business_group.action_date_year_quarter_.astype(str),\
+         large_business_group.winsorized_delay_std,label="large business",\
+         marker='o', markersize=5)
+plt.legend(loc="upper left")
+plt.axvline(x=5.5, color="black")
+text(7.5, 115,'Quickpay implemented\n (Apr 27, 2011)',
+     horizontalalignment='center')
+plt.xlabel("Year-Quarter",fontsize=14)
+#plt.axvline(x=6)
+savefig('/Users/vibhutidhingra/Desktop/research/Git:Github/qp_data_and_code/img/trends_winsorized_std_dev.png', bbox_inches='tight')
+
+### Number of contracts ###
 
 fig = plt.figure()
 plt.xticks(rotation=90)
@@ -121,10 +143,12 @@ plt.legend(loc="lower left")
 plt.xlabel("Year-Quarter",fontsize=14)
 savefig('/Users/vibhutidhingra/Desktop/research/Git:Github/qp_data_and_code/img/trends_number_of_contracts.png', bbox_inches='tight')
 
+### Average raw delays ###
+
 fig = plt.figure()
 plt.xticks(rotation=90)
 #plt.gca().xaxis.set_major_locator(LinearLocator(numticks=25))  
-plt.title('Raw average delays (in days)')
+plt.title('Average raw  delays (in days)')
 plt.plot(small_business_group.action_date_year_quarter_.astype(str),\
          small_business_group.change_in_deadline_mean,label="small business",\
          marker='o', markersize=5)
@@ -137,4 +161,23 @@ text(7.5, 1.5,'Quickpay implemented\n (Apr 27, 2011)',
      horizontalalignment='center')
 plt.xlabel("Year-Quarter",fontsize=14)
 savefig('/Users/vibhutidhingra/Desktop/research/Git:Github/qp_data_and_code/img/trends_raw.png', bbox_inches='tight')
+
+#######################################################
+# Contracts per firm
+#######################################################
+
+contracts_per_recipient=df_sorted.groupby('recipient_duns')['contract_award_unique_key'].nunique().reset_index()
+
+contracts_per_recipient.loc[contracts_per_recipient.contract_award_unique_key==1,"category"]="One contract"
+contracts_per_recipient.loc[(contracts_per_recipient.contract_award_unique_key>1)&(contracts_per_recipient.contract_award_unique_key<=5),"category"]="1-5 contracts"
+contracts_per_recipient.loc[(contracts_per_recipient.contract_award_unique_key>5)&(contracts_per_recipient.contract_award_unique_key<=10),"category"]="5-10 contracts"
+contracts_per_recipient.loc[(contracts_per_recipient.contract_award_unique_key>10)&(contracts_per_recipient.contract_award_unique_key<=15),"category"]="10-15 contracts"
+contracts_per_recipient.loc[(contracts_per_recipient.contract_award_unique_key>15),"category"]="More than 15 contracts"
+
+summary=contracts_per_recipient.groupby('category')['recipient_duns'].nunique().reset_index()
+summary.rename(columns={'recipient_duns':'number of firms','category':'contract group'},inplace=True)
+summary.to_html(justify="left").replace("\n","")
+
+
+
 
