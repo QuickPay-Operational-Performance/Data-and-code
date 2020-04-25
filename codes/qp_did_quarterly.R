@@ -27,7 +27,7 @@ df$after_quickpay=ifelse(df$action_date_year_quarter>as.Date("2011-04-27"),1,0)
 df$small_business=ifelse(df$business_type=="S",1,0)
 
 ##########################################
-# Baseline Regressions (all clustered) 
+# Baseline Regressions (SEs not clustered)
 ##########################################
 
 ols_fe<-felm(as.formula("winsorized_delay ~ after_quickpay*small_business| 
