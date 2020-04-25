@@ -19,10 +19,13 @@ df$delay=ifelse(df$contract_award_unique_key==lag(df$contract_award_unique_key,1
 
 df$winsorized_delay=Winsorize(df$delay,na.rm=TRUE)
 
-df$after_quickpay=ifelse(df$action_date_year_quarter>as.Date("2011-04-27"),1,0)
+df$after_quickpay=as.factor(ifelse(df$action_date_year_quarter>as.Date("2011-04-27"),1,0))
 
-df$small_business=ifelse(df$business_type=="S",1,0)
+df$small_business=as.factor(ifelse(df$business_type=="S",1,0))
 
+df$naics_code<-as.factor(df$naics_code)
+df$recipient_duns<-as.factor(df$recipient_duns)
+df$product_or_service_code<-as.factor(df$product_or_service_code)
 #####################################################
 # Baseline Regressions 
 # (SEs clustered, but cluster variable not specified)
