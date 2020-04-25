@@ -1,13 +1,10 @@
 rm(list = ls())
 library(tidyverse)
-library(zoo)
 library(dplyr)
 library(lfe) # linear fixed effects 
 library(DescTools) 
-library(MatchIt)
 library(stargazer)
 library(broom)
-library(bookdown)
 
 #####################################
 # Read data and assign variables #
@@ -26,9 +23,10 @@ df$after_quickpay=ifelse(df$action_date_year_quarter>as.Date("2011-04-27"),1,0)
 
 df$small_business=ifelse(df$business_type=="S",1,0)
 
-##########################################
-# Baseline Regressions (SEs not clustered)
-##########################################
+#####################################################
+# Baseline Regressions 
+# (SEs clustered, but cluster variable not specified)
+#####################################################
 
 ols_fe<-felm(as.formula("winsorized_delay ~ after_quickpay*small_business| 
                      0|0|0"),
@@ -112,3 +110,6 @@ stargazer(ols_fe,firm_fe,firm_and_task_fe,firm_and_task_naics_fe,
           type="html",style="qje",
           notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that were active in both pre and post treatment period",
           header = F)
+
+###########################################################################################
+
