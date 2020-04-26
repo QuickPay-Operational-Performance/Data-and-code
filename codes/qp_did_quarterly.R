@@ -13,7 +13,8 @@ df=read.csv('~/Dropbox/quickpay_resampled.csv',stringsAsFactors = FALSE)
 
 df=df %>% mutate_at(vars(action_date_year_quarter,last_reported_start_date,last_reported_end_date),
                     as.Date, format="%Y-%m-%d")
-
+df=df%>%arrange(contract_award_unique_key,action_date_year_quarter)
+# sort by contract id and date 
 df$delay=ifelse(df$contract_award_unique_key==lag(df$contract_award_unique_key,1), 
                 df$last_reported_end_date-lag(df$last_reported_end_date,1),NaN)
 
@@ -158,3 +159,32 @@ stargazer(ols_fe,firm_fe,firm_and_task_fe,firm_and_task_naics_fe,
           type="html",style="qje",
           notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to contracts that were active in both pre and post treatment period",
           header = F)
+
+
+#######################################
+# Regression for assigning time trend #
+#######################################
+
+df_qn<-df[!duplicated(df$action_date_year_quarter), ]%>%
+  select("action_date_year_quarter")%>%arrange(action_date_year_quarter)
+# drop duplicates based on quarter, select only quarter column, and sort values in ascending order
+df_qn$time <- seq.int(nrow(df_qn)) 
+# add a column to denote row index
+# sort values by action date quarter, and assign time = t-th quarter in the observation horizon
+
+df_sb_tt=merge(subset(df,small_business==1),df_qn,by="action_date_year_quarter")
+
+ols_model<-lm(winsorized_delay~time*after_quickpay,data=df_sb_tt)
+stargazer(ols_model,         
+          title = "Days of Delay (Winsorized): Small businesses only (2009-2011)",
+          dep.var.labels.include = TRUE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("Firm FE","No"),
+                           c("Product/Service Code FE","No"),
+                           c("Industry FE","No"),
+                           c("Controls","No")), 
+          type="html",style="qje",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to small businesses only, (iii) Time, t, represents t-th quarter in the observation horizon",
+          header = F)
+
