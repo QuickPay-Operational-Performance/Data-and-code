@@ -73,6 +73,11 @@ df_sorted[['action_date_year_quarter','last_reported_start_date','last_reported_
 
 df_sorted["winsorized_delay"]=winsorize(df_sorted.change_in_deadline,limits=0.001)
 
+df_sorted=df_sorted[df_sorted.action_date_year_quarter<df_sorted.action_date_year_quarter.max()]
+# restrict to quarter ending June 30, 2012
+# data is truncated at July 1, 2012 -- 
+# so quarter ending Sept 30, 2012 will only have values as of July 1, 2012
+
 small_business=df_sorted.query("business_type=='S'")
 large_business=df_sorted.query("business_type=='O'")
 
@@ -96,7 +101,7 @@ plt.plot(large_business_group.action_date_year_quarter_.astype(str),\
          marker='o', markersize=5)
 plt.legend(loc="upper left")
 plt.axvline(x=5.5, color="black")
-text(7.5, 1.5,'Quickpay implemented\n (Apr 27, 2011)',
+text(7.5, 20,'Quickpay implemented\n (Apr 27, 2011)',
      horizontalalignment='center')
 plt.xlabel("Year-Quarter",fontsize=14)
 #plt.axvline(x=6)
@@ -137,7 +142,7 @@ plt.plot(lb.action_date_year_quarter_.astype(str),\
          lb.winsorized_delay_count,label="large business",\
          marker='o', markersize=5)
 plt.axvline(x=4.5,color="black")
-text(6.5, 1.5,'Quickpay implemented\n (Apr 27, 2011)',
+text(6.5, 4000,'Quickpay implemented\n (Apr 27, 2011)',
      horizontalalignment='center')
 plt.legend(loc="lower left")
 plt.xlabel("Year-Quarter",fontsize=14)
@@ -157,7 +162,7 @@ plt.plot(large_business_group.action_date_year_quarter_.astype(str),\
          marker='o', markersize=5)
 plt.legend(loc="upper left")
 plt.axvline(x=5.5, color="black")
-text(7.5, 1.5,'Quickpay implemented\n (Apr 27, 2011)',
+text(7.5, 11.5,'Quickpay implemented\n (Apr 27, 2011)',
      horizontalalignment='center')
 plt.xlabel("Year-Quarter",fontsize=14)
 savefig('/Users/vibhutidhingra/Desktop/research/Git:Github/qp_data_and_code/img/trends_raw.png', bbox_inches='tight')

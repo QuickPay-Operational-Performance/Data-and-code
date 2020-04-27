@@ -10,6 +10,10 @@ library(broom)
 # Read data and assign variables #
 ####################################
 df=read.csv('~/Dropbox/quickpay_resampled.csv',stringsAsFactors = FALSE)
+df=subset(df,action_date_year_quarter<max(df$action_date_year_quarter))
+# restrict to quarter ending June 30, 2012
+# data is truncated at July 1, 2012 -- 
+# so quarter ending Sept 30, 2012 will only have values as of July 1, 2012
 
 df=df %>% mutate_at(vars(action_date_year_quarter,last_reported_start_date,last_reported_end_date),
                     as.Date, format="%Y-%m-%d")
@@ -187,4 +191,33 @@ stargazer(ols_model,
           type="html",style="qje",
           notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to small businesses only, (iii) Time, t, represents t-th quarter in the observation horizon",
           header = F)
+
+## Considering only time trend and interaction with "after_quickpay"
+## Because high correlation between time trend and "after_quickpay" variable 
+## -- similar to collinearity issue in DD
+
+ols_model<-lm(winsorized_delay~time+time:after_quickpay,data=df_sb_tt)
+stargazer(ols_model,         
+          title = "Days of Delay (Winsorized): Small businesses only (2009-2011)",
+          dep.var.labels.include = TRUE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("Firm FE","No"),
+                           c("Product/Service Code FE","No"),
+                           c("Industry FE","No"),
+                           c("Controls","No")), 
+          type="html",style="qje",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to small businesses only, (iii) Time, t, represents t-th quarter in the observation horizon",
+          header = F)
+
+
+
+
+
+
+
+
+
+
+
 
