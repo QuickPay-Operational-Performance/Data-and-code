@@ -66,7 +66,7 @@ df_sorted.to_csv('~/Dropbox/quickpay_resampled.csv',index=False)
 # [Plots]
 ################################################################
 
-df_sorted=pd.read_csv('~/Dropbox/quickpay_resampled.csv')
+df_sorted=pd.read_csv('/Users/vibhutidhingra/Dropbox/data_quickpay/quickpay_resampled.csv')
 
 df_sorted[['action_date_year_quarter','last_reported_start_date','last_reported_end_date']]=\
 df_sorted[['action_date_year_quarter','last_reported_start_date','last_reported_end_date']].astype(np.datetime64)

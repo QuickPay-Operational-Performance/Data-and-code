@@ -9,7 +9,9 @@ library(broom)
 #####################################
 # Read data and assign variables #
 ####################################
-df=read.csv('~/Dropbox/quickpay_resampled.csv',stringsAsFactors = FALSE)
+# df_raw=read.csv('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data.csv',stringsAsFactors = FALSE)
+
+df=read.csv('/Users/vibhutidhingra/Dropbox/data_quickpay/quickpay_resampled.csv',stringsAsFactors = FALSE)
 df=subset(df,action_date_year_quarter<max(df$action_date_year_quarter))
 # restrict to quarter ending June 30, 2012
 # data is truncated at July 1, 2012 -- 

@@ -10,6 +10,7 @@ def filter_naics_code(path):
     for chunk in pd.read_csv(path, chunksize=10000):
         chunk_list.append(chunk[(chunk.naics_code.astype(str).apply(lambda x: x[0:4]).isin(eligible_naics))\
                                 &(chunk.type_of_contract_pricing_code=='J')\
+                                &(chunk.awarding_agency_code==97)\
                                 &(chunk.small_disadvantaged_business=='f')\
                                 &((chunk.contract_bundling_code.fillna('').isin(['H','D']))\
                                   |(chunk.contract_bundling_code.isnull()))])
@@ -81,7 +82,7 @@ def convert_to_date_time(df): # input dataframe
     df = df.copy(deep=True)#copy so that the input dataframe is not altered
     date_cols=df.columns[df.columns.str.endswith('_date')].tolist() #get columns that have dates
     if date_cols: #If the list is non-empty, execute the following code
-        df[date_cols]=df[date_cols].apply(pd.to_datetime, errors='coerce')
+        df[date_cols]=pd.to_datetime(df[date_cols], errors='coerce')
         #pandas requires dates to be in some range, coercing errors will set weird dates like year 2919 to NaT
         #Run pd.Timestamp.max and pd.Timestamp.min to see range allowed
     return df
