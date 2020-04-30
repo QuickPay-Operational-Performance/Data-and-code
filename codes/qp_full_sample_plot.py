@@ -20,11 +20,6 @@ df_sorted[['action_date_year_quarter','last_reported_start_date','last_reported_
 
 df_sorted["winsorized_delay"]=winsorize(df_sorted.change_in_deadline,limits=0.001)
 
-df_sorted=df_sorted[df_sorted.action_date_year_quarter<df_sorted.action_date_year_quarter.max()]
-# restrict to quarter ending June 30, 2012
-# data is truncated at July 1, 2012 -- 
-# so quarter ending Sept 30, 2012 will only have values as of July 1, 2012
-
 small_business=df_sorted.query("business_type=='S'")
 large_business=df_sorted.query("business_type=='O'")
 
