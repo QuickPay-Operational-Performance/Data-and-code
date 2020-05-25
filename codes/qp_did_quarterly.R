@@ -5,14 +5,15 @@ library(lfe) # linear fixed effects
 library(DescTools) 
 library(stargazer)
 library(broom)
-
+library(data.table)
 #####################################
 # Read data and assign variables #
 ####################################
 # df_raw=read.csv('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data.csv',stringsAsFactors = FALSE)
 
-df=read.csv('/Users/vibhutidhingra/Dropbox/data_quickpay/quickpay_resampled.csv',stringsAsFactors = FALSE)
-df=subset(df,action_date_year_quarter<max(df$action_date_year_quarter))
+df=read.csv('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/resampled_qp_data/quickpay_resampled_fy10_to_fy12.csv',
+            stringsAsFactors = FALSE)
+df=subset(df,as.Date(action_date_year_quarter)<max(as.Date(df$action_date_year_quarter)))
 # restrict to quarter ending June 30, 2012
 # data is truncated at July 1, 2012 -- 
 # so quarter ending Sept 30, 2012 will only have values as of July 1, 2012
@@ -213,13 +214,100 @@ stargazer(ols_model,
           header = F)
 
 
+#############################################
+# Regression for Performance based contracts #
+#############################################
 
+covariates=c("contract_award_unique_key",
+             "performance_based_service_acquisition_code",
+             "performance_based_service_acquisition")
 
+df_pb=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_fy10_to_fy18.csv',
+            select=covariates)
 
+df1=merge(as.data.table(df),unique(df_pb,by='contract_award_unique_key'),
+          on='contract_award_unique_key')
 
+#####################################################
+# Baseline Regressions for Performance Based contract
+# (SEs clustered, but cluster variable not specified)
+#####################################################
 
+ols_fe<-felm(as.formula("winsorized_delay ~ after_quickpay*small_business| 
+                     0|0|0"),
+             data=subset(df1,performance_based_service_acquisition_code=="Y"), 
+             exactDOF = TRUE, 
+             cmethod = "reghdfe")
 
+firm_fe<-felm(as.formula("winsorized_delay ~ after_quickpay*small_business| 
+                     recipient_duns|0|0"),
+              data=subset(df1,performance_based_service_acquisition_code=="Y"), 
+              exactDOF = TRUE, 
+              cmethod = "reghdfe")
 
+firm_and_task_fe<-felm(as.formula("winsorized_delay ~ after_quickpay*small_business| 
+                     recipient_duns+product_or_service_code|0|0"),
+                       data=subset(df1,performance_based_service_acquisition_code=="Y"), 
+                       exactDOF = TRUE, 
+                       cmethod = "reghdfe")
 
+firm_and_task_naics_fe<-felm(as.formula("winsorized_delay ~ after_quickpay*small_business| 
+                     recipient_duns+product_or_service_code+naics_code|0|0"),
+                             data=subset(df1,performance_based_service_acquisition_code=="Y"), 
+                             exactDOF = TRUE, 
+                             cmethod = "reghdfe")
 
+stargazer(ols_fe,firm_fe,firm_and_task_fe,firm_and_task_naics_fe,
+          title = "Performance Based Contracts: Days of Delay (Winsorized): Quickpay 2009-2011",
+          dep.var.labels.include = FALSE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("Firm FE","No","Yes","Yes","Yes"),
+                           c("Product/Service Code FE","No","No","Yes","Yes"),
+                           c("Industry FE","No","No","No","Yes"),
+                           c("Controls","No", "No","No", "No")), 
+          type="html",style="qje",
+          notes="Each observation is a project-quarter",
+          header = F)
 
+#############################################################
+# Baseline Regressions for NON-Performance Based contracts
+# (SEs clustered, but cluster variable not specified)
+##############################################################
+
+ols_fe<-felm(as.formula("winsorized_delay ~ after_quickpay*small_business| 
+                     0|0|0"),
+             data=subset(df1,performance_based_service_acquisition_code!="Y"), 
+             exactDOF = TRUE, 
+             cmethod = "reghdfe")
+
+firm_fe<-felm(as.formula("winsorized_delay ~ after_quickpay*small_business| 
+                     recipient_duns|0|0"),
+              data=subset(df1,performance_based_service_acquisition_code!="Y"), 
+              exactDOF = TRUE, 
+              cmethod = "reghdfe")
+
+firm_and_task_fe<-felm(as.formula("winsorized_delay ~ after_quickpay*small_business| 
+                     recipient_duns+product_or_service_code|0|0"),
+                       data=subset(df1,performance_based_service_acquisition_code!="Y"), 
+                       exactDOF = TRUE, 
+                       cmethod = "reghdfe")
+
+firm_and_task_naics_fe<-felm(as.formula("winsorized_delay ~ after_quickpay*small_business| 
+                     recipient_duns+product_or_service_code+naics_code|0|0"),
+                             data=subset(df1,performance_based_service_acquisition_code!="Y"), 
+                             exactDOF = TRUE, 
+                             cmethod = "reghdfe")
+
+stargazer(ols_fe,firm_fe,firm_and_task_fe,firm_and_task_naics_fe,
+          title = "NON-Performance Based Contracts: Days of Delay (Winsorized): Quickpay 2009-2011",
+          dep.var.labels.include = FALSE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("Firm FE","No","Yes","Yes","Yes"),
+                           c("Product/Service Code FE","No","No","Yes","Yes"),
+                           c("Industry FE","No","No","No","Yes"),
+                           c("Controls","No", "No","No", "No")), 
+          type="html",style="qje",
+          notes="Each observation is a project-quarter",
+          header = F)
