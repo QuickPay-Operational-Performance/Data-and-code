@@ -11,6 +11,7 @@ import pandas as pd
 #import numpy as np
 import quickpay_datacleaning as qpc
 #import matplotlib.pyplot as plt
+import glob, os
 
 pd.set_option('display.expand_frame_repr', False)
 
@@ -76,3 +77,15 @@ qp_data_fy16_to_fy18=pd.concat([df_fy2016,df_fy2017,df_fy2018])
 
 qp_data_fy16_to_fy18.to_csv('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data_fy16_to_fy18.csv',index=False)
 
+############################################
+# Save all data into one file (no resample)
+############################################
+
+path_to_folder='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data'
+all_files = glob.glob(os.path.join(path_to_folder, "*.csv"))  
+# create a list of path for each file in the folder
+df_from_each_file = (pd.read_csv(f) for f in all_files)
+# query each file in the folder and save as generator
+df = pd.concat(df_from_each_file, ignore_index=True)
+# merge into one dataset
+df.to_csv('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_fy10_to_fy18.csv',index=False)
