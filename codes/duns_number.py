@@ -32,3 +32,22 @@ df_unique.to_csv('/Users/vibhutidhingra/Dropbox/data_quickpay/full_sample_recipi
 # example rows/columns
 df_example=df_unique[['recipient_duns','recipient_name','contracting_officers_determination_of_business_size']].iloc[0:5]
 print(df_example.to_markdown(showindex=False).replace('\n',''))
+
+##########################################################
+# Save into Multiple CSVs 
+# Intellect db only allows to search for 500 duns at a time 
+##########################################################
+
+df=pd.read_csv('/Users/vibhutidhingra/Dropbox/data_quickpay/full_sample_recipient_duns.csv')
+df.recipient_duns=df.recipient_duns.astype('Int64')
+unique_duns=df[['recipient_duns']].drop_duplicates().reset_index(drop=True)
+
+size = 500
+list_of_dfs = [unique_duns.loc[i:i+size-1,:] for i in range(0, len(unique_duns),size)]
+# converts into list of dataframes 
+
+for i in range(0,len(list_of_dfs)):
+   folder_path='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/split_csvs_for_duns'
+   file_name = 'duns_file_'+str(i)
+   file_path=folder_path+'/'+file_name+'.csv'
+   list_of_dfs[i].to_csv(file_path,index=False)
