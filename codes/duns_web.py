@@ -29,9 +29,9 @@ for f in all_files:
         # this part is tricky -- need to check what the output is like 
         # and save the csv into a dataframe -- here I assume that r.content will give a csv
         list_of_dfs.append(df)
-        # get response
-
-total_output_df = pd.concat(list_of_dataframes)
+        # save each dataframe to a list
+        
+total_output_df = pd.concat(list_of_dfs)
 # merge all outputs into one dataframe
 total_output_df.to_csv('file_path.csv',index=False)
 # save that dataframe to a csv file 
