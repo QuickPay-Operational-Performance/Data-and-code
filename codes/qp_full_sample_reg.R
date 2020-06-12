@@ -110,7 +110,7 @@ reg2=felm(winsorized_delay ~ time+treat*business_type|
 
 # t + Q_1 + ... + Q_4 + Tr x t + Tr x Q_1 + ... + Tr x Q_4 + other controls
 
-reg3=felm(winsorized_delay ~  time+treat+
+reg3=felm(winsorized_delay ~  time+
                               time:treat+
                               treat:quarter+
                               business_type|
@@ -122,7 +122,7 @@ reg3=felm(winsorized_delay ~  time+treat+
 # t + Q_1 + ... + Q_4 + Tr x t + Tr x Q_1 + ... 
 # + Tr x Q_4 + SM x Tr x t + SM x Tr x Q_1 + ... + SM x Tr x Q_4 + other controls
 
-reg4=felm(winsorized_delay ~ time+treat+
+reg4=felm(winsorized_delay ~ time+
                               time:treat+
                               quarter:treat+
                               business_type:treat:time+
