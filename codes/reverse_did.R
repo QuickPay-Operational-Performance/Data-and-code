@@ -61,7 +61,7 @@ range="Mar 2013 - Mar 2016"
 #              action_date_year_quarter>=as.Date("2013-12-31"))
 # range="Dec 2013 - Jun 2015"
 
-#### Regressions #####
+#### Base Regressions #####
 
 # Y = a + LargeBusiness + Before2014 + LargeBusiness x Before2014 + e
 
@@ -84,9 +84,49 @@ stargazer(no_fe,recipient_fe,task_and_recipient_fe,
           model.numbers=FALSE,
           add.lines = list(c("Firm FE","No","Yes","Yes"),
                            c("Task FE","No","No","Yes"),
-                           c("Controls","No","No","Yes")), 
+                           c("Controls","No","No","No")), 
           style="qje",
           notes=" (i) Each observation is a project-quarter",
           type="html",
           header=F)
+
+#### Performance-based Regressions #####
+
+# read only pb columns
+
+df_raw=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_fy10_to_fy18.csv',
+             select = c("contract_award_unique_key",
+                        "performance_based_service_acquisition_code",
+                        "performance_based_service_acquisition"))
+
+pba_dict=unique(df_raw, by = "contract_award_unique_key")
+
+pba_df=merge(df1,pba_dict,by= "contract_award_unique_key")
+# read only pb columns
+
+no_fe=felm(winsorized_delay ~ before_aug_2014*business_type |
+             0|0|0,     
+           data = subset(pba_df,performance_based_service_acquisition_code=='Y'))
+
+recipient_fe=felm(winsorized_delay ~ before_aug_2014*business_type |
+                    recipient_duns|0|0,     
+                  data = subset(pba_df,performance_based_service_acquisition_code=='Y'))
+
+task_and_recipient_fe=felm(winsorized_delay ~before_aug_2014*business_type |
+                             recipient_duns+product_or_service_code|0|0,     
+                           data = subset(pba_df,performance_based_service_acquisition_code=='Y'))
+
+stargazer(no_fe,recipient_fe,task_and_recipient_fe,
+          title = paste("Days of Delay (Winsorized):",range,sep=" "),
+          dep.var.labels.include = TRUE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("Firm FE","No","Yes","Yes"),
+                           c("Task FE","No","No","Yes"),
+                           c("Controls","No","No","No")), 
+          style="qje",
+          notes=" (i) Each observation is a project-quarter",
+          type="html",
+          header=F)
+
 
