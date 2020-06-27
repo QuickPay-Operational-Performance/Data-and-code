@@ -30,7 +30,7 @@ pba=pba.rename(columns={'contract_award_unique_key':'Number of performance based
 fin=sb[sb.contract_financing_code.isin(['C','A','D','E','F'])].groupby(['action_date_year_quarter'])['contract_award_unique_key'].nunique().reset_index()
 fin=fin.rename(columns={'contract_award_unique_key':'Number of contracts receiving financing'})
 
-non_competitive=sb[sb.extent_competed_code.isin(['G','B','C'])].groupby(['action_date_year_quarter'])['contract_award_unique_key'].nunique().reset_index()
+non_competitive=sb[(sb.extent_competed_code.isnull())|(sb.extent_competed_code.isin(['G','B','C']))].groupby(['action_date_year_quarter'])['contract_award_unique_key'].nunique().reset_index()
 non_competitive=non_competitive.rename(columns={'contract_award_unique_key':'Number of non-competed contracts'})
 
 dfs = [df.set_index(['action_date_year_quarter']) for df in [sb_summary_1, pba, fin,non_competitive]]
@@ -54,7 +54,7 @@ pba_lb=pba_lb.rename(columns={'contract_award_unique_key':'Number of performance
 fin_lb=lb[lb.contract_financing_code.isin(['C','A','D','E','F'])].groupby(['action_date_year_quarter'])['contract_award_unique_key'].nunique().reset_index()
 fin_lb=fin_lb.rename(columns={'contract_award_unique_key':'Number of contracts receiving financing'})
 
-non_competitive_lb=lb[lb.extent_competed_code.isin(['G','B','C'])].groupby(['action_date_year_quarter'])['contract_award_unique_key'].nunique().reset_index()
+non_competitive_lb=lb[(lb.extent_competed_code.isnull())|(lb.extent_competed_code.isin(['G','B','C']))].groupby(['action_date_year_quarter'])['contract_award_unique_key'].nunique().reset_index()
 non_competitive_lb=non_competitive_lb.rename(columns={'contract_award_unique_key':'Number of non-competed contracts'})
 
 dfs = [df.set_index(['action_date_year_quarter']) for df in [lb_summary_1, pba_lb, fin_lb,non_competitive_lb]]
@@ -64,33 +64,6 @@ lb_summary=pd.concat(dfs, axis=1).reset_index()
 
 # 'wt' -- overwrite existing material, 'a' -- append to existing material                
 print(lb_summary.to_markdown(), file=open('/Users/vibhutidhingra/Desktop/lb_summary_stats.md','wt'))  
-
-
-#%% Number of null values (convert to string to show in groupby)
-
-cols=['performance_based_service_acquisition','performance_based_service_acquisition_code',\
-      'extent_competed','extent_competed_code',\
-      'contract_financing','contract_financing_code']
-df[cols]=df[cols].astype(str)
-
-## pba
-pba_notnull=df.groupby(['performance_based_service_acquisition',\
-                        'performance_based_service_acquisition_code'])['contract_award_unique_key'].nunique().reset_index()
-pba_notnull=pba_notnull.rename(columns={'contract_award_unique_key':'Number of contracts'})
-
-## extent competed
-noncompete_notnull=df.groupby(['extent_competed','extent_competed_code'])['contract_award_unique_key'].nunique().reset_index()
-noncompete_notnull=noncompete_notnull.rename(columns={'contract_award_unique_key':'Number of contracts'})
-
-## contract financing
-fin_notnull=df.groupby(['contract_financing','contract_financing_code'])['contract_award_unique_key'].nunique().reset_index()
-fin_notnull=fin_notnull.rename(columns={'contract_award_unique_key':'Number of contracts'})
-
-## to markdown
-
-print(pba_notnull.to_markdown(), file=open('/Users/vibhutidhingra/Desktop/pba_notnull.md','wt'))  
-print(noncompete_notnull.to_markdown(), file=open('/Users/vibhutidhingra/Desktop/noncompete_notnull.md','wt'))  
-print(fin_notnull.to_markdown(), file=open('/Users/vibhutidhingra/Desktop/fin_notnull.md','wt'))  
 
 #%% Plot the total number of firms over time
 folder_path='/Users/vibhutidhingra/Desktop/research/Git:Github/qp_data_and_code/img/summary_stats'
@@ -159,3 +132,29 @@ plt.legend(loc="best")
 plt.ylabel('Fraction of contracts', fontsize=18)
 plt.xlabel('Year-Quarter', fontsize=16)
 plt.savefig(folder_path+'/summary_non_compete.png',bbox_inches='tight')
+
+#%% Number of null values (convert to string to show in groupby)
+
+cols=['performance_based_service_acquisition','performance_based_service_acquisition_code',\
+      'extent_competed','extent_competed_code',\
+      'contract_financing','contract_financing_code']
+df[cols]=df[cols].astype(str)
+
+## pba
+pba_notnull=df.groupby(['performance_based_service_acquisition',\
+                        'performance_based_service_acquisition_code'])['contract_award_unique_key'].nunique().reset_index()
+pba_notnull=pba_notnull.rename(columns={'contract_award_unique_key':'Number of contracts'})
+
+## extent competed
+noncompete_notnull=df.groupby(['extent_competed','extent_competed_code'])['contract_award_unique_key'].nunique().reset_index()
+noncompete_notnull=noncompete_notnull.rename(columns={'contract_award_unique_key':'Number of contracts'})
+
+## contract financing
+fin_notnull=df.groupby(['contract_financing','contract_financing_code'])['contract_award_unique_key'].nunique().reset_index()
+fin_notnull=fin_notnull.rename(columns={'contract_award_unique_key':'Number of contracts'})
+
+## to markdown
+
+print(pba_notnull.to_markdown(), file=open('/Users/vibhutidhingra/Desktop/pba_notnull.md','wt'))  
+print(noncompete_notnull.to_markdown(), file=open('/Users/vibhutidhingra/Desktop/noncompete_notnull.md','wt'))  
+print(fin_notnull.to_markdown(), file=open('/Users/vibhutidhingra/Desktop/fin_notnull.md','wt'))  
