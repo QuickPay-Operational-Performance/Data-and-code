@@ -184,19 +184,19 @@ pba_dict=unique(df_raw, by = "contract_award_unique_key")
 pba_df2=merge(df2,pba_dict,by= "contract_award_unique_key")
 # read only pb columns
 
-no_fe=felm(winsorized_delay ~ before_aug_2014*business_type |
+no_fe_pba=felm(winsorized_delay ~ before_aug_2014*business_type |
              0|0|0,     
            data = subset(pba_df2,performance_based_service_acquisition_code=='Y'))
 
-recipient_fe=felm(winsorized_delay ~ before_aug_2014*business_type |
+task_fe_pba=felm(winsorized_delay ~ before_aug_2014*business_type |
                     product_or_service_code|0|0,     
                   data = subset(pba_df2,performance_based_service_acquisition_code=='Y'))
 
-task_and_recipient_fe=felm(winsorized_delay ~before_aug_2014*business_type |
+task_and_industry_fe_pba=felm(winsorized_delay ~before_aug_2014*business_type |
                              naics_code+product_or_service_code|0|0,     
                            data = subset(pba_df2,performance_based_service_acquisition_code=='Y'))
 
-stargazer(no_fe,task_fe,task_and_industry_fe,
+stargazer(no_fe_pba,task_fe_pba,task_and_industry_fe_pba,
           title = paste("Days of Delay (Winsorized):",range,sep=" "),
           dep.var.labels.include = TRUE,
           object.names=FALSE, 
