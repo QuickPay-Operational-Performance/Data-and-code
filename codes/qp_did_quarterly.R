@@ -6,9 +6,9 @@ library(DescTools)
 library(stargazer)
 library(broom)
 library(data.table)
-#####################################
-# Read data and assign variables #
-####################################
+
+#### Read data and assign variables ####
+
 # df_raw=read.csv('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data.csv',stringsAsFactors = FALSE)
 
 df=read.csv('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/resampled_qp_data/quickpay_resampled_fy10_to_fy12.csv',
@@ -34,10 +34,9 @@ df$small_business=ifelse(df$business_type=="S",1,0)
 df$naics_code<-as.factor(df$naics_code)
 df$recipient_duns<-as.factor(df$recipient_duns)
 df$product_or_service_code<-as.factor(df$product_or_service_code)
-#####################################################
-# Baseline Regressions 
-# (SEs clustered, but cluster variable not specified)
-#####################################################
+
+#### Baseline Regressions ####
+
 
 ols_fe<-felm(as.formula("winsorized_delay ~ after_quickpay*small_business| 
                      0|0|0"),
@@ -76,10 +75,10 @@ stargazer(ols_fe,firm_fe,firm_and_task_fe,firm_and_task_naics_fe,
           notes="Each observation is a project-quarter",
           header = F)
 
-###########################################################################################
-# Sample restricted to firms that were active in both pre and post treatment period
+
+#### Sample restricted to firms that were active in both pre and post treatment period ####
 # This will help test whether the mechanism driving treatment effect is indeed moral hazard
-###########################################################################################
+
 
 firms_before=unique(subset(df,after_quickpay==0)$recipient_duns)
 firms_after=unique(subset(df,after_quickpay==1)$recipient_duns)
@@ -122,9 +121,9 @@ stargazer(ols_fe,firm_fe,firm_and_task_fe,firm_and_task_naics_fe,
           notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that were active in both pre and post treatment period",
           header = F)
 
-###########################################################################################
-# Sample restricted to contracts that were active in both pre and post treatment period
-###########################################################################################
+
+#### Sample restricted to contracts that were active in both pre and post treatment period ####
+
 
 contracts_before=unique(subset(df,after_quickpay==0)$contract_award_unique_key)
 contracts_after=unique(subset(df,after_quickpay==1)$contract_award_unique_key)
@@ -168,9 +167,7 @@ stargazer(ols_fe,firm_fe,firm_and_task_fe,firm_and_task_naics_fe,
           header = F)
 
 
-#######################################
-# Regression for assigning time trend #
-#######################################
+#### Regression for assigning time trend ####
 
 df_qn<-df[!duplicated(df$action_date_year_quarter), ]%>%
   select("action_date_year_quarter")%>%arrange(action_date_year_quarter)
@@ -213,10 +210,7 @@ stargazer(ols_model,
           notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to small businesses only, (iii) Time, t, represents t-th quarter in the observation horizon",
           header = F)
 
-
-#############################################
-# Regression for Performance based contracts #
-#############################################
+#### Regression for Performance based contracts #####
 
 covariates=c("contract_award_unique_key",
              "performance_based_service_acquisition_code",
@@ -228,10 +222,8 @@ df_pb=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_fy10_to
 df1=merge(as.data.table(df),unique(df_pb,by='contract_award_unique_key'),
           on='contract_award_unique_key')
 
-#####################################################
-# Baseline Regressions for Performance Based contract
+#### Baseline Regressions for Performance Based contract ####
 # (SEs clustered, but cluster variable not specified)
-#####################################################
 
 ols_fe<-felm(as.formula("winsorized_delay ~ after_quickpay*small_business| 
                      0|0|0"),
@@ -270,10 +262,9 @@ stargazer(ols_fe,firm_fe,firm_and_task_fe,firm_and_task_naics_fe,
           notes="Each observation is a project-quarter",
           header = F)
 
-#############################################################
-# Baseline Regressions for NON-Performance Based contracts
+
+#### Baseline Regressions for NON-Performance Based contracts ####
 # (SEs clustered, but cluster variable not specified)
-##############################################################
 
 ols_fe<-felm(as.formula("winsorized_delay ~ after_quickpay*small_business| 
                      0|0|0"),
@@ -311,3 +302,104 @@ stargazer(ols_fe,firm_fe,firm_and_task_fe,firm_and_task_naics_fe,
           type="html",style="qje",
           notes="Each observation is a project-quarter",
           header = F)
+
+#### Only firms with one type of contract ####
+library(data.table)
+
+firms_with_multiple_types=unique(setDT(df)[,uniqueN(business_type),by=recipient_duns][V1==2,]$recipient_duns)
+
+df2=subset(setDT(df),!recipient_duns%in%firms_with_multiple_types)
+
+
+ols_fe<-felm(winsorized_delay ~ after_quickpay*small_business| 
+                     0|0|0,
+             data=df2, 
+             exactDOF = TRUE, 
+             cmethod = "reghdfe")
+
+task_fe<-felm(winsorized_delay ~ after_quickpay*small_business| 
+                     product_or_service_code|0|0,
+                       data=df2, 
+                       exactDOF = TRUE, 
+                       cmethod = "reghdfe")
+
+industry_and_task_fe<-felm(winsorized_delay ~ after_quickpay*small_business| 
+                       product_or_service_code+naics_code|0|0,
+                             data=df2, 
+                             exactDOF = TRUE, 
+                             cmethod = "reghdfe")
+
+stargazer(ols_fe,task_fe,industry_and_task_fe,
+          title = "Days of Delay (Winsorized): Quickpay Dec 2009- June 2012",
+          dep.var.labels.include = FALSE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("Product/Service Code FE","No","Yes","Yes"),
+                           c("Industry FE","No","No","Yes"),
+                           c("Controls","No", "No","No")), 
+          type="html",style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both)",
+          header = F)
+
+#### Firms with one type of contract: Performance-based Regressions #####
+
+# read only pb columns
+
+df_raw=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_fy10_to_fy18.csv',
+             select = c("contract_award_unique_key",
+                        "performance_based_service_acquisition_code",
+                        "performance_based_service_acquisition"))
+
+pba_dict=unique(df_raw, by = "contract_award_unique_key")
+
+pba_df2=merge(df2,pba_dict,by= "contract_award_unique_key")
+# read only pb columns
+
+
+no_fe_pba=felm(winsorized_delay ~ after_quickpay*small_business |
+                 0|0|0,     
+               data = subset(pba_df2,performance_based_service_acquisition_code=='Y'))
+
+task_fe_pba=felm(winsorized_delay ~ after_quickpay*small_business |
+                   product_or_service_code|0|0,     
+                 data = subset(pba_df2,performance_based_service_acquisition_code=='Y'))
+
+task_and_industry_fe_pba=felm(winsorized_delay ~after_quickpay*small_business |
+                                naics_code+product_or_service_code|0|0,     
+                              data = subset(pba_df2,performance_based_service_acquisition_code=='Y'))
+
+stargazer(no_fe_pba,task_fe_pba,task_and_industry_fe_pba,
+          title = "Days of Delay (Winsorized): Quickpay Dec 2009- June 2012",
+          dep.var.labels.include = TRUE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("PSC code FE","No","Yes","Yes"),
+                           c("Industry FE","No","No","Yes"),
+                           c("Controls","No","No","No")), 
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both), (iii) Performance based contracts only",
+          type="html",
+          header=F)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
