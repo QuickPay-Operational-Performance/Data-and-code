@@ -3,6 +3,7 @@ library(readxl)
 library(dplyr)
 library(data.table) 
 library(knitr)
+library(ggplot2)
 
 #### Read intellect data #### 
 files <- list.files(path = "~/Dropbox/data_quickpay/qp_data/intellect_data", 
@@ -13,6 +14,7 @@ df <- sapply(files, read_excel, simplify=FALSE) %>%
   rbindlist(., fill = TRUE)
 
 df$`D-U-N-S@ Number`<-as.numeric(gsub("-", "", df$`D-U-N-S@ Number`))
+# remove hyphen and convert to number
 
 cols_needed=c("D-U-N-S@ Number",
               "Company Name",
@@ -27,14 +29,18 @@ cols_needed=c("D-U-N-S@ Number",
              "2018 Sales Volume" )
 
 data=df[,..cols_needed]
+# read select columns
 
 sales_df = melt(data, id.vars = c("D-U-N-S@ Number","Company Name"),
              measure.vars = cols_needed[3:11])
+# convert to long form 
 
 sales_df[ , ("value") := lapply(.SD,  function(x) as.numeric(gsub("[,$]", "", x))),
           .SDcols = "value"]
+# remove $ and , signs and convert to number for sales & employee info
 
 sales_df[, sales_year:=as.numeric(substr(variable, start = 1, stop = 4))]
+# extract year from "2010 Sales Volume" --> 2010
 
 # the years in Intellect data correspond to fiscal years 
 
@@ -48,7 +54,9 @@ dft=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_fy10_to_f
                     "contracting_officers_determination_of_business_size_code"))
 
 dft=dft[contracting_officers_determination_of_business_size_code%in%c("O","S")]
+# remove null values
 dft[, recipient_duns:=as.numeric(recipient_duns)]
+# convert duns number to numeric
 
 # group by recipient duns and year, and add all federal action obligations
 fao=dft[, 
@@ -58,6 +66,7 @@ fao=dft[,
 
 setnames(fao, c("federal_action_obligation"), 
          c("sum_of_federal_action_obligation"))
+## we have entries as: duns, year, fao_sum --> Firm 8353532, Year 2010, Total_obligations 500,000$ 
 
 #### Merge the two datasets ####
 govt_weight_per_recipient=merge(x=fao,y=sales_df,
@@ -124,6 +133,8 @@ fao_weight_summary=fao_weight_summary[order(action_date_fiscal_year)]
 
 #### mean plots ####
 
+folder_name='/Users/vibhutidhingra/Desktop/research/Git:Github/qp_data_and_code/img/summary_stats'
+
 mean_weight_plot=ggplot(fao_weight_summary, 
        aes(x=action_date_fiscal_year, 
            y=mean_fao_weight,
@@ -132,6 +143,7 @@ mean_weight_plot=ggplot(fao_weight_summary,
           theme_bw()+
           theme(panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank()) 
+ggsave(paste0(folder_name,'/mean_weight_plot.png'),mean_weight_plot)
 
 mean_sales_plot=ggplot(fao_weight_summary, 
        aes(x=action_date_fiscal_year, 
@@ -141,6 +153,7 @@ mean_sales_plot=ggplot(fao_weight_summary,
             theme_bw()+
             theme(panel.grid.major = element_blank(),
                   panel.grid.minor = element_blank()) 
+ggsave(paste0(folder_name,'/mean_sales_plot.png'),mean_sales_plot)
 
 mean_obligations_plot=ggplot(fao_weight_summary, 
        aes(x=action_date_fiscal_year, 
@@ -150,6 +163,7 @@ mean_obligations_plot=ggplot(fao_weight_summary,
             theme_bw()+
             theme(panel.grid.major = element_blank(),
                   panel.grid.minor = element_blank()) 
+ggsave(paste0(folder_name,'/mean_obligations_plot.png'),mean_obligations_plot)
 
 #### median plots ####
 
@@ -161,6 +175,8 @@ median_weight_plot=ggplot(fao_weight_summary,
                     theme_bw()+
                     theme(panel.grid.major = element_blank(),
                           panel.grid.minor = element_blank()) 
+ggsave(paste0(folder_name,'/median_weight_plot.png'),median_weight_plot)
+
 median_sales_plot=ggplot(fao_weight_summary, 
                        aes(x=action_date_fiscal_year, 
                            y=median_sales_volume,
@@ -169,6 +185,8 @@ median_sales_plot=ggplot(fao_weight_summary,
                       theme_bw()+
                       theme(panel.grid.major = element_blank(),
                             panel.grid.minor = element_blank()) 
+ggsave(paste0(folder_name,'/median_sales_plot.png'),median_sales_plot)
+
 median_obligations_plot=ggplot(fao_weight_summary, 
                              aes(x=action_date_fiscal_year, 
                                  y=median_total_obligations,
@@ -177,6 +195,8 @@ median_obligations_plot=ggplot(fao_weight_summary,
                       theme_bw()+
                       theme(panel.grid.major = element_blank(),
                             panel.grid.minor = element_blank()) #+ggtitle("Plant growth")
+ggsave(paste0(folder_name,'/median_obligations_plot.png'),median_obligations_plot)
+
 
 #### Analysis for firms with NO negative obligations ####
 
@@ -267,6 +287,7 @@ mean_weight_plot_non_neg_fao=ggplot(fao_weight_summary_non_neg_fao,
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()) +
   ggtitle("Only firms with non-negative obligations")
+ggsave(paste0(folder_name,'/mean_weight_plot_non_neg_fao.png'),mean_weight_plot_non_neg_fao)
 
 mean_sales_plot_non_neg_fao=ggplot(fao_weight_summary_non_neg_fao, 
                        aes(x=action_date_fiscal_year, 
@@ -277,6 +298,7 @@ mean_sales_plot_non_neg_fao=ggplot(fao_weight_summary_non_neg_fao,
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())  +
   ggtitle("Only firms with non-negative obligations")
+ggsave(paste0(folder_name,'/mean_sales_plot_non_neg_fao.png'),mean_sales_plot_non_neg_fao)
 
 
 mean_obligations_plot_non_neg_fao=ggplot(fao_weight_summary_non_neg_fao, 
@@ -288,6 +310,7 @@ mean_obligations_plot_non_neg_fao=ggplot(fao_weight_summary_non_neg_fao,
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())  +
   ggtitle("Only firms with non-negative obligations")
+ggsave(paste0(folder_name,'/mean_obligations_plot_non_neg_fao.png'),mean_obligations_plot_non_neg_fao)
 
 
 #### NO negative obligations: median plots ####
@@ -301,6 +324,8 @@ median_weight_plot_non_neg_fao=ggplot(fao_weight_summary_non_neg_fao,
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())  +
   ggtitle("Only firms with non-negative obligations")
+ggsave(paste0(folder_name,'/median_weight_plot_non_neg_fao.png'),
+       median_weight_plot_non_neg_fao)
 
 
 median_sales_plot_non_neg_fao=ggplot(fao_weight_summary_non_neg_fao, 
@@ -312,6 +337,8 @@ median_sales_plot_non_neg_fao=ggplot(fao_weight_summary_non_neg_fao,
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())  +
   ggtitle("Only firms with non-negative obligations")
+ggsave(paste0(folder_name,'/median_sales_plot_non_neg_fao.png'),
+       median_sales_plot_non_neg_fao)
 
 median_obligations_plot_non_neg_fao=ggplot(fao_weight_summary_non_neg_fao, 
                                aes(x=action_date_fiscal_year, 
@@ -322,6 +349,7 @@ median_obligations_plot_non_neg_fao=ggplot(fao_weight_summary_non_neg_fao,
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())  +
   ggtitle("Only firms with non-negative obligations")
+ggsave(paste0(folder_name,'/median_obligations_plot_non_neg_fao.png'),
+       median_obligations_plot_non_neg_fao)
 
-#ggsave(file="length-hist.png")
 
