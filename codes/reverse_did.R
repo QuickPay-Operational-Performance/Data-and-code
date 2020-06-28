@@ -129,4 +129,97 @@ stargazer(no_fe,recipient_fe,task_and_recipient_fe,
           type="html",
           header=F)
 
+#### Only firms with one type of contract ####
+
+# get list of firms with both Small & Large contracts 
+firms_with_multiple_types=unique(df1[,uniqueN(business_type),by=recipient_duns][V1==2,]$recipient_duns)
+
+df2=subset(df1,!recipient_duns%in%firms_with_multiple_types)
+# remove them from the sample
+
+# Y = a + LargeBusiness + Before2014 + LargeBusiness x Before2014 + e
+
+no_fe=felm(winsorized_delay ~ before_aug_2014*business_type |
+             0|0|0,     
+           data = df2)
+
+# This does not work any more because each firm corresponds to one business type -- so collinearity
+# recipient_fe=felm(winsorized_delay ~ before_aug_2014*business_type |
+#                     recipient_duns|0|0,     
+#                   data = df2)
+
+task_fe=felm(winsorized_delay ~before_aug_2014*business_type |
+                             product_or_service_code|0|0,     
+                           data = df2)
+
+task_and_industry_fe=felm(winsorized_delay ~before_aug_2014*business_type |
+               naics_code+product_or_service_code|0|0,     
+             data = df2)
+
+stargazer(no_fe,task_fe,task_and_industry_fe,
+          title = paste("Days of Delay (Winsorized):",range,sep=" "),
+          dep.var.labels.include = TRUE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("PSC code FE","No","Yes","Yes"),
+                           c("Industry FE","No","No","Yes"),
+                           c("Controls","No","No","No")), 
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both)",
+          type="html",
+          header=F)
+
+#### Firms with one type of contract: Performance-based Regressions #####
+
+# read only pb columns
+
+df_raw=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_fy10_to_fy18.csv',
+             select = c("contract_award_unique_key",
+                        "performance_based_service_acquisition_code",
+                        "performance_based_service_acquisition"))
+
+pba_dict=unique(df_raw, by = "contract_award_unique_key")
+
+pba_df2=merge(df2,pba_dict,by= "contract_award_unique_key")
+# read only pb columns
+
+no_fe=felm(winsorized_delay ~ before_aug_2014*business_type |
+             0|0|0,     
+           data = subset(pba_df2,performance_based_service_acquisition_code=='Y'))
+
+recipient_fe=felm(winsorized_delay ~ before_aug_2014*business_type |
+                    product_or_service_code|0|0,     
+                  data = subset(pba_df2,performance_based_service_acquisition_code=='Y'))
+
+task_and_recipient_fe=felm(winsorized_delay ~before_aug_2014*business_type |
+                             naics_code+product_or_service_code|0|0,     
+                           data = subset(pba_df2,performance_based_service_acquisition_code=='Y'))
+
+stargazer(no_fe,task_fe,task_and_industry_fe,
+          title = paste("Days of Delay (Winsorized):",range,sep=" "),
+          dep.var.labels.include = TRUE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("PSC code FE","No","Yes","Yes"),
+                           c("Industry FE","No","No","Yes"),
+                           c("Controls","No","No","No")), 
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both), (iii) Performance based contracts only",
+          type="html",
+          header=F)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
