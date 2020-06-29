@@ -80,7 +80,9 @@ govt_weight_per_recipient[, fao_weight:= ifelse(is.finite(sum_of_federal_action_
                                                   is.finite(sales_volume)&
                                                   sales_volume>0,
                                                 sum_of_federal_action_obligation/sales_volume, NaN)]
-                            
+
+fwrite(govt_weight_per_recipient,'~/Dropbox/data_quickpay/qp_data/govt_weight_per_recipient.csv')
+
 #### get contracts info #### 
 
 # get list of firms active in a given year and their contract classification
