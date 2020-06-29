@@ -184,6 +184,7 @@ pba_dict=unique(df_raw, by = "contract_award_unique_key")
 pba_df2=merge(df2,pba_dict,by= "contract_award_unique_key")
 # read only pb columns
 
+# subset of performance based contracts
 no_fe_pba=felm(winsorized_delay ~ before_aug_2014*business_type |
              0|0|0,     
            data = subset(pba_df2,performance_based_service_acquisition_code=='Y'))
@@ -210,11 +211,62 @@ stargazer(no_fe_pba,task_fe_pba,task_and_industry_fe_pba,
           type="html",
           header=F)
 
+# subset of NON-performance based contracts
+
+no_fe_non_pba=felm(winsorized_delay ~ before_aug_2014*business_type |
+                 0|0|0,     
+               data = subset(pba_df2,performance_based_service_acquisition_code=='N'))
+
+task_fe_non_pba=felm(winsorized_delay ~ before_aug_2014*business_type |
+                   product_or_service_code|0|0,     
+                 data = subset(pba_df2,performance_based_service_acquisition_code=='N'))
+
+task_and_industry_fe_non_pba=felm(winsorized_delay ~before_aug_2014*business_type |
+                                naics_code+product_or_service_code|0|0,     
+                              data = subset(pba_df2,performance_based_service_acquisition_code=='N'))
+
+stargazer(no_fe_non_pba,task_fe_non_pba,task_and_industry_fe_non_pba,
+          title = paste("Days of Delay (Winsorized):",range,sep=" "),
+          dep.var.labels.include = TRUE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("PSC code FE","No","Yes","Yes"),
+                           c("Industry FE","No","No","Yes"),
+                           c("Controls","No","No","No")), 
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both), (iii) Only contracts for which performance-based was not used",
+          type="html",
+          header=F)
 
 
+# subset of contracts for which performance based contracts not applicable
 
+no_fe_pba_not_applicable=felm(winsorized_delay ~ before_aug_2014*business_type |
+                     0|0|0,     
+                   data = subset(pba_df2,performance_based_service_acquisition_code=='X'))
 
+task_fe_pba_not_applicable=felm(winsorized_delay ~ before_aug_2014*business_type |
+                       product_or_service_code|0|0,     
+                     data = subset(pba_df2,performance_based_service_acquisition_code=='X'))
 
+task_and_industry_fe_pba_not_applicable=felm(winsorized_delay ~before_aug_2014*business_type |
+                                    naics_code+product_or_service_code|0|0,     
+                                  data = subset(pba_df2,performance_based_service_acquisition_code=='X'))
+
+stargazer(no_fe_pba_not_applicable,task_fe_pba_not_applicable,task_and_industry_fe_pba_not_applicable,
+          title = paste("Days of Delay (Winsorized):",range,sep=" "),
+          dep.var.labels.include = TRUE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("PSC code FE","No","Yes","Yes"),
+                           c("Industry FE","No","No","Yes"),
+                           c("Controls","No","No","No")), 
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both), (iii) Only contracts for which performance-based was not applicable",
+          type="html",
+          header=F)
 
 
 
