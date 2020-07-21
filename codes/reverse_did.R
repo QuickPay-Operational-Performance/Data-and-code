@@ -268,6 +268,80 @@ stargazer(no_fe_pba_not_applicable,task_fe_pba_not_applicable,task_and_industry_
           type="html",
           header=F)
 
+#### Firms with one type of contract: Contract financing #####
+
+# get list of firms with both Small & Large contracts 
+firms_with_multiple_types=unique(df1[,uniqueN(business_type),by=recipient_duns][V1==2,]$recipient_duns)
+
+df2=subset(df1,!recipient_duns%in%firms_with_multiple_types)
+# remove them from the sample
+
+# read only specific columns
+df_raw=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_fy10_to_fy18.csv',
+             select = c("contract_award_unique_key",
+                        "contract_financing_code",
+                        "contract_financing"))
+
+fin_dict=unique(df_raw, by = "contract_award_unique_key")
+
+fin_df=merge(df2,fin_dict,by= "contract_award_unique_key")
+
+fin_df[,receives_financing:=ifelse(!contract_financing_code%in%c("Z",""),1,0)]
+
+# subset of financed contracts
+no_fe_fin=felm(winsorized_delay ~ before_aug_2014*business_type |
+                  0|0|0,
+               data = subset(fin_df,receives_financing==1))
+ 
+task_fe_fin=felm(winsorized_delay ~ before_aug_2014*business_type |
+                   product_or_service_code|0|0,
+                 data = subset(fin_df,receives_financing==1))
+
+task_and_industry_fe_fin=felm(winsorized_delay ~before_aug_2014*business_type |
+                                naics_code+product_or_service_code|0|0,
+                              data = subset(fin_df,receives_financing==1))
+
+stargazer(no_fe_fin,task_fe_fin,task_and_industry_fe_fin,
+          title = paste("Days of Delay (Winsorized):",range,sep=" "),
+          dep.var.labels.include = TRUE,
+          object.names=FALSE,
+          model.numbers=FALSE,
+          add.lines = list(c("PSC code FE","No","Yes","Yes"),
+                           c("Industry FE","No","No","Yes"),
+                           c("Controls","No","No","No")),
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both), (iii) Financed contracts only",
+          type="html",
+          header=F)
+
+# subset of non financed contracts
+no_fe_nonfin=felm(winsorized_delay ~ before_aug_2014*business_type |
+                 0|0|0,
+               data = subset(fin_df,receives_financing==0))
+
+task_fe_nonfin=felm(winsorized_delay ~ before_aug_2014*business_type |
+                   product_or_service_code|0|0,
+                 data = subset(fin_df,receives_financing==0))
+
+task_and_industry_fe_nonfin=felm(winsorized_delay ~before_aug_2014*business_type |
+                                naics_code+product_or_service_code|0|0,
+                              data = subset(fin_df,receives_financing==0))
+
+stargazer(no_fe_nonfin,task_fe_nonfin,task_and_industry_fe_nonfin,
+          title = paste("Days of Delay (Winsorized):",range,sep=" "),
+          dep.var.labels.include = TRUE,
+          object.names=FALSE,
+          model.numbers=FALSE,
+          add.lines = list(c("PSC code FE","No","Yes","Yes"),
+                           c("Industry FE","No","No","Yes"),
+                           c("Controls","No","No","No")),
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both), (iii) Non-financed contracts only",
+          type="html",
+          header=F)
+
 
 #### Firms with one type of contract: Terciles Obligation to Sales ratio #### 
 
