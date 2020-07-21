@@ -208,7 +208,8 @@ plt.savefig(folder_path+'/summary_initial_duration.png',bbox_inches='tight')
 # to markdown
 df[['action_type_code','action_type']]=df[['action_type_code','action_type']].astype(str)
 contracts_per_action_type=df.groupby(['action_type_code','action_type'])['contract_award_unique_key'].nunique().reset_index()
-print(contracts_per_action_type.to_markdown(), file=open('/Users/vibhutidhingra/Desktop/action_types.md','wt'))  
+contracts_per_action_type.rename(columns={'contract_award_unique_key':'Number of contracts'}, inplace=True)
+print(contracts_per_action_type.to_markdown(), file=open('/Users/vibhutidhingra/Desktop/contracts_per_action_type.md','wt'))  
 
 
 
