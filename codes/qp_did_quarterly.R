@@ -383,7 +383,77 @@ stargazer(no_fe_pba,task_fe_pba,task_and_industry_fe_pba,
           type="html",
           header=F)
 
-#### Terciles Obligation to Sales Ratio: Firms with one type of contract ####
+#### Firms with one type of contract: Contract financing #####
+
+range = "Oct 2009 to June 2012"
+library(data.table)
+firms_with_multiple_types=unique(setDT(df)[,uniqueN(business_type),by=recipient_duns][V1==2,]$recipient_duns)
+df2=subset(setDT(df),!recipient_duns%in%firms_with_multiple_types)
+
+df_raw=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_fy10_to_fy18.csv',
+             select = c("contract_award_unique_key",
+                        "contract_financing_code",
+                        "contract_financing"))
+fin_dict=unique(df_raw, by = "contract_award_unique_key")
+fin_df=merge(df2,fin_dict,by= "contract_award_unique_key")
+fin_df[,receives_financing:=ifelse(!contract_financing_code%in%c("Z",""),1,0)]
+
+# receive financing
+
+no_fe_fin=felm(winsorized_delay ~ after_quickpay*small_business |
+                 0|0|0,     
+               data = subset(fin_df,receives_financing==1))
+
+task_fe_fin=felm(winsorized_delay ~ after_quickpay*small_business |
+                   product_or_service_code|0|0,     
+                 data = subset(fin_df,receives_financing==1))
+
+task_and_industry_fe_fin=felm(winsorized_delay ~after_quickpay*small_business |
+                                naics_code+product_or_service_code|0|0,     
+                              data = subset(fin_df,receives_financing==1))
+
+stargazer(no_fe_fin,task_fe_fin,task_and_industry_fe_fin,
+          title = "Days of Delay (Winsorized): Quickpay Dec 2009- June 2012",
+          dep.var.labels.include = TRUE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("PSC code FE","No","Yes","Yes"),
+                           c("Industry FE","No","No","Yes"),
+                           c("Controls","No","No","No")), 
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both), (iii) Only contracts that receive financing",
+          type="html",
+          header=F)
+
+# no financing
+no_fe_fin=felm(winsorized_delay ~ after_quickpay*small_business |
+                 0|0|0,     
+               data = subset(fin_df,receives_financing==0))
+
+task_fe_fin=felm(winsorized_delay ~ after_quickpay*small_business |
+                   product_or_service_code|0|0,     
+                 data = subset(fin_df,receives_financing==0))
+
+task_and_industry_fe_fin=felm(winsorized_delay ~after_quickpay*small_business |
+                                naics_code+product_or_service_code|0|0,     
+                              data = subset(fin_df,receives_financing==0))
+
+stargazer(no_fe_fin,task_fe_fin,task_and_industry_fe_fin,
+          title = "Days of Delay (Winsorized): Quickpay Dec 2009- June 2012",
+          dep.var.labels.include = TRUE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("PSC code FE","No","Yes","Yes"),
+                           c("Industry FE","No","No","Yes"),
+                           c("Controls","No","No","No")), 
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both), (iii) Only contracts that do not receive financing",
+          type="html",
+          header=F)
+
+#### Firms with one type of contract: Terciles Obligation to Sales Ratio ####
 
 range = "Oct 2009 to June 2012"
 
@@ -517,6 +587,7 @@ stargazer(no_fe,task_fe,task_and_industry_fe,
           notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both)",
           type="html",
           header=F)
+
 
 
 
