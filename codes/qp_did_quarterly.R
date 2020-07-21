@@ -588,9 +588,106 @@ stargazer(no_fe,task_fe,task_and_industry_fe,
           type="html",
           header=F)
 
+#### Firms with one type of contract: Performance-based contracts with FAO terciles #####
+
+range = "Oct 2009 to June 2012"
+
+library(data.table)
+
+firms_with_multiple_types=unique(setDT(df)[,uniqueN(business_type),by=recipient_duns][V1==2,]$recipient_duns)
+
+df2=subset(setDT(df),!recipient_duns%in%firms_with_multiple_types)
+
+# add fiscal year to df2 (contract data)
+# format Add the year to 1 if the month (in action-date-year-quarter) 
+# is greater than or equal to 10 (or to zero if not)
+# because new fiscal year starts from Oct
+
+df2[,action_date_year_quarter:=as.Date(action_date_year_quarter)]
+df2[,action_date_fiscal_year:=as.numeric(format(action_date_year_quarter, "%Y")) 
+    + (format(action_date_year_quarter, "%m") >= "10")]
+
+# We are assuming fiscal years are same in USASpending & Intellect data
+
+fao_to_sales=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/govt_weight_per_recipient.csv')
+df3=merge(df2,fao_to_sales,by= c("recipient_duns","action_date_fiscal_year"))
+
+df3[,winsorized_fao_weight:=Winsorize(fao_weight,na.rm=TRUE)]
+df3[,fao_weight_tercile:=ntile(winsorized_fao_weight,3)]
+
+# read only pb columns
+df_raw=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_fy10_to_fy18.csv',
+             select = c("contract_award_unique_key",
+                        "performance_based_service_acquisition_code",
+                        "performance_based_service_acquisition"))
+
+pba_dict=unique(df_raw, by = "contract_award_unique_key")
+pba_df=merge(df3,pba_dict,by= "contract_award_unique_key")
+
+# performance based
+no_fe_pba_tercile_1=felm(winsorized_delay ~ after_quickpay*small_business |
+                 0|0|0,     
+               data = subset(pba_df,performance_based_service_acquisition_code=='Y'&
+                               fao_weight_tercile==1))
+
+no_fe_pba_tercile_2=felm(winsorized_delay ~ after_quickpay*small_business |
+                           0|0|0,     
+                         data = subset(pba_df,performance_based_service_acquisition_code=='Y'&
+                                         fao_weight_tercile==2))
+
+no_fe_pba_tercile_3=felm(winsorized_delay ~ after_quickpay*small_business |
+                           0|0|0,     
+                         data = subset(pba_df,performance_based_service_acquisition_code=='Y'&
+                                         fao_weight_tercile==3))
 
 
+stargazer(no_fe_pba_tercile_1,no_fe_pba_tercile_2,no_fe_pba_tercile_3,
+          title = "Days of Delay (Winsorized): Quickpay Dec 2009- June 2012",
+          dep.var.labels.include = TRUE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          column.labels = c("Bottom Tercile", "Middle Tercile","Top Tercile"),
+          add.lines = list(c("PSC code FE","No","No","No"),
+                           c("Industry FE","No","No","No"),
+                           c("Controls","No","No","No")), 
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both), (iii) Performance based contracts only",
+          type="html",
+          header=F)
 
+# non performance based
+
+no_fe_non_pba_tercile_1=felm(winsorized_delay ~ after_quickpay*small_business |
+                           0|0|0,     
+                         data = subset(pba_df,performance_based_service_acquisition_code!='Y'&
+                                         fao_weight_tercile==1))
+
+no_fe_non_pba_tercile_2=felm(winsorized_delay ~ after_quickpay*small_business |
+                           0|0|0,     
+                         data = subset(pba_df,performance_based_service_acquisition_code!='Y'&
+                                         fao_weight_tercile==2))
+
+no_fe_non_pba_tercile_3=felm(winsorized_delay ~ after_quickpay*small_business |
+                           0|0|0,     
+                         data = subset(pba_df,performance_based_service_acquisition_code!='Y'&
+                                         fao_weight_tercile==3))
+
+
+stargazer(no_fe_non_pba_tercile_1,no_fe_non_pba_tercile_2,no_fe_non_pba_tercile_3,
+          title = "Days of Delay (Winsorized): Quickpay Dec 2009- June 2012",
+          dep.var.labels.include = TRUE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          column.labels = c("Bottom Tercile", "Middle Tercile","Top Tercile"),
+          add.lines = list(c("PSC code FE","No","No","No"),
+                           c("Industry FE","No","No","No"),
+                           c("Controls","No","No","No")), 
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both), (iii) NON performance based contracts only",
+          type="html",
+          header=F)
 
 
 
