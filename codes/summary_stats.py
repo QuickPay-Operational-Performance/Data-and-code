@@ -215,18 +215,66 @@ print(contracts_per_action_type.to_markdown(), file=open('/Users/vibhutidhingra/
 
 print(pd.DataFrame(df.columns.tolist()[0:276]).to_markdown(), file=open('/Users/vibhutidhingra/Desktop/list_of_columns.md','wt'))  
 
+#%% cfa_8 program
 
+contracts_per_c8a=df.groupby(['contracting_officers_determination_of_business_size_code',\
+                               'c8a_program_participant'])['contract_award_unique_key'].nunique().reset_index()
+contracts_per_c8a.rename(columns={'contract_award_unique_key':'Number of contracts'}, inplace=True)
 
+print(contracts_per_c8a.to_markdown(), file=open('/Users/vibhutidhingra/Desktop/contracts_per_c8a.md','wt'))  
 
+############
 
+contracts_per_c8a_fy=df.groupby(['action_date_year_quarter',\
+                               'c8a_program_participant'])['contract_award_unique_key'].nunique().reset_index()
 
+contracts_per_c8a_fy.rename(columns={'contract_award_unique_key':'Number of contracts'}, inplace=True)
 
+contracts_with_8a=contracts_per_c8a_fy[contracts_per_c8a_fy.c8a_program_participant=='t'].reset_index()
+contracts_without_8a=contracts_per_c8a_fy[contracts_per_c8a_fy.c8a_program_participant=='f'].reset_index()
 
+# Plot
+folder_path='/Users/vibhutidhingra/Desktop/research/Git:Github/qp_data_and_code/img/summary_stats'
+fig = plt.figure(figsize=(8, 6))
+plt.xticks(rotation=90)
+plt.plot(contracts_with_8a.action_date_year_quarter,contracts_with_8a['Number of contracts'],label="8A contracts")
+plt.plot(contracts_without_8a.action_date_year_quarter,contracts_without_8a['Number of contracts'],label="NON 8A contracts")
+plt.legend(loc="best")
+plt.ylabel('Number of contracts', fontsize=18)
+plt.xlabel('Year-Quarter', fontsize=16)
+plt.savefig(folder_path+'/summary_8a_contracts.png',bbox_inches='tight')
 
+#%% Length of contracts based on competition
+from scipy.stats import mstats
+folder_path='/Users/vibhutidhingra/Desktop/research/Git:Github/qp_data_and_code/img/summary_stats'
 
+df.extent_competed_code=df.extent_competed_code.astype(str)
+dfv=df.sort_values(by='action_date').drop_duplicates(subset='contract_award_unique_key').reset_index(drop=True)
+# get entry when a contract first appeared in the sample
 
+dfv['period_of_performance_current_end_date']=pd.to_datetime(dfv.period_of_performance_current_end_date)
+dfv['period_of_performance_start_date']=pd.to_datetime(dfv.period_of_performance_start_date)
 
+dfv["initial_duration"]=(dfv.period_of_performance_current_end_date-dfv.period_of_performance_start_date).dt.days
+dfv["winsorized_contract_value"]=mstats.winsorize(dfv.base_and_all_options_value, limits=[0.05, 0.05])
+dfv["winsorized_initial_duration"]=mstats.winsorize(dfv.initial_duration, limits=[0.05, 0.05])
 
+competed_contracts=dfv[~dfv.extent_competed_code.isin({'nan', 'G' , 'B', 'C'})].reset_index()
+non_competed_contracts=dfv[dfv.extent_competed_code.isin({'nan', 'G' , 'B', 'C'})].reset_index()
 
+plot_competed=competed_contracts.groupby('action_date_year_quarter')[['base_and_all_options_value',\
+                            'winsorized_contract_value','initial_duration','winsorized_initial_duration']].mean().reset_index()
+plot_non_competed=non_competed_contracts.groupby('action_date_year_quarter')[['base_and_all_options_value',\
+                            'winsorized_contract_value','initial_duration','winsorized_initial_duration']].mean().reset_index()
 
+fig = plt.figure(figsize=(8, 6))
+plt.xticks(rotation=90)
+plt.plot(plot_competed.action_date_year_quarter.astype(str),\
+         plot_competed.winsorized_initial_duration,label="Competed contracts")
+plt.plot(plot_non_competed.action_date_year_quarter.astype(str),\
+         plot_non_competed.winsorized_initial_duration,label="Non-Competed contracts")
+plt.legend(loc="best")
+plt.ylabel('Initial project duration \n (5% winsorized average)', fontsize=18)
+plt.xlabel('Year-Quarter', fontsize=16)
+plt.savefig(folder_path+'/summary_initial_duration_competition.png',bbox_inches='tight')
 
