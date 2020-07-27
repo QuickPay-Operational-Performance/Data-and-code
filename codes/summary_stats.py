@@ -211,6 +211,22 @@ contracts_per_action_type=df.groupby(['action_type_code','action_type'])['contra
 contracts_per_action_type.rename(columns={'contract_award_unique_key':'Number of contracts'}, inplace=True)
 print(contracts_per_action_type.to_markdown(), file=open('/Users/vibhutidhingra/Desktop/contracts_per_action_type.md','wt'))  
 
+#%% List of variables
+
+print(pd.DataFrame(df.columns.tolist()[0:276]).to_markdown(), file=open('/Users/vibhutidhingra/Desktop/list_of_columns.md','wt'))  
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
