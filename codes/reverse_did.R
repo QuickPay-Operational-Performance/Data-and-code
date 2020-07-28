@@ -1,4 +1,6 @@
 rm(list = ls())
+
+#### Load Packages ####
 library(tidyverse)
 library(zoo) # for year-quarter
 #library(dplyr)
@@ -575,3 +577,249 @@ stargazer(no_fe_nonpba_tercile_1,no_fe_nonpba_tercile_2,no_fe_nonpba_tercile_3,
           notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both), (iii) Non-performance based contracts only",
           type="html",
           header=F)
+
+
+#### Firms with one type of contract: LB subsample terciles Obligation to Sales ratio ####
+# In this case, we consider the subsamples as:
+# all small businesses, large businesses under i-th tercile 
+
+# get list of firms with both Small & Large contracts 
+firms_with_multiple_types=unique(df1[,uniqueN(business_type),by=recipient_duns][V1==2,]$recipient_duns)
+
+# remove them from the sample
+df2=subset(df1,!recipient_duns%in%firms_with_multiple_types)
+
+# add fiscal year to df2 (contract data)
+# format Add the year to 1 if the month (in action-date-year-quarter) 
+# is greater than or equal to 10 (or to zero if not)
+# because new fiscal year starts from Oct
+
+df2[,action_date_year_quarter:=as.Date(action_date_year_quarter)]
+df2[,action_date_fiscal_year:=as.numeric(format(action_date_year_quarter, "%Y")) 
+    + (format(action_date_year_quarter, "%m") >= "10")]
+
+# We are assuming fiscal years are same in USASpending & Intellect data
+
+fao_to_sales=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/govt_weight_per_recipient.csv')
+
+df3=merge(df2,fao_to_sales,by= c("recipient_duns","action_date_fiscal_year"))
+
+df3[,winsorized_fao_weight:=Winsorize(fao_weight,na.rm=TRUE)]
+df3[,fao_weight_tercile:=ntile(winsorized_fao_weight,3)]
+
+# Y = a + LargeBusiness + Before2014 + LargeBusiness x Before2014 + e
+
+df3[,lb_tercile_name:=case_when(business_type=="O" & fao_weight_tercile==1~ "Bottom Tercile LB",
+                                business_type=="O" & fao_weight_tercile==2~ "Middle Tercile LB",
+                                business_type=="O" & fao_weight_tercile==3~ "Top Tercile LB")]
+
+select_tercile="Top Tercile LB"
+
+no_fe=felm(winsorized_delay ~ before_aug_2014*business_type |
+               0|0|0,
+           data = subset(df3,lb_tercile_name==select_tercile | business_type=="S" ))
+
+task_fe=felm(winsorized_delay ~before_aug_2014*business_type |
+                 product_or_service_code|0|0,
+             data = subset(df3,lb_tercile_name==select_tercile | business_type=="S" ))
+
+task_and_industry_fe=felm(winsorized_delay ~before_aug_2014*business_type |
+                              naics_code+product_or_service_code|0|0,
+                          data = subset(df3,lb_tercile_name==select_tercile | business_type=="S" ))
+
+stargazer(no_fe,task_fe,task_and_industry_fe,
+          title = paste("Days of Delay (Winsorized):", range, select_tercile, "of Obligation to Sales Ratio", sep=" "),
+          dep.var.labels.include = TRUE,
+          object.names=FALSE,
+          model.numbers=FALSE,
+          add.lines = list(c("PSC code FE","No","Yes","Yes"),
+                           c("Industry FE","No","No","Yes"),
+                           c("Controls","No","No","No")),
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Sample restricted to firms that receive only one type of contract (small or large, but not both)",
+          type="html",
+          header=F)
+
+
+
+#### Firms with one type of contract: LB subsample Contract financing terciles Obligation to Sales ratio ####
+# In this case, we consider the subsamples as:
+# all small businesses, large businesses under i-th tercile 
+
+# get list of firms with both Small & Large contracts 
+firms_with_multiple_types=unique(df1[,uniqueN(business_type),by=recipient_duns][V1==2,]$recipient_duns)
+
+# remove them from the sample
+df2=subset(df1,!recipient_duns%in%firms_with_multiple_types)
+
+# add fiscal year to df2 (contract data)
+# format Add the year to 1 if the month (in action-date-year-quarter) 
+# is greater than or equal to 10 (or to zero if not)
+# because new fiscal year starts from Oct
+
+df2[,action_date_year_quarter:=as.Date(action_date_year_quarter)]
+df2[,action_date_fiscal_year:=as.numeric(format(action_date_year_quarter, "%Y")) 
+    + (format(action_date_year_quarter, "%m") >= "10")]
+
+# read only specific columns
+df_raw=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_fy10_to_fy18.csv',
+             select = c("contract_award_unique_key",
+                        "contract_financing_code",
+                        "contract_financing"))
+
+fin_dict=unique(df_raw, by = "contract_award_unique_key")
+fin_df=merge(df2,fin_dict,by= "contract_award_unique_key")
+fin_df[,receives_financing:=ifelse(!contract_financing_code%in%c("Z",""),1,0)]
+
+# We are assuming fiscal years are same in USASpending & Intellect data
+
+fao_to_sales=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/govt_weight_per_recipient.csv')
+
+df3=merge(fin_df,fao_to_sales,by= c("recipient_duns","action_date_fiscal_year"))
+
+df3[,winsorized_fao_weight:=Winsorize(fao_weight,na.rm=TRUE)]
+df3[,fao_weight_tercile:=ntile(winsorized_fao_weight,3)]
+
+# Y = a + LargeBusiness + Before2014 + LargeBusiness x Before2014 + e
+
+df3[,lb_tercile_name:=case_when(business_type=="O" & fao_weight_tercile==1~ "Bottom Tercile LB",
+                                business_type=="O" & fao_weight_tercile==2~ "Middle Tercile LB",
+                                business_type=="O" & fao_weight_tercile==3~ "Top Tercile LB")]
+
+no_fe_1=felm(winsorized_delay ~ before_aug_2014*business_type |
+               0|0|0,
+           data = subset(df3,receives_financing==1 & 
+                             (lb_tercile_name=="Bottom Tercile LB" | business_type=="S") ))
+
+no_fe_2=felm(winsorized_delay ~ before_aug_2014*business_type |
+                 0|0|0,
+             data = subset(df3,receives_financing==1 & 
+                               (lb_tercile_name=="Middle Tercile LB" | business_type=="S") ))
+no_fe_3=felm(winsorized_delay ~ before_aug_2014*business_type |
+                 0|0|0,
+             data = subset(df3,receives_financing==1 & 
+                               (lb_tercile_name=="Top Tercile LB" | business_type=="S") ))
+
+stargazer(no_fe_1,no_fe_2,no_fe_3,
+          title = paste("Days of Delay (Winsorized):", range, "of Obligation to Sales Ratio", sep=" "),
+          dep.var.labels.include = TRUE,
+          object.names=FALSE,
+          model.numbers=FALSE,
+          column.labels = c("Bottom Tercile","Middle Tercile","Top Tercile"),
+          add.lines = list(c("PSC code FE","No","No","No"),
+                           c("Industry FE","No","No","No"),
+                           c("Controls","No","No","No")),
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Only contracts that receive financing, (iii) Sample restricted to firms that receive only one type of contract (small or large, but not both)",
+          type="html",
+          header=F)
+
+
+## contracts that DONT receive financing
+
+no_fe_1_nonfin=felm(winsorized_delay ~ before_aug_2014*business_type |
+                 0|0|0,
+             data = subset(df3,receives_financing==0 & 
+                               (lb_tercile_name=="Bottom Tercile LB" | business_type=="S") ))
+
+no_fe_2_nonfin=felm(winsorized_delay ~ before_aug_2014*business_type |
+                 0|0|0,
+             data = subset(df3,receives_financing==0 & 
+                               (lb_tercile_name=="Middle Tercile LB" | business_type=="S") ))
+no_fe_3_nonfin=felm(winsorized_delay ~ before_aug_2014*business_type |
+                 0|0|0,
+             data = subset(df3,receives_financing==0 & 
+                               (lb_tercile_name=="Top Tercile LB" | business_type=="S") ))
+
+stargazer(no_fe_1_nonfin,no_fe_2_nonfin,no_fe_3_nonfin,
+          title = paste("Days of Delay (Winsorized):", range, "of Obligation to Sales Ratio", sep=" "),
+          dep.var.labels.include = TRUE,
+          object.names=FALSE,
+          model.numbers=FALSE,
+          column.labels = c("Bottom Tercile","Middle Tercile","Top Tercile"),
+          add.lines = list(c("PSC code FE","No","No","No"),
+                           c("Industry FE","No","No","No"),
+                           c("Controls","No","No","No")),
+          style="qje",
+          notes.align = "l",
+          notes=" (i) Each observation is a project-quarter, (ii) Only contracts that DO NOT receive financing, (iii) Sample restricted to firms that receive only one type of contract (small or large, but not both)",
+          type="html",
+          header=F)
+
+
+
+#### Firms with one type of contract: Parallel Trends####
+library("ggplot2")
+d=df2[,mean(winsorized_delay,na.rm = TRUE), by = c("business_type","action_date_year_quarter")]
+setnames(d, "V1", "winsorized_delay")
+ggplot(data=na.omit(d),
+       aes(x=action_date_year_quarter, y=winsorized_delay, colour=business_type)) +
+    geom_line() +
+    ggtitle("Firms with only one type of contract") 
+
+#### Firms with one type of contract + having a fao ratio: Parallel Trends####
+library("ggplot2")
+## Firms with only one type of contract but also having a fao ratio (i.e. present in Intellect data)
+d1=df3[, mean(winsorized_delay,na.rm = TRUE), by = c("business_type","action_date_year_quarter")]
+setnames(d1, "V1", "winsorized_delay")
+ggplot(data=na.omit(d1),
+       aes(x=action_date_year_quarter, y=winsorized_delay, colour=business_type)) +
+    geom_line()+
+    ggtitle("Firms with only one type of contract \n and having a FAO ratio") 
+
+#### Firms with one type of contract + having a fao ratio: Parallel Trends across terciles####
+
+df3[,category:=case_when(business_type=="O" & fao_weight_tercile==1~ "Bottom Tercile LB",
+                                business_type=="O" & fao_weight_tercile==2~ "Middle Tercile LB",
+                                business_type=="O" & fao_weight_tercile==3~ "Top Tercile LB",
+                                business_type=="S"~ "Small business")]
+d2=df3[, mean(winsorized_delay,na.rm = TRUE), by = c("category","action_date_year_quarter")]
+setnames(d2, "V1", "winsorized_delay")
+ggplot(data=na.omit(d2),
+       aes(x=action_date_year_quarter, y=winsorized_delay, colour=category)) +
+    geom_line()+
+    ggtitle("Terciles of FAO ratio firms with only one type of contract") 
+
+#### Firms with one type of contract + having a fao ratio: Parallel Trends within terciles####
+
+## Checking parallel trends within terciles
+## Firms with only one type of contract, having a fao ratio (i.e. present in Intellect data)
+
+df3[,category_within_terciles:=case_when(business_type=="O" & fao_weight_tercile==1~ "Bottom Tercile LB",
+                         business_type=="O" & fao_weight_tercile==2~ "Middle Tercile LB",
+                         business_type=="O" & fao_weight_tercile==3~ "Top Tercile LB",
+                         business_type=="S" & fao_weight_tercile==1~ "Bottom Tercile SB",
+                         business_type=="S" & fao_weight_tercile==2~ "Middle Tercile SB",
+                         business_type=="S" & fao_weight_tercile==3~ "Top Tercile SB")]
+
+####  
+bottom_tercile=subset(df3,fao_weight_tercile==1)[, 
+                                     mean(winsorized_delay,na.rm = TRUE), by = c("category_within_terciles","action_date_year_quarter")]
+setnames(bottom_tercile, "V1", "winsorized_delay")
+ggplot(data=na.omit(bottom_tercile),
+       aes(x=action_date_year_quarter, y=winsorized_delay, colour=category_within_terciles)) +
+    geom_line()+
+    ggtitle("Terciles of FAO ratio firms with only one type of contract") 
+
+####   
+middle_tercile=subset(df3,fao_weight_tercile==2)[, 
+                                                 mean(winsorized_delay,na.rm = TRUE), by = c("category_within_terciles","action_date_year_quarter")]
+setnames(middle_tercile, "V1", "winsorized_delay")
+ggplot(data=na.omit(middle_tercile),
+       aes(x=action_date_year_quarter, y=winsorized_delay, colour=category_within_terciles)) +
+    geom_line()+
+    ggtitle("Terciles of FAO ratio firms with only one type of contract") 
+
+####   
+top_tercile=subset(df3,fao_weight_tercile==3)[, 
+                                                 mean(winsorized_delay,na.rm = TRUE), by = c("category_within_terciles","action_date_year_quarter")]
+setnames(top_tercile, "V1", "winsorized_delay")
+ggplot(data=na.omit(top_tercile),
+       aes(x=action_date_year_quarter, y=winsorized_delay, colour=category_within_terciles)) +
+    geom_line()+
+    ggtitle("Terciles of FAO ratio firms with only one type of contract") 
+
+
+
