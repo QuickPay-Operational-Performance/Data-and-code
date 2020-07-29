@@ -278,3 +278,19 @@ plt.ylabel('Initial project duration \n (5% winsorized average)', fontsize=18)
 plt.xlabel('Year-Quarter', fontsize=16)
 plt.savefig(folder_path+'/summary_initial_duration_competition.png',bbox_inches='tight')
 
+#%% 
+# Data as of July 13, 2020 has some different variables
+# The data we are using is as of Feb 05, 2020
+# In this section, we get a list of new columns added & old columns removed in the data
+
+july_2020_df=pd.read_csv('/Users/vibhutidhingra/Dropbox/USA_Spending_Downloads/20200713_dod_award_data_archive/FY2018_097_Contracts_Full_20200713/FY2018_097_Contracts_Full_20200714_1.csv',\
+                         nrows=1)
+feb_2020_df=pd.read_csv('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_fy10_to_fy18.csv',\
+                         nrows=1)
+new_columns_added=pd.DataFrame(list(set(july_2020_df.columns)-set(feb_2020_df.columns)))
+print(new_columns_added.to_markdown(), file=open('/Users/vibhutidhingra/Desktop/new_columns_added.md','wt'))  
+
+user_defined_columns={'small_business','top_level_psc','four_digit_naics'}
+old_columns_removed=pd.DataFrame(list(set(feb_2020_df.columns)-user_defined_columns-set(july_2020_df.columns)))
+
+print(old_columns_removed.to_markdown(), file=open('/Users/vibhutidhingra/Desktop/old_columns_removed.md','wt'))  
