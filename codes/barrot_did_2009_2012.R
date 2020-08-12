@@ -373,3 +373,87 @@ stargazer(firm_and_time_fe,firm_task_and_time_fe, project_and_time_fe,
           type="html",style="qje",
           notes="Each observation is a project-quarter",
           header = F)
+#### Data cleaning for Business Reliance ####
+# Run until ``Regression formula`` first # 
+# We are assuming fiscal years are same in USASpending & Intellect data
+fao_to_sales=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/govt_weight_per_recipient.csv')
+
+# add fiscal year to df (resampled contract data)
+# format Add the year to 1 if the month (in action-date-year-quarter) 
+# is greater than or equal to 10 (or to zero if not)
+# because new fiscal year starts from Oct
+df[,action_date_fiscal_year:=as.numeric(format(action_date_year_quarter, "%Y")) 
+    + (format(action_date_year_quarter, "%m") >= "10")]
+
+df_fao=merge(df,fao_to_sales,by= c("recipient_duns","action_date_fiscal_year"))
+
+reg_df=merge(df_fao,
+             df_raw_cols,
+             all.x = TRUE, # keep values in df, add columns of df_raw_cols
+             by=c("contract_award_unique_key"))
+
+# merge contract characteristics with FAO data
+
+reg_df[,winsorized_fao_weight:=Winsorize(fao_weight,na.rm=TRUE)]
+reg_df[,fao_weight_tercile:=as.factor(ntile(winsorized_fao_weight,3))]
+# tercile = 1 --> least dependent on federal contracts, tercile = 3 --> most revenue comes from govt
+
+#### Regressions for Business Reliance ####
+# tercile = 1 --> least dependent on federal contracts
+# tercile = 3 --> most revenue comes from govt
+
+int_var=as.name("fao_weight_tercile") 
+cluster_var = 0
+
+## Firm and Time Fixed Effects
+fixed_vars =  c("action_date_year_quarter","recipient_duns")
+control_vars=c("initial_duration_in_days_i","initial_budget_i")
+
+firm_fe_formula=formula(paste(baseline,int_var, "+ post_t:",int_var,
+                              "+",paste("post_t:",control_vars,collapse="+"),
+                              "|", paste(fixed_vars, collapse= "+"),
+                              "| 0 |", cluster_var))
+
+firm_and_time_fe<-felm(firm_fe_formula,
+                       data=reg_df, 
+                       exactDOF = TRUE, 
+                       cmethod = "reghdfe")
+
+## Firm, Task and Time Fixed Effects
+fixed_vars =  c("action_date_year_quarter","recipient_duns","product_or_service_code")
+firm_task_fe_formula=formula(paste(baseline,int_var, "+ post_t:",int_var,
+                                   "+",paste("post_t:",control_vars,collapse="+"),
+                                   "|", paste(fixed_vars, collapse= "+"),
+                                   "| 0 |", cluster_var))
+
+firm_task_and_time_fe<-felm(firm_task_fe_formula,
+                            data=reg_df, 
+                            exactDOF = TRUE, 
+                            cmethod = "reghdfe")
+
+## Project and Time Fixed Effects
+fixed_vars =  c("action_date_year_quarter","contract_award_unique_key")
+
+project_fe_formula=formula(paste(baseline,int_var, "+ post_t:",int_var,
+                                 "+",paste("post_t:",control_vars,collapse="+"),
+                                 "|", paste(fixed_vars, collapse= "+"),
+                                 "| 0 |", cluster_var))
+
+project_and_time_fe<-felm(project_fe_formula,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+stargazer(firm_and_time_fe,firm_task_and_time_fe, project_and_time_fe,
+          title = "Days of Delay (Winsorized): Quickpay 2009-2011",
+          dep.var.labels.include = FALSE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("Firm FE","Yes","Yes","No"),
+                           c("Quarter FE","Yes","Yes","Yes"),
+                           c("PSC FE","No","Yes","No"),
+                           c("Project FE","No","No","Yes"),
+                           c("Controls","Yes","Yes", "Yes")), 
+          type="html",style="qje",
+          notes="Each observation is a project-quarter",
+          header = F)
