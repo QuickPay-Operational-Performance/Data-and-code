@@ -10,6 +10,7 @@ library(DescTools)
 library(zoo) # for year quarter
 library(stargazer)
 library(broom)
+library(ggplot2)
 library(data.table)
 #### Read data ####
 
@@ -183,6 +184,16 @@ ti_reg_with_treat_subset=felm(ti_formula_with_treat,
                                   exactDOF = TRUE, 
                                   cmethod = "reghdfe")
 
+ti_reg_subset_2=felm(ti_formula,
+                   data=subset(reg_df2,(treat_i==1 & rho_it>0 & rho_it<=1)|treat_i==0),
+                   exactDOF = TRUE, 
+                   cmethod = "reghdfe")
+
+ti_reg_with_treat_subset_2=felm(ti_formula_with_treat,
+                              data=subset(reg_df2,(treat_i==1 & rho_it>0  & rho_it<=1)|treat_i==0),
+                              exactDOF = TRUE, 
+                              cmethod = "reghdfe")
+
 #### Output Table #### 
 vars.order=c("rho_it",
              "rho_it:post_t",
@@ -195,14 +206,25 @@ stargazer(ti_reg,
           ti_reg_with_treat,
           ti_reg_subset,
           ti_reg_with_treat_subset,
+          ti_reg_subset_2,
+          ti_reg_with_treat_subset_2,
           object.names=FALSE, 
           model.numbers=T,
-          add.lines = list(c("Firm FE","Yes","Yes","Yes","Yes"),
-                           c("Quarter FE","Yes","Yes","Yes","Yes"),
-                           c("PSC FE","Yes","Yes","Yes","Yes"),
-                           c("Project FE","No","No","No","No")),
+          add.lines = list(c("Firm FE","Yes","Yes","Yes","Yes","Yes","Yes"),
+                           c("Quarter FE","Yes","Yes","Yes","Yes","Yes","Yes"),
+                           c("PSC FE","Yes","Yes","Yes","Yes","Yes","Yes"),
+                           c("Project FE","No","No","No","No","No","No")),
           type="html",style="qje",
           order=paste0("^", vars.order , "$"),
-          notes="(i) Each observation is a project-quarter, (ii) Columns (3) and (4) drop treated observations with a non-positive rho, (iii) Standard errors are robust and clustered at the project level",
+          notes="(i) Each observation is a project-quarter, (ii) Columns (3) and (4) drop treated observations with a non-positive rho, (iii) Columns (5) and (6) only consider those treated observations that have rho greater than 0 and less than or equal to 1, (iv) Standard errors are robust and clustered at the project level",
           header=F)
 
+#### Output Plot for Rho #### 
+# can also replace business_type with factor(treat_i) 
+plot=ggplot(reg_df2, aes(x=business_type, y=rho_it, color=business_type)) +  
+  geom_boxplot() + 
+  scale_y_continuous(limits = c(0, 12), breaks = seq(-1, 12, by = 0.5)) 
+
+ggsave(plot, 
+       file="/Users/vibhutidhingra/Desktop/research/Git:Github/qp_data_and_code/img/rho_box_plot.png",
+       scale=0.8)
