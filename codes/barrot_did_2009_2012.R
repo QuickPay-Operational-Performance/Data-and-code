@@ -103,6 +103,46 @@ reg_df=merge(df,
              all.x = TRUE, # keep values in df, add columns of df_raw_cols
              by=c("contract_award_unique_key"))
 
+#### Regression for Parallel Trends ####
+df_qn<-unique(reg_df,by='action_date_year_quarter')[,"action_date_year_quarter"]
+df_qn=df_qn[order(action_date_year_quarter)][,quarter_number:=seq.int(nrow(df_qn))]
+reg_df=merge(reg_df,df_qn,by='action_date_year_quarter')
+cluster_var = "contract_award_unique_key"
+
+# Estimating linear time trend before quickpay was implemented
+
+fixed_vars =  c("action_date_year_quarter",
+                "recipient_duns",
+                "product_or_service_code")
+
+control_vars=c("initial_duration_in_days_i")
+
+pt_formula=formula(paste("winsorized_delay~treat_i+
+                         quarter_number:treat_i+
+                         initial_duration_in_days_i",
+                         "|", paste(fixed_vars, collapse= "+"),
+                         "| 0 |", cluster_var))
+
+parallel_trend<-felm(pt_formula,
+                     data=subset(reg_df,post_t==0), 
+                     exactDOF = TRUE, 
+                     cmethod = "reghdfe")
+#tidy(parallel_trend)
+
+stargazer(parallel_trend,
+          title = "Linear Time Trend Before QuickPay",
+          dep.var.labels.include = FALSE,
+          object.names=FALSE, 
+          model.numbers=FALSE,
+          add.lines = list(c("Firm FE","Yes"),
+                           c("Quarter FE","Yes"),
+                           c("PSC FE","Yes"),
+                           c("Controls","Yes","Yes")), 
+          type="html",
+          style="qje",
+          notes="Each observation is a project-quarter. Standard errors are robust and clustered at the project level. Observations are for quarters before quickpay.",
+          header = F)
+
 #### Regression formula ####
 baseline="winsorized_delay~post_t:treat_i+"
 
