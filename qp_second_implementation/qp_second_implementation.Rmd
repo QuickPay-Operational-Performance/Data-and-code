@@ -107,6 +107,7 @@ df[,treat_i:=ifelse(business_type=="O",1,0)]
 # Assign variables: ContractFinancing_i, Competition_i, PerformanceBased_i, Financial_Aid_i 
 df_raw[,contract_financing_i:=ifelse(!is.null(contract_financing_code)&
                                        !contract_financing_code%in%c("Z", ""),1,0)]
+df_raw[,no_contract_financing_i:= 1-contract_financing_i]
 #### 
 df_raw[,competitively_awarded_i:=ifelse(!is.null(extent_competed_code)&
                                           !extent_competed_code%in%c("","G","B", "C"),1,0)]
@@ -128,6 +129,7 @@ df_raw[,winsorized_initial_budget_i:=Winsorize(base_and_all_options_value,na.rm=
 select_cols=c("contract_award_unique_key",
               "number_of_offers_received",
               "contract_financing_i",
+              "no_contract_financing_i",
               "competitively_awarded_i",
               "performance_based_contract_i",
               "receives_financial_aid_i",
@@ -282,7 +284,7 @@ controls_and_firm_task_fe=felm(winsorized_delay~treat_i+pre_t:treat_i+
 stargazer(baseline_reg,
           controls_and_firm_fe,
           controls_and_firm_task_fe,
-          title = "Quickpay 2009-2011",
+          title = "Quickpay 2013-2016",
           dep.var.labels="$Delay_{it}$ (in days)",
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$","$Pre_t$","$Treat_i$x$Pre_t$","Constant"),
@@ -382,7 +384,7 @@ stargazer(baseline_reg,
           controls_and_firm_task_fe,
           digits=2,
           digits.extra=2,
-          title = "Effect of Contract Financing: Quickpay 2009-2011",
+          title = "Effect of Contract Financing: Quickpay 2013-2016",
           dep.var.labels="$Delay_{it}$ (in days)",
           dep.var.caption = "",
           order=paste0("^", vars.order , "$"),
@@ -416,6 +418,112 @@ stargazer(baseline_reg,
           header=F)
 ```
 
+# Contract Financing: Two Indicators
+
+$$ CF_i = \begin{cases} 1, \text{ if project } i \text{ receives contract financing}\\
+0, \text{ otherwise} \end{cases}$$
+
+$$ NCF_i = \begin{cases} 1, \text{ if project } i \text{ does not receive contract financing}\\
+0, \text{ otherwise} \end{cases}$$
+
+$$ \begin{aligned}
+Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Pre_t + \beta_2 (Treat_i \times Pre_t \times NCF_i) \\
+&+&\beta_3 CF_i + \beta_4 (CF_i \times Pre_t) + \beta_5 (Treat_i \times Pre_t \times CF_i) \\ 
+&+&X_i + (Pre_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
+\end{aligned}$$
+```{r contract_financing_two_indicators, echo=FALSE, results='asis'}
+# Baseline Regressions 
+baseline_reg=felm(winsorized_delay~treat_i+pre_t:treat_i:no_contract_financing_i+pre_t+
+                    contract_financing_i+pre_t:contract_financing_i+
+                    pre_t:treat_i:contract_financing_i|
+                    0| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df, 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+
+# time fixed effects also included in the following specs
+controls_and_firm_fe=felm(winsorized_delay~treat_i+
+                            pre_t:treat_i:no_contract_financing_i+
+                            contract_financing_i+
+                            pre_t:contract_financing_i+
+                            pre_t:treat_i:contract_financing_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            pre_t:winsorized_initial_duration_in_days_i+
+                            pre_t:winsorized_initial_budget_i+
+                            pre_t:number_of_offers_received|
+                            recipient_duns+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
+                            pre_t:treat_i:no_contract_financing_i+
+                            contract_financing_i+
+                            pre_t:contract_financing_i+
+                            pre_t:treat_i:contract_financing_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            pre_t:winsorized_initial_duration_in_days_i+
+                            pre_t:winsorized_initial_budget_i+
+                            pre_t:number_of_offers_received|
+                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+vars.order=c('treat_i',
+             'pre_t',
+              'treat_i:pre_t:no_contract_financing_i',
+              'contract_financing_i',
+              'pre_t:contract_financing_i',
+              'treat_i:pre_t:contract_financing_i')
+
+stargazer(baseline_reg,
+          controls_and_firm_fe,
+          controls_and_firm_task_fe,
+          digits=2,
+          digits.extra=2,
+          title = "Effect of Contract Financing: Quickpay 2013-2016",
+          dep.var.labels="$Delay_{it}$ (in days)",
+          dep.var.caption = "",
+          order=paste0("^", vars.order , "$"),
+          covariate.labels = c("$Treat_i$",
+                               "$Pre_t$",
+                               "$Treat_i$x$Pre_t$x$NCF_i$",
+                               "$CF_i$",
+                               "$Pre_t$ x $CF_i$",
+                               "$Pre_t$ x $CF_i$ x $Treat_i$",
+                               "Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
+                           c("Firm Fixed Effects","No","Yes","Yes"),
+                           c("Task Fixed Effects","No","No","Yes"),
+                           c("Duration, Budget, Bids","No","Yes","Yes"),
+                           c("$Pre_t$  x  (Duration, Budget, Bids)","No","Yes","Yes")),
+          omit=c('winsorized_initial_duration_in_days_i',
+                  'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'pre_t:winsorized_initial_duration_in_days_i',
+                   'pre_t:winsorized_initial_budget_i',
+                   'pre_t:number_of_offers_received'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level."),
+          header=F)
+```
 # Receives Financial Aid
 
 $$ FinancialAid = \begin{cases} 1, \text{ if firm receives grants or is a c8A participant}\\
@@ -487,7 +595,7 @@ stargazer(baseline_reg,
           controls_and_firm_task_fe,
           digits=2,
           digits.extra=2,
-          title = "Effect of Grants or C8A Participant: Quickpay 2009-2011",
+          title = "Effect of Grants or C8A Participant: Quickpay 2013-2016",
           dep.var.labels="$Delay_{it}$ (in days)",
           dep.var.caption = "",
           order=paste0("^", vars.order , "$"),
@@ -594,7 +702,7 @@ stargazer(baseline_reg,
           controls_and_firm_task_fe,
           digits=2,
           digits.extra=2,
-          title = "Effect of Contracts, Grants, or C8A Participant: Quickpay 2009-2011",
+          title = "Effect of Contracts, Grants, or C8A Participant: Quickpay 2013-2016",
           dep.var.labels="$Delay_{it}$ (in days)",
           dep.var.caption = "",
           order=paste0("^", vars.order , "$"),

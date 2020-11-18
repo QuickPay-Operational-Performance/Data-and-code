@@ -62,7 +62,7 @@
 
 \title{Second Implementation of QuickPay (2013-2016)}
 \author{}
-\date{\vspace{-2.5em}Nov 15, 2020}
+\date{\vspace{-2.5em}Nov 17, 2020}
 
 \begin{document}
 \maketitle
@@ -148,7 +148,7 @@
 \end{aligned}\]
 
 \begin{table}[H] \centering 
-  \caption{Quickpay 2009-2011} 
+  \caption{Quickpay 2013-2016} 
   \label{} 
 \small 
 \begin{tabular}{@{\extracolsep{-2pt}}lccc} 
@@ -199,7 +199,7 @@ Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Pre_t + \beta_2 (Treat_i \times 
 \end{aligned}\]
 
 \begin{table}[H] \centering 
-  \caption{Effect of Contract Financing: Quickpay 2009-2011} 
+  \caption{Effect of Contract Financing: Quickpay 2013-2016} 
   \label{} 
 \small 
 \begin{tabular}{@{\extracolsep{-2pt}}lccc} 
@@ -246,6 +246,70 @@ Adjusted R$^{2}$ & 0.003 & 0.05 & 0.05 \\
 \end{tabular} 
 \end{table}
 
+\hypertarget{contract-financing-two-indicators}{%
+\section{Contract Financing: Two
+Indicators}\label{contract-financing-two-indicators}}
+
+\[ CF_i = \begin{cases} 1, \text{ if project } i \text{ receives contract financing}\\
+0, \text{ otherwise} \end{cases}\]
+
+\[ NCF_i = \begin{cases} 1, \text{ if project } i \text{ does not receive contract financing}\\
+0, \text{ otherwise} \end{cases}\]
+
+\[ \begin{aligned}
+Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Pre_t + \beta_2 (Treat_i \times Pre_t \times NCF_i) \\
+&+&\beta_3 CF_i + \beta_4 (CF_i \times Pre_t) + \beta_5 (Treat_i \times Pre_t \times CF_i) \\ 
+&+&X_i + (Pre_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
+\end{aligned}\]
+
+\begin{table}[H] \centering 
+  \caption{Effect of Contract Financing: Quickpay 2013-2016} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{3}{c}{$Delay_{it}$ (in days)} \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & 0.12 & $-$0.28 & $-$0.39 \\ 
+  & (0.24) & (1.00) & (1.02) \\ 
+  & & & \\ 
+ $Pre_t$ & $-$3.40$^{***}$ &  &  \\ 
+  & (0.28) &  &  \\ 
+  & & & \\ 
+ $Treat_i$x$Pre_t$x$NCF_i$ & 1.55$^{***}$ & 2.26$^{***}$ & 1.78$^{***}$ \\ 
+  & (0.44) & (0.55) & (0.55) \\ 
+  & & & \\ 
+ $CF_i$ & 6.24$^{***}$ & 0.71 & 0.70 \\ 
+  & (0.35) & (0.46) & (0.46) \\ 
+  & & & \\ 
+ $Pre_t$ x $CF_i$ & $-$3.01$^{***}$ & $-$2.57$^{***}$ & $-$2.48$^{***}$ \\ 
+  & (0.75) & (0.86) & (0.86) \\ 
+  & & & \\ 
+ $Pre_t$ x $CF_i$ x $Treat_i$ & 0.36 & 3.94$^{***}$ & 4.20$^{***}$ \\ 
+  & (1.05) & (1.17) & (1.18) \\ 
+  & & & \\ 
+ Constant & 17.70$^{***}$ &  &  \\ 
+  & (0.15) &  &  \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Year-Quarter Fixed Effects & No & Yes & Yes \\ 
+Firm Fixed Effects & No & Yes & Yes \\ 
+Task Fixed Effects & No & No & Yes \\ 
+Duration, Budget, Bids & No & Yes & Yes \\ 
+$Pre_t$  x  (Duration, Budget, Bids) & No & Yes & Yes \\ 
+Observations & 233,433 & 210,597 & 210,597 \\ 
+R$^{2}$ & 0.003 & 0.10 & 0.11 \\ 
+Adjusted R$^{2}$ & 0.003 & 0.05 & 0.05 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{3}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{3}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
 \hypertarget{receives-financial-aid}{%
 \section{Receives Financial Aid}\label{receives-financial-aid}}
 
@@ -259,7 +323,7 @@ Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Pre_t + \beta_2 (Treat_i \times 
 \end{aligned}\]
 
 \begin{table}[H] \centering 
-  \caption{Effect of Grants or C8A Participant: Quickpay 2009-2011} 
+  \caption{Effect of Grants or C8A Participant: Quickpay 2013-2016} 
   \label{} 
 \small 
 \begin{tabular}{@{\extracolsep{-2pt}}lccc} 
@@ -321,7 +385,7 @@ Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Pre_t + \beta_2 (Treat_i \times 
 \end{aligned}\]
 
 \begin{table}[H] \centering 
-  \caption{Effect of Contracts, Grants, or C8A Participant: Quickpay 2009-2011} 
+  \caption{Effect of Contracts, Grants, or C8A Participant: Quickpay 2013-2016} 
   \label{} 
 \small 
 \begin{tabular}{@{\extracolsep{-2pt}}lccc} 
