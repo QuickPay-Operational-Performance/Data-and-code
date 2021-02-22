@@ -62,7 +62,7 @@
 
 \title{First Implementation of QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Nov 15, 2020}
+\date{\vspace{-2.5em}Feb 22, 2021}
 
 \begin{document}
 \maketitle
@@ -356,6 +356,48 @@ Duration, Budget, Bids & No & Yes & Yes \\
 $Post_t$  x  (Duration, Budget, Bids) & No & Yes & Yes \\ 
 Observations & 173,900 & 155,638 & 155,638 \\ 
 R$^{2}$ & 0.01 & 0.11 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.05 & 0.05 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{3}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{3}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{treatment-intensity}{%
+\section{Treatment Intensity}\label{treatment-intensity}}
+
+\begin{table}[H] \centering 
+  \caption{Effect of Treatment Intensity: Quickpay 2009-2011} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{3}{c}{$Delay_{it}$ (in days)} \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ $theta_i$ & $-$17.02$^{***}$ & $-$5.76 & $-$3.55 \\ 
+  & (1.30) & (3.59) & (3.75) \\ 
+  & & & \\ 
+ $Post_t$ & 15.69$^{***}$ &  &  \\ 
+  & (0.59) &  &  \\ 
+  & & & \\ 
+ $theta_i$x$Post_t$ & 4.06$^{**}$ & 8.93$^{***}$ & 8.54$^{***}$ \\ 
+  & (1.92) & (2.32) & (2.35) \\ 
+  & & & \\ 
+ Constant & 34.09$^{***}$ &  &  \\ 
+  & (0.40) &  &  \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Year-Quarter Fixed Effects & No & Yes & Yes \\ 
+Firm Fixed Effects & No & Yes & Yes \\ 
+Task Fixed Effects & No & No & Yes \\ 
+Duration, Budget, Bids & No & Yes & Yes \\ 
+$Post_t$  x  (Duration, Budget, Bids) & No & Yes & Yes \\ 
+Observations & 137,274 & 122,866 & 122,866 \\ 
+R$^{2}$ & 0.01 & 0.10 & 0.11 \\ 
 Adjusted R$^{2}$ & 0.01 & 0.05 & 0.05 \\ 
 \hline 
 \hline \\[-1.8ex] 
