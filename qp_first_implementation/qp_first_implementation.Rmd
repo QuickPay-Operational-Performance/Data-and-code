@@ -677,10 +677,10 @@ reg_df[,high_i:=ifelse(is.na(rank_tercile),NaN,high_i)]
 baseline_reg=felm(winsorized_delay~treat_i+
                     medium_i+
                     high_i+
-                    post_t+
                     post_t:treat_i+
                     post_t:treat_i:medium_i+
-                    post_t:treat_i:high_i|
+                    post_t:treat_i:high_i+
+                    post_t|
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
@@ -691,10 +691,10 @@ baseline_reg=felm(winsorized_delay~treat_i+
 controls_reg=felm(winsorized_delay~treat_i+
                     medium_i+
                     high_i+
-                    post_t+
                     post_t:treat_i+
                     post_t:treat_i:medium_i+
                     post_t:treat_i:high_i+
+                    post_t+
                     winsorized_initial_duration_in_days_i+
                     winsorized_initial_budget_i+
                     number_of_offers_received+
@@ -830,10 +830,10 @@ reg_df[,theta_i:=rank_firm*treat_i]
 baseline_reg=felm(winsorized_delay~treat_i+
                     theta_i+
                     I(theta_i^2)+
-                    post_t+
                     post_t:treat_i+
                     post_t:theta_i+
-                    post_t:I(theta_i^2)|
+                    post_t:I(theta_i^2)+
+                    post_t|
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
@@ -844,10 +844,10 @@ baseline_reg=felm(winsorized_delay~treat_i+
 controls_reg=felm(winsorized_delay~treat_i+
                     theta_i+
                     I(theta_i^2)+
-                    post_t+
                     post_t:treat_i+
                     post_t:theta_i+
                     post_t:I(theta_i^2)+
+                    post_t+
                     winsorized_initial_duration_in_days_i+
                     winsorized_initial_budget_i+
                     number_of_offers_received+
@@ -918,14 +918,6 @@ all_fe_and_controls_reg=felm(winsorized_delay~treat_i+
                   exactDOF = TRUE,
                   cmethod = "reghdfe")
 
-vars.order=c('treat_i',
-             'theta_i',
-             'I(theta_i^2)',
-             'post_t',
-             'treat_i:post_t',
-             'theta_i:post_t',
-             'I(theta_i^2):post_t')
-
 stargazer(baseline_reg,
           controls_reg,
           time_fe_and_controls_reg,
@@ -936,7 +928,6 @@ stargazer(baseline_reg,
           title = "Discrete Portfolio Effects: Quickpay 2009-2011",
           dep.var.labels="$Delay_{it}$ (in days)",
           dep.var.caption = "",
-          order=paste0("^", vars.order , "$"),
           covariate.labels = c("$Treat_i$",
                                "$\\theta_i$",
                                "$\\theta_i^2$",
