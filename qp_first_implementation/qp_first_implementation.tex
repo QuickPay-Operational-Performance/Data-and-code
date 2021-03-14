@@ -62,7 +62,7 @@
 
 \title{First Implementation of QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Mar 01, 2021}
+\date{\vspace{-2.5em}Mar 14, 2021}
 
 \begin{document}
 \maketitle
@@ -365,126 +365,177 @@ Adjusted R$^{2}$ & 0.01 & 0.05 & 0.05 \\
 \end{tabular} 
 \end{table}
 
-\hypertarget{firm-share-of-small-projects}{%
-\section{Firm share of small
-projects}\label{firm-share-of-small-projects}}
+\hypertarget{firms-rank-order}{%
+\section{Firm's rank order}\label{firms-rank-order}}
 
-For project \(i\) of firm \(f\) in quarter \(t\), define
-\(\rho_f = \sum_{t\in FY2010,i\in S} \text{FAO}_{ift}/Sales_{f}^{FY2010}\).
+\begin{itemize}
+\tightlist
+\item
+  Consider a project \(i\) of firm \(f\) in quarter \(t\).
+\item
+  Let \(\Pi_{f,2010}\) denote all projects of firm \(f\) in Fiscal Year
+  2010.
+\item
+  Consider
+  \(\rho_f = \sum_{i \in \Pi_{f,2010}} (Treat_i \times FAO_{if})/Sales_{f,\text{2010}}\)
+  as the fraction of revenue a firm earns from small government
+  projects.
+\item
+  Let \(\Theta_f = rank(\rho_f)/N\) where \(rank(\rho_f)\) is the rank
+  statistic of \(\rho_{f}\) and \(N = \text{number of firms}.\) For
+  example, \(rank(\rho_f)=1\) if
+  \(\rho_f=\min(\rho_1,\rho_2,\ldots,\rho_N)\).
+\item
+  Put simply, \(\Theta_f\) is a firm's rank order based on the fraction
+  of revenue it earned from small government projects in FY 2010.
+\end{itemize}
 
-Define \(\alpha_f = rank(\rho_f)/N\) where \(rank(\rho_f)\) is the rank
-statistic of \(\rho_{f}\) and \(N = \text{number of firms}.\) For
-example, \(rank(\rho_f)=1\) if
-\(\rho_f=\min(\rho_1,\rho_2,\ldots,\rho_N)\).
+\hypertarget{portfolio-effects-discrete}{%
+\subsection{Portfolio Effects:
+Discrete}\label{portfolio-effects-discrete}}
 
-Put simply, \(\alpha_f\) is a firm's rank order based on the fraction of
-revenue it earned from small government projects in FY 2010.
+\begin{itemize}
+\tightlist
+\item
+  See
+  \href{https://github.com/QuickPay-Operational-Performance/Data-and-code/blob/master/notes/Portfolio\%20model\%2B0308.pdf}{Jie's
+  notes} for details.
+\item
+  Let \(Rank_f^{(k)}\) be an indicator for firm being in the k-th
+  tercile of \(Rank\).Define:
 
-\emph{Hypothesis: Firms that relied more on the government experienced
-greater delays on their projects after QuickPay was implemented.}
+  \begin{itemize}
+  \tightlist
+  \item
+    \(Medium_i = Treat_i * Rank_f^{(2)}\)
+  \item
+    \(High_i = Treat_i * Rank_f^{(3)}\)
+  \end{itemize}
+\end{itemize}
 
-\[ \begin{aligned}
-Delay_{it} &=& \beta_0+\beta_1 \alpha_f + \beta_2 Post_t + \beta_3 (\alpha_f \times Post_t) + \epsilon_{it}
-\end{aligned}\]
-
-\[ \begin{aligned}
-Delay_{it} &=& \beta_0+\beta_1 (\alpha_f \times Post_t) + \beta_2 X_i + \beta_3 (X_i \times Post_t) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
-\end{aligned}\]
+\[\begin{aligned} Delay_{it}&=&\beta_0+\beta_1 Treat_i + \beta_2 Medium_i+\beta_3 High_i +\beta_4 Post_t\\ && +\beta_5( Treat_i\times Post_t) + \beta_6(Medium_i\times Post_t) + \beta_7(High_i\times Post_t) + \epsilon_{it} \end{aligned}\]
 
 \begin{table}[H] \centering 
-  \caption{Effect of Treatment Intensity: Quickpay 2009-2011} 
+  \caption{Discrete Portfolio Effects: Quickpay 2009-2011} 
   \label{} 
 \small 
-\begin{tabular}{@{\extracolsep{-2pt}}lccc} 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{3}{c}{$Delay_{it}$ (in days)} \\ 
-\\[-1.8ex] & (1) & (2) & (3)\\ 
+\\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $\alpha_f$ & $-$0.85 &  &  \\ 
-  & (1.07) &  &  \\ 
-  & & & \\ 
- $Post_t$ & 13.54$^{***}$ &  &  \\ 
-  & (1.13) &  &  \\ 
-  & & & \\ 
- $\alpha_f \times Post_t$ & 6.49$^{***}$ & 7.39$^{***}$ & 7.46$^{***}$ \\ 
-  & (1.62) & (2.00) & (2.04) \\ 
-  & & & \\ 
- Constant & 27.74$^{***}$ &  &  \\ 
-  & (0.75) &  &  \\ 
-  & & & \\ 
+ $Treat_i$ & 2.85$^{**}$ & $-$0.51 & $-$0.37 & 0.38 & $-$6.90 \\ 
+  & (1.37) & (1.54) & (1.55) & (1.64) & (4.47) \\ 
+  & & & & & \\ 
+ $Medium_i$ & $-$2.92$^{**}$ & $-$1.11 & $-$1.32 & $-$0.60 & 12.24$^{**}$ \\ 
+  & (1.40) & (1.56) & (1.57) & (1.63) & (6.17) \\ 
+  & & & & & \\ 
+ $High_i$ & $-$3.26$^{**}$ & 0.09 & $-$0.07 & 1.04 & $-$3.11 \\ 
+  & (1.31) & (1.49) & (1.50) & (1.58) & (6.04) \\ 
+  & & & & & \\ 
+ $Post_t$ & 15.67$^{***}$ & 6.87$^{***}$ &  &  &  \\ 
+  & (1.05) & (1.83) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & $-$2.42 & 2.15 & 1.26 & 1.32 & 7.32$^{**}$ \\ 
+  & (2.04) & (2.36) & (2.39) & (2.43) & (3.16) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t \times Medium_i$ & 4.28$^{**}$ & 1.54 & 2.31 & 2.45 & 0.10 \\ 
+  & (2.09) & (2.38) & (2.41) & (2.45) & (3.22) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t \times High_i$ & 6.76$^{***}$ & 3.46 & 4.16$^{*}$ & 3.58 & $-$1.27 \\ 
+  & (1.97) & (2.28) & (2.31) & (2.35) & (3.07) \\ 
+  & & & & & \\ 
+ Constant & 27.08$^{***}$ & 46.30$^{***}$ &  &  &  \\ 
+  & (0.71) & (1.16) &  &  &  \\ 
+  & & & & & \\ 
 \hline \\[-1.8ex] 
-Year-Quarter Fixed Effects & No & Yes & Yes \\ 
-Firm Fixed Effects & No & Yes & Yes \\ 
-Task Fixed Effects & No & No & Yes \\ 
-Duration, Budget, Bids & No & Yes & Yes \\ 
-$Post_t \times$    (Duration, Budget, Bids) & No & Yes & Yes \\ 
-Observations & 71,753 & 63,216 & 63,216 \\ 
-R$^{2}$ & 0.01 & 0.11 & 0.12 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.04 & 0.04 \\ 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
+Task Fixed Effects & No & No & No & Yes & Yes \\ 
+Firm Fixed Effects & No & No & No & No & Yes \\ 
+Observations & 71,753 & 63,216 & 63,216 & 63,216 & 63,216 \\ 
+R$^{2}$ & 0.01 & 0.02 & 0.03 & 0.06 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.02 & 0.03 & 0.04 & 0.04 \\ 
 \hline 
 \hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{3}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{3}{r}{SEs are robust and clustered at the project level.} \\ 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
 \end{tabular} 
 \end{table}
 
-\hypertarget{terciles-of-alpha}{%
-\section{Terciles of Alpha}\label{terciles-of-alpha}}
+\hypertarget{portfolio-effects-continuous}{%
+\subsection{Portfolio Effects:
+Continuous}\label{portfolio-effects-continuous}}
 
-Define \(\alpha_f^{(k)} =\) k-th tercile of \(\alpha_f.\)
+\begin{itemize}
+\tightlist
+\item
+  See
+  \href{https://github.com/QuickPay-Operational-Performance/Data-and-code/blob/master/notes/Portfolio\%20model\%2B0308.pdf}{Jie's
+  notes} for details.
+\item
+  Define \(\theta_i = Treat_i*Rank_f\)
+\end{itemize}
 
-\includegraphics{qp_first_implementation_files/figure-latex/alpha_terciles-1.pdf}
+\[ \begin{aligned} Delay_{it}&=&\beta_0+\beta_1 Treat_i + \beta_2 \theta_i+\beta_3 \theta_i^2+\beta_4 Post_t\\&& + \beta_5 (Treat_i\times Post_t) + \beta_6 (\theta_i\times Post_t) +\beta_7 (\theta_i^2\times Post_t)+\epsilon_{it} \end{aligned} \]
 
 \begin{table}[H] \centering 
-  \caption{Effect of Treatment Intensity: Quickpay 2009-2011} 
+  \caption{Discrete Portfolio Effects: Quickpay 2009-2011} 
   \label{} 
 \small 
-\begin{tabular}{@{\extracolsep{-2pt}}lccc} 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{3}{c}{$Delay_{it}$ (in days)} \\ 
-\\[-1.8ex] & (1) & (2) & (3)\\ 
+\\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $\alpha_f^{(2)}$ & $-$1.21 &  &  \\ 
-  & (0.97) &  &  \\ 
-  & & & \\ 
- $\alpha_f^{(3)}$ & $-$1.07 &  &  \\ 
-  & (0.85) &  &  \\ 
-  & & & \\ 
- $Post_t$ & 14.68$^{***}$ &  &  \\ 
-  & (0.93) &  &  \\ 
-  & & & \\ 
- $\alpha_f^{(2)} \times Post_t$ & 3.09$^{**}$ & 5.75$^{***}$ & 6.00$^{***}$ \\ 
-  & (1.45) & (1.88) & (1.93) \\ 
-  & & & \\ 
- $\alpha_f^{(3)} \times Post_t$ & 5.24$^{***}$ & 4.79$^{***}$ & 4.79$^{***}$ \\ 
-  & (1.29) & (1.61) & (1.65) \\ 
-  & & & \\ 
- Constant & 27.93$^{***}$ &  &  \\ 
-  & (0.62) &  &  \\ 
-  & & & \\ 
+ $Treat_i$ & $-$1.44 & $-$4.54 & $-$4.12 & $-$2.25 & $-$19.01$^{**}$ \\ 
+  & (2.52) & (2.79) & (2.80) & (2.88) & (8.36) \\ 
+  & & & & & \\ 
+ $\theta_i$ & 15.63$^{*}$ & 12.24 & 11.06 & 8.21 & 92.44$^{***}$ \\ 
+  & (8.14) & (8.85) & (8.89) & (9.06) & (34.90) \\ 
+  & & & & & \\ 
+ $\theta_i^2$ & 15.67$^{***}$ & 6.85$^{***}$ &  &  &  \\ 
+  & (1.05) & (1.83) &  &  &  \\ 
+  & & & & & \\ 
+ $Post_t$ & $-$3.83 & 2.64 & 1.05 & 0.34 & 9.39 \\ 
+  & (3.74) & (4.31) & (4.38) & (4.45) & (5.79) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 4.16 & $-$3.40 & $-$0.02 & 3.49 & $-$4.73 \\ 
+  & (12.19) & (13.75) & (13.98) & (14.13) & (17.63) \\ 
+  & & & & & \\ 
+ $\theta_i \times Post_t$ & $-$16.17$^{**}$ & $-$8.85 & $-$8.10 & $-$5.07 & $-$88.48$^{***}$ \\ 
+  & (6.56) & (7.11) & (7.15) & (7.30) & (31.25) \\ 
+  & & & & & \\ 
+ $\theta_i^2 \times Post_t$ & 4.91 & 6.92 & 4.92 & 1.51 & 1.46 \\ 
+  & (9.87) & (11.09) & (11.27) & (11.38) & (13.78) \\ 
+  & & & & & \\ 
+ Constant & 27.08$^{***}$ & 46.30$^{***}$ &  &  &  \\ 
+  & (0.71) & (1.16) &  &  &  \\ 
+  & & & & & \\ 
 \hline \\[-1.8ex] 
-Year-Quarter Fixed Effects & No & Yes & Yes \\ 
-Firm Fixed Effects & No & Yes & Yes \\ 
-Task Fixed Effects & No & No & Yes \\ 
-Duration, Budget, Bids & No & Yes & Yes \\ 
-$Post_t \times$    (Duration, Budget, Bids) & No & Yes & Yes \\ 
-Observations & 71,753 & 63,216 & 63,216 \\ 
-R$^{2}$ & 0.01 & 0.11 & 0.12 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.04 & 0.04 \\ 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
+Task Fixed Effects & No & No & No & Yes & Yes \\ 
+Firm Fixed Effects & No & No & No & No & Yes \\ 
+Observations & 71,753 & 63,216 & 63,216 & 63,216 & 63,216 \\ 
+R$^{2}$ & 0.01 & 0.02 & 0.03 & 0.06 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.02 & 0.03 & 0.04 & 0.04 \\ 
 \hline 
 \hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{3}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{3}{r}{SEs are robust and clustered at the project level.} \\ 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
 \end{tabular} 
 \end{table}
 
-\hypertarget{treatment-intensity}{%
-\section{Treatment Intensity}\label{treatment-intensity}}
+--\textgreater{}
 
-Define \(\theta_i = Treat_i \times \alpha_f\)
+--\textgreater{} --\textgreater{} --\textgreater{} --\textgreater{}
+--\textgreater{}
 
 \end{document}

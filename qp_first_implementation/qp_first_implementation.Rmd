@@ -25,6 +25,7 @@ library(zoo) # for year quarter
 library(stargazer)
 library(broom)
 library(data.table)
+library(scales)
 ``` 
 ```{r read_data, include=FALSE}
 # read quarterly resampled data
@@ -599,23 +600,13 @@ stargazer(baseline_reg,
           header=F)
 ```
 
-# Firm share of small projects
+# Firm's rank order
 
-For project $i$ of firm $f$ in quarter $t$, define $\rho_f = \sum_{t\in FY2010,i\in S} \text{FAO}_{ift}/Sales_{f}^{FY2010}$. 
-
-Define $\alpha_f = rank(\rho_f)/N$ where $rank(\rho_f)$ is the rank statistic of $\rho_{f}$ and $N = \text{number of firms}.$ For example, $rank(\rho_f)=1$ if $\rho_f=\min(\rho_1,\rho_2,\ldots,\rho_N)$.
-
-Put simply, $\alpha_f$ is a firm's rank order based on the fraction of revenue it earned from small government projects in FY 2010.
-
-*Hypothesis: Firms that relied more on the government experienced greater delays on their projects after QuickPay was implemented.*
-
-$$ \begin{aligned}
-Delay_{it} &=& \beta_0+\beta_1 \alpha_f + \beta_2 Post_t + \beta_3 (\alpha_f \times Post_t) + \epsilon_{it}
-\end{aligned}$$
-
-$$ \begin{aligned}
-Delay_{it} &=& \beta_0+\beta_1 (\alpha_f \times Post_t) + \beta_2 X_i + \beta_3 (X_i \times Post_t) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
-\end{aligned}$$
+* Consider a project $i$ of firm $f$ in quarter $t$.
+* Let $\Pi_{f,2010}$ denote all projects of firm $f$ in Fiscal Year 2010. 
+* Consider $\rho_f = \sum_{i \in \Pi_{f,2010}} (Treat_i \times FAO_{if})/Sales_{f,\text{2010}}$ as the fraction of revenue a firm earns from small government projects.
+* Let $\Theta_f = rank(\rho_f)/N$ where $rank(\rho_f)$ is the rank statistic of $\rho_{f}$ and $N = \text{number of firms}.$ For example, $rank(\rho_f)=1$ if $\rho_f=\min(\rho_1,\rho_2,\ldots,\rho_N)$.
+* Put simply, $\Theta_f$ is a firm's rank order based on the fraction of revenue it earned from small government projects in FY 2010.
 
 ```{r fao, include=FALSE}
 # read raw data
@@ -647,147 +638,48 @@ small_projects_fao=merge(small_projects_fao,
 # We don't have sales data for all firms in intellect and some sales are 0 
 small_projects_fao[, rho:=ifelse(sales_fiscal_year=="2010 Sales Volume" & sales_volume>0,
                                  sum_fao/(sales_volume),NaN)] 
+small_projects_fao[,rescaled_rho:=rescale(rho)]
 
 # get empirical distribution of rho, defined by alpha
 small_projects_fao=small_projects_fao[order(rho)]
 denom=nrow(subset(small_projects_fao,sales_fiscal_year=="2010 Sales Volume" & sales_volume>0))
 
-small_projects_fao[,alpha_firm:=ifelse(sales_fiscal_year=="2010 Sales Volume" & sales_volume>0,
+small_projects_fao[,rank_firm:=ifelse(sales_fiscal_year=="2010 Sales Volume" & sales_volume>0,
                                   seq.int(nrow(small_projects_fao))/denom,NaN)]
 
-small_projects_fao=small_projects_fao[,c('recipient_duns','alpha_firm')]
-```
-
-```{r alpha_regs, echo=FALSE, results='asis'}
+small_projects_fao=small_projects_fao[,c('recipient_duns','rank_firm','rescaled_rho','rho')]
 
 reg_df=merge(reg_df,small_projects_fao,by='recipient_duns',all=T)
-
-# Baseline Regressions 
-baseline_reg=felm(winsorized_delay~post_t:alpha_firm+
-                    alpha_firm+
-                    post_t|
-                    0| # no fixed effects
-                    0| # no IV
-                    contract_award_unique_key, # clustered at project level
-                  data=reg_df, 
-                  exactDOF = TRUE, 
-                  cmethod = "reghdfe")
-
-# time fixed effects also included in the following specs
-controls_and_firm_fe=felm(winsorized_delay~post_t:alpha_firm+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
-                            number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            post_t:number_of_offers_received|
-                            recipient_duns+action_date_year_quarter|
-                            0|
-                            contract_award_unique_key,
-                          data=reg_df, 
-                          exactDOF = TRUE, 
-                          cmethod = "reghdfe")
-
-controls_and_firm_task_fe=felm(winsorized_delay~post_t:alpha_firm+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
-                            number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
-                            0|
-                            contract_award_unique_key,
-                          data=reg_df, 
-                          exactDOF = TRUE, 
-                          cmethod = "reghdfe")
-
-vars.order=c('alpha_firm',
-             'post_t',
-             'post_t:alpha_firm')
-
-stargazer(baseline_reg,
-          controls_and_firm_fe,
-          controls_and_firm_task_fe,
-          digits=2,
-          digits.extra=2,
-          title = "Effect of Treatment Intensity: Quickpay 2009-2011",
-          dep.var.labels="$Delay_{it}$ (in days)",
-          dep.var.caption = "",
-          order=paste0("^", vars.order , "$"),
-          covariate.labels = c("$\\alpha_f$",
-                               "$Post_t$",
-                               "$\\alpha_f \\times Post_t$",
-                               "Constant"),
-          object.names=FALSE, 
-          model.numbers=TRUE,
-          font.size = "small",
-          omit.stat=c("f", "ser"),
-          column.sep.width = "-2pt",
-          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
-                           c("Firm Fixed Effects","No","Yes","Yes"),
-                           c("Task Fixed Effects","No","No","Yes"),
-                           c("Duration, Budget, Bids","No","Yes","Yes"),
-                           c("$Post_t \\times$    (Duration, Budget, Bids)","No","Yes","Yes")),
-          omit=c('winsorized_initial_duration_in_days_i',
-                  'winsorized_initial_budget_i',
-                   'number_of_offers_received',
-                   'post_t:winsorized_initial_duration_in_days_i',
-                   'post_t:winsorized_initial_budget_i',
-                   'post_t:number_of_offers_received'),
-         table.placement = "H",
-         style="default",
-        notes=c("Each observation is a project-quarter.",
-                  "SEs are robust and clustered at the project level."),
-          header=F)
 ```
 
-# Terciles of Alpha
+## Portfolio Effects: Discrete
 
-Define $\alpha_f^{(k)} =$ k-th tercile of $\alpha_f.$
+* See [Jie’s notes](https://github.com/QuickPay-Operational-Performance/Data-and-code/blob/master/notes/Portfolio%20model%2B0308.pdf) for details.
+* Let $Rank_f^{(k)}$ be an indicator for firm being in the k-th tercile of $Rank$.Define:
+  * $Medium_i = Treat_i * Rank_f^{(2)}$
+  * $High_i = Treat_i * Rank_f^{(3)}$
 
-```{r alpha_terciles, echo=FALSE, results='asis'}
+$$\begin{aligned} Delay_{it}&=&\beta_0+\beta_1 Treat_i + \beta_2 Medium_i+\beta_3 High_i +\beta_4 Post_t\\ && +\beta_5( Treat_i\times Post_t) + \beta_6(Medium_i\times Post_t) + \beta_7(High_i\times Post_t) + \epsilon_{it} \end{aligned}$$
 
-reg_df[,alpha_tercile:=ntile(alpha_firm,3)]
-reg_df[,alpha_first_tercile:=ifelse(alpha_tercile==1,1,0)]
-reg_df[,alpha_second_tercile:=ifelse(alpha_tercile==2,1,0)]
-reg_df[,alpha_third_tercile:=ifelse(alpha_tercile==3,1,0)]
+```{r portfolio_regs_discrete, echo=FALSE, results='asis'}
 
-plot_df=na.omit(reg_df)[, mean(winsorized_delay),
-                        by=list(alpha_tercile,action_date_year_quarter)]
+reg_df[,rank_tercile:=ntile(rank_firm,3)]
 
-plot_df[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
-plot_df=plot_df[order(action_date_year_quarter)]
+# This will also set all NA rank_terciles to zero
+reg_df[,medium_i:=ifelse(rank_tercile==2 & treat_i==1,1,0)]
+reg_df[,high_i:=ifelse(rank_tercile==3 & treat_i==1,1,0)]
 
-ggplot(plot_df, aes(year_quarter, 
-                    V1,
-                    group = as.factor(alpha_tercile), 
-               shape=as.factor(alpha_tercile), 
-               linetype=as.factor(alpha_tercile)))+
-    geom_line() +    
-    scale_x_discrete(limits=plot_df$year_quarter)+
-    geom_point(size=3)+
-    labs(x="Year-Quarter", y = "Average delay per quarter (in days)")+  
-    annotate("text", label = "QuickPay\n implemented", x = 11, y = 50,color="dimgrey")+
-    geom_vline(xintercept = 15, linetype="solid", 
-                color = "gray", size=1.5)+
-    scale_shape_discrete(name  ="Firm tercile",
-                          breaks=c("1","2","3"),
-                          labels=c("First","Second","Third"))+
-    scale_linetype_discrete(name  ="Firm tercile",
-                          breaks=c("1","2","3"),
-                          labels=c("First","Second","Third"))+
-    theme(axis.text.x = element_text(angle = 90),
-    axis.line = element_line(),
-    panel.border = element_blank(),
-    panel.background = element_blank(),
-    legend.text = element_text(size=12))
+# set values to NA for those observations whose firm's rank is not defined
+reg_df[,medium_i:=ifelse(is.na(rank_tercile),NaN,medium_i)]
+reg_df[,high_i:=ifelse(is.na(rank_tercile),NaN,high_i)]
 
-baseline_reg=felm(winsorized_delay~post_t+
-                    alpha_second_tercile+
-                    alpha_third_tercile+
-                    post_t:alpha_second_tercile+
-                    post_t:alpha_third_tercile|
+baseline_reg=felm(winsorized_delay~treat_i+
+                    medium_i+
+                    high_i+
+                    post_t+
+                    post_t:treat_i+
+                    post_t:treat_i:medium_i+
+                    post_t:treat_i:high_i|
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
@@ -795,296 +687,812 @@ baseline_reg=felm(winsorized_delay~post_t+
                   exactDOF = TRUE,
                   cmethod = "reghdfe")
 
-# time fixed effects also included in the following specs
-controls_and_firm_fe=felm(winsorized_delay~post_t:alpha_second_tercile+
-                            post_t:alpha_third_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
-                            number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            post_t:number_of_offers_received|
-                            recipient_duns+action_date_year_quarter|
-                            0|
-                            contract_award_unique_key,
-                          data=reg_df, 
-                          exactDOF = TRUE, 
-                          cmethod = "reghdfe")
+controls_reg=felm(winsorized_delay~treat_i+
+                    medium_i+
+                    high_i+
+                    post_t+
+                    post_t:treat_i+
+                    post_t:treat_i:medium_i+
+                    post_t:treat_i:high_i+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    0| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
 
-controls_and_firm_task_fe=felm(winsorized_delay~post_t:alpha_second_tercile+
-                            post_t:alpha_third_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
-                            number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
-                            0|
-                            contract_award_unique_key,
-                          data=reg_df, 
-                          exactDOF = TRUE, 
-                          cmethod = "reghdfe")
+time_fe_and_controls_reg=felm(winsorized_delay~treat_i+
+                    medium_i+
+                    high_i+
+                    post_t:treat_i+
+                    post_t:treat_i:medium_i+
+                    post_t:treat_i:high_i+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    action_date_year_quarter| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
 
-vars.order=c('alpha_second_tercile',
-             'alpha_third_tercile',
+time_task_fe_and_controls_reg=felm(winsorized_delay~treat_i+
+                    medium_i+
+                    high_i+
+                    post_t:treat_i+
+                    post_t:treat_i:medium_i+
+                    post_t:treat_i:high_i+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    product_or_service_code+action_date_year_quarter| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+all_fe_and_controls_reg=felm(winsorized_delay~treat_i+
+                    medium_i+
+                    high_i+
+                    post_t:treat_i+
+                    post_t:treat_i:medium_i+
+                    post_t:treat_i:high_i+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    product_or_service_code+action_date_year_quarter+recipient_duns| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+vars.order=c('treat_i',
+             'medium_i',
+             'high_i',
              'post_t',
-             'post_t:alpha_second_tercile',
-             'post_t:alpha_third_tercile')
+             'treat_i:post_t',
+             'treat_i:medium_i:post_t',
+             'treat_i:high_i:post_t')
 
 stargazer(baseline_reg,
-          controls_and_firm_fe,
-          controls_and_firm_task_fe,
+          controls_reg,
+          time_fe_and_controls_reg,
+          time_task_fe_and_controls_reg,
+          all_fe_and_controls_reg,
           digits=2,
           digits.extra=2,
-          title = "Effect of Treatment Intensity: Quickpay 2009-2011",
+          title = "Discrete Portfolio Effects: Quickpay 2009-2011",
           dep.var.labels="$Delay_{it}$ (in days)",
           dep.var.caption = "",
           order=paste0("^", vars.order , "$"),
-          covariate.labels = c("$\\alpha_f^{(2)}$",
-                               "$\\alpha_f^{(3)}$",
+          covariate.labels = c("$Treat_i$",
+                               "$Medium_i$",
+                               "$High_i$",
                                "$Post_t$",
-                               "$\\alpha_f^{(2)} \\times Post_t$",
-                               "$\\alpha_f^{(3)} \\times Post_t$",
+                               "$Treat_i \\times Post_t$",
+                               "$Treat_i \\times Post_t \\times Medium_i$",
+                               "$Treat_i \\times Post_t \\times High_i$",
                                "Constant"),
           object.names=FALSE, 
           model.numbers=TRUE,
           font.size = "small",
           omit.stat=c("f", "ser"),
           column.sep.width = "-2pt",
-          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
-                           c("Firm Fixed Effects","No","Yes","Yes"),
-                           c("Task Fixed Effects","No","No","Yes"),
-                           c("Duration, Budget, Bids","No","Yes","Yes"),
-                           c("$Post_t \\times$    (Duration, Budget, Bids)","No","Yes","Yes")),
+          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
+                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))
+                           ),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
                    'post_t:winsorized_initial_duration_in_days_i',
                    'post_t:winsorized_initial_budget_i',
                    'post_t:number_of_offers_received'),
-         table.placement = "H",
-         style="default",
-        notes=c("Each observation is a project-quarter.",
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level."),
           header=F)
 ```
 
-# Treatment Intensity
+## Portfolio Effects: Continuous
 
-Define $\theta_i = Treat_i \times \alpha_f$
+* See [Jie’s notes](https://github.com/QuickPay-Operational-Performance/Data-and-code/blob/master/notes/Portfolio%20model%2B0308.pdf) for details.
+* Define $\theta_i = Treat_i*Rank_f$
 
-```{r treat_intensity_regs, echo=FALSE, results='asis',eval = FALSE}
+$$ \begin{aligned} Delay_{it}&=&\beta_0+\beta_1 Treat_i + \beta_2 \theta_i+\beta_3 \theta_i^2+\beta_4 Post_t\\&& + \beta_5 (Treat_i\times Post_t) + \beta_6 (\theta_i\times Post_t) +\beta_7 (\theta_i^2\times Post_t)+\epsilon_{it} \end{aligned} $$
 
-reg_df[,treat_intensity_i:=treat_i*alpha_firm]
+```{r portfolio_regs_continuous, echo=FALSE, results='asis'}
 
-# Baseline Regressions 
-baseline_reg=felm(winsorized_delay~post_t:treat_intensity_i+
-                    treat_intensity_i+
-                    post_t|
+reg_df[,theta_i:=rank_firm*treat_i]
+
+baseline_reg=felm(winsorized_delay~treat_i+
+                    theta_i+
+                    I(theta_i^2)+
+                    post_t+
+                    post_t:treat_i+
+                    post_t:theta_i+
+                    post_t:I(theta_i^2)|
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
-                  data=reg_df, 
-                  exactDOF = TRUE, 
+                  data=reg_df,
+                  exactDOF = TRUE,
                   cmethod = "reghdfe")
 
-# time fixed effects also included in the following specs
-controls_and_firm_fe=felm(winsorized_delay~post_t:treat_intensity_i+
-                            treat_intensity_i+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
-                            number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            post_t:number_of_offers_received|
-                            recipient_duns+action_date_year_quarter|
-                            0|
-                            contract_award_unique_key,
-                          data=reg_df, 
-                          exactDOF = TRUE, 
-                          cmethod = "reghdfe")
+controls_reg=felm(winsorized_delay~treat_i+
+                    theta_i+
+                    I(theta_i^2)+
+                    post_t+
+                    post_t:treat_i+
+                    post_t:theta_i+
+                    post_t:I(theta_i^2)+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    0| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
 
-controls_and_firm_task_fe=felm(winsorized_delay~post_t:treat_intensity_i+
-                                 treat_intensity_i+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
-                            number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
-                            0|
-                            contract_award_unique_key,
-                          data=reg_df, 
-                          exactDOF = TRUE, 
-                          cmethod = "reghdfe")
+time_fe_and_controls_reg=felm(winsorized_delay~treat_i+
+                    theta_i+
+                    I(theta_i^2)+
+                    post_t:treat_i+
+                    post_t:theta_i+
+                    post_t:I(theta_i^2)+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    action_date_year_quarter| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
 
-vars.order=c('treat_intensity_i',
+time_task_fe_and_controls_reg=felm(winsorized_delay~treat_i+
+                    theta_i+
+                    I(theta_i^2)+
+                    post_t:treat_i+
+                    post_t:theta_i+
+                    post_t:I(theta_i^2)+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    product_or_service_code+action_date_year_quarter| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+all_fe_and_controls_reg=felm(winsorized_delay~treat_i+
+                    theta_i+
+                    I(theta_i^2)+
+                    post_t:treat_i+
+                    post_t:theta_i+
+                    post_t:I(theta_i^2)+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    product_or_service_code+action_date_year_quarter+recipient_duns| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+vars.order=c('treat_i',
+             'theta_i',
+             'I(theta_i^2)',
              'post_t',
-             'post_t:treat_intensity_i')
+             'treat_i:post_t',
+             'theta_i:post_t',
+             'I(theta_i^2):post_t')
 
 stargazer(baseline_reg,
-          controls_and_firm_fe,
-          controls_and_firm_task_fe,
+          controls_reg,
+          time_fe_and_controls_reg,
+          time_task_fe_and_controls_reg,
+          all_fe_and_controls_reg,
           digits=2,
           digits.extra=2,
-          title = "Effect of Treatment Intensity: Quickpay 2009-2011",
+          title = "Discrete Portfolio Effects: Quickpay 2009-2011",
           dep.var.labels="$Delay_{it}$ (in days)",
           dep.var.caption = "",
           order=paste0("^", vars.order , "$"),
-          covariate.labels = c("$\\theta_i$",
+          covariate.labels = c("$Treat_i$",
+                               "$\\theta_i$",
+                               "$\\theta_i^2$",
                                "$Post_t$",
+                               "$Treat_i \\times Post_t$",
                                "$\\theta_i \\times Post_t$",
+                               "$\\theta_i^2 \\times Post_t$",
                                "Constant"),
           object.names=FALSE, 
           model.numbers=TRUE,
           font.size = "small",
           omit.stat=c("f", "ser"),
           column.sep.width = "-2pt",
-          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
-                           c("Firm Fixed Effects","No","Yes","Yes"),
-                           c("Task Fixed Effects","No","No","Yes"),
-                           c("Duration, Budget, Bids","No","Yes","Yes"),
-                           c("$Post_t \\times$    (Duration, Budget, Bids)","No","Yes","Yes")),
+          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
+                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))
+                           ),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
                    'post_t:winsorized_initial_duration_in_days_i',
                    'post_t:winsorized_initial_budget_i',
                    'post_t:number_of_offers_received'),
-         table.placement = "H",
-         style="default",
-        notes=c("Each observation is a project-quarter.",
-                  "SEs are robust and clustered at the project level."),
-          header=F)
-
-```
-
-```{r theta_terciles, echo=FALSE, results='asis',eval = FALSE}
-
-reg_df[,treat_tercile:=ntile(treat_intensity_i,3)]
-reg_df[,treat_first_tercile:=ifelse(treat_tercile==1,1,0)]
-reg_df[,treat_second_tercile:=ifelse(treat_tercile==2,1,0)]
-reg_df[,treat_third_tercile:=ifelse(treat_tercile==3,1,0)]
-
-plot_df=na.omit(reg_df)[, mean(winsorized_delay),
-                        by=list(treat_tercile,action_date_year_quarter)]
-
-plot_df[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
-plot_df=plot_df[order(action_date_year_quarter)]
-
-ggplot(plot_df, aes(year_quarter, 
-                    V1,
-                    group = as.factor(treat_tercile), 
-               shape=as.factor(treat_tercile), 
-               linetype=as.factor(treat_tercile)))+
-    geom_line() +    
-    scale_x_discrete(limits=plot_df$year_quarter)+
-    geom_point(size=3)+
-    labs(x="Year-Quarter", y = "Average delay per quarter (in days)")+  
-    annotate("text", label = "QuickPay\n implemented", x = 11, y = 50,color="dimgrey")+
-    geom_vline(xintercept = 15, linetype="solid", 
-                color = "gray", size=1.5)+
-    scale_shape_discrete(name  ="Treat tercile",
-                          breaks=c("1","2","3"),
-                          labels=c("First","Second","Third"))+
-    scale_linetype_discrete(name  ="Treat tercile",
-                          breaks=c("1","2","3"),
-                          labels=c("First","Second","Third"))+
-    theme(axis.text.x = element_text(angle = 90),
-    axis.line = element_line(),
-    panel.border = element_blank(),
-    panel.background = element_blank(),
-    legend.text = element_text(size=12))
-
-baseline_reg=felm(winsorized_delay~post_t+
-                    treat_second_tercile+
-                    treat_third_tercile+
-                    post_t:treat_second_tercile+
-                    post_t:treat_third_tercile|
-                    0| # no fixed effects
-                    0| # no IV
-                    contract_award_unique_key, # clustered at project level
-                  data=reg_df,
-                  exactDOF = TRUE,
-                  cmethod = "reghdfe")
-
-# time fixed effects also included in the following specs
-controls_and_firm_fe=felm(winsorized_delay~post_t:treat_second_tercile+
-                            post_t:treat_third_tercile+
-                              treat_second_tercile+
-                              treat_third_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
-                            number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            post_t:number_of_offers_received|
-                            recipient_duns+action_date_year_quarter|
-                            0|
-                            contract_award_unique_key,
-                          data=reg_df, 
-                          exactDOF = TRUE, 
-                          cmethod = "reghdfe")
-
-controls_and_firm_task_fe=felm(winsorized_delay~post_t:treat_second_tercile+
-                            post_t:treat_third_tercile+
-                              treat_second_tercile+
-                              treat_third_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
-                            number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
-                            0|
-                            contract_award_unique_key,
-                          data=reg_df, 
-                          exactDOF = TRUE, 
-                          cmethod = "reghdfe")
-
-vars.order=c('treat_second_tercile',
-             'treat_third_tercile',
-             'post_t',
-             'post_t:treat_second_tercile',
-             'post_t:treat_third_tercile')
-
-stargazer(baseline_reg,
-          controls_and_firm_fe,
-          controls_and_firm_task_fe,
-          digits=2,
-          digits.extra=2,
-          title = "Effect of Treatment Intensity: Quickpay 2009-2011",
-          dep.var.labels="$Delay_{it}$ (in days)",
-          dep.var.caption = "",
-          order=paste0("^", vars.order , "$"),
-          covariate.labels = c("$\\theta_i^{(2)}$",
-                               "$\\theta_i^{(3)}$",
-                               "$Post_t$",
-                               "$\\theta_f^{(2)} \\times Post_t$",
-                               "$\\theta_f^{(3)} \\times Post_t$",
-                               "Constant"),
-          object.names=FALSE, 
-          model.numbers=TRUE,
-          font.size = "small",
-          omit.stat=c("f", "ser"),
-          column.sep.width = "-2pt",
-          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
-                           c("Firm Fixed Effects","No","Yes","Yes"),
-                           c("Task Fixed Effects","No","No","Yes"),
-                           c("Duration, Budget, Bids","No","Yes","Yes"),
-                           c("$Post_t \\times$    (Duration, Budget, Bids)","No","Yes","Yes")),
-          omit=c('winsorized_initial_duration_in_days_i',
-                  'winsorized_initial_budget_i',
-                   'number_of_offers_received',
-                   'post_t:winsorized_initial_duration_in_days_i',
-                   'post_t:winsorized_initial_budget_i',
-                   'post_t:number_of_offers_received'),
-         table.placement = "H",
-         style="default",
-        notes=c("Each observation is a project-quarter.",
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level."),
           header=F)
 ```
+
+<!-- ## Continuous Treatment  -->
+
+<!-- ```{r trying_sthn, eval=False} -->
+<!-- a=subset(df_raw_first,action_date_fiscal_year==2010)[,n_distinct(contract_award_unique_key), by= c('recipient_duns')] -->
+<!-- a_small=subset(df_raw_first,action_date_fiscal_year==2010 & contracting_officers_determination_of_business_size_code=="S")[,n_distinct(contract_award_unique_key), by= c('recipient_duns')] -->
+<!-- setnames(a,"V1","total_num_of_projects") -->
+<!-- setnames(a_small,"V1","num_of_small_projects") -->
+<!-- a1=merge(a,a_small,on=recipient_duns,all=T) -->
+<!-- a1[is.na(a1)] <- 0 -->
+<!-- a1[,pc_small_projects:=num_of_small_projects*100/total_num_of_projects] -->
+<!-- a1[,ratio_small_projects:=num_of_small_projects/total_num_of_projects] -->
+<!-- a1=merge(a1,reg_df,on=recipient_duns,all=T) -->
+
+<!-- baseline_reg=felm(winsorized_delay~ -->
+<!--                     ratio_small_projects+ -->
+<!--                     post_t:ratio_small_projects+ -->
+<!--                     post_t| -->
+<!-- 0| # no fixed effects -->
+<!-- 0| # no IV -->
+<!-- contract_award_unique_key, # clustered at project level -->
+<!-- data=a1, -->
+<!-- exactDOF = TRUE, -->
+<!-- cmethod = "reghdfe") -->
+
+<!-- controls_reg=felm(winsorized_delay~ -->
+<!--                     ratio_small_projects+ -->
+<!--                     post_t:ratio_small_projects+ -->
+<!--                     post_t+ -->
+<!--                     winsorized_initial_duration_in_days_i+ -->
+<!--                     winsorized_initial_budget_i+ -->
+<!--                     number_of_offers_received+ -->
+<!--                     post_t:winsorized_initial_duration_in_days_i+ -->
+<!--                     post_t:winsorized_initial_budget_i+ -->
+<!--                     post_t:number_of_offers_received| -->
+<!-- 0| # no fixed effects -->
+<!-- 0| # no IV -->
+<!-- contract_award_unique_key, # clustered at project level -->
+<!-- data=a1, -->
+<!-- exactDOF = TRUE, -->
+<!-- cmethod = "reghdfe") -->
+
+<!-- controls_and_time_task_fe_reg=felm(winsorized_delay~ -->
+<!--                     ratio_small_projects+ -->
+<!--                     post_t:ratio_small_projects+ -->
+<!--                     winsorized_initial_duration_in_days_i+ -->
+<!--                     winsorized_initial_budget_i+ -->
+<!--                     number_of_offers_received+ -->
+<!--                     post_t:winsorized_initial_duration_in_days_i+ -->
+<!--                     post_t:winsorized_initial_budget_i+ -->
+<!--                     post_t:number_of_offers_received| -->
+<!-- action_date_year_quarter+product_or_service_code| # no fixed effects -->
+<!-- 0| # no IV -->
+<!-- contract_award_unique_key, # clustered at project level -->
+<!-- data=a1, -->
+<!-- exactDOF = TRUE, -->
+<!-- cmethod = "reghdfe") -->
+
+<!-- controls_and_all_fe_reg=felm(winsorized_delay~ -->
+<!--                     post_t:ratio_small_projects+ -->
+<!--                     winsorized_initial_duration_in_days_i+ -->
+<!--                     winsorized_initial_budget_i+ -->
+<!--                     number_of_offers_received+ -->
+<!--                     post_t:winsorized_initial_duration_in_days_i+ -->
+<!--                     post_t:winsorized_initial_budget_i+ -->
+<!--                     post_t:number_of_offers_received| -->
+<!-- recipient_duns+action_date_year_quarter+product_or_service_code| # no fixed effects -->
+<!-- 0| # no IV -->
+<!-- contract_award_unique_key, # clustered at project level -->
+<!-- data=a1, -->
+<!-- exactDOF = TRUE, -->
+<!-- cmethod = "reghdfe") -->
+
+<!-- ``` -->
+<!-- $$ \begin{aligned} -->
+<!-- Delay_{it} &=& \beta_0 + \beta_1 Rank_f + \beta_2 Treat_i + \beta_3 Post_t + \beta_4 (Post_t \times Treat_i) + \\  -->
+<!-- && \beta_5 (Post_t \times Treat_i \times Rank_f) + \epsilon_{it} -->
+<!-- \end{aligned}$$ -->
+
+<!-- * $Rank_f$ is time-invariant so interaction with $Post_t$ irrelevant -->
+<!-- * In this model, we have: -->
+<!--    * Small + Before QP = $\beta_0 + \beta_1 Rank_f + \beta_2$ -->
+<!--    * Large + Before QP = $\beta_0 +\beta_1 Rank_f$ -->
+<!--    * $\Delta_{before}$ = $\beta_2$ -->
+<!--    * Small + After QP = $\beta_0 + \beta_1 Rank_f + \beta_2+\beta_3 + \beta_4+\beta_5 Rank_f$ -->
+<!--    * Large + After QP = $\beta_0 +\beta_1 Rank_f + \beta_3$ -->
+<!--    * $\Delta_{after}$ = $\beta_2+\beta_4+\beta_5 Rank_f$ -->
+<!--    * Treatment effect = $\Delta_{after} - \Delta_{before} = \beta_4 + \beta_5 Rank_f$ -->
+<!-- * One percentage point increase in $Rank_f$ increases the treatment effect by $\beta_5$. Put differently, quickpay increases small project delays by $\beta_4$ days for all firms, and an additional $\beta_5*Rank_f$ days of delay would occur based on the firm’s rank order.  -->
+
+<!-- ```{r rank_continuous, echo=FALSE, results='asis'} -->
+
+<!-- baseline_reg=felm(winsorized_delay~treat_i+post_t+rank_firm+ -->
+<!-- post_t:treat_i+ -->
+<!-- post_t:treat_i:rank_firm| -->
+<!-- 0| # no fixed effects -->
+<!-- 0| # no IV -->
+<!-- contract_award_unique_key, # clustered at project level -->
+<!-- data=reg_df, -->
+<!-- exactDOF = TRUE, -->
+<!-- cmethod = "reghdfe") -->
+
+<!-- time_fe_reg=felm(winsorized_delay~treat_i+rank_firm+ -->
+<!-- post_t:treat_i+ -->
+<!-- post_t:treat_i:rank_firm| -->
+<!-- action_date_year_quarter| # no fixed effects -->
+<!-- 0| # no IV -->
+<!-- contract_award_unique_key, # clustered at project level -->
+<!-- data=reg_df, -->
+<!-- exactDOF = TRUE, -->
+<!-- cmethod = "reghdfe") -->
+
+<!-- time_and_task_fe_reg=felm(winsorized_delay~treat_i+rank_firm+ -->
+<!-- post_t:treat_i+ -->
+<!-- post_t:treat_i:rank_firm| -->
+<!-- product_or_service_code+action_date_year_quarter| # no fixed effects -->
+<!-- 0| # no IV -->
+<!-- contract_award_unique_key, # clustered at project level -->
+<!-- data=reg_df, -->
+<!-- exactDOF = TRUE, -->
+<!-- cmethod = "reghdfe") -->
+
+<!-- before_qp_firms=unique(subset(reg_df,post_t==0)$recipient_duns) -->
+<!-- after_qp_firms=unique(subset(reg_df,post_t==1)$recipient_duns) -->
+<!-- firms_in_both_periods=intersect(before_qp_firms,after_qp_firms) -->
+
+<!-- controls_reg=felm(winsorized_delay~ -->
+<!--                     treat_i+ -->
+<!--                     rank_firm+ -->
+<!--                     post_t:treat_i+ -->
+<!--                     post_t:treat_i:rank_firm+ -->
+<!--                     post_t+ -->
+<!--                     winsorized_initial_duration_in_days_i+ -->
+<!--                     winsorized_initial_budget_i+ -->
+<!--                     number_of_offers_received+ -->
+<!--                     post_t:winsorized_initial_duration_in_days_i+ -->
+<!--                     post_t:winsorized_initial_budget_i+ -->
+<!--                     post_t:number_of_offers_received| -->
+<!-- 0| # no fixed effects -->
+<!-- 0| # no IV -->
+<!-- contract_award_unique_key, # clustered at project level -->
+<!-- data=subset(reg_df, recipient_duns%in% firms_in_both_periods), -->
+<!-- exactDOF = TRUE, -->
+<!-- cmethod = "reghdfe") -->
+
+<!-- vars.order=c('treat_i', -->
+<!--              'rank_second_tercile', -->
+<!--              'rank_third_tercile', -->
+<!--              'post_t', -->
+<!--              'treat_i:post_t:rank_first_tercile', -->
+<!--              'treat_i:post_t:rank_second_tercile', -->
+<!--              'treat_i:post_t:rank_second_tercile') -->
+
+<!-- stargazer(baseline_reg, -->
+<!--           time_fe, -->
+<!--           time_and_task_fe_reg, -->
+<!--           digits=2, -->
+<!--           digits.extra=2, -->
+<!--           title = "Effect of Treatment Intensity: Quickpay 2009-2011", -->
+<!--           dep.var.labels="$Delay_{it}$ (in days)", -->
+<!--           dep.var.caption = "", -->
+<!--           order=paste0("^", vars.order , "$"), -->
+<!--           covariate.labels = c("$Treat_i$", -->
+<!--                                "$Rank_{(2)}$", -->
+<!--                                "$Rank_{(3)}$", -->
+<!--                                "$Post_t$", -->
+<!--                                "$Treat_i \\times Post_t \\times Rank_{(1)}$", -->
+<!--                                "$Treat_i \\times Post_t \\times Rank_{(2)}$", -->
+<!--                                "$Treat_i \\times Post_t \\times Rank_{(3)}$", -->
+<!--                                "Constant"), -->
+<!--           object.names=FALSE,  -->
+<!--           model.numbers=TRUE, -->
+<!--           font.size = "small", -->
+<!--           omit.stat=c("f", "ser"), -->
+<!--           column.sep.width = "-2pt", -->
+<!--           add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes","Yes","Yes"), -->
+<!--                            c("Task Fixed Effects","No","No","No","Yes","Yes"), -->
+<!--                            c("Firm Fixed Effects","No","No","No","No","Yes"), -->
+<!--                            c("Duration, Budget, Bids","No","No","Yes","Yes","Yes"), -->
+<!--                            c("$Post_t \\times$    (Duration, Budget, Bids)","No","No","Yes","Yes","Yes")), -->
+<!--           omit=c('winsorized_initial_duration_in_days_i', -->
+<!--                   'winsorized_initial_budget_i', -->
+<!--                    'number_of_offers_received', -->
+<!--                    'post_t:winsorized_initial_duration_in_days_i', -->
+<!--                    'post_t:winsorized_initial_budget_i', -->
+<!--                    'post_t:number_of_offers_received'), -->
+<!--          table.placement = "H", -->
+<!--          style="default", -->
+<!--          notes=c("Each observation is a project-quarter.", -->
+<!--                   "SEs are robust and clustered at the project level."), -->
+<!--          header=F) -->
+
+<!-- ``` -->
+
+<!-- ```{r quadratic_rank_continuous, echo=FALSE, results='asis'} -->
+
+<!-- quadratic_reg=felm(winsorized_delay~treat_i+post_t+I(100*rank_firm)+ -->
+<!-- post_t:treat_i+ -->
+<!-- post_t:treat_i:I(100*rank_firm)+ -->
+<!-- post_t:treat_i:I((100*rank_firm)^2)| -->
+<!-- 0| # no fixed effects -->
+<!-- 0| # no IV -->
+<!-- contract_award_unique_key, # clustered at project level -->
+<!-- data=reg_df, -->
+<!-- exactDOF = TRUE, -->
+<!-- cmethod = "reghdfe") -->
+
+<!-- quadratic_time_fe_reg=felm(winsorized_delay~treat_i+I(100*rank_firm)+ -->
+<!-- post_t:treat_i+ -->
+<!-- post_t:treat_i:I(100*rank_firm)+ -->
+<!-- post_t:treat_i:I((100*rank_firm)^2)| -->
+<!-- action_date_year_quarter| # no fixed effects -->
+<!-- 0| # no IV -->
+<!-- contract_award_unique_key, # clustered at project level -->
+<!-- data=reg_df, -->
+<!-- exactDOF = TRUE, -->
+<!-- cmethod = "reghdfe") -->
+
+<!-- quadratic_time_and_task_fe_reg=felm(winsorized_delay~treat_i+I(100*rank_firm)+ -->
+<!-- post_t:treat_i+ -->
+<!-- post_t:treat_i:I(100*rank_firm)+ -->
+<!-- post_t:treat_i:I((100*rank_firm)^2)| -->
+<!-- product_or_service_code+action_date_year_quarter| # no fixed effects -->
+<!-- 0| # no IV -->
+<!-- contract_award_unique_key, # clustered at project level -->
+<!-- data=reg_df, -->
+<!-- exactDOF = TRUE, -->
+<!-- cmethod = "reghdfe") -->
+<!-- ``` -->
+
+<!-- Let $Rank_{(k)}$ is an indicator for firms in $k-th$ tericle of $r_f$. -->
+
+<!-- $$ \begin{aligned}  -->
+<!-- Delay_{it}&=&\beta_0 + \beta_1 Treat_i + \beta_2 Rank_{(2)} +\beta_3 Rank_{(3)} + \beta_4 Post_t \\ -->
+<!--           && + \beta_5 (Post_t \times Treat_i \times Rank_{(1)}) + \beta_6 (Post_t \times Treat_i \times Rank_{(2)})\\ -->
+<!--           && + \beta_7 (Post_t \times Treat_i \times Rank_{(3)}) + \epsilon_{it} -->
+<!-- \end{aligned}$$ -->
+
+<!-- * Treatment effect for firms in first tercile: $\beta_5$ -->
+<!-- * Treatment effect for firms in second tercile: $\beta_6$ -->
+<!-- * Treatment effect for firms in third tercile: $\beta_7$ -->
+<!-- * $Rank_{(k)}$ is time-invariant -- so $Post_t \times Rank_{(k)}$ does not make sense -->
+
+<!-- ```{r define_rank_terciles, echo=FALSE, results='asis'} -->
+
+<!-- reg_df[,rank_tercile:=ntile(rank_firm,3)] -->
+<!-- reg_df[,rank_first_tercile:=ifelse(rank_tercile==1,1,0)] -->
+<!-- reg_df[,rank_second_tercile:=ifelse(rank_tercile==2,1,0)] -->
+<!-- reg_df[,rank_third_tercile:=ifelse(rank_tercile==3,1,0)] -->
+<!-- ``` -->
+
+
+<!-- ```{r portfolio_regs, echo=FALSE, results='asis'} -->
+
+<!-- baseline_reg=felm(winsorized_delay~treat_i+ -->
+<!--                     post_t:treat_i:rank_first_tercile+ -->
+<!--                     post_t:treat_i:rank_second_tercile+ -->
+<!--                     post_t:treat_i:rank_third_tercile+ -->
+<!--                     +post_t+ -->
+<!--                     rank_second_tercile+ -->
+<!--                     rank_third_tercile| -->
+<!--                     0| # no fixed effects -->
+<!--                     0| # no IV -->
+<!--                     contract_award_unique_key, # clustered at project level -->
+<!--                   data=reg_df, -->
+<!--                   exactDOF = TRUE, -->
+<!--                   cmethod = "reghdfe") -->
+
+<!-- time_fe=felm(winsorized_delay~treat_i+ -->
+<!--                             post_t:treat_i:rank_first_tercile+ -->
+<!--                             post_t:treat_i:rank_second_tercile+ -->
+<!--                             post_t:treat_i:rank_third_tercile+ -->
+<!--                             rank_second_tercile+ -->
+<!--                             rank_third_tercile| -->
+<!--                             action_date_year_quarter| -->
+<!--                             0| -->
+<!--                             contract_award_unique_key, -->
+<!--                           data=reg_df,  -->
+<!--                           exactDOF = TRUE,  -->
+<!--                           cmethod = "reghdfe") -->
+
+<!-- controls_and_time_fe=felm(winsorized_delay~treat_i+ -->
+<!--                             post_t:treat_i:rank_first_tercile+ -->
+<!--                             post_t:treat_i:rank_second_tercile+ -->
+<!--                             post_t:treat_i:rank_third_tercile+ -->
+<!--                             rank_second_tercile+ -->
+<!--                             rank_third_tercile+ -->
+<!--                             winsorized_initial_duration_in_days_i+ -->
+<!--                             winsorized_initial_budget_i+ -->
+<!--                             number_of_offers_received+ -->
+<!--                             post_t:winsorized_initial_duration_in_days_i+ -->
+<!--                             post_t:winsorized_initial_budget_i+ -->
+<!--                             post_t:number_of_offers_received| -->
+<!--                             action_date_year_quarter| -->
+<!--                             0| -->
+<!--                             contract_award_unique_key, -->
+<!--                           data=reg_df,  -->
+<!--                           exactDOF = TRUE,  -->
+<!--                           cmethod = "reghdfe") -->
+
+<!-- # time fixed effects also included in the following specs -->
+<!-- controls_and_task_fe=felm(winsorized_delay~treat_i+ -->
+<!--                             post_t:treat_i:rank_first_tercile+ -->
+<!--                             post_t:treat_i:rank_second_tercile+ -->
+<!--                             post_t:treat_i:rank_third_tercile+ -->
+<!--                             rank_second_tercile+ -->
+<!--                             rank_third_tercile+ -->
+<!--                             winsorized_initial_duration_in_days_i+ -->
+<!--                             winsorized_initial_budget_i+ -->
+<!--                             number_of_offers_received+ -->
+<!--                             post_t:winsorized_initial_duration_in_days_i+ -->
+<!--                             post_t:winsorized_initial_budget_i+ -->
+<!--                             post_t:number_of_offers_received| -->
+<!--                             product_or_service_code+action_date_year_quarter| -->
+<!--                             0| -->
+<!--                             contract_award_unique_key, -->
+<!--                           data=reg_df,  -->
+<!--                           exactDOF = TRUE,  -->
+<!--                           cmethod = "reghdfe") -->
+
+<!-- controls_and_firm_task_fe=felm(winsorized_delay~treat_i+ -->
+<!--                             post_t:treat_i:rank_first_tercile+ -->
+<!--                             post_t:treat_i:rank_second_tercile+ -->
+<!--                             post_t:treat_i:rank_third_tercile+ -->
+<!--                             winsorized_initial_duration_in_days_i+ -->
+<!--                             winsorized_initial_budget_i+ -->
+<!--                             number_of_offers_received+ -->
+<!--                             post_t:winsorized_initial_duration_in_days_i+ -->
+<!--                             post_t:winsorized_initial_budget_i+ -->
+<!--                             post_t:number_of_offers_received| -->
+<!--                             recipient_duns+product_or_service_code+action_date_year_quarter| -->
+<!--                             0| -->
+<!--                             contract_award_unique_key, -->
+<!--                           data=reg_df,  -->
+<!--                           exactDOF = TRUE,  -->
+<!--                           cmethod = "reghdfe") -->
+
+<!-- vars.order=c('treat_i', -->
+<!--              'rank_second_tercile', -->
+<!--              'rank_third_tercile', -->
+<!--              'post_t', -->
+<!--              'treat_i:post_t:rank_first_tercile', -->
+<!--              'treat_i:post_t:rank_second_tercile', -->
+<!--              'treat_i:post_t:rank_second_tercile') -->
+
+<!-- stargazer(baseline_reg, -->
+<!--           time_fe, -->
+<!--           controls_and_time_fe, -->
+<!--           controls_and_task_fe, -->
+<!--           controls_and_firm_task_fe, -->
+<!--           digits=2, -->
+<!--           digits.extra=2, -->
+<!--           title = "Effect of Treatment Intensity: Quickpay 2009-2011", -->
+<!--           dep.var.labels="$Delay_{it}$ (in days)", -->
+<!--           dep.var.caption = "", -->
+<!--           order=paste0("^", vars.order , "$"), -->
+<!--           covariate.labels = c("$Treat_i$", -->
+<!--                                "$Rank_{(2)}$", -->
+<!--                                "$Rank_{(3)}$", -->
+<!--                                "$Post_t$", -->
+<!--                                "$Treat_i \\times Post_t \\times Rank_{(1)}$", -->
+<!--                                "$Treat_i \\times Post_t \\times Rank_{(2)}$", -->
+<!--                                "$Treat_i \\times Post_t \\times Rank_{(3)}$", -->
+<!--                                "Constant"), -->
+<!--           object.names=FALSE,  -->
+<!--           model.numbers=TRUE, -->
+<!--           font.size = "small", -->
+<!--           omit.stat=c("f", "ser"), -->
+<!--           column.sep.width = "-2pt", -->
+<!--           add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes","Yes","Yes"), -->
+<!--                            c("Task Fixed Effects","No","No","No","Yes","Yes"), -->
+<!--                            c("Firm Fixed Effects","No","No","No","No","Yes"), -->
+<!--                            c("Duration, Budget, Bids","No","No","Yes","Yes","Yes"), -->
+<!--                            c("$Post_t \\times$    (Duration, Budget, Bids)","No","No","Yes","Yes","Yes")), -->
+<!--           omit=c('winsorized_initial_duration_in_days_i', -->
+<!--                   'winsorized_initial_budget_i', -->
+<!--                    'number_of_offers_received', -->
+<!--                    'post_t:winsorized_initial_duration_in_days_i', -->
+<!--                    'post_t:winsorized_initial_budget_i', -->
+<!--                    'post_t:number_of_offers_received'), -->
+<!--          table.placement = "H", -->
+<!--          style="default", -->
+<!--          notes=c("Each observation is a project-quarter.", -->
+<!--                   "SEs are robust and clustered at the project level."), -->
+<!--          header=F) -->
+<!-- ``` -->
+
+<!-- <!-- ## Relative to First Tercile --> -->
+
+<!-- <!-- $$ \begin{aligned}  --> -->
+<!-- <!-- Delay_{it}&=&\beta_0 + \beta_1 Treat_i + \beta_2 Rank_{(2)} +\beta_3 Rank_{(3)} + \beta_4 Post_t \\ --> -->
+<!-- <!--           && + \beta_5 (Post_t \times Treat_i) + \beta_6 (Post_t \times Treat_i \times Rank_{(2)})\\ --> -->
+<!-- <!--           && + \beta_7 (Post_t \times Treat_i \times Rank_{(3)}) + \epsilon_{it} --> -->
+<!-- <!-- \end{aligned}$$ --> -->
+
+<!-- ```{r portfolio_relative_regs, eval= FALSE, echo=FALSE} -->
+
+<!-- baseline_reg=felm(winsorized_delay~treat_i+ -->
+<!--                     post_t:treat_i+ -->
+<!--                     post_t:treat_i:rank_second_tercile+ -->
+<!--                     post_t:treat_i:rank_third_tercile+ -->
+<!--                     +post_t+ -->
+<!--                     rank_second_tercile+ -->
+<!--                     rank_third_tercile| -->
+<!--                     0| # no fixed effects -->
+<!--                     0| # no IV -->
+<!--                     contract_award_unique_key, # clustered at project level -->
+<!--                   data=reg_df, -->
+<!--                   exactDOF = TRUE, -->
+<!--                   cmethod = "reghdfe") -->
+
+<!-- time_fe=felm(winsorized_delay~treat_i+ -->
+<!--                             post_t:treat_i+ -->
+<!--                             post_t:treat_i:rank_second_tercile+ -->
+<!--                             post_t:treat_i:rank_third_tercile+ -->
+<!--                             rank_second_tercile+ -->
+<!--                             rank_third_tercile| -->
+<!--                             action_date_year_quarter| -->
+<!--                             0| -->
+<!--                             contract_award_unique_key, -->
+<!--                           data=reg_df,  -->
+<!--                           exactDOF = TRUE,  -->
+<!--                           cmethod = "reghdfe") -->
+
+<!-- controls_and_time_fe=felm(winsorized_delay~treat_i+ -->
+<!--                             post_t:treat_i+ -->
+<!--                             post_t:treat_i:rank_second_tercile+ -->
+<!--                             post_t:treat_i:rank_third_tercile+ -->
+<!--                             rank_second_tercile+ -->
+<!--                             rank_third_tercile+ -->
+<!--                             winsorized_initial_duration_in_days_i+ -->
+<!--                             winsorized_initial_budget_i+ -->
+<!--                             number_of_offers_received+ -->
+<!--                             post_t:winsorized_initial_duration_in_days_i+ -->
+<!--                             post_t:winsorized_initial_budget_i+ -->
+<!--                             post_t:number_of_offers_received| -->
+<!--                             action_date_year_quarter| -->
+<!--                             0| -->
+<!--                             contract_award_unique_key, -->
+<!--                           data=reg_df,  -->
+<!--                           exactDOF = TRUE,  -->
+<!--                           cmethod = "reghdfe") -->
+
+<!-- # time fixed effects also included in the following specs -->
+<!-- controls_and_task_fe=felm(winsorized_delay~treat_i+ -->
+<!--                             post_t:treat_i+ -->
+<!--                             post_t:treat_i:rank_second_tercile+ -->
+<!--                             post_t:treat_i:rank_third_tercile+ -->
+<!--                             rank_second_tercile+ -->
+<!--                             rank_third_tercile+ -->
+<!--                             winsorized_initial_duration_in_days_i+ -->
+<!--                             winsorized_initial_budget_i+ -->
+<!--                             number_of_offers_received+ -->
+<!--                             post_t:winsorized_initial_duration_in_days_i+ -->
+<!--                             post_t:winsorized_initial_budget_i+ -->
+<!--                             post_t:number_of_offers_received| -->
+<!--                             product_or_service_code+action_date_year_quarter| -->
+<!--                             0| -->
+<!--                             contract_award_unique_key, -->
+<!--                           data=reg_df,  -->
+<!--                           exactDOF = TRUE,  -->
+<!--                           cmethod = "reghdfe") -->
+
+<!-- controls_and_firm_task_fe=felm(winsorized_delay~treat_i+ -->
+<!--                             post_t:treat_i+ -->
+<!--                             post_t:treat_i:rank_second_tercile+ -->
+<!--                             post_t:treat_i:rank_third_tercile+ -->
+<!--                             winsorized_initial_duration_in_days_i+ -->
+<!--                             winsorized_initial_budget_i+ -->
+<!--                             number_of_offers_received+ -->
+<!--                             post_t:winsorized_initial_duration_in_days_i+ -->
+<!--                             post_t:winsorized_initial_budget_i+ -->
+<!--                             post_t:number_of_offers_received| -->
+<!--                             recipient_duns+product_or_service_code+action_date_year_quarter| -->
+<!--                             0| -->
+<!--                             contract_award_unique_key, -->
+<!--                           data=reg_df,  -->
+<!--                           exactDOF = TRUE,  -->
+<!--                           cmethod = "reghdfe") -->
+
+<!-- vars.order=c('treat_i', -->
+<!--              'rank_second_tercile', -->
+<!--              'rank_third_tercile', -->
+<!--              'post_t', -->
+<!--              'treat_i:post_t', -->
+<!--              'treat_i:post_t:rank_second_tercile', -->
+<!--              'treat_i:post_t:rank_second_tercile') -->
+
+<!-- stargazer(baseline_reg, -->
+<!--           time_fe, -->
+<!--           controls_and_time_fe, -->
+<!--           controls_and_task_fe, -->
+<!--           controls_and_firm_task_fe, -->
+<!--           digits=2, -->
+<!--           digits.extra=2, -->
+<!--           title = "Effect of Treatment Intensity: Quickpay 2009-2011", -->
+<!--           dep.var.labels="$Delay_{it}$ (in days)", -->
+<!--           dep.var.caption = "", -->
+<!--           order=paste0("^", vars.order , "$"), -->
+<!--           covariate.labels = c("$Treat_i$", -->
+<!--                                "$Rank_{(2)}$", -->
+<!--                                "$Rank_{(3)}$", -->
+<!--                                "$Post_t$", -->
+<!--                                "$Treat_i \\times Post_t$", -->
+<!--                                "$Treat_i \\times Post_t \\times Rank_{(2)}$", -->
+<!--                                "$Treat_i \\times Post_t \\times Rank_{(3)}$", -->
+<!--                                "Constant"), -->
+<!--           object.names=FALSE,  -->
+<!--           model.numbers=TRUE, -->
+<!--           font.size = "small", -->
+<!--           omit.stat=c("f", "ser"), -->
+<!--           column.sep.width = "-2pt", -->
+<!--           add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes","Yes","Yes"), -->
+<!--                            c("Task Fixed Effects","No","No","No","Yes","Yes"), -->
+<!--                            c("Firm Fixed Effects","No","No","No","No","Yes"), -->
+<!--                            c("Duration, Budget, Bids","No","No","Yes","Yes","Yes"), -->
+<!--                            c("$Post_t \\times$    (Duration, Budget, Bids)","No","No","Yes","Yes","Yes")), -->
+<!--           omit=c('winsorized_initial_duration_in_days_i', -->
+<!--                   'winsorized_initial_budget_i', -->
+<!--                    'number_of_offers_received', -->
+<!--                    'post_t:winsorized_initial_duration_in_days_i', -->
+<!--                    'post_t:winsorized_initial_budget_i', -->
+<!--                    'post_t:number_of_offers_received'), -->
+<!--          table.placement = "H", -->
+<!--          style="default", -->
+<!--          notes=c("Each observation is a project-quarter.", -->
+<!--                   "SEs are robust and clustered at the project level."), -->
+<!--          header=F) -->
+<!-- ``` -->
