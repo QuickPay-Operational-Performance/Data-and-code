@@ -483,7 +483,7 @@ Continuous}\label{portfolio-effects-continuous}}
 \[ \begin{aligned} Delay_{it}&=&\beta_0+\beta_1 Treat_i + \beta_2 \theta_i+\beta_3 \theta_i^2+\beta_4 Post_t\\&& + \beta_5 (Treat_i\times Post_t) + \beta_6 (\theta_i\times Post_t) +\beta_7 (\theta_i^2\times Post_t)+\epsilon_{it} \end{aligned} \]
 
 \begin{table}[H] \centering 
-  \caption{Discrete Portfolio Effects: Quickpay 2009-2011} 
+  \caption{Continuous Portfolio Effects: Quickpay 2009-2011} 
   \label{} 
 \small 
 \begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
@@ -533,9 +533,292 @@ Adjusted R$^{2}$ & 0.01 & 0.02 & 0.03 & 0.04 & 0.04 \\
 \end{tabular} 
 \end{table}
 
---\textgreater{}
+\hypertarget{firm-level-analysis}{%
+\section{Firm level analysis:}\label{firm-level-analysis}}
 
---\textgreater{} --\textgreater{} --\textgreater{} --\textgreater{}
---\textgreater{}
+\begin{itemize}
+\tightlist
+\item
+  Treatment is now defined at the firm level.
+\item
+  There is variation in the portfolio of small projects held by each
+  firm
+\item
+  We compare what happens to delays of a \emph{firm} holding too many
+  versus too few small projects once quickpay was implemented.
+\item
+  Drawback: We cannot distinguish the effects for a given firm's large
+  and small projects because of multicollinearity.
+\end{itemize}
+
+\hypertarget{proxy-1-revenue-from-small-projects}{%
+\subsection{Proxy 1: Revenue from small
+projects}\label{proxy-1-revenue-from-small-projects}}
+
+\begin{itemize}
+\tightlist
+\item
+  We defined \(\rho_f\) as the share of revenue a firm received from
+  small projects in fiscal year 2010.
+\item
+  The numerator of \(\rho_f\) is the sum of all federal obligations from
+  small projects of a firm in fiscal year 2010. Because obligations can
+  be negative, the sum can be zero or negative even if the firm held
+  substantial number of small projects.
+\item
+  In the previous section, we ranked the values of \(\rho_f\). But this
+  makes interpretation somewhat tricky. The minimum rank for each firm
+  is now 1/N and it is never zero. What does a unit increase in Rank
+  mean?
+\item
+  An alternative can be to simply scale the values of \(\rho_f\) to
+  between 0 and 1. That is, for a firm A, we define
+  \(Share_A = (\rho_A - \min(\rho_f))/(\max(\rho_f)-\min(\rho_f))\).
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Suppose \(\rho_A= -1,\max(\rho_f)=3,\min(\rho_f)=-2\). Then,
+    \(Share_A = (-1-(-2))/(3-(-2))=1/5.\)
+  \item
+    The max share will be 1 and min share will be 0.
+  \end{itemize}
+\item
+  Setting aside measurement issues described earlier, we have:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \(Share_f=0\) represents a firm getting no revenue from small
+    projects.
+  \item
+    \(Share_f=1\) represents a firm getting its entire revenue from
+    small projects.
+  \end{itemize}
+\end{itemize}
+
+\hypertarget{continuous-effect}{%
+\subsubsection{Continuous effect}\label{continuous-effect}}
+
+\[ Delay_{ift}=\beta_0 + \beta_1 Share_f + \beta_2 Post_t + \beta_3 (Share_f \times Post_t)+\epsilon_{ift} \]
+
+\begin{itemize}
+\tightlist
+\item
+  Control is firm with \(Share_f = 0\):
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Before = \(\beta_0\)
+  \item
+    After = \(\beta_0+\beta_2\)
+  \end{itemize}
+\item
+  Treated firm with \(Share_f = j\):
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Before = \(\beta_0 + \beta_1 j\)
+  \item
+    After = \(\beta_0+\beta_2 + \beta_1 j +\beta_3 j\)
+  \end{itemize}
+\item
+  Treatment effect: \(\beta_3 j\)
+\end{itemize}
+
+\textbf{Interpretation:} For a firm that received a proportion \(j\) of
+its revenue from small projects, delays after quickpay increased by
+\(\beta_3 j\) days relative to a firm that received no revenue from
+small projects.
+
+\textbf{Assumption:} Parallel trends for overall delays of treated and
+control firms.
+
+\includegraphics[width=\textwidth,height=0.5\textheight]{/Users/vibhutidhingra/Desktop/firm_parallel_trends.png}
+
+\begin{itemize}
+\tightlist
+\item
+  For better interpretation, in the regressions below, \(Share_f\) is
+  scaled to be between 0 and 100.
+
+  \begin{itemize}
+  \tightlist
+  \item
+    So we can interpret a one percentage point increase in \(Share_f\)
+  \end{itemize}
+\end{itemize}
+
+\begin{table}[H] \centering 
+  \caption{Discrete Portfolio Effects: Quickpay 2009-2011} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & 1.65$^{**}$ & 1.71$^{**}$ & 1.57$^{**}$ & 3.08$^{***}$ & $-$0.34 \\ 
+  & (0.69) & (0.71) & (0.71) & (0.78) & (2.46) \\ 
+  & & & & & \\ 
+ $Share_f$ & $-$0.83$^{***}$ & $-$0.94$^{**}$ & $-$0.97$^{**}$ & $-$0.78$^{**}$ &  \\ 
+  & (0.26) & (0.40) & (0.42) & (0.35) &  \\ 
+  & & & & & \\ 
+ $Post_t$ & 16.25$^{***}$ & 8.76$^{***}$ &  &  &  \\ 
+  & (0.83) & (1.55) &  &  &  \\ 
+  & & & & & \\ 
+ $Share_f \times Post_t$ & 0.60$^{**}$ & 0.76$^{**}$ & 0.76$^{**}$ & 0.64$^{*}$ & 0.47 \\ 
+  & (0.28) & (0.35) & (0.36) & (0.34) & (0.34) \\ 
+  & & & & & \\ 
+ Constant & 27.76$^{***}$ & 46.14$^{***}$ &  &  &  \\ 
+  & (0.81) & (1.27) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
+Task Fixed Effects & No & No & No & Yes & Yes \\ 
+Firm Fixed Effects & No & No & No & No & Yes \\ 
+Observations & 71,753 & 63,216 & 63,216 & 63,216 & 63,216 \\ 
+R$^{2}$ & 0.01 & 0.02 & 0.03 & 0.06 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.02 & 0.03 & 0.04 & 0.04 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{discrete-effect}{%
+\subsubsection{Discrete effect}\label{discrete-effect}}
+
+\begin{itemize}
+\tightlist
+\item
+  Let \(Share_f^{(k)}\) denote k-th tercile of \(Share_f.\)
+\end{itemize}
+
+\[ Delay_{ift}=\beta_0 + \beta_1 Share_f^{(2)}+ \beta_2 Share_f^{(3)} + \beta_3 Post_t + \beta_4 (Share_f^{(2)} \times Post_t) + \beta_5 (Share_f^{(3)} \times Post_t) + \epsilon_{ift} \]
+
+\begin{itemize}
+\tightlist
+\item
+  Control is firms in first tercile:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Before = \(\beta_0\)
+  \item
+    After = \(\beta_0+\beta_3\)
+  \end{itemize}
+\item
+  Treated firms in second tercile:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Before = \(\beta_0 + \beta_1\)
+  \item
+    After = \(\beta_0+\beta_1 + \beta_3 +\beta_4\)
+  \item
+    Treatment effect: \(\beta_4\)
+  \end{itemize}
+\item
+  Treated firms in third tercile:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Before = \(\beta_0 + \beta_2\)
+  \item
+    After = \(\beta_0 + \beta_2 + \beta_3 +\beta_5\)
+  \item
+    Treatment effect: \(\beta_5\)
+  \end{itemize}
+\end{itemize}
+
+\textbf{Interpretation:} For a firm in medium range of revenue from
+small projects, delays after quickpay increased by \(\beta_4\) days
+relative to a firm that received low revenue from small projects.
+
+\textbf{Assumption:} Parallel trends for overall delays of treated and
+control firms.
+
+\begin{table}[H] \centering 
+  \caption{Discrete Portfolio Effects: Quickpay 2009-2011} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Share_f^{(2)}$ & $-$1.21 & $-$1.53 & $-$1.67 & $-$0.45 &  \\ 
+  & (0.97) & (1.05) & (1.06) & (1.11) &  \\ 
+  & & & & & \\ 
+ $Share_f^{(3)}$ & $-$1.07 & 0.003 & $-$0.09 & 1.59 &  \\ 
+  & (0.85) & (0.91) & (0.92) & (0.97) &  \\ 
+  & & & & & \\ 
+ $Post_t$ & 14.68$^{***}$ & 7.25$^{***}$ &  &  &  \\ 
+  & (0.93) & (1.65) &  &  &  \\ 
+  & & & & & \\ 
+ $Share_f^{(2)} \times Post_t$ & 3.09$^{**}$ & 3.68$^{**}$ & 3.69$^{**}$ & 3.82$^{**}$ & 6.00$^{***}$ \\ 
+  & (1.45) & (1.61) & (1.63) & (1.65) & (1.93) \\ 
+  & & & & & \\ 
+ $Share_f^{(3)} \times Post_t$ & 5.24$^{***}$ & 5.30$^{***}$ & 5.33$^{***}$ & 4.88$^{***}$ & 4.79$^{***}$ \\ 
+  & (1.29) & (1.43) & (1.45) & (1.47) & (1.65) \\ 
+  & & & & & \\ 
+ Constant & 27.93$^{***}$ & 46.06$^{***}$ &  &  &  \\ 
+  & (0.62) & (1.05) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
+Task Fixed Effects & No & No & No & Yes & Yes \\ 
+Firm Fixed Effects & No & No & No & No & Yes \\ 
+Observations & 71,753 & 63,216 & 63,216 & 63,216 & 63,216 \\ 
+R$^{2}$ & 0.01 & 0.02 & 0.03 & 0.06 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.02 & 0.03 & 0.04 & 0.04 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{proxy-2-ratio-of-small-projects}{%
+\subsection{Proxy 2: Ratio of small
+projects}\label{proxy-2-ratio-of-small-projects}}
+
+\begin{itemize}
+\tightlist
+\item
+  For firm \(f\), define
+  \(Share_f = \frac{\text{Num of small projects in FY 2010}}{\text{Total num of projects in FY 2010}}\).
+\item
+  Same analysis as before but advantages:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Sample size: only firms excluded are new entrants to government
+    projects.
+  \item
+    No measurement problem. \(Share_f\) will be zero for firms with no
+    small projects, and one for firms with only small projects.
+  \item
+    We can control for differences across firms through fixed effects.
+    This will be less of an issue here because we will have enough
+    observations.
+  \end{itemize}
+\end{itemize}
 
 \end{document}
