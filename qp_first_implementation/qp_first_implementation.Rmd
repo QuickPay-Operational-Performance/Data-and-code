@@ -960,6 +960,294 @@ stargazer(baseline_reg,
           header=F)
 ```
 
+# Firm's rank order [Vibhuti]
+
+## Continuous model
+
+* We have $\theta_{if} = Treat_i * Rank_f$
+
+$$ Delay_{ift} = \beta_0 + \beta_1 \theta_{if} + \beta_2 (\theta_{if} \times Post_t) + \beta_3 Post_t + \beta_4 Rank_f + \epsilon_{ift} $$
+
+* Consider a firm with $Rank_f = k$. Then, we have
+   * Large + Before = $\beta_0 + \beta_4 k$
+   * Large + After = $\beta_0+\beta_3 +\beta_4 k$
+   * Small + Before = $\beta_0+\beta_1 k + \beta_4 k$
+   * Small + After = $\beta_0+\beta_1 k + \beta_2 k + \beta_3 + \beta_4 k$
+   * Treatment effect: $\beta_2 k$
+
+**Interpretation:** 
+
+* Treatment effect is $\beta_2 k$ for a firm that received a proportion $k$ of its revenue from small projects. 
+* In other words, for a firm earning $k$ proportion of revenue from small projects, Quickpay increased delays on small projects by $\beta_3 k$ days.
+
+**Assumption:** Parallel trends between large and small projects of the same firm.
+
+![](/Users/vibhutidhingra/Desktop/cts_te.png){width=30%,height=30%}
+
+```{r continuous_treatment_regs, echo= FALSE, results='asis'}
+
+reg_df[, theta_if := treat_i*rank_firm]
+
+baseline_reg=felm(winsorized_delay~ theta_if+
+                    post_t:theta_if+
+                    rank_firm+
+                    post_t|
+                    0| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+controls_reg=felm(winsorized_delay~theta_if+
+                    post_t:theta_if+
+                    rank_firm+
+                    post_t+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    0| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+time_fe_and_controls_reg=felm(winsorized_delay~theta_if+
+                    post_t:theta_if+
+                    rank_firm+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    action_date_year_quarter| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+time_task_fe_and_controls_reg=felm(winsorized_delay~theta_if+
+                    post_t:theta_if+
+                    rank_firm+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    product_or_service_code+action_date_year_quarter| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+all_fe_and_controls_reg=felm(winsorized_delay~theta_if+
+                    post_t:theta_if+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    product_or_service_code+action_date_year_quarter+recipient_duns| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+stargazer(baseline_reg,
+          controls_reg,
+          time_fe_and_controls_reg,
+          time_task_fe_and_controls_reg,
+          all_fe_and_controls_reg,
+          digits=2,
+          digits.extra=2,
+          title = "Continuous Portfolio Effects: Quickpay 2009-2011",
+          dep.var.labels="$Delay_{it}$ (in days)",
+          dep.var.caption = "",
+          covariate.labels = c("$\\theta_{if}$",
+                               "$Rank_f$",
+                               "$Post_t$",
+                               "$\\theta_{if} \\times Post_t$",
+                               "Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
+                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))
+                           ),
+          omit=c('winsorized_initial_duration_in_days_i',
+                  'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'post_t:winsorized_initial_duration_in_days_i',
+                   'post_t:winsorized_initial_budget_i',
+                   'post_t:number_of_offers_received'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level."),
+          header=F)
+```          
+
+## Continuous Quadratic Model
+
+* We have $\theta_{if} = Treat_i * Rank_f$
+
+$$ Delay_{ift} = \beta_0 + \beta_1 \theta_{if} + \beta_2 \theta_{if}^2 + \beta_3 (\theta_{if} \times Post_t) + \beta_4 (\theta_{if}^2 \times Post_t)+ \beta_5 Post_t + \beta_6 Rank_f + \epsilon_{ift} $$
+
+* Consider a firm with $Rank_f = k$. Then, we have
+   * Large + Before = $\beta_0 + \beta_6 k$
+   * Large + After = $\beta_0+\beta_5 +\beta_6 k$
+   * Small + Before = $\beta_0+\beta_1 k + \beta_2 k^2 + \beta_6 k$
+   * Small + After = $\beta_0+\beta_1 k + \beta_2 k^2 + \beta_3 k + \beta_4 k^2 + \beta_5 + \beta_6 k$
+   * Treatment effect: $\beta_3 k + \beta_4 k^2$
+
+**Interpretation:** 
+* One unit increase in rank $k$ increases treatment effect by $\beta_3 + 2k \beta_4$.
+
+**Assumption:** Parallel trends between large and small projects of the same firm.
+
+```{r quadratic_cts_treatment_regs, echo= FALSE, results='asis'}
+
+baseline_reg=felm(winsorized_delay~ theta_if+
+                    I(theta_if^2)+
+                    post_t:theta_if+
+                    post_t:I(theta_if^2)+
+                    rank_firm+
+                    post_t|
+                    0| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+controls_reg=felm(winsorized_delay~theta_if+
+                    I(theta_if^2)+
+                    post_t:theta_if+
+                    post_t:I(theta_if^2)+
+                    rank_firm+
+                    post_t+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    0| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+time_fe_and_controls_reg=felm(winsorized_delay~theta_if+
+                    I(theta_if^2)+
+                    post_t:theta_if+
+                    post_t:I(theta_if^2)+
+                    rank_firm+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    action_date_year_quarter| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+time_task_fe_and_controls_reg=felm(winsorized_delay~theta_if+
+                    I(theta_if^2)+
+                    post_t:theta_if+
+                    post_t:I(theta_if^2)+
+                    rank_firm+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    product_or_service_code+action_date_year_quarter| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+all_fe_and_controls_reg=felm(winsorized_delay~theta_if+
+                    I(theta_if^2)+
+                    post_t:theta_if+
+                    post_t:I(theta_if^2)+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    product_or_service_code+action_date_year_quarter+recipient_duns| # no fixed effects
+                    0| # no IV
+                  contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+stargazer(baseline_reg,
+          controls_reg,
+          time_fe_and_controls_reg,
+          time_task_fe_and_controls_reg,
+          all_fe_and_controls_reg,
+          digits=2,
+          digits.extra=2,
+          title = "Continuous Portfolio Effects: Quickpay 2009-2011",
+          dep.var.labels="$Delay_{it}$ (in days)",
+          dep.var.caption = "",
+          covariate.labels = c("$\\theta_{if}$",
+                               "$\\theta_{if}^2$",
+                               "$Rank_f$",
+                               "$Post_t$",
+                               "$\\theta_{if} \\times Post_t$",
+                               "$\\theta_{if}^2 \\times Post_t$",
+                               "Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
+                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))
+                           ),
+          omit=c('winsorized_initial_duration_in_days_i',
+                  'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'post_t:winsorized_initial_duration_in_days_i',
+                   'post_t:winsorized_initial_budget_i',
+                   'post_t:number_of_offers_received'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level."),
+          header=F)
+```  
+
 # Firm level analysis: 
 
 * Treatment is now defined at the firm level.
