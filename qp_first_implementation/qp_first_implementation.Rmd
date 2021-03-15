@@ -1002,8 +1002,7 @@ $$ Delay_{ift}=\beta_0 + \beta_1 Share_f + \beta_2 Post_t + \beta_3 (Share_f \ti
   
 ```{r rescaled_rho_continuous, echo=FALSE, results='asis'}
 
-baseline_reg=felm(winsorized_delay~treat_i+
-                    post_t:I(100*rescaled_rho)+
+baseline_reg=felm(winsorized_delay~post_t:I(100*rescaled_rho)+
                     I(100*rescaled_rho)+
                     post_t|
                     0| # no fixed effects
@@ -1013,8 +1012,7 @@ baseline_reg=felm(winsorized_delay~treat_i+
                   exactDOF = TRUE,
                   cmethod = "reghdfe")
 
-controls_reg=felm(winsorized_delay~treat_i+
-                    post_t:I(100*rescaled_rho)+
+controls_reg=felm(winsorized_delay~post_t:I(100*rescaled_rho)+
                     I(100*rescaled_rho)+
                     post_t+
                     winsorized_initial_duration_in_days_i+
@@ -1030,8 +1028,7 @@ controls_reg=felm(winsorized_delay~treat_i+
                   exactDOF = TRUE,
                   cmethod = "reghdfe")
 
-time_fe_and_controls_reg=felm(winsorized_delay~treat_i+
-                    post_t:I(100*rescaled_rho)+
+time_fe_and_controls_reg=felm(winsorized_delay~post_t:I(100*rescaled_rho)+
                     I(100*rescaled_rho)+
                     winsorized_initial_duration_in_days_i+
                     winsorized_initial_budget_i+
@@ -1046,8 +1043,7 @@ time_fe_and_controls_reg=felm(winsorized_delay~treat_i+
                   exactDOF = TRUE,
                   cmethod = "reghdfe")
 
-time_task_fe_and_controls_reg=felm(winsorized_delay~treat_i+
-                    post_t:I(100*rescaled_rho)+
+time_task_fe_and_controls_reg=felm(winsorized_delay~post_t:I(100*rescaled_rho)+
                     I(100*rescaled_rho)+
                     winsorized_initial_duration_in_days_i+
                     winsorized_initial_budget_i+
@@ -1062,8 +1058,7 @@ time_task_fe_and_controls_reg=felm(winsorized_delay~treat_i+
                   exactDOF = TRUE,
                   cmethod = "reghdfe")
 
-all_fe_and_controls_reg=felm(winsorized_delay~treat_i+
-                    post_t:I(100*rescaled_rho)+
+all_fe_and_controls_reg=felm(winsorized_delay~post_t:I(100*rescaled_rho)+
                     winsorized_initial_duration_in_days_i+
                     winsorized_initial_budget_i+
                     number_of_offers_received+
@@ -1089,8 +1084,7 @@ stargazer(baseline_reg,
           title = "Discrete Portfolio Effects: Quickpay 2009-2011",
           dep.var.labels="$Delay_{it}$ (in days)",
           dep.var.caption = "",
-          covariate.labels = c("$Treat_i$",
-                               "$Share_f$",
+          covariate.labels = c("$Share_f$",
                                "$Post_t$",
                                "$Share_f \\times Post_t$",
                                "Constant"),
