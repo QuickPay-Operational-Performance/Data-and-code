@@ -982,7 +982,7 @@ $$ Delay_{ift} = \beta_0 + \beta_1 \theta_{if} + \beta_2 (\theta_{if} \times Pos
 
 **Assumption:** Parallel trends between large and small projects of the same firm.
 
-![](/Users/vibhutidhingra/Desktop/cts_te.png){width=30%,height=30%}
+![](/Users/vibhutidhingra/Desktop/cts_te.png){width=10%,height=10%}
 
 ```{r continuous_treatment_regs, echo= FALSE, results='asis'}
 
@@ -1248,12 +1248,203 @@ stargazer(baseline_reg,
           header=F)
 ```  
 
-# Firm level analysis: 
+## Discrete Model
 
-* Treatment is now defined at the firm level.
-* There is variation in the portfolio of small projects held by each firm
-* We compare what happens to delays of a *firm* holding too many versus too few small projects once quickpay was implemented.
-* Drawback: We cannot distinguish the effects for a given firm's large and small projects because of multicollinearity.
+* Let $Rank_f^{(k)}$ be an indicator for firm being in the k-th tercile of $Rank$. Define:
+  * $Medium_{if}=Treat_i*Rank_f^{(2)}$ and
+  * $High_{if} = Treat_i*Rank_f^{(3)}$ 
+
+$$\begin{aligned} Delay_{ift} &= \beta_0+\beta_1 Low_{if}+\beta_2 Medium_{if}+\beta_3 High_{if} +\\  & \qquad  \beta_4 Rank_f^{(2)} + \beta_5 Rank_f^{(3)}+ \beta_6 Post_t + \\& \qquad \beta_7 (Low_{if} \times Post_t) + \beta_8 (Medium_{if} \times Post_t) + \beta_9 (High_{if} \times Post_t) + \epsilon_{ift} \end{aligned}$$
+
+
+* Firms in lowest tercile:
+  * Large + before = $\beta_0$
+  * Large + after = $\beta_0 + \beta_6$
+  * Small + before = $\beta_0 + \beta_1$
+  * Small + after = $\beta_0 + \beta_1 + \beta_6 + \beta_7$
+  * Treatment effect = $\beta_7$
+
+* Firms in medium tercile:
+  * Large + before = $\beta_0+\beta_4$
+  * Large + after = $\beta_0+\beta_4+\beta_6$
+  * Small + before = $\beta_0+\beta_2+\beta_4$
+  * Small + after = $\beta_0+\beta_2+\beta_4 + \beta_6 + \beta_8$
+  * Treatment effect = $\beta_8$
+
+* Firms in highest tercile:
+  * Large + before = $\beta_0+\beta_5$
+  * Large + after = $\beta_0 + \beta_5+\beta_6$
+  * Small + before = $\beta_0+\beta_3+\beta_5$
+  * Small + after = $\beta_0 + \beta_3 + \beta_5 + \beta_6 + \beta_9$
+  * Treatment effect = $\beta_9$
+
+ **Assumption:** Parallel trends between large and small projects of firms in the same tercile.
+ 
+```{r discretize_cts_treatment, echo= FALSE, results='asis'}
+
+# This will also set all NA rank_terciles to zero
+reg_df[,low_if:=ifelse(rank_tercile==1 & treat_i==1,1,0)]
+reg_df[,medium_if:=ifelse(rank_tercile==2 & treat_i==1,1,0)]
+reg_df[,high_if:=ifelse(rank_tercile==3 & treat_i==1,1,0)]
+
+# set values to NA for those observations whose firm's rank is not defined
+reg_df[,low_if:=ifelse(is.na(rank_tercile),NaN,low_if)]
+reg_df[,medium_if:=ifelse(is.na(rank_tercile),NaN,medium_if)]
+reg_df[,high_if:=ifelse(is.na(rank_tercile),NaN,high_if)]
+
+reg_df[,low_rank_f:=ifelse(rank_tercile==1,1,0)]
+reg_df[,medium_rank_f:=ifelse(rank_tercile==2,1,0)]
+reg_df[,high_rank_f:=ifelse(rank_tercile==3,1,0)]
+
+reg_df[,low_rank_f:=ifelse(is.na(rank_tercile),NaN,low_rank_f)]
+reg_df[,medium_rank_f:=ifelse(is.na(rank_tercile),NaN,medium_rank_f)]
+reg_df[,high_rank_f:=ifelse(is.na(rank_tercile),NaN,high_rank_f)]
+
+
+baseline_reg=felm(winsorized_delay~low_if+
+                    medium_if+
+                    high_if+
+                    medium_rank_f+
+                    high_rank_f+
+                    post_t:low_if+
+                    post_t:medium_if+
+                    post_t:high_if+
+                    post_t|
+                    0| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+controls_reg=felm(winsorized_delay~low_if+
+                    medium_if+
+                    high_if+
+                    medium_rank_f+
+                    high_rank_f+
+                    post_t:low_if+
+                    post_t:medium_if+
+                    post_t:high_if+
+                    post_t+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    0| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+time_fe_and_controls_reg=felm(winsorized_delay~low_if+
+                    medium_if+
+                    high_if+
+                    medium_rank_f+
+                    high_rank_f+
+                    post_t:low_if+
+                    post_t:medium_if+
+                    post_t:high_if+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    action_date_year_quarter| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+time_task_fe_and_controls_reg=felm(winsorized_delay~low_if+
+                    medium_if+
+                    high_if+
+                    medium_rank_f+
+                    high_rank_f+
+                    post_t:low_if+
+                    post_t:medium_if+
+                    post_t:high_if+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    product_or_service_code+action_date_year_quarter| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+all_fe_and_controls_reg=felm(winsorized_delay~low_if+
+                    medium_if+
+                    high_if+
+                    post_t:low_if+
+                    post_t:medium_if+
+                    post_t:high_if+
+                    winsorized_initial_duration_in_days_i+
+                    winsorized_initial_budget_i+
+                    number_of_offers_received+
+                    post_t:winsorized_initial_duration_in_days_i+
+                    post_t:winsorized_initial_budget_i+
+                    post_t:number_of_offers_received|
+                    recipient_duns+product_or_service_code+action_date_year_quarter| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df,
+                  exactDOF = TRUE,
+                  cmethod = "reghdfe")
+
+stargazer(baseline_reg,
+          controls_reg,
+          time_fe_and_controls_reg,
+          time_task_fe_and_controls_reg,
+          all_fe_and_controls_reg,
+          digits=2,
+          digits.extra=2,
+          title = "Discrete Portfolio Effects: Quickpay 2009-2011",
+          dep.var.labels="$Delay_{it}$ (in days)",
+          # dep.var.caption = "",
+          covariate.labels = c("$Low_{if}$",
+                               "$Medium_{if}$",
+                               "$High_{if}$",
+                               "$Rank_f^{(2)}$",
+                               "$Rank_f^{(3)}$",
+                               "$Post_t$",
+                               "$Low_{if} \\times Post_t$",
+                               "$Medium_{if} \\times Post_t$",
+                               "$High_{if} \\times Post_t$",
+                               "Constant"),
+          object.names=FALSE,
+          model.numbers=TRUE,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
+                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))
+                           ),
+          omit=c('winsorized_initial_duration_in_days_i',
+                  'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'post_t:winsorized_initial_duration_in_days_i',
+                   'post_t:winsorized_initial_budget_i',
+                   'post_t:number_of_offers_received'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level."),
+          header=F)
+```
+
+# Other Proxies
 
 ## Proxy 1: Revenue from small projects
 
@@ -1266,301 +1457,6 @@ stargazer(baseline_reg,
 * Setting aside measurement issues described earlier, we have:
   * $Share_f=0$ represents a firm getting no revenue from small projects.
   * $Share_f=1$ represents a firm getting its entire revenue from small projects.
-
-### Continuous effect
-
-$$ Delay_{ift}=\beta_0 + \beta_1 Share_f + \beta_2 Post_t + \beta_3 (Share_f \times Post_t)+\epsilon_{ift} $$
-
-* Control is firm with $Share_f = 0$:
-   * Before = $\beta_0$
-   * After = $\beta_0+\beta_2$
-* Treated firm with $Share_f = j$:
-   * Before = $\beta_0 + \beta_1 j$
-   * After = $\beta_0+\beta_2 + \beta_1 j +\beta_3 j$
-* Treatment effect: $\beta_3 j$
-
-**Interpretation:** For a firm that received a proportion $j$ of its revenue from small projects, delays after quickpay increased by $\beta_3 j$ days relative to a firm that received no revenue from small projects.
-
-**Assumption:** Parallel trends for overall delays of treated and control firms. 
-
-![](/Users/vibhutidhingra/Desktop/firm_parallel_trends.png){width=50%, height=50%}
-
-* For better interpretation, in the regressions below, $Share_f$ is scaled to be between 0 and 100.
-  * So we can interpret a one percentage point increase in $Share_f$
-  
-```{r rescaled_rho_continuous, echo=FALSE, results='asis'}
-
-baseline_reg=felm(winsorized_delay~post_t:I(100*rescaled_rho)+
-                    I(100*rescaled_rho)+
-                    post_t|
-                    0| # no fixed effects
-                    0| # no IV
-                    contract_award_unique_key, # clustered at project level
-                  data=reg_df,
-                  exactDOF = TRUE,
-                  cmethod = "reghdfe")
-
-controls_reg=felm(winsorized_delay~post_t:I(100*rescaled_rho)+
-                    I(100*rescaled_rho)+
-                    post_t+
-                    winsorized_initial_duration_in_days_i+
-                    winsorized_initial_budget_i+
-                    number_of_offers_received+
-                    post_t:winsorized_initial_duration_in_days_i+
-                    post_t:winsorized_initial_budget_i+
-                    post_t:number_of_offers_received|
-                    0| # no fixed effects
-                    0| # no IV
-                  contract_award_unique_key, # clustered at project level
-                  data=reg_df,
-                  exactDOF = TRUE,
-                  cmethod = "reghdfe")
-
-time_fe_and_controls_reg=felm(winsorized_delay~post_t:I(100*rescaled_rho)+
-                    I(100*rescaled_rho)+
-                    winsorized_initial_duration_in_days_i+
-                    winsorized_initial_budget_i+
-                    number_of_offers_received+
-                    post_t:winsorized_initial_duration_in_days_i+
-                    post_t:winsorized_initial_budget_i+
-                    post_t:number_of_offers_received|
-                    action_date_year_quarter| # no fixed effects
-                    0| # no IV
-                  contract_award_unique_key, # clustered at project level
-                  data=reg_df,
-                  exactDOF = TRUE,
-                  cmethod = "reghdfe")
-
-time_task_fe_and_controls_reg=felm(winsorized_delay~post_t:I(100*rescaled_rho)+
-                    I(100*rescaled_rho)+
-                    winsorized_initial_duration_in_days_i+
-                    winsorized_initial_budget_i+
-                    number_of_offers_received+
-                    post_t:winsorized_initial_duration_in_days_i+
-                    post_t:winsorized_initial_budget_i+
-                    post_t:number_of_offers_received|
-                    product_or_service_code+action_date_year_quarter| # no fixed effects
-                    0| # no IV
-                  contract_award_unique_key, # clustered at project level
-                  data=reg_df,
-                  exactDOF = TRUE,
-                  cmethod = "reghdfe")
-
-all_fe_and_controls_reg=felm(winsorized_delay~post_t:I(100*rescaled_rho)+
-                    winsorized_initial_duration_in_days_i+
-                    winsorized_initial_budget_i+
-                    number_of_offers_received+
-                    post_t:winsorized_initial_duration_in_days_i+
-                    post_t:winsorized_initial_budget_i+
-                    post_t:number_of_offers_received|
-                    product_or_service_code+
-                    action_date_year_quarter+
-                    recipient_duns| # no fixed effects
-                    0| # no IV
-                  contract_award_unique_key, # clustered at project level
-                  data=reg_df,
-                  exactDOF = TRUE,
-                  cmethod = "reghdfe")
-
-stargazer(baseline_reg,
-          controls_reg,
-          time_fe_and_controls_reg,
-          time_task_fe_and_controls_reg,
-          all_fe_and_controls_reg,
-          digits=2,
-          digits.extra=2,
-          title = "Discrete Portfolio Effects: Quickpay 2009-2011",
-          dep.var.labels="$Delay_{it}$ (in days)",
-          dep.var.caption = "",
-          covariate.labels = c("$Share_f$",
-                               "$Post_t$",
-                               "$Share_f \\times Post_t$",
-                               "Constant"),
-          object.names=FALSE, 
-          model.numbers=TRUE,
-          font.size = "small",
-          omit.stat=c("f", "ser"),
-          column.sep.width = "-2pt",
-          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
-                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
-                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
-                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))
-                           ),
-          omit=c('winsorized_initial_duration_in_days_i',
-                  'winsorized_initial_budget_i',
-                   'number_of_offers_received',
-                   'post_t:winsorized_initial_duration_in_days_i',
-                   'post_t:winsorized_initial_budget_i',
-                   'post_t:number_of_offers_received'),
-          table.placement = "H",
-          style="default",
-          notes=c("Each observation is a project-quarter.",
-                  "SEs are robust and clustered at the project level."),
-          header=F)
-```          
-
-### Discrete effect
-
-* Let $Share_f^{(k)}$ denote k-th tercile of $Share_f.$
-
-$$ Delay_{ift}=\beta_0 + \beta_1 Share_f^{(2)}+ \beta_2 Share_f^{(3)} + \beta_3 Post_t + \beta_4 (Share_f^{(2)} \times Post_t) + \beta_5 (Share_f^{(3)} \times Post_t) + \epsilon_{ift} $$
-
-* Control is firms in first tercile:
-   * Before = $\beta_0$
-   * After = $\beta_0+\beta_3$
-* Treated firms in second tercile:
-   * Before = $\beta_0 + \beta_1$
-   * After = $\beta_0+\beta_1 + \beta_3 +\beta_4$
-   * Treatment effect: $\beta_4$
-* Treated firms in third tercile:
-   * Before = $\beta_0 + \beta_2$
-   * After = $\beta_0 + \beta_2 + \beta_3 +\beta_5$
-   * Treatment effect: $\beta_5$
-
-**Interpretation:** For a firm in medium range of revenue from small projects, delays after quickpay increased by $\beta_4$ days relative to a firm that received low revenue from small projects.
-
-**Assumption:** Parallel trends for overall delays of treated and control firms. 
-
-```{r rescaled_rho_discrete, echo = FALSE, results='asis'}
-
-reg_df[,rho_tercile:=ntile(rescaled_rho,3)]
-
-# This will also set all NA rank_terciles to zero
-reg_df[,low_rho_f:=ifelse(rho_tercile==1,1,0)]
-reg_df[,medium_rho_f:=ifelse(rho_tercile==2,1,0)]
-reg_df[,high_rho_f:=ifelse(rho_tercile==3,1,0)]
-
-# set values to NA for those observations whose firm's rank is not defined
-reg_df[,low_rho_f:=ifelse(is.na(rank_tercile),NaN,low_rho_f)]
-reg_df[,medium_rho_f:=ifelse(is.na(rank_tercile),NaN,medium_rho_f)]
-reg_df[,high_rho_f:=ifelse(is.na(rank_tercile),NaN,high_rho_f)]
-
-baseline_reg=felm(winsorized_delay~post_t:medium_rho_f+
-                    post_t:high_rho_f+
-                    post_t+
-                    medium_rho_f+
-                    high_rho_f|
-                    0| # no fixed effects
-                    0| # no IV
-                    contract_award_unique_key, # clustered at project level
-                  data=reg_df,
-                  exactDOF = TRUE,
-                  cmethod = "reghdfe")
-
-controls_reg=felm(winsorized_delay~post_t:medium_rho_f+
-                    post_t:high_rho_f+
-                    post_t+
-                    medium_rho_f+
-                    high_rho_f+
-                    winsorized_initial_duration_in_days_i+
-                    winsorized_initial_budget_i+
-                    number_of_offers_received+
-                    post_t:winsorized_initial_duration_in_days_i+
-                    post_t:winsorized_initial_budget_i+
-                    post_t:number_of_offers_received|
-                    0| # no fixed effects
-                    0| # no IV
-                  contract_award_unique_key, # clustered at project level
-                  data=reg_df,
-                  exactDOF = TRUE,
-                  cmethod = "reghdfe")
-
-time_fe_and_controls_reg=felm(winsorized_delay~post_t:medium_rho_f+
-                    post_t:high_rho_f+
-                    medium_rho_f+
-                    high_rho_f+
-                    winsorized_initial_duration_in_days_i+
-                    winsorized_initial_budget_i+
-                    number_of_offers_received+
-                    post_t:winsorized_initial_duration_in_days_i+
-                    post_t:winsorized_initial_budget_i+
-                    post_t:number_of_offers_received|
-                    action_date_year_quarter| # no fixed effects
-                    0| # no IV
-                  contract_award_unique_key, # clustered at project level
-                  data=reg_df,
-                  exactDOF = TRUE,
-                  cmethod = "reghdfe")
-
-time_task_fe_and_controls_reg=felm(winsorized_delay~post_t:medium_rho_f+
-                    post_t:high_rho_f+
-                    medium_rho_f+
-                    high_rho_f+
-                    winsorized_initial_duration_in_days_i+
-                    winsorized_initial_budget_i+
-                    number_of_offers_received+
-                    post_t:winsorized_initial_duration_in_days_i+
-                    post_t:winsorized_initial_budget_i+
-                    post_t:number_of_offers_received|
-                    product_or_service_code+action_date_year_quarter| # no fixed effects
-                    0| # no IV
-                  contract_award_unique_key, # clustered at project level
-                  data=reg_df,
-                  exactDOF = TRUE,
-                  cmethod = "reghdfe")
-
-all_fe_and_controls_reg=felm(winsorized_delay~post_t:medium_rho_f+
-                    post_t:high_rho_f+
-                    winsorized_initial_duration_in_days_i+
-                    winsorized_initial_budget_i+
-                    number_of_offers_received+
-                    post_t:winsorized_initial_duration_in_days_i+
-                    post_t:winsorized_initial_budget_i+
-                    post_t:number_of_offers_received|
-                    product_or_service_code+action_date_year_quarter+recipient_duns| # no fixed effects
-                    0| # no IV
-                  contract_award_unique_key, # clustered at project level
-                  data=reg_df,
-                  exactDOF = TRUE,
-                  cmethod = "reghdfe")
-
-vars.order=c('medium_rho_f',
-             'high_rho_f',
-             'post_t',
-             'post_t:medium_rho_f',
-             'post_t:high_rho_f')
-
-stargazer(baseline_reg,
-          controls_reg,
-          time_fe_and_controls_reg,
-          time_task_fe_and_controls_reg,
-          all_fe_and_controls_reg,
-          digits=2,
-          digits.extra=2,
-          title = "Discrete Portfolio Effects: Quickpay 2009-2011",
-          dep.var.labels="$Delay_{it}$ (in days)",
-          dep.var.caption = "",
-          order=paste0("^", vars.order , "$"),
-          covariate.labels = c("$Share_f^{(2)}$",
-                               "$Share_f^{(3)}$",
-                               "$Post_t$",
-                               "$Share_f^{(2)} \\times Post_t$",
-                               "$Share_f^{(3)} \\times Post_t$",
-                               "Constant"),
-          object.names=FALSE, 
-          model.numbers=TRUE,
-          font.size = "small",
-          omit.stat=c("f", "ser"),
-          column.sep.width = "-2pt",
-          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
-                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
-                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
-                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))
-                           ),
-          omit=c('winsorized_initial_duration_in_days_i',
-                  'winsorized_initial_budget_i',
-                   'number_of_offers_received',
-                   'post_t:winsorized_initial_duration_in_days_i',
-                   'post_t:winsorized_initial_budget_i',
-                   'post_t:number_of_offers_received'),
-          table.placement = "H",
-          style="default",
-          notes=c("Each observation is a project-quarter.",
-                  "SEs are robust and clustered at the project level."),
-          header=F)
-```   
 
 ## Proxy 2: Ratio of small projects
 
