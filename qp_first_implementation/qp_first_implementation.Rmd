@@ -308,8 +308,8 @@ baseline_reg=felm(winsorized_delay~treat_i+post_t:treat_i+post_t+
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
-# time fixed effects also included in the following specs
-controls_and_firm_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(winsorized_delay~treat_i+
+                            post_t+
                             post_t:treat_i+
                             contract_financing_i+
                             post_t:contract_financing_i+
@@ -320,14 +320,51 @@ controls_and_firm_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+action_date_year_quarter|
+                            0|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            contract_financing_i+
+                            post_t:contract_financing_i+
+                            post_t:treat_i:contract_financing_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+# time fixed effects also included in the following specs
+controls_time_task_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            contract_financing_i+
+                            post_t:contract_financing_i+
+                            post_t:treat_i:contract_financing_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:treat_i+
                             contract_financing_i+
                             post_t:contract_financing_i+
@@ -352,8 +389,10 @@ vars.order=c('treat_i',
               'treat_i:post_t:contract_financing_i')
 
 stargazer(baseline_reg,
-          controls_and_firm_fe,
-          controls_and_firm_task_fe,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
           digits=2,
           digits.extra=2,
           title = "Effect of Contract Financing: Quickpay 2009-2011",
@@ -372,11 +411,12 @@ stargazer(baseline_reg,
           font.size = "small",
           omit.stat=c("f", "ser"),
           column.sep.width = "-2pt",
-          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
-                           c("Firm Fixed Effects","No","Yes","Yes"),
-                           c("Task Fixed Effects","No","No","Yes"),
-                           c("Duration, Budget, Bids","No","Yes","Yes"),
-                           c("$Post_t \\times $  (Duration, Budget, Bids)","No","Yes","Yes")),
+          add.lines = list(
+                           c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -413,8 +453,8 @@ baseline_reg=felm(winsorized_delay~treat_i+post_t:treat_i+post_t+
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
-# time fixed effects also included in the following specs
-controls_and_firm_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(winsorized_delay~treat_i+
+                            post_t+
                             post_t:treat_i+
                             receives_financial_aid_i+
                             post_t:receives_financial_aid_i+
@@ -425,14 +465,50 @@ controls_and_firm_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+action_date_year_quarter|
+                            0|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            receives_financial_aid_i+
+                            post_t:receives_financial_aid_i+
+                            post_t:treat_i:receives_financial_aid_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_time_task_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            receives_financial_aid_i+
+                            post_t:receives_financial_aid_i+
+                            post_t:treat_i:receives_financial_aid_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:treat_i+
                             receives_financial_aid_i+
                             post_t:receives_financial_aid_i+
@@ -457,8 +533,10 @@ vars.order=c('treat_i',
               'treat_i:post_t:receives_financial_aid_i')
 
 stargazer(baseline_reg,
-          controls_and_firm_fe,
-          controls_and_firm_task_fe,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
           digits=2,
           digits.extra=2,
           title = "Effect of Grants or C8A Participant: Quickpay 2009-2011",
@@ -477,11 +555,12 @@ stargazer(baseline_reg,
           font.size = "small",
           omit.stat=c("f", "ser"),
           column.sep.width = "-2pt",
-          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
-                           c("Firm Fixed Effects","No","Yes","Yes"),
-                           c("Task Fixed Effects","No","No","Yes"),
-                           c("Duration, Budget, Bids","No","Yes","Yes"),
-                           c("$Post_t \\times$  (Duration, Budget, Bids)","No","Yes","Yes")),
+          add.lines = list(
+                           c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -520,8 +599,8 @@ baseline_reg=felm(winsorized_delay~treat_i+post_t:treat_i+post_t+
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
-# time fixed effects also included in the following specs
-controls_and_firm_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(winsorized_delay~treat_i+
+                            post_t+
                             post_t:treat_i+
                             receives_contracts_and_financial_aid_i+
                             post_t:receives_contracts_and_financial_aid_i+
@@ -532,14 +611,50 @@ controls_and_firm_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+action_date_year_quarter|
+                            0|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            receives_contracts_and_financial_aid_i+
+                            post_t:receives_contracts_and_financial_aid_i+
+                            post_t:treat_i:receives_contracts_and_financial_aid_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_time_task_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            receives_contracts_and_financial_aid_i+
+                            post_t:receives_contracts_and_financial_aid_i+
+                            post_t:treat_i:receives_contracts_and_financial_aid_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:treat_i+
                             receives_contracts_and_financial_aid_i+
                             post_t:receives_contracts_and_financial_aid_i+
@@ -564,8 +679,10 @@ vars.order=c('treat_i',
               'treat_i:post_t:receives_contracts_and_financial_aid_i')
 
 stargazer(baseline_reg,
-          controls_and_firm_fe,
-          controls_and_firm_task_fe,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
           digits=2,
           digits.extra=2,
           title = "Effect of Contracts, Grants, or C8A Participant: Quickpay 2009-2011",
@@ -584,11 +701,12 @@ stargazer(baseline_reg,
           font.size = "small",
           omit.stat=c("f", "ser"),
           column.sep.width = "-2pt",
-          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
-                           c("Firm Fixed Effects","No","Yes","Yes"),
-                           c("Task Fixed Effects","No","No","Yes"),
-                           c("Duration, Budget, Bids","No","Yes","Yes"),
-                           c("$Post_t \\times$  (Duration, Budget, Bids)","No","Yes","Yes")),
+          add.lines = list(
+                           c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -617,7 +735,9 @@ Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times
 
 ```{r pba_all, echo=FALSE, results='asis'}
 # Baseline Regressions 
-baseline_reg=felm(winsorized_delay~treat_i+post_t:treat_i+post_t+
+baseline_reg=felm(winsorized_delay~treat_i+
+                    post_t:treat_i+
+                    post_t+
                     performance_based_contract_i+
                     post_t:performance_based_contract_i+
                     post_t:treat_i:performance_based_contract_i|
@@ -628,8 +748,8 @@ baseline_reg=felm(winsorized_delay~treat_i+post_t:treat_i+post_t+
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
-# time fixed effects also included in the following specs
-controls_and_firm_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(winsorized_delay~treat_i+
+                            post_t+
                             post_t:treat_i+
                             performance_based_contract_i+
                             post_t:performance_based_contract_i+
@@ -640,14 +760,50 @@ controls_and_firm_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+action_date_year_quarter|
+                            0|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            performance_based_contract_i+
+                            post_t:performance_based_contract_i+
+                            post_t:treat_i:performance_based_contract_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_time_task_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            performance_based_contract_i+
+                            post_t:performance_based_contract_i+
+                            post_t:treat_i:performance_based_contract_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:treat_i+
                             performance_based_contract_i+
                             post_t:performance_based_contract_i+
@@ -672,8 +828,10 @@ vars.order=c('treat_i',
               'treat_i:post_t:performance_based_contract_i')
 
 stargazer(baseline_reg,
-          controls_and_firm_fe,
-          controls_and_firm_task_fe,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
           digits=2,
           digits.extra=2,
           title = "Effect of Performance Incentives: Quickpay 2009-2011",
@@ -692,11 +850,12 @@ stargazer(baseline_reg,
           font.size = "small",
           omit.stat=c("f", "ser"),
           column.sep.width = "-2pt",
-          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
-                           c("Firm Fixed Effects","No","Yes","Yes"),
-                           c("Task Fixed Effects","No","No","Yes"),
-                           c("Duration, Budget, Bids","No","Yes","Yes"),
-                           c("$Post_t \\times$  (Duration, Budget, Bids)","No","Yes","Yes")),
+          add.lines = list(
+                           c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -717,20 +876,21 @@ stargazer(baseline_reg,
 both_projects=intersect(unique(subset(reg_df,post_t==1)$contract_award_unique_key),
                         unique(subset(reg_df,post_t==0)$contract_award_unique_key))
 
-# Baseline Regressions 
-baseline_reg=felm(winsorized_delay~treat_i+post_t:treat_i+post_t+
+baseline_reg=felm(winsorized_delay~treat_i+
+                    post_t:treat_i+
+                    post_t+
                     performance_based_contract_i+
                     post_t:performance_based_contract_i+
                     post_t:treat_i:performance_based_contract_i|
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
-                  data=subset(reg_df, contract_award_unique_key%in% both_projects), 
+                  data=subset(reg_df,contract_award_unique_key%in%both_projects), 
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
-# time fixed effects also included in the following specs
-controls_and_firm_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(winsorized_delay~treat_i+
+                            post_t+
                             post_t:treat_i+
                             performance_based_contract_i+
                             post_t:performance_based_contract_i+
@@ -741,14 +901,50 @@ controls_and_firm_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+action_date_year_quarter|
+                            0|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df, contract_award_unique_key%in% both_projects), 
+                          data=subset(reg_df,contract_award_unique_key%in%both_projects), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            performance_based_contract_i+
+                            post_t:performance_based_contract_i+
+                            post_t:treat_i:performance_based_contract_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df,contract_award_unique_key%in%both_projects), 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_time_task_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            performance_based_contract_i+
+                            post_t:performance_based_contract_i+
+                            post_t:treat_i:performance_based_contract_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df,contract_award_unique_key%in%both_projects), 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:treat_i+
                             performance_based_contract_i+
                             post_t:performance_based_contract_i+
@@ -762,7 +958,7 @@ controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
                             recipient_duns+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df, contract_award_unique_key%in% both_projects), 
+                          data=subset(reg_df,contract_award_unique_key%in%both_projects), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 vars.order=c('treat_i',
@@ -773,8 +969,10 @@ vars.order=c('treat_i',
               'treat_i:post_t:performance_based_contract_i')
 
 stargazer(baseline_reg,
-          controls_and_firm_fe,
-          controls_and_firm_task_fe,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
           digits=2,
           digits.extra=2,
           title = "Effect of Performance Incentives: Quickpay 2009-2011",
@@ -793,11 +991,12 @@ stargazer(baseline_reg,
           font.size = "small",
           omit.stat=c("f", "ser"),
           column.sep.width = "-2pt",
-          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
-                           c("Firm Fixed Effects","No","Yes","Yes"),
-                           c("Task Fixed Effects","No","No","Yes"),
-                           c("Duration, Budget, Bids","No","Yes","Yes"),
-                           c("$Post_t \\times$  (Duration, Budget, Bids)","No","Yes","Yes")),
+          add.lines = list(
+                           c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -808,7 +1007,7 @@ stargazer(baseline_reg,
           style="default",
           notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level.",
-                  "Sample restricted to projects active both before and after Quickpay."),
+                  "Sample restricted to projects active both before and after quickpay."),
           header=F)
 ```
 
@@ -828,7 +1027,9 @@ Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times
 
 ```{r competition_all, echo=FALSE, results='asis'}
 # Baseline Regressions 
-baseline_reg=felm(winsorized_delay~treat_i+post_t:treat_i+post_t+
+baseline_reg=felm(winsorized_delay~treat_i+
+                    post_t:treat_i+
+                    post_t+
                     competitively_awarded_i+
                     post_t:competitively_awarded_i+
                     post_t:treat_i:competitively_awarded_i|
@@ -839,8 +1040,8 @@ baseline_reg=felm(winsorized_delay~treat_i+post_t:treat_i+post_t+
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
-# time fixed effects also included in the following specs
-controls_and_firm_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(winsorized_delay~treat_i+
+                            post_t+
                             post_t:treat_i+
                             competitively_awarded_i+
                             post_t:competitively_awarded_i+
@@ -851,14 +1052,50 @@ controls_and_firm_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+action_date_year_quarter|
+                            0|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            competitively_awarded_i+
+                            post_t:competitively_awarded_i+
+                            post_t:treat_i:competitively_awarded_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_time_task_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            competitively_awarded_i+
+                            post_t:competitively_awarded_i+
+                            post_t:treat_i:competitively_awarded_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:treat_i+
                             competitively_awarded_i+
                             post_t:competitively_awarded_i+
@@ -883,8 +1120,10 @@ vars.order=c('treat_i',
               'treat_i:post_t:competitively_awarded_i')
 
 stargazer(baseline_reg,
-          controls_and_firm_fe,
-          controls_and_firm_task_fe,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
           digits=2,
           digits.extra=2,
           title = "Effect of Competition: Quickpay 2009-2011",
@@ -903,11 +1142,12 @@ stargazer(baseline_reg,
           font.size = "small",
           omit.stat=c("f", "ser"),
           column.sep.width = "-2pt",
-          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
-                           c("Firm Fixed Effects","No","Yes","Yes"),
-                           c("Task Fixed Effects","No","No","Yes"),
-                           c("Duration, Budget, Bids","No","Yes","Yes"),
-                           c("$Post_t \\times$  (Duration, Budget, Bids)","No","Yes","Yes")),
+          add.lines = list(
+                           c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -929,19 +1169,21 @@ both_projects=intersect(unique(subset(reg_df,post_t==1)$contract_award_unique_ke
                         unique(subset(reg_df,post_t==0)$contract_award_unique_key))
 
 # Baseline Regressions 
-baseline_reg=felm(winsorized_delay~treat_i+post_t:treat_i+post_t+
+baseline_reg=felm(winsorized_delay~treat_i+
+                    post_t:treat_i+
+                    post_t+
                     competitively_awarded_i+
                     post_t:competitively_awarded_i+
                     post_t:treat_i:competitively_awarded_i|
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
-                  data=subset(reg_df, contract_award_unique_key%in% both_projects), 
+                  data=subset(reg_df,contract_award_unique_key%in%both_projects), 
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
-# time fixed effects also included in the following specs
-controls_and_firm_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(winsorized_delay~treat_i+
+                            post_t+
                             post_t:treat_i+
                             competitively_awarded_i+
                             post_t:competitively_awarded_i+
@@ -952,14 +1194,50 @@ controls_and_firm_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+action_date_year_quarter|
+                            0|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df, contract_award_unique_key%in% both_projects), 
+                          data=subset(reg_df,contract_award_unique_key%in%both_projects), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            competitively_awarded_i+
+                            post_t:competitively_awarded_i+
+                            post_t:treat_i:competitively_awarded_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df,contract_award_unique_key%in%both_projects), 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_time_task_fe=felm(winsorized_delay~treat_i+
+                            post_t:treat_i+
+                            competitively_awarded_i+
+                            post_t:competitively_awarded_i+
+                            post_t:treat_i:competitively_awarded_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df,contract_award_unique_key%in%both_projects), 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:treat_i+
                             competitively_awarded_i+
                             post_t:competitively_awarded_i+
@@ -973,7 +1251,7 @@ controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
                             recipient_duns+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df, contract_award_unique_key%in% both_projects), 
+                          data=subset(reg_df,contract_award_unique_key%in%both_projects), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 vars.order=c('treat_i',
@@ -984,8 +1262,10 @@ vars.order=c('treat_i',
               'treat_i:post_t:competitively_awarded_i')
 
 stargazer(baseline_reg,
-          controls_and_firm_fe,
-          controls_and_firm_task_fe,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
           digits=2,
           digits.extra=2,
           title = "Effect of Competition: Quickpay 2009-2011",
@@ -1004,11 +1284,12 @@ stargazer(baseline_reg,
           font.size = "small",
           omit.stat=c("f", "ser"),
           column.sep.width = "-2pt",
-          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
-                           c("Firm Fixed Effects","No","Yes","Yes"),
-                           c("Task Fixed Effects","No","No","Yes"),
-                           c("Duration, Budget, Bids","No","Yes","Yes"),
-                           c("$Post_t \\times$  (Duration, Budget, Bids)","No","Yes","Yes")),
+          add.lines = list(
+                           c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
