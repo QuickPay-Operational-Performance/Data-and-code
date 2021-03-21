@@ -62,7 +62,7 @@
 
 \title{First Implementation of QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Mar 15, 2021}
+\date{\vspace{-2.5em}Mar 21, 2021}
 
 \begin{document}
 \maketitle
@@ -183,8 +183,12 @@ Adjusted R$^{2}$ & 0.01 & 0.05 & 0.05 \\
 \end{tabular} 
 \end{table}
 
+\hypertarget{impact-of-firms-financial-constraints}{%
+\section{Impact of Firm's Financial
+Constraints}\label{impact-of-firms-financial-constraints}}
+
 \hypertarget{contract-financing}{%
-\section{Contract Financing}\label{contract-financing}}
+\subsection{Contract Financing}\label{contract-financing}}
 
 \[ CF_i = \begin{cases} 1, \text{ if project } i \text{ receives contract financing}\\
 0, \text{ otherwise} \end{cases}\]
@@ -244,7 +248,7 @@ Adjusted R$^{2}$ & 0.01 & 0.05 & 0.05 \\
 \end{table}
 
 \hypertarget{receives-financial-aid}{%
-\section{Receives Financial Aid}\label{receives-financial-aid}}
+\subsection{Receives Financial Aid}\label{receives-financial-aid}}
 
 \[ FinancialAid = \begin{cases} 1, \text{ if firm receives grants or is a c8A participant}\\
 0, \text{ otherwise} \end{cases}\]
@@ -304,7 +308,7 @@ Adjusted R$^{2}$ & 0.01 & 0.05 & 0.05 \\
 \end{table}
 
 \hypertarget{receives-contracts-and-financial-aid}{%
-\section{Receives Contracts and Financial
+\subsection{Receives Contracts and Financial
 Aid}\label{receives-contracts-and-financial-aid}}
 
 \[ CFA = \begin{cases} 1, \text{ if firm receives "contracts and grants"}\\ 
@@ -365,6 +369,239 @@ Adjusted R$^{2}$ & 0.01 & 0.05 & 0.05 \\
 \end{tabular} 
 \end{table}
 
+\hypertarget{performance-incentives}{%
+\section{Performance Incentives}\label{performance-incentives}}
+
+\[ PerformanceBased_i = \begin{cases} 1, \text{ if project was subject to performance incentives}\\ 
+0, \text{ otherwise} \end{cases}\]
+
+\[ \begin{aligned}
+Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t) +\beta_3 PerformanceBased_i \\
+&+& \beta_4 (PerformanceBased_i \times Post_t) + \beta_5 (Treat_i \times Post_t \times PerformanceBased_i) \\ 
+&+&X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
+\end{aligned}\]
+
+\hypertarget{full-sample}{%
+\subsection{Full Sample}\label{full-sample}}
+
+\begin{table}[H] \centering 
+  \caption{Effect of Performance Incentives: Quickpay 2009-2011} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{3}{c}{$Delay_{it}$ (in days)} \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$6.13$^{***}$ & $-$3.55$^{**}$ & $-$3.09$^{*}$ \\ 
+  & (0.50) & (1.55) & (1.59) \\ 
+  & & & \\ 
+ $Post_t$ & 13.40$^{***}$ &  &  \\ 
+  & (0.60) &  &  \\ 
+  & & & \\ 
+ $Treat_i \times Post_t$ & 1.94$^{**}$ & 6.99$^{***}$ & 6.93$^{***}$ \\ 
+  & (0.82) & (1.06) & (1.08) \\ 
+  & & & \\ 
+ $PerformanceBased_i$ & $-$2.19$^{***}$ & $-$2.53$^{***}$ & $-$4.03$^{***}$ \\ 
+  & (0.56) & (0.74) & (0.78) \\ 
+  & & & \\ 
+ $Post_t \times PerformanceBased_i$ & $-$0.96 & $-$2.67$^{**}$ & $-$3.12$^{***}$ \\ 
+  & (1.02) & (1.19) & (1.20) \\ 
+  & & & \\ 
+ $Post_t \times PerformanceBased_i \times Treat_i$ & 4.52$^{***}$ & 0.25 & 0.39 \\ 
+  & (1.25) & (1.55) & (1.57) \\ 
+  & & & \\ 
+ Constant & 33.53$^{***}$ &  &  \\ 
+  & (0.39) &  &  \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Year-Quarter Fixed Effects & No & Yes & Yes \\ 
+Firm Fixed Effects & No & Yes & Yes \\ 
+Task Fixed Effects & No & No & Yes \\ 
+Duration, Budget, Bids & No & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes \\ 
+Observations & 173,900 & 155,638 & 155,638 \\ 
+R$^{2}$ & 0.01 & 0.11 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.05 & 0.05 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{3}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{3}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{subsample-projects-active-both-before-and-after-quickpay}{%
+\subsection{Subsample: Projects active both before and after
+Quickpay}\label{subsample-projects-active-both-before-and-after-quickpay}}
+
+\begin{table}[H] \centering 
+  \caption{Effect of Performance Incentives: Quickpay 2009-2011} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{3}{c}{$Delay_{it}$ (in days)} \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$5.80$^{***}$ & $-$7.26$^{***}$ & $-$7.27$^{***}$ \\ 
+  & (0.65) & (2.15) & (2.23) \\ 
+  & & & \\ 
+ $Post_t$ & 23.96$^{***}$ &  &  \\ 
+  & (0.75) &  &  \\ 
+  & & & \\ 
+ $Treat_i \times Post_t$ & 1.39 & 7.47$^{***}$ & 7.46$^{***}$ \\ 
+  & (1.06) & (1.39) & (1.40) \\ 
+  & & & \\ 
+ $PerformanceBased_i$ & 1.91$^{**}$ & $-$0.80 & $-$2.63$^{**}$ \\ 
+  & (0.75) & (1.02) & (1.08) \\ 
+  & & & \\ 
+ $Post_t \times PerformanceBased_i$ & $-$4.28$^{***}$ & $-$5.05$^{***}$ & $-$5.17$^{***}$ \\ 
+  & (1.33) & (1.58) & (1.60) \\ 
+  & & & \\ 
+ $Post_t \times PerformanceBased_i \times Treat_i$ & 4.87$^{***}$ & 1.64 & 1.30 \\ 
+  & (1.69) & (2.08) & (2.12) \\ 
+  & & & \\ 
+ Constant & 28.16$^{***}$ &  &  \\ 
+  & (0.50) &  &  \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Year-Quarter Fixed Effects & No & Yes & Yes \\ 
+Firm Fixed Effects & No & Yes & Yes \\ 
+Task Fixed Effects & No & No & Yes \\ 
+Duration, Budget, Bids & No & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes \\ 
+Observations & 110,888 & 95,988 & 95,988 \\ 
+R$^{2}$ & 0.02 & 0.11 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.02 & 0.05 & 0.05 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{3}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{3}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{3}{r}{Sample restricted to projects active both before and after Quickpay.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{competition}{%
+\section{Competition}\label{competition}}
+
+\[ Competition_i = \begin{cases} 1, \text{ if project was subject to full and open competition}\\ 
+                       \text{(extent competed code is not B, C, G, or "")}\\
+0, \text{ otherwise} \end{cases}\]
+
+\[ \begin{aligned}
+Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t) +\beta_3 Competition_i \\
+&+& \beta_4 (Competition_i \times Post_t) + \beta_5 (Treat_i \times Post_t \times Competition_i) \\ 
+&+&X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
+\end{aligned}\]
+
+\hypertarget{full-sample-1}{%
+\subsection{Full Sample}\label{full-sample-1}}
+
+\begin{table}[H] \centering 
+  \caption{Effect of Competition: Quickpay 2009-2011} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{3}{c}{$Delay_{it}$ (in days)} \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$6.25$^{***}$ & $-$3.65$^{**}$ & $-$3.17$^{**}$ \\ 
+  & (0.50) & (1.55) & (1.59) \\ 
+  & & & \\ 
+ $Post_t$ & 9.35$^{***}$ &  &  \\ 
+  & (1.18) &  &  \\ 
+  & & & \\ 
+ $Treat_i \times Post_t$ & 10.35$^{***}$ & 11.38$^{***}$ & 11.48$^{***}$ \\ 
+  & (1.48) & (2.02) & (2.04) \\ 
+  & & & \\ 
+ $Competition_i$ & $-$1.36$^{*}$ & 3.16$^{***}$ & 2.98$^{**}$ \\ 
+  & (0.70) & (1.21) & (1.23) \\ 
+  & & & \\ 
+ $Post_t \times Competition_i$ & 4.40$^{***}$ & 0.68 & 0.98 \\ 
+  & (1.26) & (1.62) & (1.65) \\ 
+  & & & \\ 
+ $Post_t \times Competition_i \times Treat_i$ & $-$8.42$^{***}$ & $-$5.55$^{***}$ & $-$5.70$^{***}$ \\ 
+  & (1.54) & (2.12) & (2.15) \\ 
+  & & & \\ 
+ Constant & 34.16$^{***}$ &  &  \\ 
+  & (0.71) &  &  \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Year-Quarter Fixed Effects & No & Yes & Yes \\ 
+Firm Fixed Effects & No & Yes & Yes \\ 
+Task Fixed Effects & No & No & Yes \\ 
+Duration, Budget, Bids & No & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes \\ 
+Observations & 173,900 & 155,638 & 155,638 \\ 
+R$^{2}$ & 0.01 & 0.11 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.05 & 0.05 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{3}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{3}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{subsample-projects-active-both-before-and-after-quickpay-1}{%
+\subsection{Subsample: Projects active both before and after
+Quickpay}\label{subsample-projects-active-both-before-and-after-quickpay-1}}
+
+\begin{table}[H] \centering 
+  \caption{Effect of Competition: Quickpay 2009-2011} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{3}{c}{$Delay_{it}$ (in days)} \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$5.62$^{***}$ & $-$7.18$^{***}$ & $-$7.22$^{***}$ \\ 
+  & (0.65) & (2.15) & (2.23) \\ 
+  & & & \\ 
+ $Post_t$ & 21.56$^{***}$ &  &  \\ 
+  & (1.56) &  &  \\ 
+  & & & \\ 
+ $Treat_i \times Post_t$ & 11.80$^{***}$ & 10.84$^{***}$ & 10.42$^{***}$ \\ 
+  & (2.02) & (2.77) & (2.83) \\ 
+  & & & \\ 
+ $Competition_i$ & 2.25$^{**}$ & 5.08$^{***}$ & 5.71$^{***}$ \\ 
+  & (0.89) & (1.78) & (1.82) \\ 
+  & & & \\ 
+ $Post_t \times Competition_i$ & 1.57 & $-$4.86$^{**}$ & $-$5.07$^{**}$ \\ 
+  & (1.66) & (2.19) & (2.23) \\ 
+  & & & \\ 
+ $Post_t \times Competition_i \times Treat_i$ & $-$11.03$^{***}$ & $-$4.07 & $-$3.74 \\ 
+  & (2.11) & (2.94) & (3.00) \\ 
+  & & & \\ 
+ Constant & 26.68$^{***}$ &  &  \\ 
+  & (0.89) &  &  \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Year-Quarter Fixed Effects & No & Yes & Yes \\ 
+Firm Fixed Effects & No & Yes & Yes \\ 
+Task Fixed Effects & No & No & Yes \\ 
+Duration, Budget, Bids & No & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes \\ 
+Observations & 110,888 & 95,988 & 95,988 \\ 
+R$^{2}$ & 0.02 & 0.11 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.02 & 0.05 & 0.05 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{3}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{3}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{3}{r}{Sample restricted to projects active both before and after Quickpay.} \\ 
+\end{tabular} 
+\end{table}
+
 \hypertarget{firms-rank-order}{%
 \section{Firm's rank order}\label{firms-rank-order}}
 
@@ -400,6 +637,10 @@ Discrete}\label{portfolio-effects-discrete}}
   See
   \href{https://github.com/QuickPay-Operational-Performance/Data-and-code/blob/master/notes/Portfolio\%20model\%2B0308.pdf}{Jie's
   notes} for details.
+\item
+  Assumption: Parallel trends between small projects of firms in
+  different terciles wtih pooled sample large projects. May not hold.
+  Need to include firm specific control or at least plot the trends.
 \item
   Let \(Rank_f^{(k)}\) be an indicator for firm being in the k-th
   tercile of \(Rank\). Define:
@@ -533,9 +774,9 @@ Adjusted R$^{2}$ & 0.01 & 0.02 & 0.03 & 0.04 & 0.04 \\
 \end{tabular} 
 \end{table}
 
-\hypertarget{firms-rank-order-vibhuti}{%
-\section{Firm's rank order
-{[}Vibhuti{]}}\label{firms-rank-order-vibhuti}}
+\hypertarget{firms-rank-order-alternate-model}{%
+\section{Firm's rank order : Alternate
+model}\label{firms-rank-order-alternate-model}}
 
 \hypertarget{continuous-model}{%
 \subsection{Continuous model}\label{continuous-model}}
@@ -584,8 +825,6 @@ Adjusted R$^{2}$ & 0.01 & 0.02 & 0.03 & 0.04 & 0.04 \\
 
 \textbf{Assumption:} Parallel trends between large and small projects of
 the same firm.
-
-\includegraphics{/Users/vibhutidhingra/Desktop/cts_te.png}
 
 \begin{table}[H] \centering 
   \caption{Continuous Portfolio Effects: Quickpay 2009-2011} 
@@ -850,8 +1089,9 @@ Adjusted R$^{2}$ & 0.01 & 0.02 & 0.03 & 0.04 & 0.04 \\
 \end{tabular} 
 \end{table}
 
-\hypertarget{other-proxies}{%
-\section{Other Proxies}\label{other-proxies}}
+\hypertarget{other-proxies-for-treatment-intensity-or-portfolio-effects}{%
+\section{Other Proxies for Treatment intensity or Portfolio
+effects}\label{other-proxies-for-treatment-intensity-or-portfolio-effects}}
 
 \hypertarget{proxy-1-revenue-from-small-projects}{%
 \subsection{Proxy 1: Revenue from small
