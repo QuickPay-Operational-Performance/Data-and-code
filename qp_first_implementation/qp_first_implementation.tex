@@ -284,6 +284,11 @@ For a subsample of competitive or noncompetitive projects:
   According to our hypothesis, \(\beta_4\) should be positive and
   significant for competitive projects, and insignificant for
   non-competitive projects.
+\item
+  In the following regressions, we also control for the project's age.
+  Project's age is defined as the number of quarters since it first
+  showed up in the sample. We include the terciles of project's age as a
+  control variable.
 \end{itemize}
 
 \begin{table}[H] \centering 
@@ -296,30 +301,31 @@ For a subsample of competitive or noncompetitive projects:
 \\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$6.26$^{***}$ & $-$4.16$^{***}$ & $-$3.95$^{***}$ & $-$1.21$^{**}$ & $-$2.06 \\ 
-  & (0.50) & (0.50) & (0.51) & (0.53) & (1.80) \\ 
+ $Treat_i$ & $-$6.26$^{***}$ & $-$4.12$^{***}$ & $-$3.90$^{***}$ & $-$0.97$^{*}$ & $-$2.25 \\ 
+  & (0.50) & (0.50) & (0.50) & (0.53) & (1.79) \\ 
   & & & & & \\ 
- $SignedAfterQP_i$ & $-$19.40$^{***}$ & $-$26.26$^{***}$ & $-$41.89$^{***}$ & $-$37.24$^{***}$ & $-$37.51$^{***}$ \\ 
-  & (0.78) & (0.80) & (0.95) & (0.95) & (1.04) \\ 
+ $SignedAfterQP_i$ & $-$19.40$^{***}$ & $-$21.24$^{***}$ & $-$37.23$^{***}$ & $-$33.58$^{***}$ & $-$34.53$^{***}$ \\ 
+  & (0.78) & (0.81) & (0.97) & (0.97) & (1.06) \\ 
   & & & & & \\ 
- $Post_t$ & 19.61$^{***}$ & 20.13$^{***}$ &  &  &  \\ 
+ $Post_t$ & 19.61$^{***}$ & 16.38$^{***}$ &  &  &  \\ 
   & (0.47) & (0.99) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times SignedAfterQP_i \times Post_t$ & 5.97$^{***}$ & 3.10$^{***}$ & 3.64$^{***}$ & 2.04$^{**}$ & 5.21$^{***}$ \\ 
-  & (0.98) & (0.99) & (1.01) & (1.01) & (1.17) \\ 
+ $Treat_i \times SignedAfterQP_i \times Post_t$ & 5.97$^{***}$ & 2.77$^{***}$ & 3.34$^{***}$ & 2.01$^{**}$ & 5.10$^{***}$ \\ 
+  & (0.98) & (0.99) & (1.00) & (1.00) & (1.17) \\ 
   & & & & & \\ 
- Constant & 32.80$^{***}$ & 50.77$^{***}$ &  &  &  \\ 
-  & (0.37) & (0.65) &  &  &  \\ 
+ Constant & 32.80$^{***}$ & 35.52$^{***}$ &  &  &  \\ 
+  & (0.37) & (0.69) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
 $Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project age & No & Yes & Yes & Yes & Yes \\ 
 Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
 Task Fixed Effects & No & No & No & Yes & Yes \\ 
 Firm Fixed Effects & No & No & No & No & Yes \\ 
 Observations & 144,011 & 128,428 & 128,428 & 128,428 & 128,428 \\ 
-R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.07 & 0.13 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.06 & 0.06 \\ 
+R$^{2}$ & 0.01 & 0.03 & 0.05 & 0.07 & 0.13 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.03 & 0.05 & 0.06 & 0.06 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -339,36 +345,37 @@ Adjusted R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.06 & 0.06 \\
 \\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & 2.01$^{*}$ & 4.03$^{***}$ & 4.18$^{***}$ & $-$0.33 & $-$0.95 \\ 
-  & (1.11) & (1.14) & (1.14) & (1.40) & (4.15) \\ 
+ $Treat_i$ & 2.01$^{*}$ & 4.09$^{***}$ & 4.21$^{***}$ & $-$0.63 & $-$1.03 \\ 
+  & (1.11) & (1.14) & (1.14) & (1.40) & (4.11) \\ 
   & & & & & \\ 
- $SignedAfterQP_i$ & $-$15.13$^{***}$ & $-$20.56$^{***}$ & $-$39.76$^{***}$ & $-$39.92$^{***}$ & $-$42.37$^{***}$ \\ 
-  & (1.72) & (1.77) & (2.15) & (2.22) & (2.62) \\ 
+ $SignedAfterQP_i$ & $-$15.13$^{***}$ & $-$17.98$^{***}$ & $-$37.41$^{***}$ & $-$37.36$^{***}$ & $-$39.23$^{***}$ \\ 
+  & (1.72) & (1.78) & (2.17) & (2.25) & (2.66) \\ 
   & & & & & \\ 
- $Post_t$ & 20.62$^{***}$ & 30.62$^{***}$ &  &  &  \\ 
-  & (1.11) & (5.86) &  &  &  \\ 
+ $Post_t$ & 20.62$^{***}$ & 28.80$^{***}$ &  &  &  \\ 
+  & (1.11) & (5.98) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times SignedAfterQP_i \times Post_t$ & $-$3.34 & $-$4.44$^{**}$ & $-$3.97$^{*}$ & $-$2.06 & 1.21 \\ 
-  & (2.16) & (2.20) & (2.25) & (2.33) & (2.98) \\ 
+ $Treat_i \times SignedAfterQP_i \times Post_t$ & $-$3.34 & $-$4.42$^{**}$ & $-$3.94$^{*}$ & $-$2.04 & 0.86 \\ 
+  & (2.16) & (2.20) & (2.24) & (2.33) & (2.98) \\ 
   & & & & & \\ 
- Constant & 29.65$^{***}$ & 33.18$^{***}$ &  &  &  \\ 
-  & (0.92) & (5.53) &  &  &  \\ 
+ Constant & 29.65$^{***}$ & 18.80$^{***}$ &  &  &  \\ 
+  & (0.92) & (5.71) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
 $Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project age & No & Yes & Yes & Yes & Yes \\ 
 Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
 Task Fixed Effects & No & No & No & Yes & Yes \\ 
 Firm Fixed Effects & No & No & No & No & Yes \\ 
 Observations & 29,889 & 27,210 & 27,210 & 27,210 & 27,210 \\ 
-R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.08 & 0.17 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.06 & 0.03 \\ 
+R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.09 & 0.17 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.06 & 0.04 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
  & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
  & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
- & \multicolumn{5}{r}{Sample restricted to non competed projects.} \\ 
+ & \multicolumn{5}{r}{Sample restricted to non-competed projects.} \\ 
 \end{tabular} 
 \end{table}
 
@@ -388,7 +395,7 @@ Adjusted R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.06 & 0.03 \\
 \begin{itemize}
 \tightlist
 \item
-  According to our hypothesis, \(\beta_8\) should be positive and
+  According to our hypothesis, \(\beta_9\) should be positive and
   significant. That is the difference in treatment effect for
   competitive and non-competitive projects is significant.
 \end{itemize}
@@ -403,45 +410,46 @@ Adjusted R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.06 & 0.03 \\
 \\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & 2.01$^{*}$ & 3.87$^{***}$ & 3.97$^{***}$ & 2.00$^{*}$ & $-$0.44 \\ 
-  & (1.11) & (1.14) & (1.15) & (1.19) & (2.27) \\ 
+ $Treat_i$ & 2.01$^{*}$ & 3.94$^{***}$ & 4.00$^{***}$ & 1.80 & $-$0.79 \\ 
+  & (1.11) & (1.14) & (1.14) & (1.19) & (2.26) \\ 
   & & & & & \\ 
- $StartedAfterQP_i$ & $-$15.13$^{***}$ & $-$21.10$^{***}$ & $-$38.27$^{***}$ & $-$37.01$^{***}$ & $-$38.83$^{***}$ \\ 
-  & (1.72) & (1.76) & (1.86) & (1.86) & (2.09) \\ 
+ $StartedAfterQP_i$ & $-$15.13$^{***}$ & $-$18.13$^{***}$ & $-$35.18$^{***}$ & $-$34.24$^{***}$ & $-$36.26$^{***}$ \\ 
+  & (1.72) & (1.76) & (1.85) & (1.86) & (2.09) \\ 
   & & & & & \\ 
- $Competitive_i$ & 3.15$^{***}$ & 4.53$^{***}$ & 4.53$^{***}$ & 2.35$^{**}$ & 3.59$^{**}$ \\ 
-  & (0.99) & (1.04) & (1.05) & (1.11) & (1.61) \\ 
+ $Competitive_i$ & 3.15$^{***}$ & 5.76$^{***}$ & 5.37$^{***}$ & 2.66$^{**}$ & 4.00$^{**}$ \\ 
+  & (0.99) & (1.04) & (1.04) & (1.11) & (1.61) \\ 
   & & & & & \\ 
- $Post_t$ & 20.62$^{***}$ & 20.39$^{***}$ &  &  &  \\ 
-  & (1.11) & (1.40) &  &  &  \\ 
+ $Post_t$ & 20.62$^{***}$ & 17.75$^{***}$ &  &  &  \\ 
+  & (1.11) & (1.41) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Competitive_i$ & $-$8.26$^{***}$ & $-$8.03$^{***}$ & $-$7.90$^{***}$ & $-$3.07$^{**}$ & $-$0.62 \\ 
-  & (1.22) & (1.25) & (1.25) & (1.31) & (2.06) \\ 
+ $Treat_i \times Competitive_i$ & $-$8.26$^{***}$ & $-$8.07$^{***}$ & $-$7.89$^{***}$ & $-$2.66$^{**}$ & $-$0.38 \\ 
+  & (1.22) & (1.24) & (1.25) & (1.30) & (2.05) \\ 
   & & & & & \\ 
- $Post_t \times Competitive_i$ & $-$1.00 & $-$0.73 & $-$1.80 & $-$2.26$^{*}$ & $-$3.95$^{***}$ \\ 
-  & (1.21) & (1.32) & (1.36) & (1.36) & (1.49) \\ 
+ $Post_t \times Competitive_i$ & $-$1.00 & $-$1.74 & $-$2.46$^{*}$ & $-$2.78$^{**}$ & $-$4.34$^{***}$ \\ 
+  & (1.21) & (1.32) & (1.35) & (1.36) & (1.49) \\ 
   & & & & & \\ 
- $StartedAfterQP_i \times Competitive_i$ & $-$4.27$^{**}$ & $-$5.03$^{***}$ & $-$3.88$^{**}$ & $-$0.37 & 1.45 \\ 
-  & (1.89) & (1.93) & (1.97) & (1.97) & (2.21) \\ 
+ $StartedAfterQP_i \times Competitive_i$ & $-$4.27$^{**}$ & $-$3.10 & $-$2.49 & 0.48 & 1.98 \\ 
+  & (1.89) & (1.92) & (1.96) & (1.96) & (2.21) \\ 
   & & & & & \\ 
- $Treat_i \times StartedAfterQP_i \times Post_t$ & $-$3.34 & $-$4.45$^{**}$ & $-$3.98$^{*}$ & $-$2.61 & $-$0.22 \\ 
-  & (2.16) & (2.20) & (2.24) & (2.23) & (2.60) \\ 
+ $Treat_i \times StartedAfterQP_i \times Post_t$ & $-$3.34 & $-$4.43$^{**}$ & $-$3.96$^{*}$ & $-$2.74 & $-$0.53 \\ 
+  & (2.16) & (2.20) & (2.23) & (2.22) & (2.60) \\ 
   & & & & & \\ 
- $Treat_i \times StartedAfterQP_i \times Post_t \times Competitive_i$ & 9.31$^{***}$ & 7.61$^{***}$ & 7.68$^{***}$ & 4.49$^{*}$ & 4.69$^{*}$ \\ 
-  & (2.37) & (2.41) & (2.45) & (2.44) & (2.85) \\ 
+ $Treat_i \times StartedAfterQP_i \times Post_t \times Competitive_i$ & 9.31$^{***}$ & 7.27$^{***}$ & 7.39$^{***}$ & 4.58$^{*}$ & 4.87$^{*}$ \\ 
+  & (2.37) & (2.41) & (2.45) & (2.44) & (2.84) \\ 
   & & & & & \\ 
- Constant & 29.65$^{***}$ & 45.93$^{***}$ &  &  &  \\ 
-  & (0.92) & (1.06) &  &  &  \\ 
+ Constant & 29.65$^{***}$ & 29.76$^{***}$ &  &  &  \\ 
+  & (0.92) & (1.11) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
 $Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project age & No & Yes & Yes & Yes & Yes \\ 
 Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
 Task Fixed Effects & No & No & No & Yes & Yes \\ 
 Firm Fixed Effects & No & No & No & No & Yes \\ 
 Observations & 173,900 & 155,638 & 155,638 & 155,638 & 155,638 \\ 
-R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.07 & 0.13 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.06 & 0.05 \\ 
+R$^{2}$ & 0.01 & 0.03 & 0.05 & 0.07 & 0.13 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.03 & 0.05 & 0.06 & 0.06 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 

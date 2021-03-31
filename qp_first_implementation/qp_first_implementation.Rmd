@@ -417,6 +417,7 @@ For a subsample of competitive or noncompetitive projects:
 $$ \begin{aligned} Delay_{it} &=& \beta_0 +\beta_1 Treat_i+ \beta_2 StartedAfterQP_i+ \beta_3 Post_t \\ &+& \beta_4 (Treat_i \times Post_t \times StartedAfterQP_i )+\epsilon_{it} \end{aligned} $$
 
 * According to our hypothesis, $\beta_4$ should be positive and significant for competitive projects, and insignificant for non-competitive projects. 
+* In the following regressions, we also control for the project's age. Project's age is defined as the number of quarters since it first showed up in the sample. We include the terciles of project's age as a control variable. 
 
 ```{r competition_delays_subsample, echo=FALSE, results='asis'}
 
@@ -426,7 +427,11 @@ reg_df[,project_signed_after_quickpay:=ifelse(contract_award_unique_key%in%new_p
 
 # assign number of quarters since project started: "project age" in some sense
 setorder(reg_df,contract_award_unique_key,action_date_year_quarter)[, 
-           project_quarter := rowid(contract_award_unique_key)]
+           project_quarter_age := rowid(contract_award_unique_key)]
+
+reg_df[,project_quarter_tercile:=as.factor(ntile(project_quarter_age,3))]
+# Project age is a highly skewed variable
+# Including it as fixed effects doesn't work because projects in treatment and control are not always in same "tercile" while controling for everything else. 
 
 baseline_reg=felm(winsorized_delay~treat_i+
                                   project_signed_after_quickpay+
@@ -448,7 +453,8 @@ controls_and_no_fe=felm(winsorized_delay~treat_i+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i|
+                            post_t:winsorized_initial_budget_i+
+                            project_quarter_tercile|
                             0|
                             0|
                             contract_award_unique_key,
@@ -464,7 +470,8 @@ controls_and_time_fe=felm(winsorized_delay~treat_i+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i|
+                            post_t:winsorized_initial_budget_i+
+                            project_quarter_tercile|
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
@@ -480,7 +487,8 @@ controls_time_task_fe=felm(winsorized_delay~treat_i+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i|
+                            post_t:winsorized_initial_budget_i+
+                            project_quarter_tercile|
                             product_or_service_code+
                             action_date_year_quarter|
                             0|
@@ -497,7 +505,8 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i|
+                            post_t:winsorized_initial_budget_i+
+                            project_quarter_tercile|
                             recipient_duns+
                             product_or_service_code+
                             action_date_year_quarter|
@@ -530,6 +539,7 @@ stargazer(baseline_reg,
           add.lines = list(
                            c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
+                           c("Project age",rep("No",1),rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
                            c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
@@ -538,7 +548,8 @@ stargazer(baseline_reg,
                    'number_of_offers_received',
                    'post_t:winsorized_initial_duration_in_days_i',
                    'post_t:winsorized_initial_budget_i',
-                   'post_t:number_of_offers_received'),
+                   'post_t:number_of_offers_received',
+                   'project_quarter_tercile'),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
@@ -569,7 +580,8 @@ controls_and_no_fe=felm(winsorized_delay~treat_i+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i|
+                            post_t:winsorized_initial_budget_i+
+                            project_quarter_tercile|
                             0|
                             0|
                             contract_award_unique_key,
@@ -585,7 +597,8 @@ controls_and_time_fe=felm(winsorized_delay~treat_i+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i|
+                            post_t:winsorized_initial_budget_i+
+                            project_quarter_tercile|
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
@@ -601,7 +614,8 @@ controls_time_task_fe=felm(winsorized_delay~treat_i+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i|
+                            post_t:winsorized_initial_budget_i+
+                            project_quarter_tercile|
                             product_or_service_code+
                             action_date_year_quarter|
                             0|
@@ -618,7 +632,8 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i|
+                            post_t:winsorized_initial_budget_i+
+                            project_quarter_tercile|
                             recipient_duns+
                             product_or_service_code+
                             action_date_year_quarter|
@@ -651,6 +666,7 @@ stargazer(baseline_reg,
           add.lines = list(
                            c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
+                           c("Project age",rep("No",1),rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
                            c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
@@ -659,12 +675,13 @@ stargazer(baseline_reg,
                    'number_of_offers_received',
                    'post_t:winsorized_initial_duration_in_days_i',
                    'post_t:winsorized_initial_budget_i',
-                   'post_t:number_of_offers_received'),
+                   'post_t:number_of_offers_received',
+                   'project_quarter_tercile'),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level.",
-                  "Sample restricted to non competed projects."),
+                  "Sample restricted to non-competed projects."),
           header=F)
 ```
 
@@ -674,7 +691,7 @@ stargazer(baseline_reg,
 
 $$ \begin{aligned} Delay_{it} &=& \beta_0 +\beta_1 Treat_i+ \beta_2 StartedAfterQP_i+ \beta_3 Post_t+ \beta_4 Competitive_i\\ && + \beta_5 (Treat_i \times Competitive_i) + \beta_6 (Post_t \times Competitive_i) \\ && +\beta_7 (StartedAfterQP_i \times Competitive_i)+\beta_8 (Treat_i \times Post_t \times StartedAfterQP_i )\\ && +\beta_9 (Treat_i \times Post_t \times StartedAfterQP_i \times Competitive_i) + \epsilon_{it} \end{aligned} $$
 
-* According to our hypothesis, $\beta_8$ should be positive and significant. That is the difference in treatment effect for competitive and non-competitive projects is significant.
+* According to our hypothesis, $\beta_9$ should be positive and significant. That is the difference in treatment effect for competitive and non-competitive projects is significant.
 
 ```{r competition_delays_combined, echo= FALSE, results ='asis'}
 
@@ -708,7 +725,8 @@ controls_and_no_fe=felm(winsorized_delay~treat_i+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i|
+                            post_t:winsorized_initial_budget_i+
+                            project_quarter_tercile|
                                    0| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
@@ -729,7 +747,8 @@ controls_and_time_fe=felm(winsorized_delay~treat_i+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i|
+                            post_t:winsorized_initial_budget_i+
+                            project_quarter_tercile|
                                    action_date_year_quarter| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
@@ -750,7 +769,8 @@ controls_time_task_fe=felm(winsorized_delay~treat_i+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i|
+                            post_t:winsorized_initial_budget_i+
+                            project_quarter_tercile|
                                    action_date_year_quarter+
                        product_or_service_code| # no fixed effects
                                    0| # no IV
@@ -772,7 +792,8 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i|
+                            post_t:winsorized_initial_budget_i+
+                            project_quarter_tercile|
                                    action_date_year_quarter+
                        product_or_service_code+recipient_duns| # no fixed effects
                                    0| # no IV
@@ -809,6 +830,7 @@ stargazer(baseline_reg,
           add.lines = list(
                            c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
+                           c("Project age",rep("No",1),rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
                            c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
@@ -817,7 +839,8 @@ stargazer(baseline_reg,
                    'number_of_offers_received',
                    'post_t:winsorized_initial_duration_in_days_i',
                    'post_t:winsorized_initial_budget_i',
-                   'post_t:number_of_offers_received'),
+                   'post_t:number_of_offers_received',
+                   'project_quarter_tercile'),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
