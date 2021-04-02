@@ -62,7 +62,7 @@
 
 \title{First Implementation of QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Mar 31, 2021}
+\date{\vspace{-2.5em}Apr 02, 2021}
 
 \begin{document}
 \maketitle
@@ -457,6 +457,80 @@ Adjusted R$^{2}$ & 0.01 & 0.03 & 0.05 & 0.06 & 0.06 \\
  & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
 \end{tabular} 
 \end{table}
+
+\hypertarget{delays-three-way-interaction}{%
+\subsection{Delays: Three-Way
+Interaction}\label{delays-three-way-interaction}}
+
+\[ Artificial_i = \begin{cases} 1 , \text{ if project started after quickpay and is competitively awarded}\\ 0 , \text{ otherwise } \end{cases}
+\]
+
+\[ \begin{aligned}
+Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t) \\
+&+&\beta_3 Artificial_i + \beta_4 (Treat_i \times Post_t \times Artificial_i) \\ 
+&+&X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
+\end{aligned}\]
+
+\begin{table}[H] \centering 
+  \caption{Effect of Competition: Quickpay 2009-2011} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$6.19$^{***}$ & $-$5.17$^{***}$ & $-$5.28$^{***}$ & $-$3.27$^{***}$ & $-$3.42$^{**}$ \\ 
+  & (0.50) & (0.53) & (0.53) & (0.56) & (1.58) \\ 
+  & & & & & \\ 
+ $Post_t$ & 16.98$^{***}$ & 14.20$^{***}$ &  &  &  \\ 
+  & (0.58) & (0.98) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 3.29$^{***}$ & 5.42$^{***}$ & 5.94$^{***}$ & 6.15$^{***}$ & 7.55$^{***}$ \\ 
+  & (0.83) & (0.91) & (0.93) & (0.93) & (1.03) \\ 
+  & & & & & \\ 
+ $Artificial_i$ & $-$16.95$^{***}$ & $-$22.01$^{***}$ & $-$33.64$^{***}$ & $-$29.83$^{***}$ & $-$31.57$^{***}$ \\ 
+  & (0.79) & (0.81) & (0.90) & (0.90) & (1.00) \\ 
+  & & & & & \\ 
+ $Post_t \times Artificial_i \times Treat_i$ & 2.61$^{**}$ & $-$1.23 & $-$0.87 & $-$1.74 & 0.16 \\ 
+  & (1.11) & (1.14) & (1.16) & (1.15) & (1.32) \\ 
+  & & & & & \\ 
+ Constant & 33.00$^{***}$ & 50.94$^{***}$ &  &  &  \\ 
+  & (0.36) & (0.62) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
+Task Fixed Effects & No & No & No & Yes & Yes \\ 
+Firm Fixed Effects & No & No & No & No & Yes \\ 
+Observations & 173,900 & 155,638 & 155,638 & 155,638 & 155,638 \\ 
+R$^{2}$ & 0.01 & 0.02 & 0.04 & 0.06 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.02 & 0.04 & 0.06 & 0.05 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{plots-for-delays}{%
+\subsection{Plots for Delays}\label{plots-for-delays}}
+
+\hypertarget{projects-started-after-quickpay}{%
+\subsubsection{Projects started after
+QuickPay}\label{projects-started-after-quickpay}}
+
+\includegraphics{qp_first_implementation_files/figure-latex/delays_plot_after_qp-1.pdf}
+
+\hypertarget{effect-of-competition-for-small-and-large-projects}{%
+\subsubsection{Effect of Competition for Small and Large
+Projects}\label{effect-of-competition-for-small-and-large-projects}}
+
+\includegraphics{qp_first_implementation_files/figure-latex/delays_plot_competition_and_size-1.pdf}
+\includegraphics{qp_first_implementation_files/figure-latex/delays_plot_competition_and_size-2.pdf}
 
 \hypertarget{impact-of-firms-financial-constraints}{%
 \section{Impact of Firm's Financial
