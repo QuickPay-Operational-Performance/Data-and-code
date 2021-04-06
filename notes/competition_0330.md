@@ -85,6 +85,8 @@ For competitive projects:
 | Large Projects | $\beta_0+\beta_4$                  | $\beta_0 +\beta_3+\beta_4+\beta_6$                           | $\beta_3+\beta_6$                       |
 | **Difference** | $\beta_1+ \beta_5$                 | $\beta_1+\beta_5+\beta_8+ \beta_9$                           | **Treatment Effect:** $\beta_8+\beta_9$ |
 
+Difference between competitive and non-competitive projects: $\beta_9$
+
 #### Started After QuickPay
 
 For non-competitive projects:
@@ -102,4 +104,8 @@ For competitive projects:
 | Small Projects | $\beta_0 +\beta_1+\beta_4+\beta_5$ | $\beta_0+\beta_1+ \beta_2 +\beta_3+\\ \beta_4+\beta_5+\beta_6+\\ +\beta_7+\beta_8+\beta_9+\\\beta_{10}+\beta_{11}$ | $\beta_2+\beta_3+\\ \beta_6+\beta_7+\\ \beta_8+\beta_9+\\ \beta_{10}+\beta_{11} $ |
 | Large Projects | $\beta_0+\beta_4$                  | $\beta_0+\beta_2 +\beta_3+\beta_4+\beta_6+\beta_7$           | $\beta_2 +\beta_3+\\ \beta_6 + \beta_7$                      |
 | **Difference** | $\beta_1+ \beta_5$                 | $\beta_1+\beta_5+\\ \beta_8+ \beta_9 \\ \beta_{10}+\beta_{11}$ | $\beta_8+\beta_9 +\beta_{10}+\beta_{11}$                     |
+
+Difference between competitive and non-competitive projects: $\beta_9+\beta_{11}$
+
+**Interpretation: $\beta_{11}$ is the additional treatment effect for (small) competitive projects signed after QuickPay (relative to those that started before the policy). ** 
 
