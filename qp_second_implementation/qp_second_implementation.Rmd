@@ -325,10 +325,17 @@ Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Pre_t + \beta_2 (Treat_i \times 
 \end{aligned}$$
 
 ```{r contract_financing, echo=FALSE, results='asis'}
+
+# both_projects=intersect(unique(subset(reg_df,pre_t==0)$contract_award_unique_key),
+#                          unique(subset(reg_df,pre_t==1)$contract_award_unique_key))
 # Baseline Regressions 
-baseline_reg=felm(winsorized_delay~treat_i+pre_t:treat_i+pre_t+
-                    contract_financing_i+pre_t:contract_financing_i+
-                    pre_t:treat_i:contract_financing_i|
+baseline_reg=felm(winsorized_delay~treat_i+
+                    contract_financing_i+
+                    pre_t:treat_i+
+                    treat_i:contract_financing_i+
+                    pre_t:contract_financing_i+
+                    pre_t:treat_i:contract_financing_i+
+                    pre_t|
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
@@ -336,30 +343,71 @@ baseline_reg=felm(winsorized_delay~treat_i+pre_t:treat_i+pre_t+
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
-# time fixed effects also included in the following specs
-controls_and_firm_fe=felm(winsorized_delay~treat_i+
-                            pre_t:treat_i+
-                            contract_financing_i+
-                            pre_t:contract_financing_i+
-                            pre_t:treat_i:contract_financing_i+
+controls_and_no_fe=felm(winsorized_delay~treat_i+
+                    contract_financing_i+
+                    pre_t:treat_i+
+                    treat_i:contract_financing_i+
+                    pre_t:contract_financing_i+
+                    pre_t:treat_i:contract_financing_i+
+                    pre_t+
                             winsorized_initial_duration_in_days_i+
                             winsorized_initial_budget_i+
                             number_of_offers_received+
                             pre_t:winsorized_initial_duration_in_days_i+
                             pre_t:winsorized_initial_budget_i+
                             pre_t:number_of_offers_received|
-                            recipient_duns+action_date_year_quarter|
+                            0|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
-                            pre_t:treat_i+
-                            contract_financing_i+
-                            pre_t:contract_financing_i+
-                            pre_t:treat_i:contract_financing_i+
+controls_and_time_fe=felm(winsorized_delay~treat_i+
+                    contract_financing_i+
+                    pre_t:treat_i+
+                    treat_i:contract_financing_i+
+                    pre_t:contract_financing_i+
+                    pre_t:treat_i:contract_financing_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            pre_t:winsorized_initial_duration_in_days_i+
+                            pre_t:winsorized_initial_budget_i+
+                            pre_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+# time fixed effects also included in the following specs
+controls_time_task_fe=felm(winsorized_delay~treat_i+
+                    contract_financing_i+
+                    pre_t:treat_i+
+                    treat_i:contract_financing_i+
+                    pre_t:contract_financing_i+
+                    pre_t:treat_i:contract_financing_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            pre_t:winsorized_initial_duration_in_days_i+
+                            pre_t:winsorized_initial_budget_i+
+                            pre_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_and_all_fe=felm(winsorized_delay~treat_i+
+                    contract_financing_i+
+                    pre_t:treat_i+
+                    treat_i:contract_financing_i+
+                    pre_t:contract_financing_i+
+                    pre_t:treat_i:contract_financing_i+
                             winsorized_initial_duration_in_days_i+
                             winsorized_initial_budget_i+
                             number_of_offers_received+
@@ -374,14 +422,17 @@ controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
                           cmethod = "reghdfe")
 vars.order=c('treat_i',
              'pre_t',
-              'treat_i:pre_t',
               'contract_financing_i',
-              'pre_t:contract_financing_i',
-              'treat_i:pre_t:contract_financing_i')
+              'treat_i:pre_t',
+              'treat_i:contract_financing_i',
+              'contract_financing_i:pre_t',
+              'treat_i:contract_financing_i:pre_t')
 
 stargazer(baseline_reg,
-          controls_and_firm_fe,
-          controls_and_firm_task_fe,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
           digits=2,
           digits.extra=2,
           title = "Effect of Contract Financing: Quickpay 2013-2016",
@@ -390,21 +441,22 @@ stargazer(baseline_reg,
           order=paste0("^", vars.order , "$"),
           covariate.labels = c("$Treat_i$",
                                "$Pre_t$",
-                               "$Treat_i$x$Pre_t$",
                                "$CF_i$",
-                               "$Pre_t$ x $CF_i$",
-                               "$Pre_t$ x $CF_i$ x $Treat_i$",
+                               "$Treat_i \\times CF_i$",
+                               "$Treat_i \\times Pre_t$",
+                               "$Pre_t \\times CF_i$",
+                               "$Treat_i \\times Pre_t \\times CF_i$",
                                "Constant"),
           object.names=FALSE, 
           model.numbers=TRUE,
           font.size = "small",
           omit.stat=c("f", "ser"),
           column.sep.width = "-2pt",
-          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
-                           c("Firm Fixed Effects","No","Yes","Yes"),
-                           c("Task Fixed Effects","No","No","Yes"),
-                           c("Duration, Budget, Bids","No","Yes","Yes"),
-                           c("$Pre_t$  x  (Duration, Budget, Bids)","No","Yes","Yes")),
+          add.lines = list(c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
+                           c("$Pre_t \\times $ (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -433,9 +485,13 @@ Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Pre_t + \beta_2 (Treat_i \times 
 \end{aligned}$$
 ```{r contract_financing_two_indicators, echo=FALSE, results='asis'}
 # Baseline Regressions 
-baseline_reg=felm(winsorized_delay~treat_i+pre_t:treat_i:no_contract_financing_i+pre_t+
-                    contract_financing_i+pre_t:contract_financing_i+
-                    pre_t:treat_i:contract_financing_i|
+baseline_reg=felm(winsorized_delay~treat_i+
+                    contract_financing_i+
+                    pre_t:treat_i:no_contract_financing_i+
+                    treat_i:contract_financing_i+
+                    pre_t:contract_financing_i+
+                    pre_t:treat_i:contract_financing_i+
+                    pre_t|
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
@@ -443,30 +499,71 @@ baseline_reg=felm(winsorized_delay~treat_i+pre_t:treat_i:no_contract_financing_i
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
-# time fixed effects also included in the following specs
-controls_and_firm_fe=felm(winsorized_delay~treat_i+
-                            pre_t:treat_i:no_contract_financing_i+
-                            contract_financing_i+
-                            pre_t:contract_financing_i+
-                            pre_t:treat_i:contract_financing_i+
+controls_and_no_fe=felm(winsorized_delay~treat_i+
+                    contract_financing_i+
+                    pre_t:treat_i:no_contract_financing_i+
+                    treat_i:contract_financing_i+
+                    pre_t:contract_financing_i+
+                    pre_t:treat_i:contract_financing_i+
+                    pre_t+
                             winsorized_initial_duration_in_days_i+
                             winsorized_initial_budget_i+
                             number_of_offers_received+
                             pre_t:winsorized_initial_duration_in_days_i+
                             pre_t:winsorized_initial_budget_i+
                             pre_t:number_of_offers_received|
-                            recipient_duns+action_date_year_quarter|
+                            0|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
-                            pre_t:treat_i:no_contract_financing_i+
-                            contract_financing_i+
-                            pre_t:contract_financing_i+
-                            pre_t:treat_i:contract_financing_i+
+controls_and_time_fe=felm(winsorized_delay~treat_i+
+                    contract_financing_i+
+                    pre_t:treat_i:no_contract_financing_i+
+                    treat_i:contract_financing_i+
+                    pre_t:contract_financing_i+
+                    pre_t:treat_i:contract_financing_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            pre_t:winsorized_initial_duration_in_days_i+
+                            pre_t:winsorized_initial_budget_i+
+                            pre_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+# time fixed effects also included in the following specs
+controls_time_task_fe=felm(winsorized_delay~treat_i+
+                    contract_financing_i+
+                    pre_t:treat_i:no_contract_financing_i+
+                    treat_i:contract_financing_i+
+                    pre_t:contract_financing_i+
+                    pre_t:treat_i:contract_financing_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            pre_t:winsorized_initial_duration_in_days_i+
+                            pre_t:winsorized_initial_budget_i+
+                            pre_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_and_all_fe=felm(winsorized_delay~treat_i+
+                    contract_financing_i+
+                    pre_t:treat_i:no_contract_financing_i+
+                    treat_i:contract_financing_i+
+                    pre_t:contract_financing_i+
+                    pre_t:treat_i:contract_financing_i+
                             winsorized_initial_duration_in_days_i+
                             winsorized_initial_budget_i+
                             number_of_offers_received+
@@ -481,37 +578,41 @@ controls_and_firm_task_fe=felm(winsorized_delay~treat_i+
                           cmethod = "reghdfe")
 vars.order=c('treat_i',
              'pre_t',
-              'treat_i:pre_t:no_contract_financing_i',
               'contract_financing_i',
-              'pre_t:contract_financing_i',
-              'treat_i:pre_t:contract_financing_i')
+              'treat_i:pre_t:no_contract_financing_i',
+              'treat_i:contract_financing_i',
+              'contract_financing_i:pre_t',
+              'treat_i:contract_financing_i:pre_t')
 
 stargazer(baseline_reg,
-          controls_and_firm_fe,
-          controls_and_firm_task_fe,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
           digits=2,
           digits.extra=2,
           title = "Effect of Contract Financing: Quickpay 2013-2016",
           dep.var.labels="$Delay_{it}$ (in days)",
           dep.var.caption = "",
           order=paste0("^", vars.order , "$"),
-          covariate.labels = c("$Treat_i$",
-                               "$Pre_t$",
-                               "$Treat_i$x$Pre_t$x$NCF_i$",
-                               "$CF_i$",
-                               "$Pre_t$ x $CF_i$",
-                               "$Pre_t$ x $CF_i$ x $Treat_i$",
-                               "Constant"),
+          # covariate.labels = c("$Treat_i$",
+          #                      "$Pre_t$",
+          #                      "$CF_i$",
+          #                      "$Treat_i \\times CF_i$",
+          #                      "$Treat_i \\times Pre_t \\times NCF_i $",
+          #                      "$Pre_t \\times CF_i$",
+          #                      "$Treat_i \\times Pre_t \\times CF_i$",
+          #                      "Constant"),
           object.names=FALSE, 
           model.numbers=TRUE,
           font.size = "small",
           omit.stat=c("f", "ser"),
           column.sep.width = "-2pt",
-          add.lines = list(c("Year-Quarter Fixed Effects","No","Yes","Yes"),
-                           c("Firm Fixed Effects","No","Yes","Yes"),
-                           c("Task Fixed Effects","No","No","Yes"),
-                           c("Duration, Budget, Bids","No","Yes","Yes"),
-                           c("$Pre_t$  x  (Duration, Budget, Bids)","No","Yes","Yes")),
+          add.lines = list(c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
+                           c("$Pre_t \\times $ (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',

@@ -62,7 +62,7 @@
 
 \title{First Implementation of QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Apr 06, 2021}
+\date{\vspace{-2.5em}Apr 19, 2021}
 
 \begin{document}
 \maketitle
@@ -222,32 +222,113 @@ NumberOfBids_{it} &=& \beta_0 + \beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Trea
   \caption{Effect of Competition After QuickPay: Quickpay 2009-2011} 
   \label{} 
 \small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{3}{c}{$NumberOfBids_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & 0.11 & 0.12 & 0.69$^{***}$ \\ 
+  & (0.11) & (0.11) & (0.12) \\ 
+  & & & \\ 
+ $Post_t$ & 0.004 &  &  \\ 
+  & (0.07) &  &  \\ 
+  & & & \\ 
+ $Treat_i \times Post_t$ & 0.25$^{**}$ & 0.25$^{**}$ & 0.16$^{*}$ \\ 
+  & (0.12) & (0.12) & (0.09) \\ 
+  & & & \\ 
+ Constant & 5.43$^{***}$ &  &  \\ 
+  & (0.10) &  &  \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Year-Quarter Fixed Effects & No & Yes & Yes \\ 
+Task Fixed Effects & No & No & Yes \\ 
+Observations & 371,290 & 371,290 & 371,290 \\ 
+R$^{2}$ & 0.0001 & 0.0003 & 0.31 \\ 
+Adjusted R$^{2}$ & 0.0001 & 0.0002 & 0.31 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{3}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{3}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{3}{r}{Sample restricted to fully competed projects.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{impact-on-initial-duration}{%
+\subsection{Impact on Initial
+Duration}\label{impact-on-initial-duration}}
+
+\begin{table}[H] \centering 
+  \caption{Effect of Competition After QuickPay: Quickpay 2009-2011} 
+  \label{} 
+\small 
 \begin{tabular}{@{\extracolsep{-2pt}}lcccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{4}{c}{$NumberOfBids_{it}$} \\ 
+\\[-1.8ex] & \multicolumn{4}{c}{$InitialDuration_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & 0.11 & 0.28$^{***}$ & 0.28$^{***}$ & 0.58$^{***}$ \\ 
-  & (0.11) & (0.09) & (0.09) & (0.07) \\ 
+ $Treat_i$ & $-$22.92$^{***}$ & $-$22.45$^{***}$ & $-$1.70 & $-$3.73 \\ 
+  & (1.05) & (1.04) & (1.04) & (2.56) \\ 
   & & & & \\ 
- $Post_t$ & 0.004 & $-$0.43$^{***}$ &  &  \\ 
-  & (0.07) & (0.12) &  &  \\ 
+ $Post_t$ & 20.43$^{***}$ &  &  &  \\ 
+  & (0.84) &  &  &  \\ 
   & & & & \\ 
- $Treat_i \times Post_t$ & 0.25$^{**}$ & 0.41$^{***}$ & 0.41$^{***}$ & 0.22$^{**}$ \\ 
-  & (0.12) & (0.12) & (0.13) & (0.09) \\ 
+ $Treat_i \times Post_t$ & $-$5.35$^{***}$ & $-$5.40$^{***}$ & $-$8.44$^{***}$ & $-$7.59$^{***}$ \\ 
+  & (1.06) & (1.07) & (0.98) & (0.87) \\ 
   & & & & \\ 
- Constant & 5.43$^{***}$ & 4.57$^{***}$ &  &  \\ 
-  & (0.10) & (0.10) &  &  \\ 
+ Constant & 165.06$^{***}$ &  &  &  \\ 
+  & (0.83) &  &  &  \\ 
   & & & & \\ 
 \hline \\[-1.8ex] 
-Duration, Budget & No & Yes & Yes & Yes \\ 
-$Post_t \times $  (Duration, Budget) & No & Yes & Yes & Yes \\ 
-Year-Quarter Fixed Effects & No & No & Yes & Yes \\ 
-Task Fixed Effects & No & No & No & Yes \\ 
-Observations & 371,290 & 348,912 & 348,912 & 348,912 \\ 
-R$^{2}$ & 0.0001 & 0.002 & 0.002 & 0.37 \\ 
-Adjusted R$^{2}$ & 0.0001 & 0.002 & 0.002 & 0.36 \\ 
+Year-Quarter Fixed Effects & No & Yes & Yes & Yes \\ 
+Task Fixed Effects & No & No & Yes & Yes \\ 
+Firm Fixed Effects & No & No & No & Yes \\ 
+Observations & 348,991 & 348,991 & 348,991 & 348,990 \\ 
+R$^{2}$ & 0.01 & 0.02 & 0.23 & 0.54 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.02 & 0.22 & 0.51 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{4}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{4}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{4}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{4}{r}{Sample restricted to fully competed projects.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{impact-on-initial-budget}{%
+\subsection{Impact on Initial Budget}\label{impact-on-initial-budget}}
+
+\begin{table}[H] \centering 
+  \caption{Effect of Competition After QuickPay: Quickpay 2009-2011} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lcccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{4}{c}{$InitialBudget_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$53,697.50$^{***}$ & $-$53,097.38$^{***}$ & $-$14.44 & $-$305.71 \\ 
+  & (1,856.22) & (1,836.24) & (1,975.57) & (5,457.49) \\ 
+  & & & & \\ 
+ $Post_t$ & 68,486.18$^{***}$ &  &  &  \\ 
+  & (1,618.36) &  &  &  \\ 
+  & & & & \\ 
+ $Treat_i \times Post_t$ & $-$33,188.84$^{***}$ & $-$33,479.50$^{***}$ & $-$35,920.65$^{***}$ & $-$29,541.46$^{***}$ \\ 
+  & (1,995.60) & (1,993.37) & (1,797.28) & (1,689.72) \\ 
+  & & & & \\ 
+ Constant & 152,346.30$^{***}$ &  &  &  \\ 
+  & (1,498.38) &  &  &  \\ 
+  & & & & \\ 
+\hline \\[-1.8ex] 
+Year-Quarter Fixed Effects & No & Yes & Yes & Yes \\ 
+Task Fixed Effects & No & No & Yes & Yes \\ 
+Firm Fixed Effects & No & No & No & Yes \\ 
+Observations & 371,369 & 371,369 & 371,369 & 371,368 \\ 
+R$^{2}$ & 0.03 & 0.04 & 0.25 & 0.49 \\ 
+Adjusted R$^{2}$ & 0.03 & 0.04 & 0.24 & 0.46 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{4}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
