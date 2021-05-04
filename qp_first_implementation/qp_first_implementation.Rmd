@@ -16,6 +16,7 @@ header-includes:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(openxlsx)
 library(tidyverse)
 library(dplyr)
 library(pryr)
@@ -163,6 +164,89 @@ $$ Treat_i = \begin{cases} 1, \text{ if project } i \text{ is a small business}\
 $$ Post_t = \begin{cases} 1, \text{ if year-quarter } t > \text{ April 27, 2011}\\
 0, \text{ otherwise} \end{cases}$$
 
+
+# Summary Statistics
+
+```{r summary_stats, echo=F, eval = F}
+
+# get mean and std_dev of continuous variables 
+cols_cts=c("business_type",
+              "winsorized_delay",
+              "winsorized_initial_duration_in_days_i",
+              "winsorized_initial_budget_i",
+              "post_t")
+
+mean_stats=reg_df[,..cols_cts][, lapply(.SD, mean, na.rm=TRUE), 
+                   by=c('business_type','post_t') ]
+setnames(mean_stats,c('winsorized_delay',
+                     'winsorized_initial_duration_in_days_i',
+                     'winsorized_initial_budget_i'),
+                     c('mean_delay',
+                     'mean_initial_duration_in_days_i',
+                     'mean_initial_budget_i'))
+
+sd_stats=reg_df[,..cols_cts][, lapply(.SD, sd, na.rm=TRUE), 
+                 by=c('business_type','post_t') ]
+setnames(sd_stats,c('winsorized_delay',
+                     'winsorized_initial_duration_in_days_i',
+                     'winsorized_initial_budget_i'),
+                     c('sd_delay',
+                     'sd_initial_duration_in_days_i',
+                     'sd_initial_budget_i'))
+
+# get num unique values of discrete variables
+cols_discrete=c("business_type",
+              "recipient_duns",
+              "product_or_service_code",
+              "contract_award_unique_key",
+              "post_t")
+
+num_unique_stats=reg_df[,..cols_discrete][, lapply(.SD, n_distinct, na.rm=TRUE), 
+                         by=c('business_type','post_t')]
+
+setnames(num_unique_stats,c("recipient_duns",
+                            "product_or_service_code",
+                            "contract_award_unique_key"),
+                     c('number_of_firms',
+                     'number_of_tasks',
+                     'number_of_projects'))
+
+# get sum of values for binary variables
+# this is wrong -- same project gets included multiple times, to be fixed
+# cols_binary=c("business_type",
+#               "contract_financing_i",
+#               "competitively_awarded_i",
+#               "post_t")
+# 
+# num_binary_stats=reg_df[,..cols_binary][, lapply(.SD, sum, na.rm=TRUE), 
+#                          by=c('business_type','post_t')]
+# 
+# setnames(num_binary_stats,c("contract_financing_i",
+#                            "competitively_awarded_i"),
+#                      c('number_of_projects_financed',
+#                      'number_of_projects_competed'))
+
+
+# num_binary_stats[,business_and_time:=paste(business_type,post_t,sep="_and_post")]
+num_unique_stats[,business_and_time:=paste(business_type,post_t,sep="_and_post")]
+mean_stats[,business_and_time:=paste(business_type,post_t,sep="_and_post")]
+sd_stats[,business_and_time:=paste(business_type,post_t,sep="_and_post")]
+
+all_summ=merge(mean_stats,
+      sd_stats,
+      on=business_and_time)
+
+all_summ=merge(all_summ,
+               num_binary_stats,
+               on=business_and_time)
+
+all_summ=merge(all_summ,
+               num_unique_stats,
+               on=business_and_time)
+
+path='/Users/vibhutidhingra/Desktop/research/Git:Github/QuickPay/qp_data_and_code/qp_first_implementation/'
+# write.xlsx(all_summ, paste0(path,'summary_stats.xlsx'))
+```
 # Parallel Trends Test
 
 Let $Time$ denote $q$-th quarter since the beginning of time horizon. For $Post_t =0$, we run the following regression:
