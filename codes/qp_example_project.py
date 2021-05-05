@@ -65,3 +65,6 @@ print(example_df.to_latex())
 # To get final end date: 
 df.period_of_performance_current_end_date.tail()
 
+# To get an example modification
+print(df[['period_of_performance_current_end_date',\
+          'award_description']].iloc[0:5].to_latex(index=False))
