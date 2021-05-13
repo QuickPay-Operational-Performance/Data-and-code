@@ -175,25 +175,30 @@ cols_cts=c("business_type",
               "winsorized_delay",
               "winsorized_initial_duration_in_days_i",
               "winsorized_initial_budget_i",
+               "number_of_offers_received",
               "post_t")
 
 mean_stats=reg_df[,..cols_cts][, lapply(.SD, mean, na.rm=TRUE), 
                    by=c('business_type','post_t') ]
 setnames(mean_stats,c('winsorized_delay',
                      'winsorized_initial_duration_in_days_i',
-                     'winsorized_initial_budget_i'),
+                     'winsorized_initial_budget_i',
+                     'number_of_offers_received'),
                      c('mean_delay',
                      'mean_initial_duration_in_days_i',
-                     'mean_initial_budget_i'))
+                     'mean_initial_budget_i',
+                     'mean_number_of_offers_received'))
 
 sd_stats=reg_df[,..cols_cts][, lapply(.SD, sd, na.rm=TRUE), 
                  by=c('business_type','post_t') ]
 setnames(sd_stats,c('winsorized_delay',
                      'winsorized_initial_duration_in_days_i',
-                     'winsorized_initial_budget_i'),
+                     'winsorized_initial_budget_i',
+                    'number_of_offers_received'),
                      c('sd_delay',
                      'sd_initial_duration_in_days_i',
-                     'sd_initial_budget_i'))
+                     'sd_initial_budget_i',
+                     'sd_number_of_offers_received'))
 
 # get num unique values of discrete variables
 cols_discrete=c("business_type",
