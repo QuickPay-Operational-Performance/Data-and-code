@@ -216,11 +216,22 @@ Adjusted R$^{2}$ & 0.01 & 0.01 & 0.03 & 0.05 & 0.05 \\
 budget}\label{impact-on-bids-duration-and-budget}}
 
 \[ \begin{aligned}
-y_{it} &=& \beta_0 + \beta_1 Treat_i + \beta_2 (Treat_i \times Post_t) \\
-&& + \mu_t + \lambda_{task}+ \epsilon_{it}
+y_{it} &=& \beta_0 + \beta_1 Treat_i +\beta_2 StartedAfterQP_i\\ 
+&+& \beta_3 (Treat_i \times StartedAfterQP_i) +\mu_t+ \lambda_{task}+ e_{it}
 \end{aligned}\]
 
-where \(y_{it}\) can be bids, duration, or budget.
+where \(y_{it}\) denotes bids, duration, or budget of project \(i\)
+signed in quarter \(t\).
+
+\begin{itemize}
+\tightlist
+\item
+  \(After_t\) is a dummy that equals one if \(t\) is a quarter after
+  QuickPay was launched.
+\item
+  \(\mu_t\) denotes fixed effects for the quarter in which the project
+  was signed.
+\end{itemize}
 
 \begin{table}[H] \centering 
   \caption{Effect of Competition After QuickPay: Quickpay 2009-2011} 
@@ -232,18 +243,18 @@ where \(y_{it}\) can be bids, duration, or budget.
 \\[-1.8ex] & $NumberOfBids_{it}$ & $InitialDuration_{it}$ & $InitialBudget_{it}$ \\ 
 \\[-1.8ex] & (1) & (2) & (3)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & 0.69$^{***}$ & $-$1.70 & $-$14.44 \\ 
-  & (0.12) & (1.04) & (1,975.57) \\ 
+ $Treat_i$ & 0.89$^{***}$ & $-$7.33$^{***}$ & $-$10,203.21$^{***}$ \\ 
+  & (0.09) & (0.70) & (1,103.25) \\ 
   & & & \\ 
- $Treat_i \times Post_t$ & 0.16$^{*}$ & $-$8.44$^{***}$ & $-$35,920.65$^{***}$ \\ 
-  & (0.09) & (0.98) & (1,797.28) \\ 
+ $Treat_i \times After_t$ & 0.27$^{**}$ & $-$3.26$^{***}$ & $-$22,048.85$^{***}$ \\ 
+  & (0.12) & (0.98) & (1,580.03) \\ 
   & & & \\ 
 \hline \\[-1.8ex] 
-Year-Quarter fixed effects & Yes & Yes & Yes \\ 
 Task fixed effects & Yes & Yes & Yes \\ 
-Observations & 371,290 & 348,991 & 371,369 \\ 
-R$^{2}$ & 0.31 & 0.23 & 0.25 \\ 
-Adjusted R$^{2}$ & 0.31 & 0.22 & 0.24 \\ 
+Time fixed effects & Yes & Yes & Yes \\ 
+Observations & 227,318 & 220,524 & 227,358 \\ 
+R$^{2}$ & 0.25 & 0.20 & 0.27 \\ 
+Adjusted R$^{2}$ & 0.24 & 0.19 & 0.26 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -273,24 +284,24 @@ NumberOfBids_{it} &=& \beta_0 + \beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Trea
 \\[-1.8ex] & \multicolumn{3}{c}{$NumberOfBids_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & 0.11 & 0.12 & 0.69$^{***}$ \\ 
-  & (0.11) & (0.11) & (0.12) \\ 
+ $Treat_i$ & 0.25$^{***}$ & 0.25$^{***}$ & 0.89$^{***}$ \\ 
+  & (0.10) & (0.10) & (0.09) \\ 
   & & & \\ 
- $Post_t$ & 0.004 &  &  \\ 
-  & (0.07) &  &  \\ 
+ $After_t$ & $-$0.34$^{***}$ &  &  \\ 
+  & (0.11) &  &  \\ 
   & & & \\ 
- $Treat_i \times Post_t$ & 0.25$^{**}$ & 0.25$^{**}$ & 0.16$^{*}$ \\ 
-  & (0.12) & (0.12) & (0.09) \\ 
+ $Treat_i \times After_t$ & 0.30$^{**}$ & 0.30$^{**}$ & 0.27$^{**}$ \\ 
+  & (0.13) & (0.13) & (0.12) \\ 
   & & & \\ 
- Constant & 5.43$^{***}$ &  &  \\ 
-  & (0.10) &  &  \\ 
+ Constant & 5.07$^{***}$ &  &  \\ 
+  & (0.08) &  &  \\ 
   & & & \\ 
 \hline \\[-1.8ex] 
 Year-Quarter Fixed Effects & No & Yes & Yes \\ 
 Task Fixed Effects & No & No & Yes \\ 
-Observations & 371,290 & 371,290 & 371,290 \\ 
-R$^{2}$ & 0.0001 & 0.0003 & 0.31 \\ 
-Adjusted R$^{2}$ & 0.0001 & 0.0002 & 0.31 \\ 
+Observations & 227,318 & 227,318 & 227,318 \\ 
+R$^{2}$ & 0.0002 & 0.0003 & 0.25 \\ 
+Adjusted R$^{2}$ & 0.0002 & 0.0003 & 0.24 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -314,25 +325,25 @@ Duration}\label{impact-on-initial-duration}}
 \\[-1.8ex] & \multicolumn{4}{c}{$InitialDuration_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$22.92$^{***}$ & $-$22.45$^{***}$ & $-$1.70 & $-$3.73 \\ 
-  & (1.05) & (1.04) & (1.04) & (2.56) \\ 
+ $Treat_i$ & $-$18.02$^{***}$ & $-$17.61$^{***}$ & $-$7.33$^{***}$ & $-$6.65$^{***}$ \\ 
+  & (0.70) & (0.70) & (0.70) & (1.62) \\ 
   & & & & \\ 
- $Post_t$ & 20.43$^{***}$ &  &  &  \\ 
-  & (0.84) &  &  &  \\ 
+ $After_t$ & 1.27 &  &  &  \\ 
+  & (0.88) &  &  &  \\ 
   & & & & \\ 
- $Treat_i \times Post_t$ & $-$5.35$^{***}$ & $-$5.40$^{***}$ & $-$8.44$^{***}$ & $-$7.59$^{***}$ \\ 
-  & (1.06) & (1.07) & (0.98) & (0.87) \\ 
+ $Treat_i \times After_t$ & 2.84$^{***}$ & 2.52$^{**}$ & $-$3.26$^{***}$ & $-$2.04$^{**}$ \\ 
+  & (1.06) & (1.06) & (0.98) & (0.95) \\ 
   & & & & \\ 
- Constant & 165.06$^{***}$ &  &  &  \\ 
-  & (0.83) &  &  &  \\ 
+ Constant & 136.56$^{***}$ &  &  &  \\ 
+  & (0.58) &  &  &  \\ 
   & & & & \\ 
 \hline \\[-1.8ex] 
 Year-Quarter Fixed Effects & No & Yes & Yes & Yes \\ 
 Task Fixed Effects & No & No & Yes & Yes \\ 
 Firm Fixed Effects & No & No & No & Yes \\ 
-Observations & 348,991 & 348,991 & 348,991 & 348,990 \\ 
-R$^{2}$ & 0.01 & 0.02 & 0.23 & 0.54 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.02 & 0.22 & 0.51 \\ 
+Observations & 220,524 & 220,524 & 220,524 & 220,523 \\ 
+R$^{2}$ & 0.01 & 0.01 & 0.20 & 0.50 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.01 & 0.19 & 0.45 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{4}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -355,25 +366,25 @@ Adjusted R$^{2}$ & 0.01 & 0.02 & 0.22 & 0.51 \\
 \\[-1.8ex] & \multicolumn{4}{c}{$InitialBudget_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$53,697.50$^{***}$ & $-$53,097.38$^{***}$ & $-$14.44 & $-$305.71 \\ 
-  & (1,856.22) & (1,836.24) & (1,975.57) & (5,457.49) \\ 
+ $Treat_i$ & $-$64,224.13$^{***}$ & $-$60,124.82$^{***}$ & $-$10,203.21$^{***}$ & $-$1,845.16 \\ 
+  & (1,020.96) & (1,135.76) & (1,103.25) & (2,564.91) \\ 
   & & & & \\ 
- $Post_t$ & 68,486.18$^{***}$ &  &  &  \\ 
-  & (1,618.36) &  &  &  \\ 
+ $After_t$ & 23.31$^{***}$ &  &  &  \\ 
+  & (2.08) &  &  &  \\ 
   & & & & \\ 
- $Treat_i \times Post_t$ & $-$33,188.84$^{***}$ & $-$33,479.50$^{***}$ & $-$35,920.65$^{***}$ & $-$29,541.46$^{***}$ \\ 
-  & (1,995.60) & (1,993.37) & (1,797.28) & (1,689.72) \\ 
+ $Treat_i \times After_t$ & $-$7,454.09$^{***}$ & $-$17,016.07$^{***}$ & $-$22,048.85$^{***}$ & $-$19,847.89$^{***}$ \\ 
+  & (1,339.70) & (1,810.34) & (1,580.03) & (1,548.88) \\ 
   & & & & \\ 
- Constant & 152,346.30$^{***}$ &  &  &  \\ 
-  & (1,498.38) &  &  &  \\ 
+ Constant & $-$217,694.10$^{***}$ &  &  &  \\ 
+  & (31,218.93) &  &  &  \\ 
   & & & & \\ 
 \hline \\[-1.8ex] 
 Year-Quarter Fixed Effects & No & Yes & Yes & Yes \\ 
 Task Fixed Effects & No & No & Yes & Yes \\ 
 Firm Fixed Effects & No & No & No & Yes \\ 
-Observations & 371,369 & 371,369 & 371,369 & 371,368 \\ 
-R$^{2}$ & 0.03 & 0.04 & 0.25 & 0.49 \\ 
-Adjusted R$^{2}$ & 0.03 & 0.04 & 0.24 & 0.46 \\ 
+Observations & 227,358 & 227,358 & 227,358 & 227,357 \\ 
+R$^{2}$ & 0.03 & 0.04 & 0.27 & 0.50 \\ 
+Adjusted R$^{2}$ & 0.03 & 0.04 & 0.26 & 0.45 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{4}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 

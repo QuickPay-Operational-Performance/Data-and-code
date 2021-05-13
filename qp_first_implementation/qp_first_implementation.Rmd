@@ -94,6 +94,7 @@ df_first_reported[,receives_contracts_and_financial_aid_i:=ifelse(receives_contr
 df_first_reported[,winsorized_initial_duration_in_days_i:=Winsorize(as.numeric(
                                as.Date(period_of_performance_current_end_date)-
                                as.Date(period_of_performance_start_date)),na.rm=T)]
+
 df_first_reported[,winsorized_initial_budget_i:=Winsorize(base_and_all_options_value,na.rm=T)]
 
 select_cols=c("contract_award_unique_key",
@@ -561,40 +562,75 @@ ggplot(subset(mean_bids,competitively_awarded_i==1),
 ## Impact on bids, duration, and budget
 
 $$ \begin{aligned}
-y_{it} &=& \beta_0 + \beta_1 Treat_i + \beta_2 (Treat_i \times Post_t) \\
-&& + \mu_t + \lambda_{task}+ \epsilon_{it}
+y_{it} &=& \beta_0 + \beta_1 Treat_i +\beta_2 StartedAfterQP_i\\ 
+&+& \beta_3 (Treat_i \times StartedAfterQP_i) +\mu_t+ \lambda_{task}+ e_{it}
 \end{aligned}$$ 
 
-where $y_{it}$ can be bids, duration, or budget.
+where $y_{it}$ denotes bids, duration, or budget of project $i$ signed in quarter $t$.
+
+* $After_t$ is a dummy that equals one if $t$ is a quarter after QuickPay was launched. 
+* $\mu_t$ denotes fixed effects for the quarter in which the project was signed. 
 
 ```{r competition_all_in_one, echo=F, results='asis'}
+
+# Get bid metrics when projects were first signed
+# This is different from other regressions
+# Quarter fixed effects here mean quarters when the project was signed
+# Not the quarter over which the "delays" are measured elsewhere
+
+select_cols_comp=c("contract_award_unique_key",
+              "number_of_offers_received",
+              "competitively_awarded_i",
+              "winsorized_initial_duration_in_days_i",
+              "winsorized_initial_budget_i",
+              "action_date",
+              "contracting_officers_determination_of_business_size_code",
+              "product_or_service_code",
+              "recipient_duns")
+
+reg_df_first_reported=subset(df_first_reported,
+                             action_date<=as.Date('2012-06-30'))[,..select_cols_comp]
+                            
+reg_df_first_reported[,action_date_year_quarter:=as.Date(as.yearqtr(as.Date(action_date)),
+                                                       frac = 1)]
+setnames(reg_df_first_reported,'action_date_year_quarter','quarter_when_project_signed')
+
+reg_df_first_reported[,project_signed_after_quickpay:=
+          ifelse(quarter_when_project_signed>as.Date('2011-04-27'),1,0)]
+
+reg_df_first_reported[,treat_i:=
+          ifelse(contracting_officers_determination_of_business_size_code=="S",1,0)]
+
 bids=felm(number_of_offers_received~treat_i+
-                                  treat_i:post_t|
+                                  treat_i:project_signed_after_quickpay|
                             product_or_service_code+
-                            action_date_year_quarter|
+                            quarter_when_project_signed|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
 duration=felm(winsorized_initial_duration_in_days_i~treat_i+
-                                  treat_i:post_t|
+                                  treat_i:project_signed_after_quickpay|
                             product_or_service_code+
-                            action_date_year_quarter|
+                            quarter_when_project_signed|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
 budget=felm(winsorized_initial_budget_i~treat_i+
-                                  treat_i:post_t|
+                                 treat_i:project_signed_after_quickpay|
                             product_or_service_code+
-                            action_date_year_quarter|
+                            quarter_when_project_signed|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
@@ -609,14 +645,14 @@ stargazer(bids,
                            "$InitialBudget_{it}$"),
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$",
-                               "$Treat_i \\times Post_t$"),
+                               "$Treat_i \\times After_t$"),
           object.names=FALSE, 
           model.numbers=TRUE,
           font.size = "small",
           omit.stat=c("f", "ser"),
           column.sep.width = "0pt",
-          add.lines = list(c("Year-Quarter fixed effects",rep("Yes",3)),
-                           c("Task fixed effects",rep("Yes",3))),
+          add.lines = list(c("Task fixed effects",rep("Yes",3)),
+                           c("Time fixed effects",rep("Yes",3))),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
@@ -636,31 +672,34 @@ NumberOfBids_{it} &=& \beta_0 + \beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Trea
 ```{r competition_bids, echo=FALSE, results='asis'}
 
 baseline_reg=felm(number_of_offers_received~treat_i+
-                                  treat_i:post_t+
-                                  post_t|
+                                  treat_i:project_signed_after_quickpay+
+                                  project_signed_after_quickpay|
                                   0| # no fixed effects
                                   0| # no IV
                                   contract_award_unique_key, # clustered at project level
-                                  data=subset(reg_df,competitively_awarded_i==1),
+                                  data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1),
                                   exactDOF = TRUE,
                                   cmethod = "reghdfe")
 
 time_fe=felm(number_of_offers_received~treat_i+
-                                  treat_i:post_t|
-                            action_date_year_quarter|
+                                  treat_i:project_signed_after_quickpay|
+                            quarter_when_project_signed|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
 time_task_fe=felm(number_of_offers_received~treat_i+
-                                  treat_i:post_t|
+                                  treat_i:project_signed_after_quickpay|
                             product_or_service_code+
-                            action_date_year_quarter|
+                            quarter_when_project_signed|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
@@ -673,8 +712,8 @@ stargazer(baseline_reg,
           dep.var.labels="$NumberOfBids_{it}$",
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$",
-                               "$Post_t$",
-                               "$Treat_i \\times Post_t$",
+                               "$After_t$",
+                               "$Treat_i \\times After_t$",
                                "Constant"),
           object.names=FALSE, 
           model.numbers=TRUE,
@@ -697,42 +736,46 @@ stargazer(baseline_reg,
 ```{r competition_duration, echo=FALSE, results='asis'}
 
 baseline_reg=felm(winsorized_initial_duration_in_days_i~treat_i+
-                                  treat_i:post_t+
-                                  post_t|
+                                  treat_i:project_signed_after_quickpay+
+                                  project_signed_after_quickpay|
                                   0| # no fixed effects
                                   0| # no IV
                                   contract_award_unique_key, # clustered at project level
-                                  data=subset(reg_df,competitively_awarded_i==1),
+                                  data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1),
                                   exactDOF = TRUE,
                                   cmethod = "reghdfe")
 
 time_fe=felm(winsorized_initial_duration_in_days_i~treat_i+
-                                  treat_i:post_t|
-                            action_date_year_quarter|
+                                  treat_i:project_signed_after_quickpay|
+                            quarter_when_project_signed|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
 time_task_fe=felm(winsorized_initial_duration_in_days_i~treat_i+
-                                  treat_i:post_t|
+                                  treat_i:project_signed_after_quickpay|
                             product_or_service_code+
-                            action_date_year_quarter|
+                            quarter_when_project_signed|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
 all_fe=felm(winsorized_initial_duration_in_days_i~treat_i+
-                                  treat_i:post_t|
+                                  treat_i:project_signed_after_quickpay|
                             product_or_service_code+
-                            action_date_year_quarter+
+                            quarter_when_project_signed+
                             recipient_duns|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
@@ -746,8 +789,8 @@ stargazer(baseline_reg,
           dep.var.labels="$InitialDuration_{it}$",
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$",
-                               "$Post_t$",
-                               "$Treat_i \\times Post_t$",
+                               "$After_t$",
+                               "$Treat_i \\times After_t$",
                                "Constant"),
           object.names=FALSE, 
           model.numbers=TRUE,
@@ -769,42 +812,46 @@ stargazer(baseline_reg,
 ```{r competition_budget, echo=FALSE, results='asis'}
 
 baseline_reg=felm(winsorized_initial_budget_i~treat_i+
-                                  treat_i:post_t+
-                                  post_t|
+                                  treat_i:project_signed_after_quickpay+
+                                  quarter_when_project_signed|
                                   0| # no fixed effects
                                   0| # no IV
                                   contract_award_unique_key, # clustered at project level
-                                  data=subset(reg_df,competitively_awarded_i==1),
+                                  data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1),
                                   exactDOF = TRUE,
                                   cmethod = "reghdfe")
 
 time_fe=felm(winsorized_initial_budget_i~treat_i+
-                                  treat_i:post_t|
-                            action_date_year_quarter|
+                                  treat_i:project_signed_after_quickpay|
+                            quarter_when_project_signed|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
 time_task_fe=felm(winsorized_initial_budget_i~treat_i+
-                                  treat_i:post_t|
+                                  treat_i:project_signed_after_quickpay|
                             product_or_service_code+
-                            action_date_year_quarter|
+                            quarter_when_project_signed|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
 all_fe=felm(winsorized_initial_budget_i~treat_i+
-                                  treat_i:post_t|
+                                  treat_i:project_signed_after_quickpay|
                             product_or_service_code+
-                            action_date_year_quarter+
+                            quarter_when_project_signed+
                             recipient_duns|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_first_reported,
+                                      competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
@@ -818,8 +865,8 @@ stargazer(baseline_reg,
           dep.var.labels="$InitialBudget_{it}$",
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$",
-                               "$Post_t$",
-                               "$Treat_i \\times Post_t$",
+                               "$After_t$",
+                               "$Treat_i \\times After_t$",
                                "Constant"),
           object.names=FALSE, 
           model.numbers=TRUE,
