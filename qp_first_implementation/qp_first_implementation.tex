@@ -467,46 +467,45 @@ Adjusted R$^{2}$ & 0.01 & 0.03 & 0.05 & 0.06 & 0.06 \\
   \caption{Subsample of Non-competitive Projects: Quickpay 2009-2011} 
   \label{} 
 \small 
-\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\begin{tabular}{@{\extracolsep{-2pt}}lcccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\\[-1.8ex] & \multicolumn{4}{c}{$Delay_{it}$ (in days)} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$1.25 & $-$0.83 & $-$0.63 & $-$5.77$^{***}$ & $-$6.66 \\ 
-  & (1.29) & (1.36) & (1.37) & (1.61) & (4.19) \\ 
-  & & & & & \\ 
- $SA_i$ & $-$12.88$^{***}$ & $-$14.61$^{***}$ & $-$34.14$^{***}$ & $-$33.89$^{***}$ & $-$35.30$^{***}$ \\ 
-  & (1.87) & (1.93) & (2.31) & (2.40) & (2.79) \\ 
-  & & & & & \\ 
- $Post_t$ & 16.62$^{***}$ & 22.60$^{***}$ &  &  &  \\ 
-  & (1.60) & (5.99) &  &  &  \\ 
-  & & & & & \\ 
- $Treat_i \times SB_i \times Post_t$ & 7.64$^{***}$ & 11.79$^{***}$ & 11.57$^{***}$ & 12.19$^{***}$ & 14.47$^{***}$ \\ 
-  & (2.23) & (2.41) & (2.47) & (2.53) & (2.94) \\ 
-  & & & & & \\ 
- $Treat_i \times SA_i \times Post_t$ & $-$0.09 & 0.51 & 0.89 & 3.04 & 6.91$^{**}$ \\ 
-  & (2.25) & (2.33) & (2.37) & (2.45) & (3.16) \\ 
-  & & & & & \\ 
- Constant & 31.42$^{***}$ & 21.66$^{***}$ &  &  &  \\ 
-  & (1.00) & (5.60) &  &  &  \\ 
-  & & & & & \\ 
+ $Treat_i$ & $-$1.25 & $-$0.83 & $-$0.63 & $-$5.77$^{***}$ \\ 
+  & (1.29) & (1.36) & (1.37) & (1.61) \\ 
+  & & & & \\ 
+ $SA_i$ & $-$12.88$^{***}$ & $-$14.61$^{***}$ & $-$34.14$^{***}$ & $-$33.89$^{***}$ \\ 
+  & (1.87) & (1.93) & (2.31) & (2.40) \\ 
+  & & & & \\ 
+ $Post_t$ & 16.62$^{***}$ & 22.60$^{***}$ &  &  \\ 
+  & (1.60) & (5.99) &  &  \\ 
+  & & & & \\ 
+ $Treat_i \times SB_i \times Post_t$ & 7.64$^{***}$ & 11.79$^{***}$ & 11.57$^{***}$ & 12.19$^{***}$ \\ 
+  & (2.23) & (2.41) & (2.47) & (2.53) \\ 
+  & & & & \\ 
+ $Treat_i \times SA_i \times Post_t$ & $-$0.09 & 0.51 & 0.89 & 3.04 \\ 
+  & (2.25) & (2.33) & (2.37) & (2.45) \\ 
+  & & & & \\ 
+ Constant & 31.42$^{***}$ & 21.66$^{***}$ &  &  \\ 
+  & (1.00) & (5.60) &  &  \\ 
+  & & & & \\ 
 \hline \\[-1.8ex] 
-Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
-$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
-Project age & No & Yes & Yes & Yes & Yes \\ 
-Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
-Task Fixed Effects & No & No & No & Yes & Yes \\ 
-Firm Fixed Effects & No & No & No & No & Yes \\ 
-Observations & 29,889 & 27,210 & 27,210 & 27,210 & 27,210 \\ 
-R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.09 & 0.17 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.06 & 0.04 \\ 
+Duration, Budget, Bids & No & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes \\ 
+Project age & No & Yes & Yes & Yes \\ 
+Year-Quarter Fixed Effects & No & No & Yes & Yes \\ 
+Task Fixed Effects & No & No & No & Yes \\ 
+Observations & 29,889 & 27,210 & 27,210 & 27,210 \\ 
+R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.09 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.06 \\ 
 \hline 
 \hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
- & \multicolumn{5}{r}{Sample restricted to non-competed projects.} \\ 
+\textit{Note:}  & \multicolumn{4}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{4}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{4}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{4}{r}{Sample restricted to non-competed projects.} \\ 
 \end{tabular} 
 \end{table}
 
