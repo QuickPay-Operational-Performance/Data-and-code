@@ -123,7 +123,7 @@ reg_df=merge(df,
 # Delays over Time
 
 ```{r plot, echo=FALSE, results='asis'}
-mean_delay=df[!is.na(winsorized_delay) & action_date_year_quarter<as.Date('2012-06-30'), 
+mean_delay=df[!is.na(winsorized_delay) & action_date_year_quarter<=as.Date('2012-06-30'), 
               mean(winsorized_delay),  
               by = c('action_date_year_quarter','business_type')]
 mean_delay[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
