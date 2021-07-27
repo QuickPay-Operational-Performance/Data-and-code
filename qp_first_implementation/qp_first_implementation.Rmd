@@ -15,6 +15,7 @@ header-includes:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
 ```{r packages,warning=FALSE,message=FALSE,include=FALSE}
 library(openxlsx)
 library(tidyverse)
@@ -28,22 +29,29 @@ library(broom)
 library(data.table)
 library(scales)
 ``` 
+
+```{r paths, include=FALSE}
+directory='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/'
+```
+
 ```{r read_data, include=FALSE}
 # read quarterly resampled data
-df=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/resampled_qp_data/quickpay_resampled_fy10_to_fy12.csv')
+# df=fread(paste0(directory,'resampled_qp_data/quickpay_resampled_fy10_to_fy12.csv'))
 
+df=fread(paste0(directory,'resampled_qp_data/qp_resampled_data_fy10_to_fy18.csv'))
 # specify date columns
 date_cols=c("action_date_year_quarter","last_reported_start_date","last_reported_end_date")
 df[,(date_cols):= lapply(.SD, as.Date), .SDcols = date_cols]
 
 # restrict to quarter ending June 30, 2012
-df=subset(df,as.Date(action_date_year_quarter)<max(as.Date(df$action_date_year_quarter)))
+df=subset(df,as.Date(action_date_year_quarter)<max(as.Date('2012-07-01')))
 # data is truncated at July 1, 2012 -- 
 # so quarter ending Sept 30, 2012 will only have values as of July 1, 2012
 
-df_first_reported=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_first_reported.csv')
+df_first_reported=fread(paste0(directory,'qp_data_first_reported.csv'))
 # contains time-invariant contract characteristics -- info when contract first appeared in the data
 ```
+
 ```{r assign_variables_1, include=FALSE}
 # Assign variables: Delay, Winsorized Delay, Post_t, Treat_i
 
@@ -66,6 +74,7 @@ df[,post_t:=ifelse(action_date_year_quarter>as.Date("2011-04-27"),1,0)]
 df[,treat_i:=ifelse(business_type=="S",1,0)]
 # quickpay was implemented for small business contracts
 ```
+
 ```{r assign_variables_2, include=FALSE}
 # Assign variables: ContractFinancing_i, Competition_i, PerformanceBased_i, Financial_Aid_i
 df_first_reported[,contract_financing_i:=ifelse(!is.null(contract_financing_code)&
@@ -98,6 +107,9 @@ df_first_reported[,winsorized_initial_duration_in_days_i:=Winsorize(as.numeric(
 df_first_reported[,winsorized_initial_budget_i:=Winsorize(base_and_all_options_value,na.rm=T)]
 
 select_cols=c("contract_award_unique_key",
+              "recipient_duns",
+              "naics_code",
+              "product_or_service_code",
               "number_of_offers_received",
               "contract_financing_i",
               "competitively_awarded_i",
@@ -112,6 +124,7 @@ df_first_reported_cols=df_first_reported[,..select_cols]
 setkey(df_first_reported_cols,contract_award_unique_key)
 setkey(df,contract_award_unique_key)
 ```
+
 ```{r combine_dfs, include=FALSE}
 # Combine all variables into dataframe needed for regression 
 reg_df=merge(df,
@@ -162,6 +175,36 @@ ggplot(mean_delay, aes(x=year_quarter,
     legend.text = element_text(size=12))
 ```
 
+```{r normalized_plot,echo=FALSE,results='asis'}
+small_baseline=subset(mean_delay,business_type=="S" & year_quarter=="2010-Mar")$V1
+large_baseline=subset(mean_delay,business_type=="O" & year_quarter=="2010-Mar")$V1
+
+mean_delay[,V2:=ifelse(business_type=="S",V1*100/small_baseline,V1*100/large_baseline)]
+
+ggplot(mean_delay, aes(x=year_quarter,
+               y=V2, 
+               group = business_type, 
+               shape=business_type, 
+               linetype=business_type))+
+    geom_line() +    
+    scale_x_discrete(limits=mean_delay$year_quarter)+
+    geom_point(size=3)+
+    labs(x="Year-Quarter", y = "Average delay rate per quarter (in days)")+  
+    annotate("text", label = "QuickPay\n implemented", x = 8, y = 180,color="dimgrey")+
+    geom_vline(xintercept = 10.2, linetype="solid", 
+                color = "gray", size=1.5)+
+    scale_shape_discrete(name  ="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    scale_linetype_discrete(name="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    theme(axis.text.x = element_text(angle = 90),
+    axis.line = element_line(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    legend.text = element_text(size=12))
+```
 # Notation 
 
 * Project $i$, Year-Quarter $t$
