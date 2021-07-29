@@ -5,6 +5,7 @@ filtered_data_directory:=~/Dropbox/data_quickpay/qp_data
 
 all: qp_first_implementation.pdf \
      $(filtered_data_directory)/qp_first_matched_sample.csv \
+	$(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv\
 	$(filtered_data_directory)/data_for_different_years/*.csv 
 
 ################################################################################################################
@@ -40,7 +41,15 @@ $(filtered_data_directory)/qp_data_first_reported.csv: first_reported_info_qp_da
 
 ################################################################################################################
 
-# Resampling
+# Resampling FY 2010 to FY 2012
+
+$(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv: qp_resample_fy10_to_fy12.py \
+							$(filtered_data_directory)/data_for_different_years/qp_data_fy10_to_fy12.csv 
+	python qp_resample_fy10_to_fy12.py
+
+################################################################################################################
+
+# Resampling FY 2010 to FY 2018
 # takes approx 3 hours to run
 
 $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy18.csv: qp_resample_data.py \
