@@ -4,9 +4,7 @@ filtered_data_directory:=~/Dropbox/data_quickpay/qp_data
 # Phony target to check whether everything is up to date
 
 all: qp_first_implementation.pdf \
-     $(filtered_data_directory)/qp_first_matched_sample.csv \
-	$(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv\
-	$(filtered_data_directory)/data_for_different_years/*.csv 
+     $(filtered_data_directory)/qp_first_matched_sample.csv 
 
 ################################################################################################################
 
@@ -43,9 +41,11 @@ $(filtered_data_directory)/qp_data_first_reported.csv: first_reported_info_qp_da
 
 # Resampling FY 2010 to FY 2012
 
-$(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv: qp_resample_fy10_to_fy12.py \
-							$(filtered_data_directory)/data_for_different_years/qp_data_fy10_to_fy12.csv 
-	python qp_resample_fy10_to_fy12.py
+# commenting this for now coz keeping dependency data file in cloud only
+
+#$(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv: qp_resample_fy10_to_fy12.py \
+#							$(filtered_data_directory)/data_for_different_years/qp_data_fy10_to_fy12.csv 
+#	python qp_resample_fy10_to_fy12.py
 
 ################################################################################################################
 
@@ -58,11 +58,12 @@ $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy18.csv:
 
 ################################################################################################################
 
-# commenting out raw files for now 
+# commenting this for now coz keeping dependency data files in cloud only
+
 # Step 1: Obtain data based on Barrot-Nanda paper
 
-$(filtered_data_directory)/qp_data_fy10_to_fy18.csv $(filtered_data_directory)/data_for_different_years/*.csv: 
-					     qp_obtain_data.py quickpay_datacleaning.py
+#$(filtered_data_directory)/qp_data_fy10_to_fy18.csv $(filtered_data_directory)/data_for_different_years/*.csv: 
+#					     qp_obtain_data.py quickpay_datacleaning.py
 #					     $(raw_data_directory)/FY2010_097_Contracts_Full_20200205/*.csv \
 #					     $(raw_data_directory)/FY2011_097_Contracts_Full_20200205/*.csv \
 #					     $(raw_data_directory)/FY2012_097_Contracts_Full_20200205/*.csv \
@@ -72,4 +73,4 @@ $(filtered_data_directory)/qp_data_fy10_to_fy18.csv $(filtered_data_directory)/d
 #					     $(raw_data_directory)/FY2016_All_Contracts_Full_20200205/*.csv \
 #					     $(raw_data_directory)/FY2017_All_Contracts_Full_20200205/*.csv \
 #					     $(raw_data_directory)/FY2018_All_Contracts_Full_20200205/*.csv
-	python qp_obtain_data.py
+#	python qp_obtain_data.py
