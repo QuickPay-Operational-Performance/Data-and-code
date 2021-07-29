@@ -65,14 +65,10 @@ df_start_end = df.melt(id_vars=select_variables, \
                            value_vars='action_date',\
                            value_name='action_date_year_quarter')
 
-import time
-start=time.time()
 df_sorted = df_start_end.groupby(['contract_award_unique_key']).apply\
             (lambda x: x.drop_duplicates('action_date_year_quarter').set_index\
              ('action_date_year_quarter').resample('Q').last()).drop\
              (columns=['contract_award_unique_key','variable']).reset_index().ffill()
-end=time.time()
-print(end-start)
             
 df_sorted.rename(columns=\
                  {'period_of_performance_start_date':'last_reported_start_date',\
@@ -87,5 +83,5 @@ df_sorted.contract_award_unique_key.map(business_type.get)
 
 #%% Save to CSV
 
-df_sorted.to_csv(directory+
+df_sorted.to_csv(directory+'resampled_qp_data/'+
                 'qp_resampled_data_fy10_to_fy18.csv',index=False)
