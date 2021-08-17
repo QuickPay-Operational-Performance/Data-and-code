@@ -4,7 +4,16 @@ filtered_data_directory:=~/Dropbox/data_quickpay/qp_data
 # Phony target to check whether everything is up to date
 
 all: qp_first_implementation.pdf \
-     $(filtered_data_directory)/qp_first_matched_sample.csv 
+     qp_first_matched.pdf 
+
+################################################################################################################
+
+# Matched Regressions Plain DiD
+
+qp_first_matched.pdf: qp_first_matched.Rmd \
+			$(filtered_data_directory)/qp_first_matched_sample.csv \
+			$(filtered_data_directory)/qp_data_first_reported.csv
+	Rscript -e 'rmarkdown::render("qp_first_matched.Rmd")'
 
 ################################################################################################################
 
