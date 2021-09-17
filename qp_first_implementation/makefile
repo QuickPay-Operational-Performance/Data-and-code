@@ -4,7 +4,10 @@ filtered_data_directory:=~/Dropbox/data_quickpay/qp_data
 # Phony target to check whether everything is up to date
 
 all: qp_first_implementation.pdf \
-     qp_first_matched.pdf 
+     qp_first_matched.pdf \
+     qp_first_delay.pdf \
+     qp_first_relative_delay.pdf \
+     qp_first_pc_delay.pdf
 
 ################################################################################################################
 
@@ -27,6 +30,32 @@ $(filtered_data_directory)/qp_first_matched_sample.csv: matching_qp.py \
 ################################################################################################################
 
 # Other Metrics 
+
+# In all of these, sample restricted to those projects that had modification zero when they showed up in our sample
+
+# Delay rate (in days)
+qp_first_delay.pdf: qp_first_delay.Rmd \
+		    $(filtered_data_directory)/qp_data_first_reported.csv \
+		    $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv
+	
+	Rscript -e 'rmarkdown::render("qp_first_delay.Rmd")'
+
+# Relative delay rate 
+
+qp_first_relative_delay.pdf: qp_first_relative_delay.Rmd \
+		    $(filtered_data_directory)/qp_data_first_reported.csv \
+		    $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv
+	
+	Rscript -e 'rmarkdown::render("qp_first_relative_delay.Rmd")'
+
+
+# Percentage delay rate 
+
+qp_first_pc_delay.pdf: qp_first_pc_delay.Rmd \
+		    $(filtered_data_directory)/qp_data_first_reported.csv \
+		    $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv
+	
+	Rscript -e 'rmarkdown::render("qp_first_pc_delay.Rmd")'
 
 ################################################################################################################
 

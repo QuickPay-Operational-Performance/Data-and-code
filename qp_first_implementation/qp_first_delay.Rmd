@@ -83,7 +83,7 @@ df[,treat_i:=ifelse(business_type=="S",1,0)]
 # assign number of quarters since project started: "project age" in some sense
 df[, project_quarter_age := rowid(contract_award_unique_key)]
 df[,project_quarter_tercile:=as.factor(ntile(project_quarter_age,3))]
-# Including it as fixed effects doesn't work because projects in treatment and control are not always in same "tercile" while controling for everything else. 
+# Including it as fixed effects doesn't work because projects in treatment and control are not always in same "tercile" while controlling for everything else. 
 ```
 
 ```{r assign_variables_2, include=FALSE}
@@ -118,14 +118,16 @@ df_first_reported[,winsorized_initial_budget_i:=
 df_first_reported[,modification_number:=as.character(modification_number)]
 
 select_cols=c("contract_award_unique_key",
+              "recipient_duns",
+              "naics_code",
+              "product_or_service_code",
               "modification_number",
               "number_of_offers_received",
               "contract_financing_i",
               "competitively_awarded_i",
-              "period_of_performance_start_date",
-              "initial_duration_in_days_i",
               "winsorized_initial_duration_in_days_i",
               "winsorized_initial_budget_i")
+
 
 # not necessary but speed efficient to set keys
 setkey(df_first_reported[,..select_cols],
@@ -190,6 +192,8 @@ ggplot(mean_delay, aes(x=year_quarter,
 #        filename = "trends_figure.png")
 
 ```
+
+## Normalized delay
 
 ```{r normalized_plot, echo=FALSE, results='asis'}
 large_baseline=subset(mean_delay,year_quarter=='2010-Mar' & business_type=="O")$V1
