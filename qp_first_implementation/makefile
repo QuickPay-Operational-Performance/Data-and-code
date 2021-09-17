@@ -21,7 +21,7 @@ qp_first_matched.pdf: qp_first_matched.Rmd \
 
 $(filtered_data_directory)/qp_first_matched_sample.csv: matching_qp.py \
 			     $(filtered_data_directory)/qp_data_first_reported.csv \
-			     $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy18.csv
+			     $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv
 	python matching_qp.py
 
 ################################################################################################################
@@ -34,7 +34,7 @@ $(filtered_data_directory)/qp_first_matched_sample.csv: matching_qp.py \
 
 qp_first_implementation.pdf: qp_first_implementation.Rmd \
 			     $(filtered_data_directory)/qp_data_first_reported.csv \
-			     $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy18.csv
+			     $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv
 	
 	Rscript -e 'rmarkdown::render("qp_first_implementation.Rmd")'
 
@@ -50,16 +50,15 @@ $(filtered_data_directory)/qp_data_first_reported.csv: first_reported_info_qp_da
 
 # Resampling FY 2010 to FY 2012
 
-# commenting this for now coz keeping dependency data file in cloud only
-
-#$(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv: qp_resample_fy10_to_fy12.py \
-#							$(filtered_data_directory)/data_for_different_years/qp_data_fy10_to_fy12.csv 
-#	python qp_resample_fy10_to_fy12.py
+$(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv: qp_resample_fy10_to_fy12.py \
+							$(filtered_data_directory)/qp_data_fy10_to_fy18.csv 
+	python qp_resample_fy10_to_fy12.py
 
 ################################################################################################################
 
 # Resampling FY 2010 to FY 2018
 # takes approx 3 hours to run
+# not used here
 
 $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy18.csv: qp_resample_data.py \
 							$(filtered_data_directory)/qp_data_fy10_to_fy18.csv 

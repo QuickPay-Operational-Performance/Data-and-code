@@ -42,8 +42,6 @@ directory='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/'
 ```
 
 ```{r read_data, include=FALSE}
-# read quarterly resampled data
-# df=fread(paste0(directory,'resampled_qp_data/quickpay_resampled_fy10_to_fy12.csv'))
 
 df=fread(paste0(directory,'qp_first_matched_sample.csv'))
 # specify date columns

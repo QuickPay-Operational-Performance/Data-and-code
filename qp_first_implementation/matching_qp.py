@@ -21,7 +21,7 @@ directory='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/'
 #%% Read data
 
 df=pd.read_csv(directory+\
-               'resampled_qp_data/qp_resampled_data_fy10_to_fy18.csv')
+               'resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv')
 # read quarterly resampled data
 
 df=qd.convert_to_date_time(df)

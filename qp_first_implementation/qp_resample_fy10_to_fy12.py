@@ -15,8 +15,6 @@ import pandas as pd
 
 #%% Output path
 
-directory='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/data_for_different_years/'
-
 output_folder='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/'
 
 #%% Read data
@@ -28,11 +26,16 @@ cols_to_read=['contract_award_unique_key',\
               'base_and_all_options_value',\
               'contracting_officers_determination_of_business_size_code']
 
-df=pd.read_csv(directory+'qp_data_fy10_to_fy12.csv',
+df=pd.read_csv(output_folder+'qp_data_fy10_to_fy18.csv',
                usecols=cols_to_read)
 
 # this is faster than using function
 df['action_date']=pd.to_datetime(df['action_date'],errors='coerce')
+# filter until FY 2012
+ub=pd.to_datetime('2012-09-30')
+df=df[df.action_date<=ub].reset_index(drop=True)
+
+
 df['period_of_performance_start_date']=\
     pd.to_datetime(df['period_of_performance_start_date'],errors='coerce')
 df['period_of_performance_current_end_date']=\

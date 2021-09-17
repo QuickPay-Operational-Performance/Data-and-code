@@ -36,9 +36,8 @@ directory='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/'
 
 ```{r read_data, include=FALSE}
 # read quarterly resampled data
-# df=fread(paste0(directory,'resampled_qp_data/quickpay_resampled_fy10_to_fy12.csv'))
 
-df=fread(paste0(directory,'resampled_qp_data/qp_resampled_data_fy10_to_fy18.csv'))
+df=fread(paste0(directory,'resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv'))
 # specify date columns
 date_cols=c("action_date_year_quarter","last_reported_start_date","last_reported_end_date")
 df[,(date_cols):= lapply(.SD, as.Date), .SDcols = date_cols]

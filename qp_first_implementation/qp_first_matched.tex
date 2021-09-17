@@ -1,40 +1,47 @@
-\PassOptionsToPackage{unicode=true}{hyperref} % options for packages loaded elsewhere
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
 \PassOptionsToPackage{hyphens}{url}
 %
-\documentclass[]{article}
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
 \usepackage{lmodern}
-\usepackage{amssymb,amsmath}
 \usepackage{ifxetex,ifluatex}
-\usepackage{fixltx2e} % provides \textsubscript
 \ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
-  \usepackage{textcomp} % provides euro and other symbols
-\else % if luatex or xelatex
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
   \usepackage{unicode-math}
-  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
 \fi
-% use upquote if available, for straight quotes in verbatim environments
+% Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
-% use microtype if available
-\IfFileExists{microtype.sty}{%
-\usepackage[]{microtype}
-\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
 }{}
-\IfFileExists{parskip.sty}{%
-\usepackage{parskip}
-}{% else
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{6pt plus 2pt minus 1pt}
-}
-\usepackage{hyperref}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \hypersetup{
-            pdftitle={Matched Regressions QuickPay (2009-2012)},
-            pdfborder={0 0 0},
-            breaklinks=true}
-\urlstyle{same}  % don't use monospace font for urls
+  pdftitle={Matched Regressions QuickPay (2009-2012)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
-\usepackage{graphicx,grffile}
+\usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
 \def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
@@ -43,30 +50,22 @@
 % margins by default, and it is still possible to overwrite the defaults
 % using explicit options in \includegraphics[width, height, ...]{}
 \setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
-\setlength{\emergencystretch}{3em}  % prevent overfull lines
-\providecommand{\tightlist}{%
-  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
-\setcounter{secnumdepth}{5}
-% Redefines (sub)paragraphs to behave more like sections
-\ifx\paragraph\undefined\else
-\let\oldparagraph\paragraph
-\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
-\fi
-\ifx\subparagraph\undefined\else
-\let\oldsubparagraph\subparagraph
-\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
-\fi
-
-% set default figure placement to htbp
+% Set default figure placement to htbp
 \makeatletter
 \def\fps@figure{htbp}
 \makeatother
-
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
 \usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array} \usepackage{wrapfig,float} \floatplacement{figure}{H}
+\ifluatex
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
 
 \title{Matched Regressions QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Aug 17, 2021}
+\date{\vspace{-2.5em}Sep 16, 2021}
 
 \begin{document}
 \maketitle
@@ -126,18 +125,18 @@ implementation -- violating the parallel trends assumption.
 \cline{2-2} 
 \\[-1.8ex] & $Delay_{it}$ (in days) \\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$4.08$^{*}$ \\ 
-  & (2.20) \\ 
+ $Treat_i$ & $-$4.81$^{*}$ \\ 
+  & (2.56) \\ 
   & \\ 
- $Treat_i \times Time$ & 0.34 \\ 
-  & (0.38) \\ 
+ $Treat_i \times Time$ & 0.18 \\ 
+  & (0.45) \\ 
   & \\ 
 \hline \\[-1.8ex] 
 Fixed effects & Firm, Task, and Year-Quarter \\ 
 Controls & Budget, Duration, Bids, Project Age \\ 
-Observations & 70,357 \\ 
+Observations & 66,053 \\ 
 R$^{2}$ & 0.16 \\ 
-Adjusted R$^{2}$ & 0.05 \\ 
+Adjusted R$^{2}$ & 0.04 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{1}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -166,17 +165,17 @@ Adjusted R$^{2}$ & 0.05 \\
 \\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$5.26$^{***}$ & $-$3.34$^{***}$ & $-$3.25$^{***}$ & $-$3.10$^{***}$ & $-$3.61$^{***}$ \\ 
-  & (0.40) & (0.42) & (0.42) & (0.43) & (1.21) \\ 
+ $Treat_i$ & $-$5.86$^{***}$ & $-$3.57$^{***}$ & $-$3.44$^{***}$ & $-$3.11$^{***}$ & $-$5.23$^{***}$ \\ 
+  & (0.47) & (0.49) & (0.49) & (0.50) & (1.48) \\ 
   & & & & & \\ 
- $Post_t$ & $-$0.26 & $-$12.58$^{***}$ &  &  &  \\ 
-  & (0.37) & (0.67) &  &  &  \\ 
+ $Post_t$ & 5.76$^{***}$ & $-$5.90$^{***}$ &  &  &  \\ 
+  & (0.46) & (0.85) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Post_t$ & 3.02$^{***}$ & 3.48$^{***}$ & 3.53$^{***}$ & 3.74$^{***}$ & 4.36$^{***}$ \\ 
-  & (0.51) & (0.55) & (0.55) & (0.55) & (0.61) \\ 
+ $Treat_i \times Post_t$ & 3.64$^{***}$ & 4.16$^{***}$ & 4.12$^{***}$ & 4.17$^{***}$ & 4.61$^{***}$ \\ 
+  & (0.64) & (0.70) & (0.70) & (0.70) & (0.79) \\ 
   & & & & & \\ 
- Constant & 25.85$^{***}$ & 34.55$^{***}$ &  &  &  \\ 
-  & (0.29) & (0.51) &  &  &  \\ 
+ Constant & 29.76$^{***}$ & 37.88$^{***}$ &  &  &  \\ 
+  & (0.34) & (0.60) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
@@ -185,9 +184,9 @@ Project Age Tercile & No & Yes & Yes & Yes & Yes \\
 Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
 Task Fixed Effects & No & No & No & Yes & Yes \\ 
 Firm Fixed Effects & No & No & No & No & Yes \\ 
-Observations & 199,475 & 175,267 & 175,267 & 175,267 & 175,267 \\ 
-R$^{2}$ & 0.001 & 0.03 & 0.03 & 0.05 & 0.11 \\ 
-Adjusted R$^{2}$ & 0.001 & 0.03 & 0.03 & 0.04 & 0.05 \\ 
+Observations & 167,580 & 148,692 & 148,692 & 148,692 & 148,692 \\ 
+R$^{2}$ & 0.003 & 0.05 & 0.05 & 0.06 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.003 & 0.05 & 0.05 & 0.06 & 0.05 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -411,23 +410,23 @@ For a subsample of competitive or noncompetitive projects:
 \\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$6.35$^{***}$ & $-$4.24$^{***}$ & $-$4.06$^{***}$ & $-$3.11$^{***}$ & $-$3.49$^{**}$ \\ 
-  & (0.44) & (0.46) & (0.46) & (0.48) & (1.46) \\ 
+ $Treat_i$ & $-$6.92$^{***}$ & $-$4.43$^{***}$ & $-$4.33$^{***}$ & $-$3.42$^{***}$ & $-$5.73$^{***}$ \\ 
+  & (0.51) & (0.53) & (0.53) & (0.55) & (1.74) \\ 
   & & & & & \\ 
- $SA_i$ & $-$10.40$^{***}$ & $-$2.94$^{***}$ & 2.70$^{***}$ & 2.73$^{***}$ & 2.50$^{***}$ \\ 
-  & (0.54) & (0.65) & (0.77) & (0.76) & (0.83) \\ 
+ $SA_i$ & $-$15.63$^{***}$ & $-$2.34$^{***}$ & $-$2.64$^{***}$ & $-$1.93$^{**}$ & $-$1.85$^{*}$ \\ 
+  & (0.70) & (0.81) & (0.98) & (0.97) & (1.06) \\ 
   & & & & & \\ 
- $Post_t$ & 3.46$^{***}$ & $-$10.78$^{***}$ &  &  &  \\ 
-  & (0.46) & (0.84) &  &  &  \\ 
+ $Post_t$ & 10.73$^{***}$ & $-$4.53$^{***}$ &  &  &  \\ 
+  & (0.58) & (1.06) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times SB_i \times Post_t$ & 1.94$^{***}$ & 2.91$^{***}$ & 2.88$^{***}$ & 3.32$^{***}$ & 3.57$^{***}$ \\ 
-  & (0.63) & (0.72) & (0.72) & (0.72) & (0.76) \\ 
+ $Treat_i \times SB_i \times Post_t$ & 2.94$^{***}$ & 4.29$^{***}$ & 4.23$^{***}$ & 4.57$^{***}$ & 4.13$^{***}$ \\ 
+  & (0.82) & (0.92) & (0.92) & (0.92) & (0.99) \\ 
   & & & & & \\ 
- $Treat_i \times SA_i \times Post_t$ & 5.03$^{***}$ & 3.46$^{***}$ & 3.36$^{***}$ & 3.07$^{***}$ & 4.22$^{***}$ \\ 
-  & (0.68) & (0.71) & (0.71) & (0.71) & (0.83) \\ 
+ $Treat_i \times SA_i \times Post_t$ & 6.48$^{***}$ & 3.92$^{***}$ & 3.99$^{***}$ & 3.40$^{***}$ & 4.99$^{***}$ \\ 
+  & (0.86) & (0.87) & (0.87) & (0.88) & (1.03) \\ 
   & & & & & \\ 
- Constant & 26.30$^{***}$ & 35.97$^{***}$ &  &  &  \\ 
-  & (0.32) & (0.55) &  &  &  \\ 
+ Constant & 30.01$^{***}$ & 39.10$^{***}$ &  &  &  \\ 
+  & (0.37) & (0.64) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
@@ -436,9 +435,9 @@ Project age & No & Yes & Yes & Yes & Yes \\
 Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
 Task Fixed Effects & No & No & No & Yes & Yes \\ 
 Firm Fixed Effects & No & No & No & No & Yes \\ 
-Observations & 164,034 & 143,275 & 143,275 & 143,275 & 143,275 \\ 
-R$^{2}$ & 0.005 & 0.03 & 0.04 & 0.05 & 0.11 \\ 
-Adjusted R$^{2}$ & 0.005 & 0.03 & 0.04 & 0.05 & 0.05 \\ 
+Observations & 139,186 & 122,916 & 122,916 & 122,916 & 122,916 \\ 
+R$^{2}$ & 0.01 & 0.05 & 0.05 & 0.06 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.05 & 0.05 & 0.06 & 0.05 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -458,23 +457,23 @@ Adjusted R$^{2}$ & 0.005 & 0.03 & 0.04 & 0.05 & 0.05 \\
 \\[-1.8ex] & \multicolumn{4}{c}{$Delay_{it}$ (in days)} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$0.01 & 1.19 & 1.38 & $-$4.31$^{***}$ \\ 
-  & (0.99) & (1.06) & (1.05) & (1.19) \\ 
+ $Treat_i$ & $-$0.93 & 0.65 & 0.83 & $-$4.77$^{***}$ \\ 
+  & (1.21) & (1.27) & (1.27) & (1.44) \\ 
   & & & & \\ 
- $SA_i$ & $-$5.94$^{***}$ & 1.25 & 6.71$^{***}$ & 6.21$^{***}$ \\ 
-  & (1.10) & (1.33) & (1.59) & (1.59) \\ 
+ $SA_i$ & $-$12.56$^{***}$ & 3.21$^{*}$ & 2.06 & 1.66 \\ 
+  & (1.61) & (1.83) & (2.29) & (2.28) \\ 
   & & & & \\ 
- $Post_t$ & 0.69 & $-$6.99$^{**}$ &  &  \\ 
-  & (1.03) & (3.35) &  &  \\ 
+ $Post_t$ & 10.72$^{***}$ & 0.50 &  &  \\ 
+  & (1.46) & (4.50) &  &  \\ 
   & & & & \\ 
- $Treat_i \times SB_i \times Post_t$ & 5.51$^{***}$ & 7.08$^{***}$ & 6.62$^{***}$ & 7.88$^{***}$ \\ 
-  & (1.44) & (1.58) & (1.57) & (1.57) \\ 
+ $Treat_i \times SB_i \times Post_t$ & 5.08$^{**}$ & 7.14$^{***}$ & 6.71$^{***}$ & 8.02$^{***}$ \\ 
+  & (1.97) & (2.15) & (2.15) & (2.17) \\ 
   & & & & \\ 
- $Treat_i \times SA_i \times Post_t$ & 1.36 & 1.32 & 1.28 & 3.00$^{*}$ \\ 
-  & (1.50) & (1.58) & (1.58) & (1.60) \\ 
+ $Treat_i \times SA_i \times Post_t$ & 0.36 & $-$0.33 & $-$0.16 & 2.03 \\ 
+  & (1.97) & (2.02) & (2.02) & (2.04) \\ 
   & & & & \\ 
- Constant & 23.37$^{***}$ & 24.29$^{***}$ &  &  \\ 
-  & (0.76) & (3.21) &  &  \\ 
+ Constant & 28.24$^{***}$ & 26.40$^{***}$ &  &  \\ 
+  & (0.95) & (4.11) &  &  \\ 
   & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes \\ 
@@ -482,9 +481,9 @@ $Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes \\
 Project age & No & Yes & Yes & Yes \\ 
 Year-Quarter Fixed Effects & No & No & Yes & Yes \\ 
 Task Fixed Effects & No & No & No & Yes \\ 
-Observations & 35,441 & 31,992 & 31,992 & 31,992 \\ 
-R$^{2}$ & 0.003 & 0.02 & 0.03 & 0.06 \\ 
-Adjusted R$^{2}$ & 0.003 & 0.02 & 0.03 & 0.05 \\ 
+Observations & 28,394 & 25,776 & 25,776 & 25,776 \\ 
+R$^{2}$ & 0.01 & 0.04 & 0.05 & 0.08 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.04 & 0.05 & 0.06 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{4}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -528,41 +527,41 @@ We run the following model:
 \\[-1.8ex] & \multicolumn{6}{c}{$Delay_{it}$ (in days)} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5) & (6)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$0.01 & 0.21 & 1.08 & 1.26 & $-$1.30 & $-$5.23$^{***}$ \\ 
-  & (0.99) & (1.06) & (1.06) & (1.06) & (1.07) & (1.74) \\ 
+ $Treat_i$ & $-$0.93 & $-$0.56 & 0.47 & 0.62 & $-$1.52 & $-$6.83$^{***}$ \\ 
+  & (1.21) & (1.27) & (1.27) & (1.27) & (1.28) & (2.19) \\ 
   & & & & & & \\ 
- $StartedAfterQP_i$ & $-$5.94$^{***}$ & $-$8.00$^{***}$ & 2.52$^{**}$ & 7.88$^{***}$ & 7.53$^{***}$ & 5.27$^{***}$ \\ 
-  & (1.10) & (1.17) & (1.20) & (1.25) & (1.24) & (1.39) \\ 
+ $StartedAfterQP_i$ & $-$12.56$^{***}$ & $-$16.60$^{***}$ & 1.79 & 1.06 & 0.72 & 1.14 \\ 
+  & (1.61) & (1.65) & (1.67) & (1.76) & (1.72) & (1.94) \\ 
   & & & & & & \\ 
- $Competitive_i$ & 2.93$^{***}$ & 4.17$^{***}$ & 4.26$^{***}$ & 4.12$^{***}$ & 2.41$^{***}$ & 0.91 \\ 
-  & (0.83) & (0.88) & (0.88) & (0.88) & (0.90) & (1.21) \\ 
+ $Competitive_i$ & 1.76$^{*}$ & 3.33$^{***}$ & 3.13$^{***}$ & 2.98$^{***}$ & 2.11$^{*}$ & 0.96 \\ 
+  & (1.01) & (1.07) & (1.08) & (1.07) & (1.09) & (1.55) \\ 
   & & & & & & \\ 
- $Post_t$ & 0.69 & $-$4.66$^{***}$ & $-$13.39$^{***}$ &  &  &  \\ 
-  & (1.03) & (1.23) & (1.25) &  &  &  \\ 
+ $Post_t$ & 10.72$^{***}$ & 9.16$^{***}$ & $-$4.90$^{***}$ &  &  &  \\ 
+  & (1.46) & (1.70) & (1.72) &  &  &  \\ 
   & & & & & & \\ 
- $Treat_i \times Competitive_i$ & $-$6.34$^{***}$ & $-$5.39$^{***}$ & $-$5.34$^{***}$ & $-$5.34$^{***}$ & $-$2.06$^{*}$ & 1.93 \\ 
-  & (1.09) & (1.16) & (1.16) & (1.15) & (1.17) & (1.64) \\ 
+ $Treat_i \times Competitive_i$ & $-$5.99$^{***}$ & $-$5.07$^{***}$ & $-$4.88$^{***}$ & $-$4.94$^{***}$ & $-$1.90 & 2.04 \\ 
+  & (1.31) & (1.38) & (1.38) & (1.37) & (1.39) & (2.03) \\ 
   & & & & & & \\ 
- $Post_t \times Competitive_i$ & 2.78$^{**}$ & 3.54$^{***}$ & 2.82$^{**}$ & 2.67$^{**}$ & 2.87$^{**}$ & 2.50$^{*}$ \\ 
-  & (1.13) & (1.22) & (1.23) & (1.22) & (1.21) & (1.29) \\ 
+ $Post_t \times Competitive_i$ & 0.004 & 1.48 & $-$0.14 & $-$0.20 & $-$0.33 & 0.21 \\ 
+  & (1.57) & (1.69) & (1.70) & (1.70) & (1.68) & (1.84) \\ 
   & & & & & & \\ 
- $StartedAfterQP_i \times Competitive_i$ & $-$4.46$^{***}$ & $-$6.50$^{***}$ & $-$5.75$^{***}$ & $-$5.44$^{***}$ & $-$4.88$^{***}$ & $-$2.68$^{*}$ \\ 
-  & (1.23) & (1.29) & (1.30) & (1.29) & (1.28) & (1.44) \\ 
+ $StartedAfterQP_i \times Competitive_i$ & $-$3.07$^{*}$ & $-$5.42$^{***}$ & $-$3.80$^{**}$ & $-$3.41$^{*}$ & $-$2.29 & $-$2.23 \\ 
+  & (1.75) & (1.79) & (1.79) & (1.80) & (1.76) & (1.98) \\ 
   & & & & & & \\ 
- $Treat_i \times Post_t$ & 5.51$^{***}$ & 8.11$^{***}$ & 7.15$^{***}$ & 6.73$^{***}$ & 7.34$^{***}$ & 8.95$^{***}$ \\ 
-  & (1.44) & (1.58) & (1.58) & (1.57) & (1.55) & (1.66) \\ 
+ $Treat_i \times Post_t$ & 5.08$^{**}$ & 8.82$^{***}$ & 7.27$^{***}$ & 6.91$^{***}$ & 7.07$^{***}$ & 8.87$^{***}$ \\ 
+  & (1.97) & (2.14) & (2.15) & (2.15) & (2.13) & (2.33) \\ 
   & & & & & & \\ 
- $Treat_i \times Post_t \times Competitive_i$ & $-$3.57$^{**}$ & $-$4.87$^{***}$ & $-$4.28$^{**}$ & $-$3.88$^{**}$ & $-$4.13$^{**}$ & $-$5.46$^{***}$ \\ 
-  & (1.57) & (1.73) & (1.73) & (1.72) & (1.71) & (1.83) \\ 
+ $Treat_i \times Post_t \times Competitive_i$ & $-$2.14 & $-$4.24$^{*}$ & $-$3.01 & $-$2.71 & $-$2.61 & $-$4.89$^{*}$ \\ 
+  & (2.14) & (2.33) & (2.33) & (2.33) & (2.32) & (2.53) \\ 
   & & & & & & \\ 
- $Treat_i \times Post_t \times StartedAfterQP_i$ & $-$4.15$^{***}$ & $-$6.39$^{***}$ & $-$5.87$^{***}$ & $-$5.46$^{***}$ & $-$5.37$^{***}$ & $-$5.89$^{***}$ \\ 
-  & (1.60) & (1.72) & (1.73) & (1.72) & (1.70) & (1.94) \\ 
+ $Treat_i \times Post_t \times StartedAfterQP_i$ & $-$4.72$^{**}$ & $-$8.16$^{***}$ & $-$7.57$^{***}$ & $-$7.00$^{***}$ & $-$6.33$^{***}$ & $-$7.59$^{***}$ \\ 
+  & (2.23) & (2.32) & (2.31) & (2.33) & (2.30) & (2.63) \\ 
   & & & & & & \\ 
- $Treat_i \times Post_t \times StartedAfterQP_i \times Competitive_i$ & 7.24$^{***}$ & 7.27$^{***}$ & 6.48$^{***}$ & 5.99$^{***}$ & 5.32$^{***}$ & 6.37$^{***}$ \\ 
-  & (1.76) & (1.89) & (1.90) & (1.90) & (1.88) & (2.12) \\ 
+ $Treat_i \times Post_t \times StartedAfterQP_i \times Competitive_i$ & 8.26$^{***}$ & 8.58$^{***}$ & 7.24$^{***}$ & 6.81$^{***}$ & 5.22$^{**}$ & 8.08$^{***}$ \\ 
+  & (2.44) & (2.53) & (2.53) & (2.54) & (2.51) & (2.86) \\ 
   & & & & & & \\ 
- Constant & 23.37$^{***}$ & 38.26$^{***}$ & 31.22$^{***}$ &  &  &  \\ 
-  & (0.76) & (0.89) & (0.90) &  &  &  \\ 
+ Constant & 28.24$^{***}$ & 45.24$^{***}$ & 35.41$^{***}$ &  &  &  \\ 
+  & (0.94) & (1.09) & (1.11) &  &  &  \\ 
   & & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes & Yes \\ 
@@ -571,9 +570,9 @@ Project age & No & No & Yes & Yes & Yes & Yes \\
 Year-Quarter Fixed Effects & No & No & No & Yes & Yes & Yes \\ 
 Task Fixed Effects & No & No & No & No & Yes & Yes \\ 
 Firm Fixed Effects & No & No & No & No & No & Yes \\ 
-Observations & 199,475 & 175,267 & 175,267 & 175,267 & 175,267 & 175,267 \\ 
-R$^{2}$ & 0.004 & 0.02 & 0.03 & 0.03 & 0.05 & 0.11 \\ 
-Adjusted R$^{2}$ & 0.004 & 0.02 & 0.03 & 0.03 & 0.04 & 0.05 \\ 
+Observations & 167,580 & 148,692 & 148,692 & 148,692 & 148,692 & 148,692 \\ 
+R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.05 & 0.06 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.02 & 0.05 & 0.05 & 0.06 & 0.05 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{6}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -608,26 +607,26 @@ Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times
 \\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$4.84$^{***}$ & $-$3.27$^{***}$ & $-$3.19$^{***}$ & $-$3.01$^{***}$ & $-$3.51$^{***}$ \\ 
-  & (0.40) & (0.42) & (0.42) & (0.43) & (1.21) \\ 
+ $Treat_i$ & $-$5.30$^{***}$ & $-$3.41$^{***}$ & $-$3.29$^{***}$ & $-$3.01$^{***}$ & $-$5.09$^{***}$ \\ 
+  & (0.47) & (0.49) & (0.49) & (0.50) & (1.48) \\ 
   & & & & & \\ 
- $Post_t$ & $-$4.81$^{***}$ & $-$12.86$^{***}$ &  &  &  \\ 
-  & (0.41) & (0.68) &  &  &  \\ 
+ $Post_t$ & $-$1.06$^{**}$ & $-$6.01$^{***}$ &  &  &  \\ 
+  & (0.51) & (0.87) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Post_t$ & 1.98$^{***}$ & 2.70$^{***}$ & 2.79$^{***}$ & 3.28$^{***}$ & 4.14$^{***}$ \\ 
-  & (0.52) & (0.58) & (0.58) & (0.58) & (0.66) \\ 
+ $Treat_i \times Post_t$ & 2.16$^{***}$ & 3.23$^{***}$ & 3.16$^{***}$ & 3.49$^{***}$ & 4.12$^{***}$ \\ 
+  & (0.68) & (0.75) & (0.75) & (0.75) & (0.86) \\ 
   & & & & & \\ 
- $CF_i$ & 0.58 & $-$1.84$^{***}$ & $-$1.72$^{***}$ & $-$2.73$^{***}$ & $-$4.26$^{***}$ \\ 
-  & (0.50) & (0.51) & (0.51) & (0.54) & (0.64) \\ 
+ $CF_i$ & $-$1.20$^{**}$ & $-$4.16$^{***}$ & $-$3.91$^{***}$ & $-$3.09$^{***}$ & $-$4.31$^{***}$ \\ 
+  & (0.57) & (0.58) & (0.58) & (0.61) & (0.75) \\ 
   & & & & & \\ 
- $Post_t \times CF_i$ & 3.82$^{***}$ & 3.44$^{***}$ & 3.35$^{***}$ & 3.33$^{***}$ & 4.14$^{***}$ \\ 
-  & (0.82) & (0.83) & (0.83) & (0.84) & (0.95) \\ 
+ $Post_t \times CF_i$ & 1.91$^{*}$ & 1.65$^{*}$ & 1.30 & 1.17 & 1.99$^{*}$ \\ 
+  & (0.98) & (1.00) & (1.00) & (1.01) & (1.15) \\ 
   & & & & & \\ 
- $Post_t \times CF_i \times Treat_i$ & 5.70$^{***}$ & 3.23$^{***}$ & 3.07$^{***}$ & 1.59$^{*}$ & 0.22 \\ 
-  & (0.94) & (0.94) & (0.94) & (0.95) & (1.13) \\ 
+ $Post_t \times CF_i \times Treat_i$ & 7.42$^{***}$ & 3.55$^{***}$ & 3.77$^{***}$ & 2.57$^{**}$ & 1.50 \\ 
+  & (1.16) & (1.15) & (1.15) & (1.17) & (1.40) \\ 
   & & & & & \\ 
- Constant & 19.80$^{***}$ & 34.80$^{***}$ &  &  &  \\ 
-  & (0.32) & (0.51) &  &  &  \\ 
+ Constant & 20.95$^{***}$ & 38.46$^{***}$ &  &  &  \\ 
+  & (0.38) & (0.60) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
@@ -636,9 +635,9 @@ Project Age Tercile & No & Yes & Yes & Yes & Yes \\
 Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
 Task Fixed Effects & No & No & No & Yes & Yes \\ 
 Firm Fixed Effects & No & No & No & No & Yes \\ 
-Observations & 199,475 & 175,267 & 175,267 & 175,267 & 175,267 \\ 
-R$^{2}$ & 0.01 & 0.03 & 0.03 & 0.05 & 0.11 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.03 & 0.03 & 0.04 & 0.05 \\ 
+Observations & 167,580 & 148,692 & 148,692 & 148,692 & 148,692 \\ 
+R$^{2}$ & 0.02 & 0.05 & 0.05 & 0.06 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.02 & 0.05 & 0.05 & 0.06 & 0.05 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -669,26 +668,26 @@ Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times
 \\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$6.05$^{***}$ & $-$4.83$^{***}$ & $-$4.84$^{***}$ & $-$4.18$^{***}$ & $-$2.81$^{**}$ \\ 
-  & (0.41) & (0.43) & (0.44) & (0.45) & (1.21) \\ 
+ $Treat_i$ & $-$6.70$^{***}$ & $-$5.31$^{***}$ & $-$5.37$^{***}$ & $-$4.37$^{***}$ & $-$3.60$^{**}$ \\ 
+  & (0.48) & (0.50) & (0.51) & (0.52) & (1.49) \\ 
   & & & & & \\ 
- $Post_t$ & 0.07 & $-$7.27$^{***}$ &  &  &  \\ 
-  & (0.38) & (0.67) &  &  &  \\ 
+ $Post_t$ & 5.78$^{***}$ & 0.42 &  &  &  \\ 
+  & (0.47) & (0.85) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Post_t$ & 2.62$^{***}$ & 2.57$^{***}$ & 2.70$^{***}$ & 3.16$^{***}$ & 3.57$^{***}$ \\ 
-  & (0.53) & (0.58) & (0.58) & (0.58) & (0.66) \\ 
+ $Treat_i \times Post_t$ & 3.75$^{***}$ & 3.33$^{***}$ & 3.48$^{***}$ & 3.68$^{***}$ & 4.57$^{***}$ \\ 
+  & (0.68) & (0.74) & (0.74) & (0.74) & (0.86) \\ 
   & & & & & \\ 
- $FinancialAid$ & 6.22$^{***}$ & 4.27$^{***}$ & 4.27$^{***}$ & 2.26$^{***}$ & 1.58 \\ 
-  & (0.57) & (0.60) & (0.60) & (0.62) & (1.11) \\ 
+ $FinancialAid$ & 6.24$^{***}$ & 3.96$^{***}$ & 3.92$^{***}$ & 2.29$^{***}$ & 0.83 \\ 
+  & (0.66) & (0.69) & (0.69) & (0.71) & (1.33) \\ 
   & & & & & \\ 
- $Post_t \times FinancialAid$ & $-$3.25$^{***}$ & $-$2.17$^{*}$ & $-$2.28$^{**}$ & $-$0.55 & $-$2.94$^{**}$ \\ 
-  & (1.04) & (1.11) & (1.11) & (1.11) & (1.41) \\ 
+ $Post_t \times FinancialAid$ & 0.21 & 1.28 & 1.09 & 1.89 & 0.34 \\ 
+  & (1.39) & (1.46) & (1.47) & (1.47) & (1.85) \\ 
   & & & & & \\ 
- $Post_t \times FinancialAid \times Treat_i$ & 3.72$^{***}$ & 5.53$^{***}$ & 5.69$^{***}$ & 3.28$^{***}$ & 7.93$^{***}$ \\ 
-  & (1.08) & (1.15) & (1.14) & (1.15) & (1.62) \\ 
+ $Post_t \times FinancialAid \times Treat_i$ & $-$0.81 & 1.96 & 2.15 & 0.74 & 4.55$^{**}$ \\ 
+  & (1.46) & (1.51) & (1.52) & (1.53) & (2.15) \\ 
   & & & & & \\ 
- Constant & 25.21$^{***}$ & 41.09$^{***}$ &  &  &  \\ 
-  & (0.30) & (0.50) &  &  &  \\ 
+ Constant & 29.11$^{***}$ & 47.41$^{***}$ &  &  &  \\ 
+  & (0.35) & (0.59) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
@@ -696,9 +695,9 @@ $Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\
 Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
 Task Fixed Effects & No & No & No & Yes & Yes \\ 
 Firm Fixed Effects & No & No & No & No & Yes \\ 
-Observations & 199,475 & 175,267 & 175,267 & 175,267 & 175,267 \\ 
-R$^{2}$ & 0.002 & 0.01 & 0.02 & 0.03 & 0.10 \\ 
-Adjusted R$^{2}$ & 0.002 & 0.01 & 0.02 & 0.03 & 0.04 \\ 
+Observations & 167,580 & 148,692 & 148,692 & 148,692 & 148,692 \\ 
+R$^{2}$ & 0.004 & 0.01 & 0.02 & 0.04 & 0.10 \\ 
+Adjusted R$^{2}$ & 0.004 & 0.01 & 0.02 & 0.03 & 0.03 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -731,26 +730,26 @@ Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times
 \\[-1.8ex] & \multicolumn{5}{c}{$Delay_{it}$ (in days)} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$5.79$^{***}$ & $-$4.60$^{***}$ & $-$4.61$^{***}$ & $-$4.03$^{***}$ & $-$2.86$^{**}$ \\ 
-  & (0.40) & (0.43) & (0.43) & (0.44) & (1.21) \\ 
+ $Treat_i$ & $-$6.43$^{***}$ & $-$5.08$^{***}$ & $-$5.12$^{***}$ & $-$4.17$^{***}$ & $-$3.64$^{**}$ \\ 
+  & (0.47) & (0.50) & (0.50) & (0.52) & (1.49) \\ 
   & & & & & \\ 
- $Post_t$ & $-$0.50 & $-$7.89$^{***}$ &  &  &  \\ 
-  & (0.39) & (0.68) &  &  &  \\ 
+ $Post_t$ & 4.98$^{***}$ & $-$0.39 &  &  &  \\ 
+  & (0.49) & (0.87) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Post_t$ & 3.30$^{***}$ & 3.00$^{***}$ & 3.15$^{***}$ & 3.59$^{***}$ & 3.63$^{***}$ \\ 
-  & (0.53) & (0.59) & (0.59) & (0.59) & (0.68) \\ 
+ $Treat_i \times Post_t$ & 4.65$^{***}$ & 3.88$^{***}$ & 4.05$^{***}$ & 4.26$^{***}$ & 4.95$^{***}$ \\ 
+  & (0.69) & (0.75) & (0.75) & (0.75) & (0.89) \\ 
   & & & & & \\ 
- $CFA$ & 5.74$^{***}$ & 3.52$^{***}$ & 3.46$^{***}$ & 1.78$^{***}$ & $-$0.33 \\ 
-  & (0.51) & (0.53) & (0.54) & (0.55) & (1.29) \\ 
+ $CFA$ & 5.66$^{***}$ & 3.09$^{***}$ & 2.93$^{***}$ & 1.38$^{**}$ & $-$2.20 \\ 
+  & (0.59) & (0.61) & (0.62) & (0.63) & (1.59) \\ 
   & & & & & \\ 
- $Post_t \times CFA$ & 0.30 & 0.78 & 0.95 & 1.84$^{**}$ & $-$0.08 \\ 
-  & (0.83) & (0.88) & (0.88) & (0.88) & (1.12) \\ 
+ $Post_t \times CFA$ & 3.23$^{***}$ & 3.21$^{***}$ & 3.41$^{***}$ & 4.24$^{***}$ & 3.43$^{**}$ \\ 
+  & (1.07) & (1.12) & (1.12) & (1.13) & (1.44) \\ 
   & & & & & \\ 
- $Post_t \times CFA \times Treat_i$ & $-$0.52 & 2.18$^{**}$ & 2.16$^{**}$ & 0.60 & 5.40$^{***}$ \\ 
-  & (0.88) & (0.94) & (0.93) & (0.94) & (1.43) \\ 
+ $Post_t \times CFA \times Treat_i$ & $-$4.28$^{***}$ & $-$0.26 & $-$0.34 & $-$1.58 & 1.75 \\ 
+  & (1.16) & (1.21) & (1.21) & (1.23) & (1.85) \\ 
   & & & & & \\ 
- Constant & 24.89$^{***}$ & 40.92$^{***}$ &  &  &  \\ 
-  & (0.30) & (0.51) &  &  &  \\ 
+ Constant & 28.79$^{***}$ & 47.30$^{***}$ &  &  &  \\ 
+  & (0.35) & (0.60) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
@@ -758,9 +757,9 @@ $Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\
 Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
 Task Fixed Effects & No & No & No & Yes & Yes \\ 
 Firm Fixed Effects & No & No & No & No & Yes \\ 
-Observations & 199,475 & 175,267 & 175,267 & 175,267 & 175,267 \\ 
-R$^{2}$ & 0.003 & 0.01 & 0.02 & 0.03 & 0.10 \\ 
-Adjusted R$^{2}$ & 0.003 & 0.01 & 0.02 & 0.03 & 0.04 \\ 
+Observations & 167,580 & 148,692 & 148,692 & 148,692 & 148,692 \\ 
+R$^{2}$ & 0.005 & 0.01 & 0.02 & 0.04 & 0.10 \\ 
+Adjusted R$^{2}$ & 0.005 & 0.01 & 0.02 & 0.03 & 0.03 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
