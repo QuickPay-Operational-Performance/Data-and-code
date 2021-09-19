@@ -7,7 +7,19 @@ all: qp_first_implementation.pdf \
      qp_first_matched.pdf \
      qp_first_delay.pdf \
      qp_first_relative_delay.pdf \
-     qp_first_pc_delay.pdf
+     qp_first_pc_delay.pdf \
+     qp_first_budget_overrun.pdf
+
+
+################################################################################################################
+
+# Budget Overruns
+
+qp_first_budget_overrun.pdf: qp_first_budget_overrun.Rmd \
+			     $(filtered_data_directory)/qp_data_first_reported.csv \
+			     $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv
+
+	Rscript -e 'rmarkdown::render("qp_first_budget_overrun.Rmd")'
 
 ################################################################################################################
 
