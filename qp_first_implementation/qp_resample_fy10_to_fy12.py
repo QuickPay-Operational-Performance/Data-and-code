@@ -57,12 +57,20 @@ df=df[~df.contract_award_unique_key.isin(multiple_values)]
 business_type=df.set_index('contract_award_unique_key')\
 ['contracting_officers_determination_of_business_size_code'].to_dict()
 
+#%% Get latest budget
+
+# Base and all options value tells the *change* in budget from previous transaction
+# This is why some values of base are zero
+# Need to add previous values to get actual & most recent budget 
+
+df['new_budget'] = df.groupby(by=['contract_award_unique_key'])['base_and_all_options_value'].cumsum()
+    
 #%% Resampling
 
 select_variables=['contract_award_unique_key',
                     'period_of_performance_start_date',
                     'period_of_performance_current_end_date',
-                    'base_and_all_options_value']
+                    'new_budget']
 
 df_start_end = df.melt(id_vars=select_variables, \
                            value_vars='action_date',\
@@ -76,7 +84,7 @@ df_sorted = df_start_end.groupby(['contract_award_unique_key']).apply\
 df_sorted.rename(columns=\
                  {'period_of_performance_start_date':'last_reported_start_date',\
                   'period_of_performance_current_end_date':'last_reported_end_date',\
-                  'base_and_all_options_value':'last_reported_budget'},\
+                  'new_budget':'last_reported_budget'},\
                   inplace=True)
 
 #%% Get business type
