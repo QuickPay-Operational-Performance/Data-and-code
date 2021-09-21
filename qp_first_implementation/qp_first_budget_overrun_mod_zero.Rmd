@@ -1,0 +1,754 @@
+---
+title: "Budget Overruns (Modification Zero): QuickPay (2009-2012)"
+date: " `r format(Sys.time(), '%b %d, %Y')`"
+output: 
+  pdf_document :
+    keep_tex: true
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(openxlsx)
+library(tidyverse)
+library(dplyr)
+library(pryr)
+library(lfe) # linear fixed effects 
+library(DescTools) 
+library(zoo) # for year quarter
+library(stargazer)
+library(broom)
+library(data.table)
+library(scales)
+``` 
+
+```{r paths, include=FALSE}
+directory='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/'
+```
+
+```{r read_data, include=FALSE}
+# read quarterly resampled data
+
+df=fread(paste0(directory,'resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv'))
+# specify date columns
+date_cols=c("action_date_year_quarter","last_reported_start_date","last_reported_end_date")
+df[,(date_cols):= lapply(.SD, as.Date), .SDcols = date_cols]
+
+# restrict to quarter ending June 30, 2012
+df=subset(df,as.Date(action_date_year_quarter)<max(as.Date('2012-07-01')))
+# data is truncated at July 1, 2012 -- 
+# so quarter ending Sept 30, 2012 will only have values as of July 1, 2012
+
+df_first_reported=fread(paste0(directory,'qp_data_first_reported.csv'))
+# contains time-invariant contract characteristics -- info when contract first appeared in the data
+```
+
+
+```{r assign_variables_1, include=FALSE}
+# Assign variables: overrun, Winsorized overrun, Post_t, Treat_i
+
+# sort by contract id and date 
+df=df[order(contract_award_unique_key,
+            action_date_year_quarter)]
+
+# determine quarter-to-quarter overrun
+df[,overrun:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1), 
+                  last_reported_budget-lag(last_reported_budget,1),NaN)]
+
+# winsorize quarter-to-quarter overrun
+df[,winsorized_overrun:=Winsorize(overrun,na.rm=TRUE)]
+
+#Post_t: A dummy that period t is post-treatment
+df[,post_t:=ifelse(action_date_year_quarter>as.Date("2011-04-27"),1,0)]
+# quickpay implemented on 27 April 2011. So all quarters starting 30 June 2011 will be in post-period
+
+#Treat_i: A dummy that contract i is in the treatment group
+df[,treat_i:=ifelse(business_type=="S",1,0)]
+# quickpay was implemented for small business contracts
+```
+
+```{r assign_variables_2, include=FALSE}
+# Assign variables: ContractFinancing_i, Competition_i, PerformanceBased_i, Financial_Aid_i
+df_first_reported[,contract_financing_i:=ifelse(!is.null(contract_financing_code)&
+                                       !contract_financing_code%in%c("Z", ""),1,0)]
+#### 
+# unique(df_first_reported[,c('extent_competed','extent_competed_code')])
+# df_first_reported[,competitively_awarded_i:=ifelse(!is.null(extent_competed_code)&
+#                                           !extent_competed_code%in%c("","G","B", "C"),1,0)]
+
+# E: FOLLOW ON TO COMPETED ACTION
+df_first_reported[,competitively_awarded_i:=ifelse(!is.null(extent_competed_code)&
+                                          !extent_competed_code%in%c("","G","B", "C","E"),1,0)]
+#### 
+df_first_reported[,performance_based_contract_i:=ifelse(performance_based_service_acquisition_code=='Y',1,0)]
+
+df_first_reported[,performance_based_contract_i:=ifelse(performance_based_service_acquisition_code=='X',NaN,performance_based_contract_i)]
+
+#### 
+df_first_reported[,receives_financial_aid_i:=ifelse(receives_grants=='t'|
+                                           c8a_program_participant=='t',1,0)]
+#### 
+df_first_reported[,receives_contracts_and_financial_aid_i:=ifelse(receives_contracts_and_grants=='t'|
+                                                         receives_grants=='t'|
+                                                         c8a_program_participant=='t',1,0)]
+
+df_first_reported[,winsorized_initial_duration_in_days_i:=Winsorize(as.numeric(
+                               as.Date(period_of_performance_current_end_date)-
+                               as.Date(period_of_performance_start_date)),na.rm=T)]
+
+df_first_reported[,winsorized_initial_budget_i:=Winsorize(base_and_all_options_value,na.rm=T)]
+
+df_first_reported[,initial_budget_i:=base_and_all_options_value]
+
+# Change type to string modification number
+df_first_reported[,modification_number:=as.character(modification_number)]
+df_first_reported[,period_of_performance_start_date:=as.Date(period_of_performance_start_date)]
+
+select_cols=c("contract_award_unique_key",
+              "recipient_duns",
+              "naics_code",
+              "product_or_service_code",
+              "number_of_offers_received",
+              "contract_financing_i",
+              "competitively_awarded_i",
+              "performance_based_contract_i",
+              "receives_financial_aid_i",
+              "receives_contracts_and_financial_aid_i",
+              "winsorized_initial_duration_in_days_i",
+              "initial_budget_i",
+              "winsorized_initial_budget_i",
+               "modification_number",
+              "period_of_performance_start_date")
+
+df_first_reported_cols=df_first_reported[,..select_cols]
+# not necessary but speed efficient to set keys
+setkey(df_first_reported_cols,contract_award_unique_key)
+setkey(df,contract_award_unique_key)
+```
+
+```{r combine_dfs, include=FALSE}
+# Combine all variables into dataframe needed for regression 
+reg_df=merge(df,
+             df_first_reported_cols,
+             all.x = TRUE, # keep values in df, add columns of df_first_reported_cols
+             by=c("contract_award_unique_key"))
+
+# only keep observations with mod num zero
+# this suffices coz modification number is same for all observations of a given project 
+# (because we looked at first reported info)
+
+reg_df=subset(reg_df,modification_number=="0" & 
+                period_of_performance_start_date<as.Date('2011-04-27'))
+
+# sort by contract id and date (just to be doubly sure)
+reg_df=reg_df[order(contract_award_unique_key,
+            action_date_year_quarter)]
+
+# assign number of quarters since project started: "project age" in some sense
+setorder(reg_df,contract_award_unique_key,action_date_year_quarter)[, 
+           project_quarter_age := rowid(contract_award_unique_key)]
+reg_df[,project_quarter_tercile:=as.factor(ntile(project_quarter_age,3))]
+# Project age is a highly skewed variable
+# Including it as fixed effects doesn't work because projects in treatment and control are not always in same "tercile" while controling for everything else. 
+
+```
+
+# Note
+
+- Sample restricted to projects with modification zero
+- Below is the definition of `base_and_all_options_value` from the data dictionary:
+  - The change (from this transaction only) to the potential contract value (i.e., the base contract and any exercised or unexercised options).
+- This means that every observation in raw data shows incremental change from previous budget. So some of the values can be zero. 
+- We, therefore, need to calculate the new budget at each point in time (by adding all previous values). We did this in the resampling step, but mentioning here for reference.
+- This is different from calculation of delays, where `period_of_performance_current_end_date` indicated the new deadline of the project.
+
+# Budget Overrun over Time
+
+```{r plot, echo=FALSE, results='asis'}
+mean_overrun=df[!is.na(winsorized_overrun) & action_date_year_quarter<=as.Date('2012-06-30'), 
+              mean(winsorized_overrun),  
+              by = c('action_date_year_quarter','business_type')]
+mean_overrun[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
+mean_overrun=mean_overrun[order(action_date_year_quarter,business_type)]
+
+ggplot(mean_overrun, aes(x=year_quarter,
+               y=V1, 
+               group = business_type, 
+               shape=business_type, 
+               linetype=business_type))+
+    geom_line() +    
+    scale_x_discrete(limits=mean_overrun$year_quarter)+
+    geom_point(size=3)+
+    labs(x="Year-Quarter", y = "Average overrun rate per quarter")+  
+    annotate("text", label = "QuickPay\n implemented", x = 12, y = 8000,color="dimgrey")+
+    geom_vline(xintercept = 10.2, linetype="solid", 
+                color = "gray", size=1.5)+
+    scale_shape_discrete(name  ="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    scale_linetype_discrete(name="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    theme(axis.text.x = element_text(angle = 90),
+    axis.line = element_line(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    legend.text = element_text(size=12))
+```
+
+## Normalized Overrun
+
+```{r normalized_plot,echo=FALSE,results='asis'}
+
+small_baseline=subset(mean_overrun,business_type=="S" & year_quarter=="2010-Mar")$V1
+large_baseline=subset(mean_overrun,business_type=="O" & year_quarter=="2010-Mar")$V1
+
+mean_overrun[,V2:=ifelse(business_type=="S",V1*100/small_baseline,V1*100/large_baseline)]
+
+ggplot(mean_overrun, aes(x=year_quarter,
+               y=V2, 
+               group = business_type, 
+               shape=business_type, 
+               linetype=business_type))+
+    geom_line() +    
+    scale_x_discrete(limits=mean_overrun$year_quarter)+
+    geom_point(size=3)+
+    labs(x="Year-Quarter", y = "Average overrun rate per quarter (in days)")+  
+    annotate("text", label = "QuickPay\n implemented", x = 8, y = 180,color="dimgrey")+
+    geom_vline(xintercept = 10.2, linetype="solid", 
+                color = "gray", size=1.5)+
+    scale_shape_discrete(name  ="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    scale_linetype_discrete(name="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    theme(axis.text.x = element_text(angle = 90),
+    axis.line = element_line(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    legend.text = element_text(size=12))
+```
+
+# Notation 
+
+* Project $i$, Year-Quarter $t$
+* $X_i$ denotes project level controls: initial duration, initial budget, number of offers received
+* $\mu_t,\theta_{firm},\lambda_{task}$: Year-Quarter, Firm, and Product/Service code Fixed effects
+* All continuous variables are winsorized at the 5\% level
+$$ Treat_i = \begin{cases} 1, \text{ if project } i \text{ is a small business}\\
+0, \text{ otherwise} \end{cases}$$
+$$ Post_t = \begin{cases} 1, \text{ if year-quarter } t > \text{ April 27, 2011}\\
+0, \text{ otherwise} \end{cases}$$
+
+# Baseline Regressions
+
+$$ Overrun_{it} = \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t) + \epsilon_{it}$$ 
+
+$$ \begin{aligned} Overrun_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
+&+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
+\end{aligned}$$
+
+```{r baseline_regressions, echo=FALSE, results='asis'}
+# Baseline Regressions 
+baseline_reg=felm(winsorized_overrun~treat_i+
+                     post_t:treat_i+
+                     post_t|
+                    0| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df, 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+
+# time fixed effects also included in the following specs
+controls_and_no_fe=felm(winsorized_overrun~treat_i+
+                           post_t:treat_i+
+                           post_t+
+                           project_quarter_tercile+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            0|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+# time fixed effects also included in the following specs
+controls_and_time_fe=felm(winsorized_overrun~treat_i+
+                             post_t:treat_i+
+                           project_quarter_tercile+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_time_task_fe=felm(winsorized_overrun~treat_i+
+                              post_t:treat_i+
+                           project_quarter_tercile+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+controls_and_all_fe=felm(winsorized_overrun~treat_i+
+                            post_t:treat_i+
+                           project_quarter_tercile+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+stargazer(baseline_reg,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
+          title = "Quickpay 2009-2011",
+          dep.var.labels="$Overrun_{it}$ (in days)",
+          dep.var.caption = "",
+          covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          digits=2,
+          digits.extra=2,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
+                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
+                           c("Project Age Tercile","No",rep("Yes",4)),
+                           c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
+                           c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
+                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
+          omit=c('winsorized_initial_duration_in_days_i',
+                  'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'post_t:winsorized_initial_duration_in_days_i',
+                   'post_t:winsorized_initial_budget_i',
+                   'post_t:number_of_offers_received',
+                   'project_quarter_tercile'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level."),
+          header=F)
+```
+
+# Percentage Overrun
+
+$$ PercentOverrun_{it} = \beta_0 + \beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_i \times Post_t) + e_{it}$$ 
+
+$$ \begin{aligned} PercentOverrun_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
+&+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
+\end{aligned}$$
+
+```{r percentage_overrun,include=FALSE}
+reg_df[,percentage_overrun:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),
+         overrun/lag(last_reported_budget,1),
+         NaN)]
+reg_df[,wins_percentage_overrun:=Winsorize(100*percentage_overrun,na.rm=T)]
+```
+
+
+## Percentage Overrun over time
+
+* Sample restricted to projects with modification zero when they first appeared in our sample.
+* $PercentOverrun_{it}=100 \times Overrun_{it}/Budget_{i,t-1}$
+
+```{r plot_pc_overrun, echo=FALSE, results='asis'}
+mean_overrun=reg_df[!is.na(wins_percentage_overrun) 
+                  & action_date_year_quarter<=as.Date('2012-06-30'), 
+              mean(wins_percentage_overrun),  
+              by = c('action_date_year_quarter','business_type')]
+mean_overrun[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
+mean_overrun=mean_overrun[order(action_date_year_quarter,business_type)]
+ggplot(mean_overrun, aes(x=year_quarter,
+               y=V1, 
+               group = business_type, 
+               shape=business_type, 
+               linetype=business_type))+
+    geom_line() +    
+    scale_x_discrete(limits=mean_overrun$year_quarter)+
+    geom_point(size=3)+
+    labs(x="Year-Quarter", y = "Average overrun rate per quarter")+  
+    annotate("text", label = "QuickPay\n implemented", x = 8, y = 30,color="dimgrey")+
+    geom_vline(xintercept = 10.2, linetype="solid", 
+                color = "gray", size=1.5)+
+    scale_shape_discrete(name  ="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    scale_linetype_discrete(name="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    theme(axis.text.x = element_text(angle = 90),
+    axis.line = element_line(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    legend.text = element_text(size=12))
+```
+
+### Normalized Overrun
+
+```{r normalized_pc_plot,echo=FALSE, results='asis'}
+large_baseline=subset(mean_overrun,year_quarter=='2010-Mar' & business_type=="O")$V1
+small_baseline=subset(mean_overrun,year_quarter=='2010-Mar' & business_type=="S")$V1
+mean_overrun[,V2:=ifelse(business_type=="S",V1*100/small_baseline,V1*100/large_baseline)]
+ggplot(mean_overrun, aes(x=year_quarter,
+               y=V2, 
+               group = business_type, 
+               shape=business_type, 
+               linetype=business_type))+
+    geom_line() +    
+    scale_x_discrete(limits=mean_overrun$year_quarter)+
+    geom_point(size=3)+
+    labs(x="Year-Quarter", y = "Average overrun rate per quarter \n (normalized by overrun in 2010-Mar) ")+  
+    annotate("text", label = "QuickPay\n implemented", x = 8, y = 150,color="dimgrey")+
+    geom_vline(xintercept = 10.2, linetype="solid", 
+                color = "gray", size=1.5)+
+    scale_shape_discrete(name  ="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    scale_linetype_discrete(name="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    theme(axis.text.x = element_text(angle = 90),
+    axis.line = element_line(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    legend.text = element_text(size=12))
+```
+
+```{r pc_regressions, echo=FALSE, results='asis'}
+# Baseline Regressions 
+baseline_reg=felm(wins_percentage_overrun~treat_i+
+                     post_t:treat_i+
+                     post_t|
+                    0| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df, 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+
+# time fixed effects also included in the following specs
+controls_and_no_fe=felm(wins_percentage_overrun~treat_i+
+                           post_t:treat_i+
+                           post_t+
+                           project_quarter_tercile+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            0|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+# time fixed effects also included in the following specs
+controls_and_time_fe=felm(wins_percentage_overrun~treat_i+
+                             post_t:treat_i+
+                           project_quarter_tercile+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+controls_time_task_fe=felm(wins_percentage_overrun~treat_i+
+                              post_t:treat_i+
+                           project_quarter_tercile+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+controls_and_all_fe=felm(wins_percentage_overrun~treat_i+
+                            post_t:treat_i+
+                           project_quarter_tercile+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+base_table<-stargazer(baseline_reg,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
+          title = "Effect of QuickPay on project overrun rates",
+          dep.var.labels="$PercentOverrun_{it}$",
+          dep.var.caption = "",
+          covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          digits=2,
+          digits.extra=2,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
+                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
+                           c("Project age","No",rep("Yes",4)),
+                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Task fixed effects",rep("No",3),rep("Yes",2)),
+                           c("Contractor fixed effects",rep("No",4),rep("Yes",1))),
+          omit=c('winsorized_initial_duration_in_days_i',
+                  'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'post_t:winsorized_initial_duration_in_days_i',
+                   'post_t:winsorized_initial_budget_i',
+                   'post_t:number_of_offers_received',
+                   'project_quarter_tercile'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level."),
+          header=F)
+```
+
+# Relative Overrun
+
+```{r relative_overrun,include=FALSE}
+reg_df[,relative_overrun:=overrun/(1+initial_budget_i)]
+reg_df[,wins_relative_overrun:=Winsorize(100*relative_overrun,na.rm=T)]
+```
+
+## Relative overruns over time
+
+* Sample restricted to projects with modification zero when they first appeared in our sample.
+
+* $RelativeOverrun_{it} = 100 \times RelativeOverrun_{it}/IntialBudget_i$
+
+```{r plot_relative_overrun, echo=FALSE, results='asis'}
+mean_overrun=reg_df[!is.na(wins_relative_overrun) 
+                  & action_date_year_quarter<=as.Date('2012-06-30'), 
+              mean(wins_relative_overrun),  
+              by = c('action_date_year_quarter','business_type')]
+mean_overrun[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
+mean_overrun=mean_overrun[order(action_date_year_quarter,business_type)]
+ggplot(mean_overrun, aes(x=year_quarter,
+               y=V1, 
+               group = business_type, 
+               shape=business_type, 
+               linetype=business_type))+
+    geom_line() +    
+    scale_x_discrete(limits=mean_overrun$year_quarter)+
+    geom_point(size=3)+
+    labs(x="Year-Quarter", y = "Average overrun rate per quarter  ")+  
+    annotate("text", label = "QuickPay\n implemented", x = 8, y = 40,color="dimgrey")+
+    geom_vline(xintercept = 10.2, linetype="solid", 
+                color = "gray", size=1.5)+
+    scale_shape_discrete(name  ="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    scale_linetype_discrete(name="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    theme(axis.text.x = element_text(angle = 90),
+    axis.line = element_line(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    legend.text = element_text(size=12))
+# ggsave(path=figures_folder,
+#        width = 8,
+#        height = 4,
+#        filename = "trends_figure.png")
+```
+
+### Normalized overrun
+
+```{r normalized_relative_plot,echo=FALSE, results='asis'}
+large_baseline=subset(mean_overrun,year_quarter=='2010-Mar' & business_type=="O")$V1
+small_baseline=subset(mean_overrun,year_quarter=='2010-Mar' & business_type=="S")$V1
+mean_overrun[,V2:=ifelse(business_type=="S",V1*100/small_baseline,V1*100/large_baseline)]
+ggplot(mean_overrun, aes(x=year_quarter,
+               y=V2, 
+               group = business_type, 
+               shape=business_type, 
+               linetype=business_type))+
+    geom_line() +    
+    scale_x_discrete(limits=mean_overrun$year_quarter)+
+    geom_point(size=3)+
+    labs(x="Year-Quarter", y = "Average overrun rate per quarter 
+                                \n (normalized by overrun in 2010-Mar) ")+  
+    annotate("text", label = "QuickPay\n implemented", x = 8, y = 150,color="dimgrey")+
+    geom_vline(xintercept = 10.2, linetype="solid", 
+                color = "gray", size=1.5)+
+    scale_shape_discrete(name  ="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    scale_linetype_discrete(name="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"))+
+    theme(axis.text.x = element_text(angle = 90),
+    axis.line = element_line(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    legend.text = element_text(size=12))
+```
+
+```{r relative_regressions, echo=FALSE, results='asis'}
+# Baseline Regressions 
+baseline_reg=felm(wins_relative_overrun~treat_i+
+                     post_t:treat_i+
+                     post_t|
+                    0| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df, 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+# time fixed effects also included in the following specs
+controls_and_no_fe=felm(wins_relative_overrun~treat_i+
+                           post_t:treat_i+
+                           post_t+
+                           project_quarter_tercile+
+                            winsorized_initial_duration_in_days_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:number_of_offers_received|
+                            0|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+# time fixed effects also included in the following specs
+controls_and_time_fe=felm(wins_relative_overrun~treat_i+
+                             post_t:treat_i+
+                           project_quarter_tercile+
+                            winsorized_initial_duration_in_days_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+controls_time_task_fe=felm(wins_relative_overrun~treat_i+
+                              post_t:treat_i+
+                           project_quarter_tercile+
+                            winsorized_initial_duration_in_days_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+controls_and_all_fe=felm(wins_relative_overrun~treat_i+
+                            post_t:treat_i+
+                           project_quarter_tercile+
+                            winsorized_initial_duration_in_days_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:number_of_offers_received|
+                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+base_table<-stargazer(baseline_reg,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
+          title = "Effect of QuickPay on project overrun rates",
+          dep.var.labels="$RelativeOverrun_{it}$",
+          dep.var.caption = "",
+          covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          digits=2,
+          digits.extra=2,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Duration, Bids","No",rep("Yes",4)),
+                           c("$Post_t \\times$  (Duration, Bids)","No",rep("Yes",4)),
+                           c("Project age","No",rep("Yes",4)),
+                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Task fixed effects",rep("No",3),rep("Yes",2)),
+                           c("Contractor fixed effects",rep("No",4),rep("Yes",1))),
+          omit=c('winsorized_initial_duration_in_days_i',
+                   'number_of_offers_received',
+                   'post_t:winsorized_initial_duration_in_days_i',
+                   'post_t:number_of_offers_received',
+                   'project_quarter_tercile'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level."),
+          header=F)
+# base_table_tex=make_tex_pieces(base_table)
+# # Write to file 
+# write(base_table_tex, 
+#       paste0(tables_folder,"/base_table.tex"))
+```
+
