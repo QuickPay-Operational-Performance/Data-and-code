@@ -20,6 +20,8 @@ directory='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/'
 
 #%% Read data
 
+projects_to_keep=pd.read_csv(directory+'projects_to_keep.csv')
+
 df=pd.read_csv(directory+\
                'resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv')
 # read quarterly resampled data
@@ -30,8 +32,10 @@ df.action_date_year_quarter=\
 pd.to_datetime(df.action_date_year_quarter)
 
 # restrict to quarter ending June 30, 2012
-df=df[df.action_date_year_quarter<\
-            pd.to_datetime('2012-07-01')]
+df=df[(df.action_date_year_quarter<\
+            pd.to_datetime('2012-07-01'))&
+      (df.contract_award_unique_key.isin(projects_to_keep.contract_award_unique_key))]
+    
 # data is truncated at July 1, 2012 -- 
 # so quarter ending Sept 30, 2012 will only have values as of July 1, 2012
 

@@ -37,24 +37,24 @@ data_folder='~/Dropbox/data_quickpay/qp_data/'
 ```
 
 ```{r read_data, include=FALSE}
+# Keep only projects whose start dates match with API one
+projects_to_keep=fread(paste0(data_folder,'projects_to_keep.csv'))
 
 # read quarterly resampled data
 df=fread(paste0(data_folder,'resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv'))
-
 # specify date columns
-date_cols=c("action_date_year_quarter",
-            "last_reported_start_date",
-            "last_reported_end_date")
-
+date_cols=c("action_date_year_quarter","last_reported_start_date","last_reported_end_date")
 df[,(date_cols):= lapply(.SD, as.Date), .SDcols = date_cols]
 
 # restrict to quarter ending June 30, 2012
-df=subset(df,as.Date(action_date_year_quarter)<max(as.Date(df$action_date_year_quarter)))
+df=subset(df,as.Date(action_date_year_quarter)<max(as.Date('2012-07-01'))&
+             contract_award_unique_key%in%projects_to_keep$contract_award_unique_key)
 # data is truncated at July 1, 2012 -- 
 # so quarter ending Sept 30, 2012 will only have values as of July 1, 2012
 
 df_first_reported=fread(paste0(data_folder,'qp_data_first_reported.csv'))
 # contains time-invariant contract characteristics -- info when contract first appeared in the data
+
 ```
 
 ```{r assign_variables_1, include=FALSE}

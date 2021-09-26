@@ -6,8 +6,8 @@
 ]{article}
 \usepackage{amsmath,amssymb}
 \usepackage{lmodern}
-\usepackage{ifxetex,ifluatex}
-\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+\usepackage{iftex}
+\ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
@@ -59,13 +59,13 @@
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{5}
 \usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array} \usepackage{wrapfig,float} \floatplacement{figure}{H}
-\ifluatex
+\ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
 
 \title{Budget Overruns: First Implementation of QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Sep 19, 2021}
+\date{\vspace{-2.5em}Sep 26, 2021}
 
 \begin{document}
 \maketitle
@@ -149,17 +149,17 @@
 \\[-1.8ex] & \multicolumn{5}{c}{$Overrun_{it}$ (in days)} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$5,606.99$^{***}$ & $-$4,860.95$^{***}$ & $-$4,580.56$^{***}$ & $-$4,247.65$^{***}$ & $-$4,727.72$^{***}$ \\ 
-  & (442.41) & (467.78) & (463.49) & (485.36) & (1,267.62) \\ 
+ $Treat_i$ & $-$2,244.11$^{***}$ & $-$1,377.52$^{***}$ & $-$1,280.64$^{***}$ & $-$1,144.28$^{***}$ & $-$2,552.92$^{**}$ \\ 
+  & (333.21) & (333.45) & (331.61) & (355.70) & (1,114.07) \\ 
   & & & & & \\ 
- $Post_t$ & 600.14 & $-$5,515.13$^{***}$ &  &  &  \\ 
-  & (373.36) & (479.98) &  &  &  \\ 
+ $Post_t$ & 3,444.55$^{***}$ & $-$1,746.45$^{***}$ &  &  &  \\ 
+  & (303.12) & (364.88) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Post_t$ & 114.97 & 841.83 & 685.19 & 843.73$^{*}$ & 404.57 \\ 
-  & (484.85) & (512.87) & (510.36) & (507.59) & (532.11) \\ 
+ $Treat_i \times Post_t$ & $-$1,323.31$^{***}$ & $-$710.86$^{*}$ & $-$731.80$^{*}$ & $-$559.47 & $-$371.98 \\ 
+  & (400.76) & (407.64) & (405.93) & (406.24) & (438.97) \\ 
   & & & & & \\ 
- Constant & 18,064.32$^{***}$ & 6,930.79$^{***}$ &  &  &  \\ 
-  & (348.01) & (439.67) &  &  &  \\ 
+ Constant & 9,543.11$^{***}$ & 2,405.81$^{***}$ &  &  &  \\ 
+  & (249.87) & (647.47) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
@@ -168,9 +168,9 @@ Project Age Tercile & No & Yes & Yes & Yes & Yes \\
 Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
 Task Fixed Effects & No & No & No & Yes & Yes \\ 
 Firm Fixed Effects & No & No & No & No & Yes \\ 
-Observations & 189,371 & 168,851 & 168,851 & 168,851 & 168,851 \\ 
-R$^{2}$ & 0.003 & 0.03 & 0.04 & 0.09 & 0.23 \\ 
-Adjusted R$^{2}$ & 0.003 & 0.03 & 0.04 & 0.08 & 0.17 \\ 
+Observations & 127,056 & 117,671 & 117,671 & 117,671 & 117,671 \\ 
+R$^{2}$ & 0.004 & 0.06 & 0.07 & 0.10 & 0.24 \\ 
+Adjusted R$^{2}$ & 0.004 & 0.06 & 0.07 & 0.09 & 0.17 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -218,17 +218,17 @@ time}\label{percentage-overrun-over-time}}
 \\[-1.8ex] & \multicolumn{5}{c}{$PercentOverrun_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$1.26$^{***}$ & $-$1.59$^{***}$ & $-$1.32$^{***}$ & $-$0.94$^{***}$ & $-$0.72 \\ 
-  & (0.25) & (0.25) & (0.25) & (0.25) & (0.65) \\ 
+ $Treat_i$ & $-$0.55$^{***}$ & $-$0.54$^{***}$ & $-$0.50$^{***}$ & $-$0.31$^{***}$ & $-$0.41 \\ 
+  & (0.08) & (0.09) & (0.09) & (0.09) & (0.25) \\ 
   & & & & & \\ 
- $Post_t$ & $-$5.23$^{***}$ & $-$6.24$^{***}$ &  &  &  \\ 
-  & (0.19) & (0.31) &  &  &  \\ 
+ $Post_t$ & $-$0.32$^{***}$ & $-$0.95$^{***}$ &  &  &  \\ 
+  & (0.07) & (0.13) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Post_t$ & 1.13$^{***}$ & 1.18$^{***}$ & 0.96$^{***}$ & 1.05$^{***}$ & 1.00$^{***}$ \\ 
-  & (0.27) & (0.28) & (0.28) & (0.28) & (0.29) \\ 
+ $Treat_i \times Post_t$ & 0.15 & 0.11 & 0.09 & 0.10 & 0.12 \\ 
+  & (0.10) & (0.10) & (0.10) & (0.10) & (0.11) \\ 
   & & & & & \\ 
- Constant & 10.79$^{***}$ & 14.22$^{***}$ &  &  &  \\ 
-  & (0.18) & (0.29) &  &  &  \\ 
+ Constant & 2.61$^{***}$ & 4.19$^{***}$ &  &  &  \\ 
+  & (0.06) & (0.17) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
@@ -237,9 +237,9 @@ Project age & No & Yes & Yes & Yes & Yes \\
 Year-Quarter fixed effects & No & No & Yes & Yes & Yes \\ 
 Task fixed effects & No & No & No & Yes & Yes \\ 
 Contractor fixed effects & No & No & No & No & Yes \\ 
-Observations & 160,810 & 150,245 & 150,245 & 150,245 & 150,245 \\ 
-R$^{2}$ & 0.01 & 0.03 & 0.05 & 0.08 & 0.19 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.03 & 0.05 & 0.07 & 0.13 \\ 
+Observations & 124,419 & 116,240 & 116,240 & 116,240 & 116,240 \\ 
+R$^{2}$ & 0.001 & 0.01 & 0.01 & 0.06 & 0.19 \\ 
+Adjusted R$^{2}$ & 0.001 & 0.01 & 0.01 & 0.05 & 0.12 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -280,17 +280,17 @@ time}\label{relative-overruns-over-time}}
 \\[-1.8ex] & \multicolumn{5}{c}{$RelativeOverrun_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$3.63$^{***}$ & $-$2.67$^{***}$ & $-$2.22$^{***}$ & $-$0.80 & $-$2.46 \\ 
-  & (0.67) & (0.72) & (0.71) & (0.74) & (1.87) \\ 
+ $Treat_i$ & $-$0.69$^{***}$ & $-$0.60$^{***}$ & $-$0.57$^{***}$ & $-$0.32$^{***}$ & $-$0.65$^{**}$ \\ 
+  & (0.10) & (0.10) & (0.10) & (0.11) & (0.31) \\ 
   & & & & & \\ 
- $Post_t$ & $-$8.40$^{***}$ & $-$9.57$^{***}$ &  &  &  \\ 
-  & (0.45) & (0.71) &  &  &  \\ 
+ $Post_t$ & $-$0.24$^{***}$ & $-$0.92$^{***}$ &  &  &  \\ 
+  & (0.08) & (0.14) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Post_t$ & 1.66$^{***}$ & 1.10 & 0.79 & 1.07 & 1.09 \\ 
-  & (0.64) & (0.70) & (0.70) & (0.69) & (0.73) \\ 
+ $Treat_i \times Post_t$ & 0.10 & 0.03 & 0.02 & 0.04 & 0.07 \\ 
+  & (0.12) & (0.12) & (0.12) & (0.12) & (0.13) \\ 
   & & & & & \\ 
- Constant & 24.28$^{***}$ & 21.00$^{***}$ &  &  &  \\ 
-  & (0.49) & (0.69) &  &  &  \\ 
+ Constant & 3.07$^{***}$ & 4.53$^{***}$ &  &  &  \\ 
+  & (0.07) & (0.20) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Bids & No & Yes & Yes & Yes & Yes \\ 
@@ -299,9 +299,9 @@ Project age & No & Yes & Yes & Yes & Yes \\
 Year-Quarter fixed effects & No & No & Yes & Yes & Yes \\ 
 Task fixed effects & No & No & No & Yes & Yes \\ 
 Contractor fixed effects & No & No & No & No & Yes \\ 
-Observations & 189,365 & 168,845 & 168,845 & 168,845 & 168,845 \\ 
-R$^{2}$ & 0.004 & 0.01 & 0.02 & 0.06 & 0.21 \\ 
-Adjusted R$^{2}$ & 0.004 & 0.01 & 0.02 & 0.05 & 0.15 \\ 
+Observations & 127,056 & 117,671 & 117,671 & 117,671 & 117,671 \\ 
+R$^{2}$ & 0.001 & 0.004 & 0.01 & 0.06 & 0.20 \\ 
+Adjusted R$^{2}$ & 0.001 & 0.004 & 0.01 & 0.05 & 0.12 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
