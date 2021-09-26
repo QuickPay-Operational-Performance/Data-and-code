@@ -74,9 +74,17 @@
 \section{Relative delays over time}\label{relative-delays-over-time}}
 
 \begin{itemize}
+\tightlist
 \item
-  Sample restricted to projects with modification zero when they first
-  appeared in our sample.
+  Sample restricted to projects for which start dates matches the one in
+  API
+
+  \begin{itemize}
+  \tightlist
+  \item
+    This is done by using first reported ``action\_date'' and
+    ``date\_signed''
+  \end{itemize}
 \item
   \(RelativeDelay_{it} = RelativeDelay_{it}/IntialDuration_i\)
 \end{itemize}

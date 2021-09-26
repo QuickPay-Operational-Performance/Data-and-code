@@ -6,8 +6,8 @@
 ]{article}
 \usepackage{amsmath,amssymb}
 \usepackage{lmodern}
-\usepackage{ifxetex,ifluatex}
-\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+\usepackage{iftex}
+\ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
@@ -59,7 +59,7 @@
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{5}
 \usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array} \usepackage{wrapfig,float} \floatplacement{figure}{H}
-\ifluatex
+\ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
 
@@ -72,6 +72,22 @@
 
 \hypertarget{delays-over-time}{%
 \section{Delays over Time}\label{delays-over-time}}
+
+\begin{itemize}
+\tightlist
+\item
+  Sample restricted to projects for which start dates matches the one in
+  API
+
+  \begin{itemize}
+  \tightlist
+  \item
+    This is done by using first reported ``action\_date'' and
+    ``date\_signed''
+  \end{itemize}
+\item
+  \(DelayRate_{it}=Deadline_{i,t} - Deadline_{i,t-1}\)
+\end{itemize}
 
 \includegraphics{qp_first_implementation_files/figure-latex/plot-1.pdf}
 

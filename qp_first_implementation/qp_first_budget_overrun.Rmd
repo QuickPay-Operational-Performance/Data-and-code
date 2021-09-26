@@ -149,6 +149,8 @@ reg_df[,project_quarter_tercile:=as.factor(ntile(project_quarter_age,3))]
 
 # Note
 
+- Sample restricted to projects for which start dates matches the one in API
+   - This is done by using first reported "action_date" and "date_signed" 
 - Below is the definition of `base_and_all_options_value` from the data dictionary:
   - The change (from this transaction only) to the potential contract value (i.e., the base contract and any exercised or unexercised options).
 - This means that every observation in raw data shows incremental change from previous budget. So some of the values can be zero. 

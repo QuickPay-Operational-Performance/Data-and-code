@@ -146,6 +146,11 @@ reg_df[,project_quarter_tercile:=as.factor(ntile(project_quarter_age,3))]
 
 # Delays over Time
 
+* Sample restricted to projects for which start dates matches the one in API
+   * This is done by using first reported "action_date" and "date_signed" 
+* $DelayRate_{it}=Deadline_{i,t} - Deadline_{i,t-1}$
+
+
 ```{r plot, echo=FALSE, results='asis'}
 mean_delay=reg_df[!is.na(winsorized_delay) & action_date_year_quarter<=as.Date('2012-06-30'), 
               mean(winsorized_delay),  

@@ -77,8 +77,15 @@ time}\label{percentage-delays-over-time}}
 \begin{itemize}
 \tightlist
 \item
-  Sample restricted to projects with modification zero when they first
-  appeared in our sample.
+  Sample restricted to projects for which start dates matches the one in
+  API
+
+  \begin{itemize}
+  \tightlist
+  \item
+    This is done by using first reported ``action\_date'' and
+    ``date\_signed''
+  \end{itemize}
 \item
   \(PercentDelay_{it}=100 \times Delay_{it}/Duration_{i,t-1}\)
 
@@ -90,6 +97,10 @@ time}\label{percentage-delays-over-time}}
 \end{itemize}
 
 \includegraphics{qp_first_pc_delay_files/figure-latex/plot_relative_delay-1.pdf}
+
+\hypertarget{normalized-delay-rate-in-percentage}{%
+\subsection{Normalized delay rate (in
+percentage)}\label{normalized-delay-rate-in-percentage}}
 
 \includegraphics{qp_first_pc_delay_files/figure-latex/normalized_plot-1.pdf}
 
