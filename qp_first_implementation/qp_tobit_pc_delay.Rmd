@@ -177,7 +177,7 @@ left_and_right_censored=subset(reg_df,wins_percentage_delay!=0 & wins_percentage
 hist(left_and_right_censored$wins_percentage_delay,freq=FALSE, main='Density plot: 0<Percentage Delay<175')
 ```
 
-```{r regressions,include=FALSE}
+```{r regressions,include=FALSE,echo=FALSE}
 m1=AER::tobit(wins_percentage_delay ~ treat_i+
                 post_t:treat_i+
                 post_t,
@@ -197,13 +197,14 @@ m2=AER::tobit(wins_percentage_delay ~ treat_i+
               data = reg_df)
 ```
 
-```{r reg_output, ,echo=FALSE, results='asis'}
+```{r reg_output, results='asis', echo=FALSE}
 texreg(list(m1,m2), 
        custom.model.names = c("Logistic","Gaussian"),
-       custom.coef.names = c(
+       custom.coef.names = c("Intercept",
         "$Treat_i$",
         "$Post_t$",
-        "$Treat_i \\times Post_t$"),
+        "$Treat_i \\times Post_t$",
+        "Log(scale)"),
          caption = "Tobit model", 
         # threeparttable = TRUE,
          custom.note="SEs are robust and clustered at the project level.",
@@ -212,8 +213,7 @@ texreg(list(m1,m2),
         # booktabs = TRUE, 
         # use.packages = FALSE, 
         # include.adjrs = FALSE, 
-        # include.bic = FALSE,
-        # include.aic=FALSE,
-        # digits = 2,
-        omit.coef = "Intercept|Log")
+         include.bic = FALSE,
+         include.aic=FALSE,
+         digits = 2)
 ```
