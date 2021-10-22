@@ -1,5 +1,5 @@
 ---
-title: " Other Metrics: QuickPay (2009-2012)"
+title: "Percentage Delay Rate: QuickPay (2009-2012)"
 date: " `r format(Sys.time(), '%b %d, %Y')`"
 output: 
   pdf_document:
@@ -31,8 +31,8 @@ library(scales)
 ```
 
 ```{r set_path_for_exporting, include=FALSE}
-# tables_folder=paste0(getwd(),'/R_tables')
-# figures_folder=paste0(getwd(),'/R_figures')
+tables_folder='~/Desktop/git_folders/QuickPay/QP_paper/Tables/percentage_delay_rate'
+figures_folder='~/Desktop/git_folders/QuickPay/QP_paper/Figures'
 data_folder='~/Dropbox/data_quickpay/qp_data/'
 ```
 
@@ -156,6 +156,8 @@ reg_df=reg_df[order(contract_award_unique_key,
 
 reg_df[,period_of_performance_start_date:=as.Date(period_of_performance_start_date)]
 
+# "period_of_performance_start_date" here comes from first reported info
+# So it is the actual start date for a project
 # get project duration as of last quarter in the denominator
 reg_df[,percentage_delay:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),
          delay/as.numeric(lag(last_reported_end_date,1)-lag(period_of_performance_start_date,1)),
@@ -172,7 +174,7 @@ reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,na.rm=T)]
     * $Duration_{i,t-1} = Deadline_{i,t-1} - StartDate_i$
 
 
-```{r plot_relative_delay, echo=FALSE, results='asis'}
+```{r plot_pc_delay, echo=FALSE, results='asis'}
 mean_delay=reg_df[!is.na(wins_percentage_delay) 
                   & action_date_year_quarter<=as.Date('2012-06-30'), 
               mean(wins_percentage_delay),  
@@ -189,7 +191,7 @@ ggplot(mean_delay, aes(x=year_quarter,
     scale_x_discrete(limits=mean_delay$year_quarter)+
     geom_point(size=3)+
     labs(x="Year-Quarter", y = "Average percentage delay rate per quarter")+  
-    annotate("text", label = "QuickPay\n implemented", x = 8, y = 40,color="dimgrey")+
+    annotate("text", label = "QuickPay\n implemented", x = 8, y = 38,color="dimgrey")+
     geom_vline(xintercept = 10.2, linetype="solid", 
                 color = "gray", size=1.5)+
     scale_shape_discrete(name  ="Business Size",
@@ -221,7 +223,7 @@ ggplot(mean_delay, aes(x=year_quarter,
     scale_x_discrete(limits=mean_delay$year_quarter)+
     geom_point(size=3)+
     labs(x="Year-Quarter", y = "Average percentage delay rate per quarter \n (normalized by delay in 2010-Mar) ")+  
-    annotate("text", label = "QuickPay\n implemented", x = 8, y = 200,color="dimgrey")+
+    annotate("text", label = "QuickPay\n implemented", x = 8, y = 160,color="dimgrey")+
     geom_vline(xintercept = 10.2, linetype="solid", 
                 color = "gray", size=1.5)+
     scale_shape_discrete(name  ="Business Size",
@@ -236,10 +238,10 @@ ggplot(mean_delay, aes(x=year_quarter,
     panel.background = element_blank(),
     legend.text = element_text(size=12))
 
-# ggsave(path=figures_folder,
-#        width = 8,
-#        height = 4,
-#        filename = "trends_normalized.png")
+ggsave(path=figures_folder,
+       width = 8,
+       height = 5,
+       filename = "pc_delay_normalized.png")
 
 ```
 
@@ -387,10 +389,10 @@ base_table<-stargazer(baseline_reg,
                   "SEs are robust and clustered at the project level."),
           header=F)
 
-# base_table_tex=make_tex_pieces(base_table)
-# # Write to file 
-# write(base_table_tex, 
-#       paste0(tables_folder,"/base_table.tex"))
+base_table_tex=make_tex_pieces(base_table)
+# Write to file
+write(base_table_tex,
+      paste0(tables_folder,"/base_table.tex"))
 
 ```
 
@@ -544,10 +546,10 @@ contract_financing_table=stargazer(baseline_reg,
                   "SEs are robust and clustered at the project level."),
           header=F)
 
-# contract_financing_tex=make_tex_pieces(contract_financing_table)
-# # Write to file 
-# write(contract_financing_tex, 
-#       paste0(tables_folder,"/contract_financing_table.tex"))
+contract_financing_tex=make_tex_pieces(contract_financing_table)
+# Write to file
+write(contract_financing_tex,
+      paste0(tables_folder,"/contract_financing_table.tex"))
 
 ```
 
@@ -702,10 +704,10 @@ competitive_projects_table=stargazer(baseline_reg,
                   "Sample restricted to fully competed projects."),
           header=F)
 
-# competitive_projects_tex=make_tex_pieces(competitive_projects_table)
-# # Write to file 
-# write(competitive_projects_tex, 
-#       paste0(tables_folder,"/competitive_projects_table.tex"))
+competitive_projects_tex=make_tex_pieces(competitive_projects_table)
+# Write to file
+write(competitive_projects_tex,
+      paste0(tables_folder,"/competitive_projects_table.tex"))
 
 ```
 
@@ -835,10 +837,10 @@ non_competitive_projects_table=stargazer(baseline_reg,
                   "Sample restricted to non-competed projects."),
           header=F)
 
-# non_competitive_projects_tex=make_tex_pieces(non_competitive_projects_table)
-# # Write to file 
-# write(non_competitive_projects_tex, 
-#       paste0(tables_folder,"/non_competitive_projects_table.tex"))
+non_competitive_projects_tex=make_tex_pieces(non_competitive_projects_table)
+# Write to file
+write(non_competitive_projects_tex,
+      paste0(tables_folder,"/non_competitive_projects_table.tex"))
 
 ```
 
@@ -1038,9 +1040,8 @@ four_way_interaction_table=stargazer(baseline_reg,
                   "SEs are robust and clustered at the project level."),
           header=F)
 
-# four_way_interaction_table_tex=make_tex_pieces(four_way_interaction_table)
-# # Write to file 
-# write(four_way_interaction_table_tex, 
-#       paste0(tables_folder,"/four_way_interaction_table.tex"))
-
+four_way_interaction_table_tex=make_tex_pieces(four_way_interaction_table)
+# Write to file
+write(four_way_interaction_table_tex,
+      paste0(tables_folder,"/four_way_interaction_table.tex"))
 ```

@@ -173,8 +173,8 @@ hist(reg_df$wins_percentage_delay,freq=FALSE, main='Density plot: Full Sample')
 left_censored_at_zero=subset(reg_df,wins_percentage_delay!=0)
 hist(left_censored_at_zero$wins_percentage_delay,freq=FALSE, main='Density plot: Percentage Delay>0')
 
-left_and_right_censored=subset(reg_df,wins_percentage_delay!=0 & wins_percentage_delay<175)
-hist(left_and_right_censored$wins_percentage_delay,freq=FALSE, main='Density plot: 0<Percentage Delay<175')
+left_and_right_censored=subset(reg_df,wins_percentage_delay!=0 & wins_percentage_delay<177)
+hist(left_and_right_censored$wins_percentage_delay,freq=FALSE, main='Density plot: 0<Percentage Delay<177')
 ```
 
 ```{r regressions,include=FALSE,echo=FALSE}
@@ -184,6 +184,7 @@ m1=AER::tobit(wins_percentage_delay ~ treat_i+
               cluster=contract_award_unique_key,
               dist="logistic",
               left = 0,
+              right=177,
               robust=T,
               data = reg_df)
 
@@ -193,6 +194,7 @@ m2=AER::tobit(wins_percentage_delay ~ treat_i+
               cluster=contract_award_unique_key,
               dist="gaussian",
               left = 0,
+              right=177,
               robust=T,
               data = reg_df)
 ```

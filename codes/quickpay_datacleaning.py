@@ -2,6 +2,14 @@
 import pandas as pd
 import numpy as np
 
+def read_multiple_csvs(path):
+    import glob, os
+   # path = r'/Users/vibhutidhingra/Downloads/all_subawards'                    
+    all_files = glob.glob(os.path.join(path, "*.csv"))  # advisable to use os.path.join as this makes concatenation OS independent
+    df_from_each_file = (pd.read_csv(f) for f in all_files)
+    df = pd.concat(df_from_each_file, ignore_index=True)
+    return df
+
 def filter_naics_code(path):
     eligible_naics=['3366','1153','5612','3162','2379',\
                     '3159','5629','3149','2362','4831','6114',\

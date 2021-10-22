@@ -1,0 +1,421 @@
+---
+title: " Realized Delay: QuickPay (2009-2012)"
+date: " `r format(Sys.time(), '%b %d, %Y')`"
+output: 
+  pdf_document:
+    keep_tex: true
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(openxlsx)
+library(tidyverse)
+library(dplyr)
+library(pryr)
+library(readr)
+library(lfe) # linear fixed effects 
+library(DescTools) 
+library(zoo) # for year quarter
+library(stargazer)
+library(broom)
+library(data.table)
+library(scales)
+library(xtable)
+options(xtable.comment = FALSE)
+library(miceadds)
+```
+
+```{r set_path_for_exporting, include=FALSE}
+# tables_folder=paste0(getwd(),'/R_tables')
+# figures_folder=paste0(getwd(),'/R_figures')
+data_folder='~/Dropbox/data_quickpay/qp_data/'
+```
+
+```{r read_data, include=FALSE}
+# Keep only projects whose start dates match with API one
+projects_to_keep=fread(paste0(data_folder,'projects_to_keep.csv'))
+
+api_path=paste0(data_folder,'api_csv_initial')
+
+df <- list.files(api_path, full.names = TRUE, pattern=".csv") %>% 
+  lapply(read_csv) %>% 
+  bind_rows 
+
+keep_cols=c("generated_unique_award_id",
+            "date_signed",
+            "period_of_performance_end_date")
+
+df=setDT(df)[,..keep_cols]
+
+# specify date columns
+date_cols=c("date_signed","period_of_performance_end_date")
+df[,(date_cols):= lapply(.SD, as.Date), .SDcols = date_cols]
+
+# restrict to projects that started and ended before June 30, 2012
+df1=subset(df,date_signed<as.Date('2012-07-01')&
+             period_of_performance_end_date<as.Date('2012-07-01')&
+             generated_unique_award_id%in%projects_to_keep$contract_award_unique_key)
+```
+
+```{r first_info,include=FALSE}
+df_first_reported=fread(paste0(data_folder,'qp_data_first_reported.csv'))
+# contains time-invariant contract characteristics -- info when contract first appeared in the data
+```
+
+```{r assign_variables,include=FALSE}
+
+# InitialDuration_i
+
+df_first_reported[,initial_duration_in_days_i:=
+                    as.numeric(
+                    as.Date(period_of_performance_current_end_date)-
+                    as.Date(period_of_performance_start_date))]
+
+df_first_reported[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(as.numeric(
+                    as.Date(period_of_performance_current_end_date)-
+                    as.Date(period_of_performance_start_date)),na.rm=T)]
+
+df_first_reported[,winsorized_budget:=Winsorize(base_and_all_options_value,na.rm=T)]
+
+df1=merge(df1,df_first_reported[,c('contract_award_unique_key',
+                               'initial_duration_in_days_i',
+                               'winsorized_initial_duration_in_days_i',
+                               'winsorized_budget',
+                               'number_of_offers_received',
+             'contracting_officers_determination_of_business_size_code',
+             'product_or_service_code',
+             'recipient_duns',
+             'awarding_sub_agency_code',
+             'naics_code')],
+      by.x='generated_unique_award_id',
+      by.y='contract_award_unique_key')
+
+df1[,realized_duration:=as.numeric(period_of_performance_end_date-date_signed)]
+
+df1[,realized_delay:=realized_duration-initial_duration_in_days_i]
+
+df1[,wins_realized_delay:=Winsorize(realized_delay,na.rm=T)]
+
+qp_launched=as.Date('2011-04-27')
+projects_started_and_ended_after=unique(subset(df1,
+                                         date_signed>qp_launched &
+       period_of_performance_end_date>qp_launched)$generated_unique_award_id)
+
+projects_started_and_ended_before=unique(subset(df1,
+                                         date_signed<qp_launched &
+       period_of_performance_end_date<qp_launched)$generated_unique_award_id)
+
+df1[,after_qp:=case_when(generated_unique_award_id%in%projects_started_and_ended_after~1,
+                         generated_unique_award_id%in%projects_started_and_ended_before~0)]
+
+df1[,treat_i:=ifelse(contracting_officers_determination_of_business_size_code=="S",1,0)]
+```
+
+# Summary Statistics
+
+* Continuous variables winsorized at 5% 
+
+```{r summary_stats, results='asis',echo=FALSE}
+
+df1[,project_size:=ifelse(treat_i==1,"Small","Large")]
+df1[,started_and_ended:=ifelse(after_qp==1,"After QuickPay","Before QuickPay")]
+
+xtable(df1[!is.na(started_and_ended), 
+    .(number_of_projects = n_distinct(generated_unique_award_id),
+      number_of_tasks = n_distinct(product_or_service_code),
+      number_of_industries = n_distinct(naics_code)), 
+    by =  c('project_size','started_and_ended')])
+
+xtable(df1[!is.na(winsorized_initial_duration_in_days_i)&
+                 !is.na(started_and_ended), 
+    .(mean_initial_duration = mean(winsorized_initial_duration_in_days_i), 
+    #    max_duration = max(winsorized_initial_duration_in_days_i),
+   #     min_duration=min(winsorized_initial_duration_in_days_i),
+        sd_duration=sd(winsorized_initial_duration_in_days_i)), 
+    by =  c('project_size','started_and_ended')])
+
+xtable(df1[!is.na(winsorized_budget)&
+                 !is.na(started_and_ended), 
+    .(mean_initial_budget = mean(winsorized_budget), 
+    #    max_budget = max(winsorized_budget),
+     #   min_budget=min(winsorized_budget),
+        sd_budget=sd(winsorized_budget)), 
+    by =  c('project_size','started_and_ended')])
+
+xtable(df1[!is.na(wins_realized_delay)&
+                 !is.na(started_and_ended), 
+    .(mean_realized_delay = mean(wins_realized_delay), 
+   #     max_realized_delay = max(wins_realized_delay),
+   #     min_realized_delay=min(wins_realized_delay),
+        sd_realized_delay=sd(wins_realized_delay)), 
+    by =  c('project_size','started_and_ended')])
+
+```
+
+```{r plots, results='asis',echo=FALSE}
+mean_delay=df1[!is.na(wins_realized_delay)&
+                 !is.na(started_and_ended), 
+              mean(wins_realized_delay),  
+              by = c('started_and_ended','project_size')]
+
+# Sort so that Before variable comes first
+mean_delay[,time:=ifelse(started_and_ended=="After QuickPay",1,0)]
+mean_delay=mean_delay[order(mean_delay$time),]
+xlabels <- c("Before QuickPay", "After QuickPay")
+
+ggplot(mean_delay, aes(x=as.factor(time),
+               y=V1, 
+               group = project_size, 
+               shape=project_size, 
+               linetype=project_size))+
+    geom_line() +    
+    geom_point(size=3)+
+    scale_x_discrete(labels= xlabels)+
+    labs(x="Time Period", y = "Average realized delay (in days)")+
+    # scale_shape_discrete(name  ="Business Size",
+    #                       breaks=c("0", "S"),
+    #                       labels=c("Large", "Small"))+
+    # scale_linetype_discrete(name="Business Size",
+    #                       breaks=c("O", "S"),
+    #                       labels=c("Large", "Small"))+
+    theme(
+    axis.line = element_line(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    legend.text = element_text(size=12))
+  
+```
+
+# Linear Regression (Full Sample)
+
+```{r regs_full, echo=FALSE, results='asis'}
+baseline_reg=felm(wins_realized_delay~treat_i+
+                     after_qp:treat_i+
+                     after_qp|
+                    0| # no fixed effects
+                    0| # no IV
+                    generated_unique_award_id, # clustered at project level
+                  data=df1, 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+
+controls_reg=felm(wins_realized_delay~treat_i+
+                     after_qp:treat_i+
+                     after_qp+
+                   winsorized_budget+
+                   winsorized_initial_duration_in_days_i+
+                   number_of_offers_received|
+                    0| # no fixed effects
+                    0| # no IV
+                    generated_unique_award_id, # clustered at project level
+                  data=df1, 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+
+task_fe_reg=felm(wins_realized_delay~treat_i+
+                     after_qp:treat_i+
+                     after_qp+
+                   winsorized_budget+
+                   winsorized_initial_duration_in_days_i+
+                   number_of_offers_received|
+                    product_or_service_code| # no fixed effects
+                    0| # no IV
+                    generated_unique_award_id, # clustered at project level
+                  data=df1, 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+
+task_industry_fe_reg=felm(wins_realized_delay~treat_i+
+                     after_qp:treat_i+
+                     after_qp+
+                   winsorized_budget+
+                   winsorized_initial_duration_in_days_i+
+                   number_of_offers_received|
+                    product_or_service_code+naics_code| 
+                    0| # no IV
+                    generated_unique_award_id, # clustered at project level
+                  data=df1, 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+
+stargazer(baseline_reg,
+          controls_reg,
+          task_fe_reg,
+          task_industry_fe_reg,
+          title = "Quickpay 2009-2011",
+          dep.var.labels="$RealizedDelay_{i}$ (in days)",
+          dep.var.caption = "",
+          covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          digits=2,
+          digits.extra=2,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Budget, Duration, Bids",rep("No",1),rep("Yes",3)),
+                          c("Task Fixed Effects",rep("No",2),rep("Yes",2)),
+                           c("Naics Fixed Effects",rep("No",3),rep("Yes",1))),
+          omit=c("winsorized_budget",
+                   "winsorized_initial_duration_in_days_i",
+                   "number_of_offers_received"),
+          table.placement = "H",
+          style="default",
+          notes=c("SEs are robust and clustered at the project level."),
+          header=F)
+
+```
+
+```{r logit_reg, eval=FALSE, echo=FALSE}
+
+# Logit Regression
+
+df1[,project_delayed:=ifelse(realized_delay>0,1,0)]
+
+baseline_reg=glm.cluster(data=df1, 
+                         formula=project_delayed ~ treat_i+
+                           after_qp+
+                           after_qp:treat_i,
+                    cluster="generated_unique_award_id", 
+                    family="binomial")
+  
+  
+  felm(wins_realized_delay~treat_i+
+                     after_qp:treat_i+
+                     after_qp|
+                    0| # no fixed effects
+                    0| # no IV
+                    generated_unique_award_id, # clustered at project level
+                  data=df1, 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+
+controls_reg=glm.cluster(data=df1, 
+                         formula=project_delayed ~ treat_i+
+                           after_qp+
+                           after_qp:treat_i+
+                   winsorized_budget+
+                   winsorized_initial_duration_in_days_i+
+                   number_of_offers_received,
+                    cluster="generated_unique_award_id", 
+                    family="binomial")
+
+task_fe_reg=glm.cluster(data=df1, 
+                         formula=project_delayed ~ treat_i+
+                           after_qp+
+                           after_qp:treat_i+
+                   winsorized_budget+
+                   winsorized_initial_duration_in_days_i+
+                   number_of_offers_received+
+                     as.factor(product_or_service_code),
+                    cluster="generated_unique_award_id", 
+                    family="binomial")
+  
+
+task_industry_fe_reg=glm.cluster(data=df1, 
+                         formula=project_delayed ~ treat_i+
+                           after_qp+
+                           after_qp:treat_i+
+                   winsorized_budget+
+                   winsorized_initial_duration_in_days_i+
+                   number_of_offers_received+
+                     as.factor(product_or_service_code),
+                    cluster="generated_unique_award_id", 
+                    family="binomial")
+
+mod2 <- glm.cluster(data=subset(reg_df,delay>=0), 
+                    formula=delayed_2 ~ treat_i+
+                      post_t:treat_i+
+                      as.factor(action_date_year_quarter),
+                      cluster="contract_award_unique_key", 
+                    family="binomial")
+summary(mod2)
+```
+# Linear Regression (Truncated Sample with Positive Delays)
+
+```{r regs_truncated, echo=FALSE, results='asis'}
+baseline_reg=felm(wins_realized_delay~treat_i+
+                     after_qp:treat_i+
+                     after_qp|
+                    0| # no fixed effects
+                    0| # no IV
+                    generated_unique_award_id, # clustered at project level
+                  data=subset(df1,wins_realized_delay>0), 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+
+controls_reg=felm(wins_realized_delay~treat_i+
+                     after_qp:treat_i+
+                     after_qp+
+                   winsorized_budget+
+                   winsorized_initial_duration_in_days_i+
+                   number_of_offers_received|
+                    0| # no fixed effects
+                    0| # no IV
+                    generated_unique_award_id, # clustered at project level
+                  data=subset(df1,wins_realized_delay>0), 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+
+task_fe_reg=felm(wins_realized_delay~treat_i+
+                     after_qp:treat_i+
+                     after_qp+
+                   winsorized_budget+
+                   winsorized_initial_duration_in_days_i+
+                   number_of_offers_received|
+                    product_or_service_code| # no fixed effects
+                    0| # no IV
+                    generated_unique_award_id, # clustered at project level
+                  data=subset(df1,wins_realized_delay>0), 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+
+task_industry_fe_reg=felm(wins_realized_delay~treat_i+
+                     after_qp:treat_i+
+                     after_qp+
+                   winsorized_budget+
+                   winsorized_initial_duration_in_days_i+
+                   number_of_offers_received|
+                    product_or_service_code+naics_code| 
+                    0| # no IV
+                    generated_unique_award_id, # clustered at project level
+                  data=subset(df1,wins_realized_delay>0), 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+
+stargazer(baseline_reg,
+          controls_reg,
+          task_fe_reg,
+          task_industry_fe_reg,
+          title = "Quickpay 2009-2011 (Truncated with positive delay)",
+          dep.var.labels="$RealizedDelay_{i}$ (in days)",
+          dep.var.caption = "",
+          covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          digits=2,
+          digits.extra=2,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Budget, Duration, Bids",rep("No",1),rep("Yes",3)),
+                          c("Task Fixed Effects",rep("No",2),rep("Yes",2)),
+                           c("Naics Fixed Effects",rep("No",3),rep("Yes",1))),
+          omit=c("winsorized_budget",
+                   "winsorized_initial_duration_in_days_i",
+                   "number_of_offers_received"),
+          table.placement = "H",
+          style="default",
+          notes=c("SEs are robust and clustered at the project level."),
+          header=F)
+```

@@ -6,8 +6,8 @@
 ]{article}
 \usepackage{amsmath,amssymb}
 \usepackage{lmodern}
-\usepackage{iftex}
-\ifPDFTeX
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
@@ -36,7 +36,7 @@
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \hypersetup{
-  pdftitle={Other Metrics: QuickPay (2009-2012)},
+  pdftitle={Percentage Delay Rate: QuickPay (2009-2012)},
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
 \urlstyle{same} % disable monospaced font for URLs
@@ -59,13 +59,13 @@
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{5}
 \usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array} \usepackage{wrapfig,float} \floatplacement{figure}{H}
-\ifLuaTeX
+\ifluatex
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
 
-\title{Other Metrics: QuickPay (2009-2012)}
+\title{Percentage Delay Rate: QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Sep 26, 2021}
+\date{\vspace{-2.5em}Oct 20, 2021}
 
 \begin{document}
 \maketitle
@@ -96,7 +96,7 @@ time}\label{percentage-delays-over-time}}
   \end{itemize}
 \end{itemize}
 
-\includegraphics{qp_first_pc_delay_files/figure-latex/plot_relative_delay-1.pdf}
+\includegraphics{qp_first_pc_delay_files/figure-latex/plot_pc_delay-1.pdf}
 
 \hypertarget{normalized-delay-rate-in-percentage}{%
 \subsection{Normalized delay rate (in
