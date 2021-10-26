@@ -7,7 +7,9 @@ all: qp_first_implementation.pdf \
      qp_first_matched.pdf \
      qp_first_relative_delay.pdf \
      qp_first_pc_delay.pdf \
-     qp_first_budget_overrun.pdf 
+     qp_first_budget_overrun.pdf \
+     qp_first_pc_delay_two_quarters.pdf \
+     qp_first_pc_delay_three_quarters.pdf 
 
 ################################################################################################################
 
@@ -22,6 +24,32 @@ qp_first_budget_overrun.pdf: qp_first_budget_overrun.Rmd \
 
 	Rscript -e 'rmarkdown::render("qp_first_budget_overrun.Rmd")'
 
+################################################################################################################
+
+# Three Quarters: Percentage delay rate (Delay_it/Duration_i,t-1) over two quarters
+
+# Sample restricted to those projects whose start dates (first value of "action_date") match with the "date_signed" from API
+
+qp_first_pc_delay_three_quarters.pdf: qp_first_pc_delay_three_quarters.Rmd \
+		    $(filtered_data_directory)/projects_to_keep.csv \
+		    $(filtered_data_directory)/qp_data_first_reported.csv \
+		    $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv
+	
+	Rscript -e 'rmarkdown::render("qp_first_pc_delay_three_quarters.Rmd")'
+
+
+################################################################################################################
+
+# Two Quarters: Percentage delay rate (Delay_it/Duration_i,t-1) over two quarters
+
+# Sample restricted to those projects whose start dates (first value of "action_date") match with the "date_signed" from API
+
+qp_first_pc_delay_two_quarters.pdf: qp_first_pc_delay_two_quarters.Rmd \
+		    $(filtered_data_directory)/projects_to_keep.csv \
+		    $(filtered_data_directory)/qp_data_first_reported.csv \
+		    $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv
+	
+	Rscript -e 'rmarkdown::render("qp_first_pc_delay_two_quarters.Rmd")'
 
 ################################################################################################################
 
