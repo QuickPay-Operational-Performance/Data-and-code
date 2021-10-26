@@ -1,5 +1,5 @@
 ---
-title: "Percentage Delay Rate (Two Quarters): QuickPay (2009-2012)"
+title: "Percentage Delay Rate (Three Quarters): QuickPay (2009-2012)"
 date: " `r format(Sys.time(), '%b %d, %Y')`"
 output: 
   pdf_document:
