@@ -143,9 +143,6 @@ reg_df=merge(df,
              all.x = TRUE, # keep values in df, add columns of df_first_reported_cols
              by=c("contract_award_unique_key"))
 
-# only keep observations with mod num zero
-reg_df=subset(reg_df,modification_number=="0")
-
 # sort by contract id and date (just to be doubly sure)
 reg_df=reg_df[order(contract_award_unique_key,
             action_date_year_quarter)]
