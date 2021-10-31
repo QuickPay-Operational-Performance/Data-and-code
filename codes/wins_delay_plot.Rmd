@@ -16,16 +16,26 @@ library(DescTools)
 df=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/reg_df.csv')
 ```
 
+* Set breaks at 20 in all graphs
+
 # Non-zero Winsorized delays (5%)
 
 ```{r 5_pc_wins,echo=FALSE, results='asis'}
-hist(subset(df,winsorized_delay!=0)$winsorized_delay)
+hist(subset(df,winsorized_delay!=0)$winsorized_delay,breaks=20)
 ```
 
 # Non-zero Winsorized delays (2.5%)
 
 ```{r 2.5_pc_wins,echo=FALSE, results='asis'}
-df[,wins_delay_2.5:=Winsorize(delay,na.rm=T,probs=c(0.025,0.975))]
+df[,wins_delay_2.5pc:=Winsorize(delay,na.rm=T,probs=c(0.025,0.975))]
 
-hist(subset(df,wins_delay_2.5!=0)$wins_delay_2.5)
+hist(subset(df,wins_delay_2.5pc!=0)$wins_delay_2.5pc,breaks=20)
+```
+
+# Non-zero Winsorized delays (1%)
+
+```{r 1_pc_wins,echo=FALSE, results='asis'}
+df[,wins_delay_1pc:=Winsorize(delay,na.rm=T,probs=c(0.01,0.99))]
+
+hist(subset(df,wins_delay_1pc!=0)$wins_delay_1pc,breaks=20)
 ```
