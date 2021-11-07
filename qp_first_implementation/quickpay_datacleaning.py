@@ -52,6 +52,14 @@ def filter_file_query(path,query_detail):
 # we can use python queries if filtering on more than one column
 # example: 
 # query_detail = "contracting_officers_determination_of_business_size_code=='S' & small_disadvantaged_business=='t'"
+
+def read_multiple_csvs(path):
+    import glob, os
+   # path = r'/Users/vibhutidhingra/Downloads/all_subawards'                    
+    all_files = glob.glob(os.path.join(path, "*.csv"))  # advisable to use os.path.join as this makes concatenation OS independent
+    df_from_each_file = (pd.read_csv(f) for f in all_files)
+    df = pd.concat(df_from_each_file, ignore_index=True)
+    return df
  
 def query_multiple_csvs(path_to_folder,query_detail):
     import glob, os
