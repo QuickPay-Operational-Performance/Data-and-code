@@ -33,9 +33,7 @@ This feature of our data implies that although we aggregate data on a quarterly 
 
 Significance code: $^{***} p<0.01$, $^{**} p<0.05$, $^* p<0.1$. All errors clustered at PSC level.
 
-![image-20211107230906291](C:\Users\jxn174\AppData\Roaming\Typora\typora-user-images\image-20211107230906291.png)
-
-
+![image-20211108155731167](C:\Users\jxn174\AppData\Roaming\Typora\typora-user-images\image-20211108155731167.png)
 
 Table 1 shows the results with projects that delay only once. Interpretation of the coefficients are as follows:
 
@@ -53,9 +51,9 @@ Table 2 shows the results with all projects. I am not sure how to interpret the 
 
 Significance code: $^{***} p<0.01$, $^{**} p<0.05$, $^* p<0.1$. All errors clustered at PSC level.
 
-![image-20211107234033899](C:\Users\jxn174\AppData\Roaming\Typora\typora-user-images\image-20211107234033899.png)
+![image-20211108155619404](C:\Users\jxn174\AppData\Roaming\Typora\typora-user-images\image-20211108155619404.png)
 
-Table 3 shows logistic regression results with projects that delay or expedite only once.  Interpretation of the coefficients are as follows:
+Table 3 shows logistic regression results with projects that delay or expedite at most once over the observation horizon.  Interpretation of the coefficients are as follows:
 
 - _Treat*Post_: The baseline treatment effect in all five quarters after QP. 
   - A small-business project is less likely to delay after QP in the first and third quarter after QP.
