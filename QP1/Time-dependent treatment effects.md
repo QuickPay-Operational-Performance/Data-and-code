@@ -80,5 +80,5 @@ I redid the aggregation on half-year and yearly basis. On both aggregation level
 
 **Overall results:**
 
-- Nonzero delays: No significant change of quarterly, bi-quarterly, and quad-quarterly delay data. The treatment effect Treat*Post have consistent estimates. (Expected given that the majority of projects delay only once in the entire observation horizon.)
-- Probability of delay: 
+- Nonzero delays: No significant change in the treatment effect Treat*Post using quarterly, bi-quarterly, and quad-quarterly delay data. (Expected given that the majority of projects delay only once in the entire observation horizon.)
+- Probability of delay: Point estimate of the treatment effect Treat*Post have the same sign using quarterly, bi-quarterly, and quad-quarterly delay data but the significance level drops. In quad-quarterly delay data, the result is insignificant. Possibly due to the reduction in sample size.
