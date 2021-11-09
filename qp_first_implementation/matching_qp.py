@@ -23,7 +23,7 @@ directory='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/'
 projects_to_keep=pd.read_csv(directory+'projects_to_keep.csv')
 
 df=pd.read_csv(directory+\
-               'resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv')
+               'resampled_qp_data/qp_resampled_data_fy10_to_fy12_with_zero_obs.csv')
 # read quarterly resampled data
 
 df=qd.convert_to_date_time(df)

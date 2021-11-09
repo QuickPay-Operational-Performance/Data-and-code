@@ -42,7 +42,7 @@ data_folder='~/Dropbox/data_quickpay/qp_data/'
 projects_to_keep=fread(paste0(data_folder,'projects_to_keep.csv'))
 
 # read quarterly resampled data
-df=fread(paste0(data_folder,'resampled_qp_data/qp_resampled_data_fy10_to_fy12.csv'))
+df=fread(paste0(data_folder,'resampled_qp_data/qp_resampled_data_fy10_to_fy12_with_zero_obs.csv'))
 # specify date columns
 date_cols=c("action_date_year_quarter","last_reported_start_date","last_reported_end_date")
 df[,(date_cols):= lapply(.SD, as.Date), .SDcols = date_cols]
