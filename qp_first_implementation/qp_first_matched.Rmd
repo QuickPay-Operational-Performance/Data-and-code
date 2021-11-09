@@ -159,7 +159,7 @@ ggplot(mean_delay, aes(x=year_quarter,
     scale_x_discrete(limits=mean_delay$year_quarter)+
     geom_point(size=3)+
     labs(x="Year-Quarter", y = "Average delay rate per quarter (in days)")+  
-    annotate("text", label = "QuickPay\n implemented", x = 8, y = 50,color="dimgrey")+
+    annotate("text", label = "QuickPay\n implemented", x = 8, y = 12,color="dimgrey")+
     geom_vline(xintercept = 10.2, linetype="solid", 
                 color = "gray", size=1.5)+
     scale_shape_discrete(name  ="Business Size",
