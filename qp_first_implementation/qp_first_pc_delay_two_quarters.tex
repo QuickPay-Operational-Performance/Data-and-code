@@ -65,7 +65,7 @@
 
 \title{Percentage Delay Rate (Two Quarters): QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Nov 11, 2021}
+\date{\vspace{-2.5em}Nov 12, 2021}
 
 \begin{document}
 \maketitle
@@ -85,14 +85,6 @@
     This is done by using first reported ``action\_date'' and
     ``date\_signed''
   \end{itemize}
-\item
-  \(PercentDelay_{it}=100 \times Delay_{it}/Duration_{i,t-1}\)
-
-  \begin{itemize}
-  \tightlist
-  \item
-    \(Duration_{i,t-1} = Deadline_{i,t-1} - StartDate_i\)
-  \end{itemize}
 \end{itemize}
 
 \includegraphics{qp_first_pc_delay_two_quarters_files/figure-latex/plot_pc_delay-1.pdf}
@@ -105,9 +97,7 @@
 \hypertarget{full-sample-regressions}{%
 \section{Full Sample Regressions}\label{full-sample-regressions}}
 
-\[ PercentDelay_{it} = \beta_0 + \beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_i \times Post_t) + e_{it}\]
-
-\[ \begin{aligned} PercentDelay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
+\[ \begin{aligned} DelayRate_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}\]
 
@@ -121,7 +111,7 @@
 \begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & \multicolumn{5}{c}{$DelayRate_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
  $Treat_i$ & $-$3.34$^{***}$ & $-$2.72$^{***}$ & $-$2.70$^{***}$ & $-$2.07$^{***}$ & $-$1.81$^{***}$ \\ 
@@ -163,7 +153,7 @@ Adjusted R$^{2}$ & 0.004 & 0.05 & 0.06 & 0.09 & 0.12 \\
 \begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & \multicolumn{5}{c}{$DelayRate_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
  $Treat_i$ & $-$7.07$^{***}$ & $-$6.05$^{***}$ & $-$6.18$^{***}$ & $-$4.55$^{***}$ & $-$3.40$^{***}$ \\ 
@@ -199,9 +189,7 @@ Adjusted R$^{2}$ & 0.01 & 0.05 & 0.06 & 0.10 & 0.14 \\
 \section{Truncated Sample with Positive
 Delays}\label{truncated-sample-with-positive-delays}}
 
-\[ PercentDelay_{it} = \beta_0 + \beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_i \times Post_t) + e_{it}\]
-
-\[ \begin{aligned} PercentDelay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
+\[ \begin{aligned} DelayRate_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}\]
 
@@ -215,7 +203,7 @@ Delays}\label{truncated-sample-with-positive-delays}}
 \begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & \multicolumn{5}{c}{$DelayRate_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
  $Treat_i$ & $-$9.22$^{***}$ & $-$9.34$^{***}$ & $-$9.38$^{***}$ & $-$7.62$^{***}$ & $-$5.47$^{***}$ \\ 
@@ -257,7 +245,7 @@ Adjusted R$^{2}$ & 0.01 & 0.02 & 0.03 & 0.11 & 0.21 \\
 \begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & \multicolumn{5}{c}{$DelayRate_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
  $Treat_i$ & $-$18.52$^{***}$ & $-$18.84$^{***}$ & $-$18.88$^{***}$ & $-$12.47$^{***}$ & $-$8.50$^{*}$ \\ 

@@ -87,11 +87,12 @@ df[,project_quarter_tercile:=as.factor(ntile(project_quarter_age,3))]
 ```
 
 ```{r delay_over_two_quarters, include=FALSE}
-keep_dates=as.Date(c('2010-03-31',
-             '2010-09-30',
-             '2011-03-31',
-             '2011-09-30', 
-             '2012-03-31'))
+keep_dates=as.Date(c('2009-12-31',
+              '2010-06-30',
+             '2010-12-31',
+             '2011-06-30',
+             '2011-12-31', 
+             '2012-06-30'))
 
 df=df[order(contract_award_unique_key,
             action_date_year_quarter)]
@@ -134,14 +135,10 @@ df_first_reported[,winsorized_initial_duration_in_days_i:=
 df_first_reported[,winsorized_initial_budget_i:=
                     Winsorize(base_and_all_options_value,na.rm=T)]
 
-# Change type to string modification number
-df_first_reported[,modification_number:=as.character(modification_number)]
-
 select_cols=c("contract_award_unique_key",
               "recipient_duns",
               "naics_code",
               "product_or_service_code",
-              "modification_number",
               "number_of_offers_received",
               "contract_financing_i",
               "competitively_awarded_i",
@@ -225,7 +222,7 @@ ggplot(mean_delay, aes(x=year_quarter,
     scale_x_discrete(limits=mean_delay$year_quarter)+
     geom_point(size=3)+
     labs(x="Year-Quarter", y = "Average delay rate per two quarters \n (normalized by delay in 2010-Jun) ")+  
-    annotate("text", label = "QuickPay\n implemented", x = 4, y = 160,color="dimgrey")+
+    annotate("text", label = "QuickPay\n implemented", x = 5.5, y = 150,color="dimgrey")+
     geom_vline(xintercept = 4.2, linetype="solid", 
                 color = "gray", size=1.5)+
     scale_shape_discrete(name  ="Business Size",
@@ -275,9 +272,7 @@ make_tex_pieces <- function(stargazer_output) {
 
 # Full Sample Regressions
 
-$$ PercentDelay_{it} = \beta_0 + \beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_i \times Post_t) + e_{it}$$ 
-
-$$ \begin{aligned} PercentDelay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
+$$ \begin{aligned} DelayRate_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}$$
 
@@ -364,7 +359,7 @@ base_table<-stargazer(baseline_reg,
           controls_time_task_fe,
           controls_and_all_fe,
           title = "Effect of QuickPay on project delay rates",
-          dep.var.labels="$PercentDelay_{it}$",
+          dep.var.labels="$DelayRate_{it}$",
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
           object.names=FALSE, 
@@ -481,7 +476,7 @@ base_table<-stargazer(baseline_reg,
           controls_time_task_fe,
           controls_and_all_fe,
           title = "Effect of QuickPay on project delay rates",
-          dep.var.labels="$PercentDelay_{it}$",
+          dep.var.labels="$DelayRate_{it}$",
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
           object.names=FALSE, 
@@ -518,9 +513,7 @@ base_table<-stargazer(baseline_reg,
 
 # Truncated Sample with Positive Delays
 
-$$ PercentDelay_{it} = \beta_0 + \beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_i \times Post_t) + e_{it}$$ 
-
-$$ \begin{aligned} PercentDelay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
+$$ \begin{aligned} DelayRate_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}$$
 
@@ -606,7 +599,7 @@ base_table<-stargazer(baseline_reg,
           controls_time_task_fe,
           controls_and_all_fe,
           title = "Effect of QuickPay on project delay rates",
-          dep.var.labels="$PercentDelay_{it}$",
+          dep.var.labels="$DelayRate_{it}$",
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
           object.names=FALSE, 
@@ -723,7 +716,7 @@ base_table<-stargazer(baseline_reg,
           controls_time_task_fe,
           controls_and_all_fe,
           title = "Effect of QuickPay on project delay rates",
-          dep.var.labels="$PercentDelay_{it}$",
+          dep.var.labels="$DelayRate_{it}$",
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
           object.names=FALSE, 
