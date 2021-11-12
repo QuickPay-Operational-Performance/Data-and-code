@@ -87,12 +87,11 @@ df[,project_quarter_tercile:=as.factor(ntile(project_quarter_age,3))]
 ```
 
 ```{r delay_over_two_quarters, include=FALSE}
-keep_dates=as.Date(c('2009-12-31',
-             '2010-06-30',
-             '2010-12-31',
-             '2011-06-30', 
-             '2011-12-31', 
-             '2012-06-30'))
+keep_dates=as.Date(c('2010-03-31',
+             '2010-09-30',
+             '2011-03-31',
+             '2011-09-30', 
+             '2012-03-31'))
 
 df=df[order(contract_award_unique_key,
             action_date_year_quarter)]
@@ -105,11 +104,6 @@ df[,two_quarter_delay:=ifelse(contract_award_unique_key==lag(contract_award_uniq
                                 action_date_year_quarter%in%keep_dates &
                                 is.na(lag(delay,1)),
                               delay,two_quarter_delay)]
-
-df[,two_quarter_delay:=ifelse(contract_award_unique_key!=lag(contract_award_unique_key,1)&
-                                action_date_year_quarter%in%keep_dates,
-                              delay,two_quarter_delay)]
-
 ```
 
 ```{r assign_variables_2, include=FALSE}
@@ -181,9 +175,6 @@ reg_df[,winsorized_two_quarter_delay:=Winsorize(two_quarter_delay,na.rm=T)]
 
 * Sample restricted to projects for which start dates matches the one in API
    * This is done by using first reported "action_date" and "date_signed" 
-* $PercentDelay_{it}=100 \times Delay_{it}/Duration_{i,t-1}$
-    * $Duration_{i,t-1} = Deadline_{i,t-1} - StartDate_i$
-
 
 ```{r plot_pc_delay, echo=FALSE, results='asis'}
 mean_delay=reg_df[!is.na(winsorized_two_quarter_delay), 
