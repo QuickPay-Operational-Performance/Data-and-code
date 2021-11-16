@@ -28,6 +28,7 @@ library(stargazer)
 library(broom)
 library(data.table)
 library(scales)
+library(DescTools) # for adding months 
 ```
 
 ```{r set_path_for_exporting, include=FALSE}
@@ -88,11 +89,11 @@ df[,project_quarter_tercile:=as.factor(ntile(project_quarter_age,3))]
 
 ```{r delay_over_two_quarters, include=FALSE}
 keep_dates=as.Date(c('2009-12-31',
-              '2010-06-30',
-             '2010-12-31',
-             '2011-06-30',
-             '2011-12-31', 
-             '2012-06-30'))
+                      '2010-06-30',
+                      '2010-12-31',
+                       '2011-06-30',
+                        '2011-12-31', 
+                        '2012-06-30'))
 
 df=df[order(contract_award_unique_key,
             action_date_year_quarter)]
@@ -105,6 +106,25 @@ df[,two_quarter_delay:=ifelse(contract_award_unique_key==lag(contract_award_uniq
                                 action_date_year_quarter%in%keep_dates &
                                 is.na(lag(delay,1)),
                               delay,two_quarter_delay)]
+
+# if last quarter of project is not in one of the "keep dates", get the delay as is
+df[,two_quarter_delay:=ifelse(contract_award_unique_key!=lead(contract_award_unique_key,1)&
+                                !(action_date_year_quarter%in%keep_dates),
+                              delay,two_quarter_delay)]
+
+# if last quarter of project is not in one of the "keep dates", create a new date with next quarter by adding three months to it
+df[,new_quarter_date:=if_else(contract_award_unique_key!=lead(contract_award_unique_key,1)&
+                               !(action_date_year_quarter%in%keep_dates),
+                              AddMonths(action_date_year_quarter,3),
+                              action_date_year_quarter)]
+
+df[,new_quarter_date:=if_else(new_quarter_date=="2010-12-30",
+                             as.Date("2010-12-31"),
+                             new_quarter_date)]
+
+df[,new_quarter_date:=if_else(new_quarter_date=="2011-12-30",
+                             as.Date("2011-12-31"),
+                             new_quarter_date)]
 ```
 
 ```{r assign_variables_2, include=FALSE}
@@ -176,9 +196,9 @@ reg_df[,winsorized_two_quarter_delay:=Winsorize(two_quarter_delay,na.rm=T)]
 ```{r plot_pc_delay, echo=FALSE, results='asis'}
 mean_delay=reg_df[!is.na(winsorized_two_quarter_delay), 
               mean(winsorized_two_quarter_delay),  
-              by = c('action_date_year_quarter','business_type')]
-mean_delay[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
-mean_delay=mean_delay[order(action_date_year_quarter,business_type)]
+              by = c('new_quarter_date','business_type')]
+mean_delay[,year_quarter:=format(new_quarter_date,"%Y-%b")]
+mean_delay=mean_delay[order(new_quarter_date,business_type)]
 
 ggplot(mean_delay, aes(x=year_quarter,
                y=V1, 
@@ -434,7 +454,7 @@ controls_and_time_fe=felm(winsorized_two_quarter_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            action_date_year_quarter|
+                            new_quarter_date|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
@@ -449,7 +469,7 @@ controls_time_task_fe=felm(winsorized_two_quarter_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            product_or_service_code+action_date_year_quarter|
+                            product_or_service_code+new_quarter_date|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
@@ -464,7 +484,7 @@ controls_and_all_fe=felm(winsorized_two_quarter_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            recipient_duns+product_or_service_code+new_quarter_date|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
@@ -674,7 +694,7 @@ controls_and_time_fe=felm(winsorized_two_quarter_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            action_date_year_quarter|
+                            new_quarter_date|
                             0|
                             contract_award_unique_key,
                           data=subset(reg_df, winsorized_two_quarter_delay!=0), 
@@ -689,7 +709,7 @@ controls_time_task_fe=felm(winsorized_two_quarter_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            product_or_service_code+action_date_year_quarter|
+                            product_or_service_code+new_quarter_date|
                             0|
                             contract_award_unique_key,
                           data=subset(reg_df, winsorized_two_quarter_delay!=0), 
@@ -704,7 +724,7 @@ controls_and_all_fe=felm(winsorized_two_quarter_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            recipient_duns+product_or_service_code+new_quarter_date|
                             0|
                             contract_award_unique_key,
                           data=subset(reg_df, winsorized_two_quarter_delay!=0), 
