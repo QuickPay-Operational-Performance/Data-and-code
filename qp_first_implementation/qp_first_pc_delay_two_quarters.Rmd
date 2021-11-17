@@ -793,8 +793,8 @@ $$ \begin{aligned} DelayRate_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + 
 \end{aligned}$$
 
 ```{r 2.5_trun, include=FALSE}
-LB_1Q<- sort(na.omit(reg_df$delay))[round(length(na.omit(reg_df$delay))*0.025)+1]
-UB_1Q<- sort(na.omit(reg_df$delay))[round(length(na.omit(reg_df$delay))*0.975)+1]
+LB_1Q_full<- sort(na.omit(reg_df$delay))[round(length(na.omit(reg_df$delay))*0.025)+1]
+UB_1Q_full<- sort(na.omit(reg_df$delay))[round(length(na.omit(reg_df$delay))*0.975)+1]
 ```
 
 ### One Quarter
@@ -807,7 +807,7 @@ baseline_reg=felm(delay~treat_i+
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
-                  data=subset(reg_df,delay>LB_1Q & delay<UB_1Q), 
+                  data=subset(reg_df,delay>=LB_1Q_full & delay<=UB_1Q_full), 
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 # time fixed effects also included in the following specs
@@ -824,7 +824,7 @@ controls_and_no_fe=felm(delay~treat_i+
                             0|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,delay>LB_1Q & delay<UB_1Q), 
+                          data=subset(reg_df,delay>=LB_1Q_full & delay<=UB_1Q_full), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 # time fixed effects also included in the following specs
@@ -840,7 +840,7 @@ controls_and_time_fe=felm(delay~treat_i+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,delay>LB_1Q & delay<UB_1Q), 
+                          data=subset(reg_df,delay>=LB_1Q_full & delay<=UB_1Q_full), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_time_task_fe=felm(delay~treat_i+
@@ -855,7 +855,7 @@ controls_time_task_fe=felm(delay~treat_i+
                             product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,delay>LB_1Q & delay<UB_1Q), 
+                          data=subset(reg_df,delay>=LB_1Q_full & delay<=UB_1Q_full), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_all_fe=felm(delay~treat_i+
@@ -870,7 +870,7 @@ controls_and_all_fe=felm(delay~treat_i+
                             recipient_duns+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,delay>LB_1Q & delay<UB_1Q), 
+                          data=subset(reg_df,delay>=LB_1Q_full & delay<=UB_1Q_full), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 base_table<-stargazer(baseline_reg,
@@ -929,7 +929,7 @@ baseline_reg=felm(two_quarter_delay~treat_i+
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
-                  data=subset(reg_df,two_quarter_delay<UB_2Q & two_quarter_delay>LB_2Q), 
+                  data=subset(reg_df,two_quarter_delay<=UB_2Q & two_quarter_delay>=LB_2Q), 
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 # time fixed effects also included in the following specs
@@ -946,7 +946,7 @@ controls_and_no_fe=felm(two_quarter_delay~treat_i+
                             0|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,two_quarter_delay<UB_2Q & two_quarter_delay>LB_2Q), 
+                          data=subset(reg_df,two_quarter_delay<=UB_2Q & two_quarter_delay>=LB_2Q), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 # time fixed effects also included in the following specs
@@ -962,7 +962,7 @@ controls_and_time_fe=felm(two_quarter_delay~treat_i+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,two_quarter_delay<UB_2Q & two_quarter_delay>LB_2Q), 
+                          data=subset(reg_df,two_quarter_delay<=UB_2Q & two_quarter_delay>=LB_2Q), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_time_task_fe=felm(two_quarter_delay~treat_i+
@@ -977,7 +977,7 @@ controls_time_task_fe=felm(two_quarter_delay~treat_i+
                             product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,two_quarter_delay<UB_2Q & two_quarter_delay>LB_2Q), 
+                          data=subset(reg_df,two_quarter_delay<=UB_2Q & two_quarter_delay>=LB_2Q), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_all_fe=felm(two_quarter_delay~treat_i+
@@ -992,7 +992,7 @@ controls_and_all_fe=felm(two_quarter_delay~treat_i+
                             recipient_duns+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,two_quarter_delay<UB_2Q & two_quarter_delay>LB_2Q), 
+                          data=subset(reg_df,two_quarter_delay<=UB_2Q & two_quarter_delay>=LB_2Q), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 base_table<-stargazer(baseline_reg,
@@ -1043,6 +1043,25 @@ base_table<-stargazer(baseline_reg,
 $$ \begin{aligned} DelayRate_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}$$
+
+* Winsorization on full sample replaces extreme values
+* In this specific case, extreme lower bound values got replaced by zero
+* That is, all negative delays get replaced by zero
+* So in effect, when we are focusing on subsample with non-zero winsorized delay, we are looking at observations with positive actual delay. That is, we no longer have observations with negative real delay in the data. 
+
+```{r plot_0,echo=FALSE,eval=FALSE}
+
+# Below are the histogram of actual delays when sample restricted to non-zero winsorized delay (for both 1Q and 2Q case)
+
+hist(subset(reg_df, winsorized_delay!=0)$delay,breaks=100,
+     xlab="Quarterly delay (in days)",main=NULL)
+```
+
+```{r plot_00,echo=FALSE,eval=FALSE}
+hist(subset(reg_df, winsorized_two_quarter_delay!=0)$two_quarter_delay,
+     breaks=100,
+     xlab="Two-quarterly delay (in days)",main=NULL)
+```
 
 ### One Quarter
 
@@ -1546,7 +1565,7 @@ UB_2Q_nz<- sort(na.omit(df_non_zero_2Q$two_quarter_delay))[round(length(na.omit(
 ```{r plot_1, eval=FALSE, echo=FALSE}
 # Non-zero one quarter delays (2.5% truncation)
 
-hist(subset(df_non_zero_1Q,delay<UB_1Q_nz & delay>LB_1Q_nz)$delay,
+hist(subset(df_non_zero_1Q,delay<=UB_1Q_nz & delay>=LB_1Q_nz)$delay,
      breaks=100,
      main=NULL,
      xlab="One-Quarter delay rate (in days)")
@@ -1560,7 +1579,7 @@ baseline_reg=felm(delay~treat_i+
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
-                  data=subset(df_non_zero_1Q,delay<UB_1Q_nz & delay>LB_1Q_nz),
+                  data=subset(df_non_zero_1Q,delay<=UB_1Q_nz & delay>=LB_1Q_nz),
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 # time fixed effects also included in the following specs
@@ -1577,7 +1596,7 @@ controls_and_no_fe=felm(delay~treat_i+
                             0|
                             0|
                             contract_award_unique_key,
-                          data=subset(df_non_zero_1Q,delay<UB_1Q_nz & delay>LB_1Q_nz), 
+                          data=subset(df_non_zero_1Q,delay<=UB_1Q_nz & delay>=LB_1Q_nz), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 # time fixed effects also included in the following specs
@@ -1593,7 +1612,7 @@ controls_and_time_fe=felm(delay~treat_i+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(df_non_zero_1Q,delay<UB_1Q_nz & delay>LB_1Q_nz), 
+                          data=subset(df_non_zero_1Q,delay<=UB_1Q_nz & delay>=LB_1Q_nz), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_time_task_fe=felm(delay~treat_i+
@@ -1608,7 +1627,7 @@ controls_time_task_fe=felm(delay~treat_i+
                             product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(df_non_zero_1Q,delay<UB_1Q_nz & delay>LB_1Q_nz), 
+                          data=subset(df_non_zero_1Q,delay<=UB_1Q_nz & delay>=LB_1Q_nz), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_all_fe=felm(delay~treat_i+
@@ -1623,7 +1642,7 @@ controls_and_all_fe=felm(delay~treat_i+
                             recipient_duns+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(df_non_zero_1Q,delay<UB_1Q_nz & delay>LB_1Q_nz), 
+                          data=subset(df_non_zero_1Q,delay<=UB_1Q_nz & delay>=LB_1Q_nz), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 base_table<-stargazer(baseline_reg,
@@ -1674,8 +1693,8 @@ base_table<-stargazer(baseline_reg,
 ```{r plot_2, echo=FALSE, eval=FALSE}
 
 # 2.5% truncation after aggregating
-hist(subset(df_non_zero_2Q,two_quarter_delay<UB_2Q_nz & 
-              two_quarter_delay>LB_2Q_nz)$two_quarter_delay,breaks=100,
+hist(subset(df_non_zero_2Q,two_quarter_delay<=UB_2Q_nz & 
+              two_quarter_delay>=LB_2Q_nz)$two_quarter_delay,breaks=100,
      xlab="Two-Quarter delay rate (in days)",
      main=NULL)
 ```
@@ -1689,7 +1708,7 @@ baseline_reg=felm(two_quarter_delay~treat_i+
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
                   data=subset(df_non_zero_2Q,
-                              two_quarter_delay<UB_2Q_nz & two_quarter_delay>LB_2Q_nz),
+                              two_quarter_delay<=UB_2Q_nz & two_quarter_delay>=LB_2Q_nz),
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 # time fixed effects also included in the following specs
@@ -1707,7 +1726,7 @@ controls_and_no_fe=felm(two_quarter_delay~treat_i+
                             0|
                             contract_award_unique_key,
                           data=subset(df_non_zero_2Q,
-                              two_quarter_delay<UB_2Q_nz & two_quarter_delay>LB_2Q_nz), 
+                              two_quarter_delay<=UB_2Q_nz & two_quarter_delay>=LB_2Q_nz), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 # time fixed effects also included in the following specs
@@ -1724,7 +1743,7 @@ controls_and_time_fe=felm(two_quarter_delay~treat_i+
                             0|
                             contract_award_unique_key,
                           data=subset(df_non_zero_2Q,
-                              two_quarter_delay<UB_2Q_nz & two_quarter_delay>LB_2Q_nz), 
+                              two_quarter_delay<=UB_2Q_nz & two_quarter_delay>=LB_2Q_nz), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_time_task_fe=felm(two_quarter_delay~treat_i+
@@ -1740,7 +1759,7 @@ controls_time_task_fe=felm(two_quarter_delay~treat_i+
                             0|
                             contract_award_unique_key,
                           data=subset(df_non_zero_2Q,
-                              two_quarter_delay<UB_2Q_nz & two_quarter_delay>LB_2Q_nz), 
+                              two_quarter_delay<=UB_2Q_nz & two_quarter_delay>=LB_2Q_nz), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_all_fe=felm(two_quarter_delay~treat_i+
@@ -1756,7 +1775,7 @@ controls_and_all_fe=felm(two_quarter_delay~treat_i+
                             0|
                             contract_award_unique_key,
                           data=subset(df_non_zero_2Q,
-                              two_quarter_delay<UB_2Q_nz & two_quarter_delay>LB_2Q_nz), 
+                              two_quarter_delay<=UB_2Q_nz & two_quarter_delay>=LB_2Q_nz), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 base_table<-stargazer(baseline_reg,
