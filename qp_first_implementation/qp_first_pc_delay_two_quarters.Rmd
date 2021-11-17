@@ -1537,11 +1537,20 @@ LB_1Q_nz<- sort(na.omit(df_non_zero_1Q$delay))[round(length(na.omit(df_non_zero_
 UB_1Q_nz<- sort(na.omit(df_non_zero_1Q$delay))[round(length(na.omit(df_non_zero_1Q$delay))*0.975)+1]
 
 
-LB_2Q_nz<- sort(na.omit(df_non_zero_2Q$two_quarter_delay))[round(length(na.omit(df_non_zero_2Q$two_quarter_delayy))*0.025)+1]
+LB_2Q_nz<- sort(na.omit(df_non_zero_2Q$two_quarter_delay))[round(length(na.omit(df_non_zero_2Q$two_quarter_delay))*0.025)+1]
 UB_2Q_nz<- sort(na.omit(df_non_zero_2Q$two_quarter_delay))[round(length(na.omit(df_non_zero_2Q$two_quarter_delay))*0.975)+1]
 ```
 
 ### One Quarter
+
+```{r plot_1, eval=FALSE, echo=FALSE}
+# Non-zero one quarter delays (2.5% truncation)
+
+hist(subset(df_non_zero_1Q,delay<UB_1Q_nz & delay>LB_1Q_nz)$delay,
+     breaks=100,
+     main=NULL,
+     xlab="One-Quarter delay rate (in days)")
+```
 
 ```{r 2.5_reg_truncated_nonzero, echo=FALSE, results='asis'}
 # Baseline Regressions 
@@ -1659,6 +1668,17 @@ base_table<-stargazer(baseline_reg,
 ```
 
 ### Two Quarters
+
+* 2.5% truncation done after calculating 2Q delays
+
+```{r plot_2, echo=FALSE, eval=FALSE}
+
+# 2.5% truncation after aggregating
+hist(subset(df_non_zero_2Q,two_quarter_delay<UB_2Q_nz & 
+              two_quarter_delay>LB_2Q_nz)$two_quarter_delay,breaks=100,
+     xlab="Two-Quarter delay rate (in days)",
+     main=NULL)
+```
 
 ```{r two_quarters_truncated_2.5_nonzero, echo=FALSE, results='asis'}
 # Baseline Regressions 
