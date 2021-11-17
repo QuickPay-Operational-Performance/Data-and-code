@@ -97,24 +97,25 @@ for (q in 2:3){
   delay.tmp <- NULL
   if (q == 2){
     # half-year delay case
-    # get one yr before and one yr after QP 
-    axisT.tmp <- axisT[c(2,4,6,8)]
+    # get one yr before and one yr after QP
+    axisT.tmp <- axisT
+    axisT.id <- c(2,4,6,8)
     # drop the first and last quarter in the obs. horizon. Consider half-years immediately 
     # before & after QP
     # To drop the half-year interval from 2011-03-31 to 2011-06-30 that covers QP, set c(1,3,7,9)
   } else {
     # annual delay case
     # get one yr before and one yr after QP
-    axisT.tmp <- sort(unique(data.nQ[[q-1]]$quarter))
-    axisT.tmp <- axisT.tmp[c(1,3)]
+    axisT.tmp <- axisT[c(2,4,6,8)]
+    axisT.id <- c(1,3)
     # get the first and third half-year
   }    
-    for (i in 1:length(axisT.tmp)){
+    for (i in 1:length(axisT.id)){
       # compute the half-year delay that starts at axisT.tmp[i]
-      tmp1 <- data.nQ[[q-1]][data.nQ[[q-1]]$quarter %in% axisT.tmp[i], c("contract_award_unique_key", "delay")]
+      tmp1 <- data.nQ[[q-1]][data.nQ[[q-1]]$quarter %in% axisT.tmp[axisT.id[i]], c("contract_award_unique_key", "delay")]
       # take out all projects and their quarterly delays in axisT.tmp[i] (if a project is not in tmp1,
       # then it does not have quarterly delay in axisT.tmp[i])
-      tmp2 <- data.nQ[[q-1]][data.nQ[[q-1]]$quarter %in% axisT.tmp[i+1],c("contract_award_unique_key", "delay")]
+      tmp2 <- data.nQ[[q-1]][data.nQ[[q-1]]$quarter %in% axisT.tmp[axisT.id[i]+1],c("contract_award_unique_key", "delay")]
       # take out all projects and their quarterly delays in quarter axisT[i+1]
       inter <- merge(tmp1, tmp2, by="contract_award_unique_key")
       # projects that have quarter delays in both quarters
@@ -126,7 +127,7 @@ for (q in 2:3){
       tmp <- rbind(tmp3, tmp1[!(tmp1[,1] %in% inter[,1]),], tmp2[!(tmp2[,1] %in% inter[,1]),])
       # combine tmp3 with projects that have only one quarterly delay
       
-      quarter <- rep(axisT.tmp[i], dim(tmp)[1])
+      quarter <- rep(axisT.tmp[axisT.id[i]], dim(tmp)[1])
       
       delay.tmp <- rbind(delay.tmp, data.frame(tmp, quarter))
     }
@@ -269,14 +270,6 @@ lm.base.aug <- felm(delay~ treat:post + treat + treat:post_qrtr | quarter | 0 | 
 summary(lm.base.aug)
 
 
-lm.naics.aug <- felm(delay~ treat:post + treat + treat:post_qrtr  
-                     | quarter + naics_code | 0 | naics_code, 
-                     data=data.nonzero[[1]],
-                     exactDOF = TRUE,
-                     cmethod ="reghdfe")
-summary(lm.naics.aug)
-
-
 lm.psc.aug <- felm(delay~ treat:post + treat  + treat:post_qrtr
                    | quarter + naics_code + product_or_service_code | 0 | naics_code, 
                    data=data.nonzero[[1]],
@@ -301,13 +294,6 @@ lm.base.aug1 <- felm(delay~ treat:post + treat + treat:post_qrtr
                      cmethod ="reghdfe")
 summary(lm.base.aug1)
 
-
-lm.naics.aug1 <- felm(delay~ treat:post + treat + treat:post_qrtr  
-                      | quarter + naics_code | 0 | product_or_service_code, 
-                      data=data.nonzero[[1]],
-                      exactDOF = TRUE,
-                      cmethod ="reghdfe")
-summary(lm.naics.aug1)
 
 lm.psc.aug1 <- felm(delay~ treat:post + treat  + treat:post_qrtr
                     | quarter + naics_code + product_or_service_code | 0 | product_or_service_code, 
@@ -666,9 +652,6 @@ logitDelay.psc.tr1d <- feglm(delayFlag ~ treat + treat:post + treat:post_qrtr
                            | naics_code, data = data.delay.1d)
 summary(logitDelay.psc.tr1d, type="clustered", cluster = ~ naics_code)
 summary(logitDelay.psc.tr1d, type="clustered", cluster = ~ product_or_service_code)
-
-
-
 
 #########################################################################################
 ################## LOGISTIC REGRESSION ON N-QUARTERLY DELAYS ###################
