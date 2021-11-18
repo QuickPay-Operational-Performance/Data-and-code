@@ -6,8 +6,8 @@
 ]{article}
 \usepackage{amsmath,amssymb}
 \usepackage{lmodern}
-\usepackage{ifxetex,ifluatex}
-\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+\usepackage{iftex}
+\ifPDFTeX
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
@@ -59,13 +59,13 @@
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{5}
 \usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array} \usepackage{wrapfig,float} \floatplacement{figure}{H}
-\ifluatex
+\ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
 
 \title{Delay Rate (Two Quarters): QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Nov 17, 2021}
+\date{\vspace{-2.5em}Nov 18, 2021}
 
 \begin{document}
 \maketitle
@@ -87,12 +87,12 @@
   \end{itemize}
 \end{itemize}
 
-\includegraphics{qp_first_pc_delay_two_quarters_files/figure-latex/plot_pc_delay-1.pdf}
+\includegraphics{qp_first_delay_two_quarters_files/figure-latex/plot_pc_delay-1.pdf}
 
 \hypertarget{normalized-delay-rate}{%
 \subsection{Normalized delay rate}\label{normalized-delay-rate}}
 
-\includegraphics{qp_first_pc_delay_two_quarters_files/figure-latex/normalized_plot-1.pdf}
+\includegraphics{qp_first_delay_two_quarters_files/figure-latex/normalized_plot-1.pdf}
 
 \hypertarget{full-sample-regressions}{%
 \section{Full Sample Regressions}\label{full-sample-regressions}}
