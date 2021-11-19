@@ -1,0 +1,62 @@
+---
+title: "Toy Example: Contract Financing"
+output: pdf_document
+---
+
+```{r setup, include=FALSE,warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(broom)
+library(alpaca)
+library(dplyr)
+library(lfe)
+library(knitr)
+```
+
+```{r read_data,include=FALSE}
+df=fread('~/Desktop/toy_cf_2.csv')
+df[,post:=case_when(quarter=="Q1"~0,
+                    quarter=="Q2"~0,
+                    quarter=="Q3"~1,
+                    quarter=="Q4"~1)]
+
+df[,treat:=ifelse(size=="small",1,0)]
+df[,delay_ind:=ifelse(delay!=0,1,0)]
+```
+
+# Dataset
+
+```{r data, echo=FALSE, results='asis'}
+kable(df)
+```
+
+# Logistic Regression
+
+```{r logistic, echo=FALSE, warning=FALSE}
+reg1 <- feglm(delay_ind ~ treat+post+cf+post:cf+treat:cf+treat:post+treat:post:cf|0, df)
+summary(reg1)
+```
+
+# Non-zero Linear Regression
+
+```{r non_zero_linear, echo=FALSE, warning=FALSE}
+reg2 =felm(delay~ treat+post+cf+post:cf+treat:cf+treat:post+treat:post:cf
+               | 0 | 0 | 0, 
+               data=subset(df,delay!=0),
+               exactDOF = TRUE,
+               cmethod ="reghdfe")
+summary(reg2)
+```
+
+# Full sample Linear Regression
+
+```{r full_linear, echo=FALSE, warning=FALSE}
+reg3 =felm(delay~ treat+post+cf+post:cf+treat:cf+treat:post+treat:post:cf
+           | 0 | 0 | 0, 
+           data=df,
+           exactDOF = TRUE,
+           cmethod ="reghdfe")
+summary(reg3)
+```
+
+
