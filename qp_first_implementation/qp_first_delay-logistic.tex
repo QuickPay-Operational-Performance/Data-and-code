@@ -1,0 +1,356 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Logistic regression: Positive Delay Rate -- QuickPay (2009-2012)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array} \usepackage{wrapfig,float} \floatplacement{figure}{H}
+\ifluatex
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Logistic regression: Positive Delay Rate -- QuickPay (2009-2012)}
+\author{}
+\date{\vspace{-2.5em}Nov 22, 2021}
+
+\begin{document}
+\maketitle
+
+\hypertarget{logistic-regressions-positive-delay}{%
+\section{Logistic Regressions (Positive
+Delay)}\label{logistic-regressions-positive-delay}}
+
+\[ I(Delay_{it}>0) = \beta_0 + \beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_i \times Post_t) + e_{it}\]
+
+\[ \begin{aligned} I(Delay_{it}>0) &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
+&+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
+\end{aligned}\]
+
+\begin{table}
+\begin{center}
+\begin{tabular}{l c c c c c}
+\hline
+ & \multicolumn{5}{c}{$I(Delay_it>0)$} \\
+\cline{2-6}
+ & (1) & (2) & (3) & (4) & (5) \\
+\hline
+Constant                                   & $-2.05^{***}$ & $-0.94^{***}$ &               &               &               \\
+                                           & $(0.01)$      & $(0.02)$      &               &               &               \\
+$Treat_i$                                  & $-0.42^{***}$ & $-0.24^{***}$ & $-0.24^{***}$ & $-0.17^{***}$ & $-0.27^{***}$ \\
+                                           & $(0.02)$      & $(0.02)$      & $(0.02)$      & $(0.03)$      & $(0.07)$      \\
+$Post_t$                                   & $0.10^{***}$  & $-0.32^{***}$ &               &               &               \\
+                                           & $(0.02)$      & $(0.03)$      &               &               &               \\
+$Treat_i \times Post_t$                    & $0.18^{***}$  & $0.16^{***}$  & $0.16^{***}$  & $0.13^{***}$  & $0.17^{***}$  \\
+                                           & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      \\
+\hline
+Duration, Budget, Bids                     & No            & Yes           & Yes           & Yes           & Yes           \\
+$Post_t \times $  (Duration, Budget, Bids) & No            & Yes           & Yes           & Yes           & Yes           \\
+Year-Quarter FE                            & No            & No            & Yes           & Yes           & Yes           \\
+Task FE                                    & No            & No            & No            & Yes           & Yes           \\
+Contractor FE                              & No            & No            & No            & No            & Yes           \\
+AIC                                        & $192105.94$   & $169728.46$   & $$            & $$            & $$            \\
+BIC                                        & $192148.21$   & $169833.28$   & $$            & $$            & $$            \\
+Log Likelihood                             & $-96048.97$   & $-84854.23$   & $$            & $$            & $$            \\
+Deviance                                   & $192097.94$   & $169708.46$   & $168714.31$   & $155008.15$   & $132964.53$   \\
+Num. obs.                                  & $287530$      & $263488$      & $263488$      & $260905$      & $216602$      \\
+\hline
+\multicolumn{6}{l}{\scriptsize{Each observation is a project-quarter. SEs are robust and clustered at the project level.}}
+\end{tabular}
+\caption{}
+\label{table:coefficients}
+\end{center}
+\end{table}
+
+\hypertarget{contract-financing}{%
+\section{Contract Financing}\label{contract-financing}}
+
+\[ CF_i = \begin{cases} 1, \text{ if project } i \text{ receives contract financing}\\
+0, \text{ otherwise} \end{cases}\]
+
+\[ \begin{aligned}
+I(Delay_{it}>0) &=& \beta_0+\beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_i \times Post_t) \\
+&+&\beta_4 CF_i + \beta_5 (CF_i \times Post_t) + \beta_6 (Treat_i \times Post_t \times CF_i) \\ 
+&+&X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
+\end{aligned}\]
+
+\begin{table}
+\begin{center}
+\begin{tabular}{l c c c c c}
+\hline
+ & \multicolumn{5}{c}{$I(Delay_it>0)$} \\
+\cline{2-6}
+ & (1) & (2) & (3) & (4) & (5) \\
+\hline
+Constant                                   & $-2.19^{***}$ & $-0.99^{***}$ &               &               &               \\
+                                           & $(0.02)$      & $(0.02)$      &               &               &               \\
+$Treat_i$                                  & $-0.41^{***}$ & $-0.27^{***}$ & $-0.27^{***}$ & $-0.18^{***}$ & $-0.28^{***}$ \\
+                                           & $(0.02)$      & $(0.02)$      & $(0.02)$      & $(0.03)$      & $(0.07)$      \\
+$Post_t$                                   & $0.09^{***}$  & $-0.30^{***}$ &               &               &               \\
+                                           & $(0.02)$      & $(0.03)$      &               &               &               \\
+$CF_i$                                     & $0.78^{***}$  & $0.62^{***}$  & $0.60^{***}$  & $0.08^{**}$   & $0.07^{*}$    \\
+                                           & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.04)$      \\
+$Treat_i \times Post_t$                    & $0.13^{***}$  & $0.16^{***}$  & $0.16^{***}$  & $0.12^{***}$  & $0.20^{***}$  \\
+                                           & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.04)$      \\
+$Post_t \times CF_i$                       & $0.01$        & $-0.06$       & $-0.05$       & $0.05$        & $0.17^{***}$  \\
+                                           & $(0.04)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      & $(0.05)$      \\
+$Treat_i \times Post_t \times CF_i$        & $0.29^{***}$  & $0.08^{**}$   & $0.09^{**}$   & $0.02$        & $-0.11^{*}$   \\
+                                           & $(0.04)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      & $(0.05)$      \\
+\hline
+Duration, Budget, Bids                     & No            & Yes           & Yes           & Yes           & Yes           \\
+$Post_t \times $  (Duration, Budget, Bids) & No            & Yes           & Yes           & Yes           & Yes           \\
+Year-Quarter FE                            & No            & No            & Yes           & Yes           & Yes           \\
+Task FE                                    & No            & No            & No            & Yes           & Yes           \\
+Contractor FE                              & No            & No            & No            & No            & Yes           \\
+AIC                                        & $188883.22$   & $168397.79$   & $$            & $$            & $$            \\
+BIC                                        & $188957.20$   & $168534.05$   & $$            & $$            & $$            \\
+Log Likelihood                             & $-94434.61$   & $-84185.89$   & $$            & $$            & $$            \\
+Deviance                                   & $188869.22$   & $168371.79$   & $167397.17$   & $154961.96$   & $132915.92$   \\
+Num. obs.                                  & $287530$      & $263488$      & $263488$      & $260905$      & $216602$      \\
+\hline
+\multicolumn{6}{l}{\scriptsize{Each observation is a project-quarter. SEs are robust and clustered at the project level.}}
+\end{tabular}
+\caption{Contract Financing}
+\label{table:coefficients}
+\end{center}
+\end{table}
+
+\hypertarget{competition}{%
+\section{Competition}\label{competition}}
+
+\hypertarget{impact-on-delays}{%
+\subsection{Impact on delays}\label{impact-on-delays}}
+
+Define
+\[ SA_i = \begin{cases} 1, \text{ if project was signed after QuickPay}\\
+0, \text{ otherwise} \end{cases}\]
+
+\[ SB_i = \begin{cases} 1, \text{ if project was signed before QuickPay}\\
+0, \text{ otherwise} \end{cases}\]
+
+\hypertarget{subsample-model}{%
+\subsubsection{Subsample model}\label{subsample-model}}
+
+For a subsample of competitive or noncompetitive projects:
+
+\[ \begin{aligned} I(Delay_{it}>0) &=& \beta_0 +\beta_1 Treat_i+ \beta_2 SA_i+ \beta_3 Post_t \\&+& \beta_4 (Treat_i \times Post_t \times SA_i )+\beta_5 (Treat_i \times Post_t \times SB_i )+e_{it} \end{aligned} \]
+
+\begin{itemize}
+\item
+  According to our hypothesis, \(\beta_4\) should be positive and
+  significant for competitive projects, and insignificant for
+  non-competitive projects.
+\item
+  In the following regressions, we also control for the project's age.
+  Project's age is defined as the number of quarters since it first
+  showed up in the sample. We include the terciles of project's age as a
+  control variable.
+\end{itemize}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{l c c c c c}
+\hline
+ & \multicolumn{5}{c}{$I(Delay_it>0)$} \\
+\cline{2-6}
+ & (1) & (2) & (3) & (4) & (5) \\
+\hline
+Constant                                   & $-1.98^{***}$ & $-0.90^{***}$ &               &               &               \\
+                                           & $(0.02)$      & $(0.02)$      &               &               &               \\
+$Treat_i$                                  & $-0.55^{***}$ & $-0.31^{***}$ & $-0.31^{***}$ & $-0.17^{***}$ & $-0.31^{***}$ \\
+                                           & $(0.02)$      & $(0.02)$      & $(0.03)$      & $(0.03)$      & $(0.09)$      \\
+$SA_i$                                     & $-0.41^{***}$ & $-0.53^{***}$ & $-0.79^{***}$ & $-0.70^{***}$ & $-0.65^{***}$ \\
+                                           & $(0.02)$      & $(0.02)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      \\
+$Post_t$                                   & $0.35^{***}$  & $0.01$        &               &               &               \\
+                                           & $(0.02)$      & $(0.03)$      &               &               &               \\
+$Treat_i \times SB_i \times Post_t$        & $0.07^{**}$   & $0.15^{***}$  & $0.17^{***}$  & $0.14^{***}$  & $0.20^{***}$  \\
+                                           & $(0.03)$      & $(0.03)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      \\
+$Treat_i \times SA_i \times Post_t$        & $0.24^{***}$  & $0.17^{***}$  & $0.16^{***}$  & $0.21^{***}$  & $0.22^{***}$  \\
+                                           & $(0.03)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      \\
+\hline
+Duration, Budget, Bids                     & No            & Yes           & Yes           & Yes           & Yes           \\
+$Post_t \times $  (Duration, Budget, Bids) & No            & Yes           & Yes           & Yes           & Yes           \\
+Year-Quarter FE                            & No            & No            & Yes           & Yes           & Yes           \\
+Task FE                                    & No            & No            & No            & Yes           & Yes           \\
+Contractor FE                              & No            & No            & No            & No            & Yes           \\
+AIC                                        & $158229.54$   & $139557.11$   & $$            & $$            & $$            \\
+BIC                                        & $158291.74$   & $139680.42$   & $$            & $$            & $$            \\
+Log Likelihood                             & $-79108.77$   & $-69766.56$   & $$            & $$            & $$            \\
+Deviance                                   & $158217.54$   & $139533.11$   & $138121.15$   & $126129.81$   & $108438.07$   \\
+Num. obs.                                  & $234573$      & $214421$      & $214421$      & $212123$      & $173025$      \\
+\hline
+\multicolumn{6}{l}{\scriptsize{Each observation is a project-quarter. SEs are robust and clustered at the project level. Sample restricted to fully competed projects.}}
+\end{tabular}
+\caption{Full Competition}
+\label{table:coefficients}
+\end{center}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{l c c c c c}
+\hline
+ & \multicolumn{5}{c}{$I(Delay_it>0)$} \\
+\cline{2-6}
+ & (1) & (2) & (3) & (4) & (5) \\
+\hline
+Constant                                   & $-2.40^{***}$ & $-0.92^{***}$ &               &               &               \\
+                                           & $(0.04)$      & $(0.21)$      &               &               &               \\
+$Treat_i$                                  & $0.27^{***}$  & $0.17^{***}$  & $0.19^{***}$  & $-0.16^{**}$  & $-0.10$       \\
+                                           & $(0.05)$      & $(0.06)$      & $(0.06)$      & $(0.07)$      & $(0.18)$      \\
+$SA_i$                                     & $-0.14^{***}$ & $-0.29^{***}$ & $-0.49^{***}$ & $-0.53^{***}$ & $-0.62^{***}$ \\
+                                           & $(0.05)$      & $(0.05)$      & $(0.06)$      & $(0.07)$      & $(0.08)$      \\
+$Post_t$                                   & $-0.02$       & $0.03$        &               &               &               \\
+                                           & $(0.05)$      & $(0.22)$      &               &               &               \\
+$Treat_i \times SB_i \times Post_t$        & $0.28^{***}$  & $0.28^{***}$  & $0.28^{***}$  & $0.29^{***}$  & $0.39^{***}$  \\
+                                           & $(0.07)$      & $(0.08)$      & $(0.08)$      & $(0.08)$      & $(0.10)$      \\
+$Treat_i \times SA_i \times Post_t$        & $0.11$        & $0.04$        & $0.05$        & $0.08$        & $0.09$        \\
+                                           & $(0.08)$      & $(0.08)$      & $(0.08)$      & $(0.09)$      & $(0.11)$      \\
+\hline
+Duration, Budget, Bids                     & No            & Yes           & Yes           & Yes           & Yes           \\
+$Post_t \times $  (Duration, Budget, Bids) & No            & Yes           & Yes           & Yes           & Yes           \\
+Year-Quarter FE                            & No            & No            & Yes           & Yes           & Yes           \\
+Task FE                                    & No            & No            & No            & Yes           & Yes           \\
+Contractor FE                              & No            & No            & No            & No            & Yes           \\
+AIC                                        & $32508.38$    & $28815.35$    & $$            & $$            & $$            \\
+BIC                                        & $32561.64$    & $28920.97$    & $$            & $$            & $$            \\
+Log Likelihood                             & $-16248.19$   & $-14395.68$   & $$            & $$            & $$            \\
+Deviance                                   & $32496.38$    & $28791.35$    & $28610.62$    & $26220.54$    & $21209.53$    \\
+Num. obs.                                  & $52957$       & $49067$       & $49067$       & $47130$       & $36044$       \\
+\hline
+\multicolumn{6}{l}{\scriptsize{Each observation is a project-quarter. SEs are robust and clustered at the project level. Sample restricted to non-competed projects.}}
+\end{tabular}
+\caption{Non-competitive projects}
+\label{table:coefficients}
+\end{center}
+\end{table}
+
+\hypertarget{four-way-interaction}{%
+\subsubsection{Four-way interaction}\label{four-way-interaction}}
+
+We run the following model:
+
+\[\begin{aligned} I(Delay_{it}>0) &=& \beta_0 +\beta_1 Treat_i+ \beta_2 StartedAfterQP_i+ \beta_3 Post_t+ \beta_4 Competitive_i\\ && +  \beta_5 (Treat_i \times Competitive_i) + \beta_6 (Post_t \times Competitive_i)\\ && +  \beta_7 (StartedAfterQP_i \times Competitive_i) +\beta_8 (Treat_i \times Post_t)\\ && + \beta_9 (Treat_i \times Post_t \times Competitive_i) \\ && + \beta_{10} (Treat_i \times Post_t \times StartedAfterQP_i )\\ && + \beta_{11} (Treat_i \times Post_t \times StartedAfterQP_i \times Competitive_i) + e_{it} \end{aligned}\]
+
+\textbf{Interpretation:}
+
+\begin{itemize}
+\tightlist
+\item
+  \(\beta_9\) is the difference between treatment effect for competitive
+  and non-competitive projects signed before quickpay.
+\item
+  \(\beta_9 + \beta_{11}\) is the difference between treatment effect
+  for competitive and non-competitive projects signed \emph{after}
+  quickpay.
+\item
+  \(\beta_{11}\) is our coefficient of interest because it tells us how
+  much of the difference is there due to ``aggressive bidding'' after
+  the policy.
+\end{itemize}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{l c c c c c}
+\hline
+ & \multicolumn{5}{c}{$I(Delay_it>0)$} \\
+\cline{2-6}
+ & (1) & (2) & (3) & (4) & (5) \\
+\hline
+Constant                                                             & $-2.40^{***}$ & $-1.09^{***}$ &               &               &               \\
+                                                                     & $(0.04)$      & $(0.04)$      &               &               &               \\
+$Treat_i$                                                            & $0.27^{***}$  & $0.16^{***}$  & $0.17^{***}$  & $-0.17^{***}$ & $-0.34^{***}$ \\
+                                                                     & $(0.05)$      & $(0.06)$      & $(0.06)$      & $(0.06)$      & $(0.10)$      \\
+$StartedAfterQP_i$                                                   & $-0.14^{***}$ & $-0.27^{***}$ & $-0.55^{***}$ & $-0.54^{***}$ & $-0.63^{***}$ \\
+                                                                     & $(0.05)$      & $(0.05)$      & $(0.06)$      & $(0.06)$      & $(0.07)$      \\
+$Competitive_i$                                                      & $0.42^{***}$  & $0.18^{***}$  & $0.20^{***}$  & $-0.08$       & $-0.27^{***}$ \\
+                                                                     & $(0.04)$      & $(0.04)$      & $(0.05)$      & $(0.05)$      & $(0.07)$      \\
+$Post_t$                                                             & $-0.02$       & $-0.26^{***}$ &               &               &               \\
+                                                                     & $(0.05)$      & $(0.06)$      &               &               &               \\
+$Treat_i \times Competitive_i$                                       & $-0.82^{***}$ & $-0.48^{***}$ & $-0.49^{***}$ & $-0.01$       & $0.06$        \\
+                                                                     & $(0.06)$      & $(0.06)$      & $(0.06)$      & $(0.07)$      & $(0.10)$      \\
+$Post_t \times Competitive_i$                                        & $0.37^{***}$  & $0.31^{***}$  & $0.31^{***}$  & $0.14^{**}$   & $0.16^{**}$   \\
+                                                                     & $(0.06)$      & $(0.06)$      & $(0.06)$      & $(0.06)$      & $(0.07)$      \\
+$StartedAfterQP_i \times Competitive_i$                              & $-0.27^{***}$ & $-0.26^{***}$ & $-0.24^{***}$ & $-0.16^{**}$  & $-0.02$       \\
+                                                                     & $(0.06)$      & $(0.06)$      & $(0.06)$      & $(0.07)$      & $(0.07)$      \\
+$Treat_i \times Post_t$                                              & $0.28^{***}$  & $0.29^{***}$  & $0.29^{***}$  & $0.19^{**}$   & $0.33^{***}$  \\
+                                                                     & $(0.07)$      & $(0.08)$      & $(0.08)$      & $(0.08)$      & $(0.09)$      \\
+$Treat_i \times Post_t \times Competitive_i$                         & $-0.21^{***}$ & $-0.13$       & $-0.12$       & $-0.05$       & $-0.14$       \\
+                                                                     & $(0.08)$      & $(0.08)$      & $(0.09)$      & $(0.09)$      & $(0.10)$      \\
+$Treat_i \times Post_t \times StartedAfterQP_i$                      & $-0.17^{**}$  & $-0.25^{***}$ & $-0.23^{***}$ & $-0.20^{**}$  & $-0.23^{**}$  \\
+                                                                     & $(0.07)$      & $(0.08)$      & $(0.08)$      & $(0.09)$      & $(0.10)$      \\
+$Treat_i \times Post_t \times StartedAfterQP_i \times Competitive_i$ & $0.34^{***}$  & $0.27^{***}$  & $0.22^{**}$   & $0.26^{***}$  & $0.24^{**}$   \\
+                                                                     & $(0.08)$      & $(0.08)$      & $(0.09)$      & $(0.09)$      & $(0.11)$      \\
+\hline
+Duration, Budget, Bids                                               & No            & Yes           & Yes           & Yes           & Yes           \\
+$Post_t \times $  (Duration, Budget, Bids)                           & No            & Yes           & Yes           & Yes           & Yes           \\
+Year-Quarter FE                                                      & No            & No            & Yes           & Yes           & Yes           \\
+Task FE                                                              & No            & No            & No            & Yes           & Yes           \\
+Contractor FE                                                        & No            & No            & No            & No            & Yes           \\
+AIC                                                                  & $190737.92$   & $168464.56$   & $$            & $$            & $$            \\
+BIC                                                                  & $190864.75$   & $168653.23$   & $$            & $$            & $$            \\
+Log Likelihood                                                       & $-95356.96$   & $-84214.28$   & $$            & $$            & $$            \\
+Deviance                                                             & $190713.92$   & $168428.56$   & $166855.10$   & $153931.94$   & $132175.22$   \\
+Num. obs.                                                            & $287530$      & $263488$      & $263488$      & $260905$      & $216764$      \\
+\hline
+\multicolumn{6}{l}{\scriptsize{Each observation is a project-quarter. SEs are robust and clustered at the project level.}}
+\end{tabular}
+\caption{Competition: Four-way Interaction}
+\label{table:coefficients}
+\end{center}
+\end{table}
+
+\end{document}
