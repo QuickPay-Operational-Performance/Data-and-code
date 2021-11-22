@@ -9,7 +9,8 @@ all: qp_first_implementation.pdf \
      qp_first_relative_delay.pdf \
      qp_first_pc_delay.pdf \
      qp_first_budget_overrun.pdf \
-     qp_first_delay_two_quarters.pdf 
+     qp_first_delay_two_quarters.pdf \
+     qp_first_delay-logistic.pdf
 
 ################################################################################################################
 
@@ -24,6 +25,16 @@ qp_first_budget_overrun.pdf: qp_first_budget_overrun.Rmd \
 
 	Rscript -e 'rmarkdown::render("qp_first_budget_overrun.Rmd")'
 
+################################################################################################################
+
+# Logistic Regressions: Positive Delay
+
+qp_first_delay-logistic.pdf: qp_first_delay-logistic.Rmd \
+		    $(filtered_data_directory)/projects_to_keep.csv \
+		    $(filtered_data_directory)/qp_data_first_reported.csv \
+		    $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12_with_zero_obs.csv
+	
+	Rscript -e 'rmarkdown::render("qp_first_delay-logistic.Rmd")'
 
 ################################################################################################################
 
