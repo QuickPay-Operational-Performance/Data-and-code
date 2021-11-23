@@ -29,6 +29,8 @@ library(broom)
 library(data.table)
 library(scales)
 library(DescTools) # for adding months 
+library(alpaca)
+library(texreg)
 ```
 
 ```{r set_path_for_exporting, include=FALSE}
@@ -130,6 +132,9 @@ df[,two_quarter_delay:=ifelse(contract_award_unique_key==lag(contract_award_uniq
 # df[,new_quarter_date:=if_else(new_quarter_date=="2011-12-30",
 #                              as.Date("2011-12-31"),
 #                              new_quarter_date)]
+
+df[,positive_delay:=ifelse(delay>0,1,0)]
+df[,positive_two_quarter_delay:=ifelse(two_quarter_delay>0,1,0)]
 ```
 
 ```{r assign_variables_2, include=FALSE}
@@ -1034,6 +1039,176 @@ base_table<-stargazer(baseline_reg,
 # write(base_table_tex,
 #       paste0(tables_folder,"/base_table.tex"))
 
+```
+
+# Logistic Regression for Positive Delays
+
+## One Quarter
+
+```{r logit_1Q, echo=FALSE, results='asis'}
+# Baseline Regressions 
+
+baseline_reg=glm(positive_delay~treat_i+
+                   post_t:treat_i+
+                   post_t,
+                 family='binomial',
+                 data=reg_df)
+
+controls_and_no_fe=glm(positive_delay~treat_i+
+                           post_t:treat_i+
+                           post_t+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received,
+                            family='binomial',
+                          data=reg_df)
+
+# time fixed effects also included in the following specs
+controls_and_time_fe=feglm(positive_delay~treat_i+
+                             post_t:treat_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            contract_award_unique_key+product_or_service_code,
+                           data=reg_df)
+
+controls_time_task_fe=feglm(positive_delay~treat_i+
+                              post_t:treat_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            contract_award_unique_key+product_or_service_code,
+                          data=reg_df)
+
+controls_and_all_fe=feglm(positive_delay~treat_i+
+                            post_t:treat_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            contract_award_unique_key+product_or_service_code,
+                          data=reg_df)
+
+texreg(list(baseline_reg,
+            controls_and_no_fe,
+            controls_and_time_fe,
+            controls_time_task_fe,
+            controls_and_all_fe),
+            #include.deviance=F,
+            include.groups=F,
+            type="cluster",
+            cluster=~contract_award_unique_key,
+            stars = c(0.01, 0.05, 0.1),
+            omit.coef=c("winsorized_initial_duration_in_days_i|winsorized_initial_budget_i|number_of_offers_received|post_t:winsorized_initial_duration_in_days_i|post_t:winsorized_initial_budget_i|post_t:number_of_offers_received"),
+       custom.coef.names = c("Constant","$Treat_i$","$Post_t$","$Treat_i \\times Post_t$"),
+       custom.model.names=c("(1)","(2)","(3)","(4)","(5)"),
+       custom.note="Each observation is a project-quarter. SEs are robust and clustered at the project level.",
+       custom.header=list("$I(Delay_{it}>0)$"=1:5),
+       caption="Logistic Regression: One Quarter Delay",
+      custom.gof.rows=list("Duration, Budget, Bids"=c(rep("No",1),rep("Yes",4)),
+      "$Post_t \\times $  (Duration, Budget, Bids)"=c(rep("No",1),rep("Yes",4)),
+      "Year-Quarter FE"=c(rep("No",2),rep("Yes",3)),
+      "Task FE"=c(rep("No",3),rep("Yes",2)),
+      "Contractor FE"=c(rep("No",4),rep("Yes",1))),
+      float.pos='h')
+```
+
+## Two Quarter
+
+```{r logit_2Q, echo=FALSE, results='asis'}
+# Baseline Regressions 
+
+baseline_reg=glm(positive_two_quarter_delay~treat_i+
+                   post_t:treat_i+
+                   post_t,
+                 family='binomial',
+                 data=reg_df)
+
+controls_and_no_fe=glm(positive_two_quarter_delay~treat_i+
+                           post_t:treat_i+
+                           post_t+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received,
+                            family='binomial',
+                          data=reg_df)
+
+# time fixed effects also included in the following specs
+controls_and_time_fe=feglm(positive_two_quarter_delay~treat_i+
+                             post_t:treat_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            contract_award_unique_key+product_or_service_code,
+                           data=reg_df)
+
+controls_time_task_fe=feglm(positive_two_quarter_delay~treat_i+
+                              post_t:treat_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            contract_award_unique_key+product_or_service_code,
+                          data=reg_df)
+
+controls_and_all_fe=feglm(positive_two_quarter_delay~treat_i+
+                            post_t:treat_i+
+                            winsorized_initial_duration_in_days_i+
+                            winsorized_initial_budget_i+
+                            number_of_offers_received+
+                            post_t:winsorized_initial_duration_in_days_i+
+                            post_t:winsorized_initial_budget_i+
+                            post_t:number_of_offers_received|
+                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            contract_award_unique_key+product_or_service_code,
+                          data=reg_df)
+
+texreg(list(baseline_reg,
+            controls_and_no_fe,
+            controls_and_time_fe,
+            controls_time_task_fe,
+            controls_and_all_fe),
+            #include.deviance=F,
+            include.groups=F,
+            type="cluster",
+            cluster=~contract_award_unique_key,
+            stars = c(0.01, 0.05, 0.1),
+            omit.coef=c("winsorized_initial_duration_in_days_i|winsorized_initial_budget_i|number_of_offers_received|post_t:winsorized_initial_duration_in_days_i|post_t:winsorized_initial_budget_i|post_t:number_of_offers_received"),
+       custom.coef.names = c("Constant","$Treat_i$","$Post_t$","$Treat_i \\times Post_t$"),
+       custom.model.names=c("(1)","(2)","(3)","(4)","(5)"),
+       custom.note="Each observation is a project-quarter. SEs are robust and clustered at the project level.",
+       custom.header=list("$I(Delay_{it}>0)$"=1:5),
+       caption="Logistic Regression: Two Quarter Delay",
+      custom.gof.rows=list("Duration, Budget, Bids"=c(rep("No",1),rep("Yes",4)),
+      "$Post_t \\times $  (Duration, Budget, Bids)"=c(rep("No",1),rep("Yes",4)),
+      "Year-Quarter FE"=c(rep("No",2),rep("Yes",3)),
+      "Task FE"=c(rep("No",3),rep("Yes",2)),
+      "Contractor FE"=c(rep("No",4),rep("Yes",1))),
+      float.pos='h')
 ```
 
 # Sample with Non-Zero Delays

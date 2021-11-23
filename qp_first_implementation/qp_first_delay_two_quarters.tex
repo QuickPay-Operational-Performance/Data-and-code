@@ -6,8 +6,8 @@
 ]{article}
 \usepackage{amsmath,amssymb}
 \usepackage{lmodern}
-\usepackage{iftex}
-\ifPDFTeX
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
@@ -59,13 +59,13 @@
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{5}
 \usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array} \usepackage{wrapfig,float} \floatplacement{figure}{H}
-\ifLuaTeX
+\ifluatex
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
 
 \title{Delay Rate (Two Quarters): QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Nov 18, 2021}
+\date{\vspace{-2.5em}Nov 22, 2021}
 
 \begin{document}
 \maketitle
@@ -370,6 +370,86 @@ Adjusted R$^{2}$ & 0.004 & 0.05 & 0.05 & 0.09 & 0.14 \\
 \end{tabular} 
 \end{table}
 
+\hypertarget{logistic-regression-for-positive-delays}{%
+\section{Logistic Regression for Positive
+Delays}\label{logistic-regression-for-positive-delays}}
+
+\hypertarget{one-quarter-3}{%
+\subsection{One Quarter}\label{one-quarter-3}}
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{l c c c c c}
+\hline
+ & \multicolumn{5}{c}{$I(Delay_{it}>0)$} \\
+\cline{2-6}
+ & (1) & (2) & (3) & (4) & (5) \\
+\hline
+Constant                                   & $-2.05^{***}$ & $-0.94^{***}$ &               &               &               \\
+                                           & $(0.01)$      & $(0.02)$      &               &               &               \\
+$Treat_i$                                  & $-0.42^{***}$ & $-0.24^{***}$ & $-0.24^{***}$ & $-0.17^{***}$ & $-0.27^{***}$ \\
+                                           & $(0.02)$      & $(0.02)$      & $(0.02)$      & $(0.03)$      & $(0.07)$      \\
+$Post_t$                                   & $0.10^{***}$  & $-0.32^{***}$ &               &               &               \\
+                                           & $(0.02)$      & $(0.03)$      &               &               &               \\
+$Treat_i \times Post_t$                    & $0.18^{***}$  & $0.16^{***}$  & $0.16^{***}$  & $0.13^{***}$  & $0.17^{***}$  \\
+                                           & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      \\
+\hline
+Duration, Budget, Bids                     & No            & Yes           & Yes           & Yes           & Yes           \\
+$Post_t \times $  (Duration, Budget, Bids) & No            & Yes           & Yes           & Yes           & Yes           \\
+Year-Quarter FE                            & No            & No            & Yes           & Yes           & Yes           \\
+Task FE                                    & No            & No            & No            & Yes           & Yes           \\
+Contractor FE                              & No            & No            & No            & No            & Yes           \\
+AIC                                        & $192105.94$   & $169728.46$   & $$            & $$            & $$            \\
+BIC                                        & $192148.21$   & $169833.28$   & $$            & $$            & $$            \\
+Log Likelihood                             & $-96048.97$   & $-84854.23$   & $$            & $$            & $$            \\
+Deviance                                   & $192097.94$   & $169708.46$   & $168714.31$   & $155008.15$   & $132964.53$   \\
+Num. obs.                                  & $287530$      & $263488$      & $263488$      & $260905$      & $216602$      \\
+\hline
+\multicolumn{6}{l}{\scriptsize{Each observation is a project-quarter. SEs are robust and clustered at the project level.}}
+\end{tabular}
+\caption{Logistic Regression: One Quarter Delay}
+\label{table:coefficients}
+\end{center}
+\end{table}
+
+\hypertarget{two-quarter}{%
+\subsection{Two Quarter}\label{two-quarter}}
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{l c c c c c}
+\hline
+ & \multicolumn{5}{c}{$I(Delay_{it}>0)$} \\
+\cline{2-6}
+ & (1) & (2) & (3) & (4) & (5) \\
+\hline
+Constant                                   & $-1.63^{***}$ & $-0.66^{***}$ &               &               &               \\
+                                           & $(0.02)$      & $(0.03)$      &               &               &               \\
+$Treat_i$                                  & $-0.43^{***}$ & $-0.23^{***}$ & $-0.24^{***}$ & $-0.17^{***}$ & $-0.33^{***}$ \\
+                                           & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.10)$      \\
+$Post_t$                                   & $0.14^{***}$  & $-0.24^{***}$ &               &               &               \\
+                                           & $(0.02)$      & $(0.04)$      &               &               &               \\
+$Treat_i \times Post_t$                    & $0.17^{***}$  & $0.14^{***}$  & $0.15^{***}$  & $0.11^{***}$  & $0.18^{***}$  \\
+                                           & $(0.03)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      \\
+\hline
+Duration, Budget, Bids                     & No            & Yes           & Yes           & Yes           & Yes           \\
+$Post_t \times $  (Duration, Budget, Bids) & No            & Yes           & Yes           & Yes           & Yes           \\
+Year-Quarter FE                            & No            & No            & Yes           & Yes           & Yes           \\
+Task FE                                    & No            & No            & No            & Yes           & Yes           \\
+Contractor FE                              & No            & No            & No            & No            & Yes           \\
+AIC                                        & $103653.12$   & $90445.89$    & $$            & $$            & $$            \\
+BIC                                        & $103691.97$   & $90542.12$    & $$            & $$            & $$            \\
+Log Likelihood                             & $-51822.56$   & $-45212.94$   & $$            & $$            & $$            \\
+Deviance                                   & $103645.12$   & $90425.89$    & $90246.58$    & $81486.80$    & $64532.60$    \\
+Num. obs.                                  & $122172$      & $111681$      & $111681$      & $110106$      & $86326$       \\
+\hline
+\multicolumn{6}{l}{\scriptsize{Each observation is a project-quarter. SEs are robust and clustered at the project level.}}
+\end{tabular}
+\caption{Logistic Regression: Two Quarter Delay}
+\label{table:coefficients}
+\end{center}
+\end{table}
+
 \hypertarget{sample-with-non-zero-delays}{%
 \section{Sample with Non-Zero
 Delays}\label{sample-with-non-zero-delays}}
@@ -397,8 +477,8 @@ sample}\label{winsorization-on-full-sample}}
   delay in the data.
 \end{itemize}
 
-\hypertarget{one-quarter-3}{%
-\subsubsection{One Quarter}\label{one-quarter-3}}
+\hypertarget{one-quarter-4}{%
+\subsubsection{One Quarter}\label{one-quarter-4}}
 
 \begin{table}[H] \centering 
   \caption{Effect of QuickPay on project delay rates} 
@@ -489,8 +569,8 @@ sample}\label{winsorization-on-non-zero-sample}}
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}\]
 
-\hypertarget{one-quarter-4}{%
-\subsubsection{One Quarter}\label{one-quarter-4}}
+\hypertarget{one-quarter-5}{%
+\subsubsection{One Quarter}\label{one-quarter-5}}
 
 \begin{table}[H] \centering 
   \caption{Effect of QuickPay on project delay rates} 
@@ -581,8 +661,8 @@ sample}\label{truncation-on-non-zero-sample}}
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}\]
 
-\hypertarget{one-quarter-5}{%
-\subsubsection{One Quarter}\label{one-quarter-5}}
+\hypertarget{one-quarter-6}{%
+\subsubsection{One Quarter}\label{one-quarter-6}}
 
 \begin{table}[H] \centering 
   \caption{Effect of QuickPay on project delay rates} 
