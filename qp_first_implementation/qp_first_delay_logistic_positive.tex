@@ -74,17 +74,11 @@
 \section{Logistic Regressions (Positive
 Delay)}\label{logistic-regressions-positive-delay}}
 
-\[ I(Delay_{it}>0) = \beta_0 + \beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_i \times Post_t) + e_{it}\]
-
-\[ \begin{aligned} I(Delay_{it}>0) &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
-&+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
-\end{aligned}\]
-
 \begin{table}
 \begin{center}
 \begin{tabular}{l c c c c c}
 \hline
- & \multicolumn{5}{c}{$I(Delay_it>0)$} \\
+ & \multicolumn{5}{c}{$I(Delay_{it}>0)$} \\
 \cline{2-6}
  & (1) & (2) & (3) & (4) & (5) \\
 \hline
@@ -121,17 +115,11 @@ Num. obs.                                  & $287530$      & $263488$      & $26
 \[ CF_i = \begin{cases} 1, \text{ if project } i \text{ receives contract financing}\\
 0, \text{ otherwise} \end{cases}\]
 
-\[ \begin{aligned}
-I(Delay_{it}>0) &=& \beta_0+\beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_i \times Post_t) \\
-&+&\beta_4 CF_i + \beta_5 (CF_i \times Post_t) + \beta_6 (Treat_i \times Post_t \times CF_i) \\ 
-&+&X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
-\end{aligned}\]
-
 \begin{table}
 \begin{center}
 \begin{tabular}{l c c c c c}
 \hline
- & \multicolumn{5}{c}{$I(Delay_it>0)$} \\
+ & \multicolumn{5}{c}{$I(Delay_{it}>0)$} \\
 \cline{2-6}
  & (1) & (2) & (3) & (4) & (5) \\
 \hline
@@ -184,27 +172,11 @@ Define
 \hypertarget{subsample-model}{%
 \subsubsection{Subsample model}\label{subsample-model}}
 
-For a subsample of competitive or noncompetitive projects:
-
-\[ \begin{aligned} I(Delay_{it}>0) &=& \beta_0 +\beta_1 Treat_i+ \beta_2 SA_i+ \beta_3 Post_t \\&+& \beta_4 (Treat_i \times Post_t \times SA_i )+\beta_5 (Treat_i \times Post_t \times SB_i )+e_{it} \end{aligned} \]
-
-\begin{itemize}
-\item
-  According to our hypothesis, \(\beta_4\) should be positive and
-  significant for competitive projects, and insignificant for
-  non-competitive projects.
-\item
-  In the following regressions, we also control for the project's age.
-  Project's age is defined as the number of quarters since it first
-  showed up in the sample. We include the terciles of project's age as a
-  control variable.
-\end{itemize}
-
 \begin{table}
 \begin{center}
 \begin{tabular}{l c c c c c}
 \hline
- & \multicolumn{5}{c}{$I(Delay_it>0)$} \\
+ & \multicolumn{5}{c}{$I(Delay_{it}>0)$} \\
 \cline{2-6}
  & (1) & (2) & (3) & (4) & (5) \\
 \hline
@@ -243,7 +215,7 @@ Num. obs.                                  & $234573$      & $214421$      & $21
 \begin{center}
 \begin{tabular}{l c c c c c}
 \hline
- & \multicolumn{5}{c}{$I(Delay_it>0)$} \\
+ & \multicolumn{5}{c}{$I(Delay_{it}>0)$} \\
 \cline{2-6}
  & (1) & (2) & (3) & (4) & (5) \\
 \hline
@@ -281,32 +253,11 @@ Num. obs.                                  & $52957$       & $49067$       & $49
 \hypertarget{four-way-interaction}{%
 \subsubsection{Four-way interaction}\label{four-way-interaction}}
 
-We run the following model:
-
-\[\begin{aligned} I(Delay_{it}>0) &=& \beta_0 +\beta_1 Treat_i+ \beta_2 StartedAfterQP_i+ \beta_3 Post_t+ \beta_4 Competitive_i\\ && +  \beta_5 (Treat_i \times Competitive_i) + \beta_6 (Post_t \times Competitive_i)\\ && +  \beta_7 (StartedAfterQP_i \times Competitive_i) +\beta_8 (Treat_i \times Post_t)\\ && + \beta_9 (Treat_i \times Post_t \times Competitive_i) \\ && + \beta_{10} (Treat_i \times Post_t \times StartedAfterQP_i )\\ && + \beta_{11} (Treat_i \times Post_t \times StartedAfterQP_i \times Competitive_i) + e_{it} \end{aligned}\]
-
-\textbf{Interpretation:}
-
-\begin{itemize}
-\tightlist
-\item
-  \(\beta_9\) is the difference between treatment effect for competitive
-  and non-competitive projects signed before quickpay.
-\item
-  \(\beta_9 + \beta_{11}\) is the difference between treatment effect
-  for competitive and non-competitive projects signed \emph{after}
-  quickpay.
-\item
-  \(\beta_{11}\) is our coefficient of interest because it tells us how
-  much of the difference is there due to ``aggressive bidding'' after
-  the policy.
-\end{itemize}
-
 \begin{table}
 \begin{center}
 \begin{tabular}{l c c c c c}
 \hline
- & \multicolumn{5}{c}{$I(Delay_it>0)$} \\
+ & \multicolumn{5}{c}{$I(Delay_{it}>0)$} \\
 \cline{2-6}
  & (1) & (2) & (3) & (4) & (5) \\
 \hline

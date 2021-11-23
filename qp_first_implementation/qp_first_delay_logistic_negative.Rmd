@@ -1,5 +1,5 @@
 ---
-title: "Logistic regression: Positive Delay Rate -- QuickPay (2009-2012)"
+title: "Logistic regression: Negative Delay Rate -- QuickPay (2009-2012)"
 date: " `r format(Sys.time(), '%b %d, %Y')`"
 output: 
   pdf_document:
@@ -85,7 +85,6 @@ df[,treat_i:=ifelse(business_type=="S",1,0)]
 df[, project_quarter_age := rowid(contract_award_unique_key)]
 df[,project_quarter_tercile:=as.factor(ntile(project_quarter_age,3))]
 # Including it as fixed effects doesn't work because projects in treatment and control are not always in same "tercile" while controling for everything else. 
-df[,positive_delay:=ifelse(delay>0,1,0)]
 df[,negative_delay:=ifelse(delay<0,1,0)]
 
 ```
@@ -179,25 +178,18 @@ make_tex_pieces <- function(stargazer_output) {
 }
 ```
 
-# Logistic Regressions (Positive Delay)
-
-$$ I(Delay_{it}>0) = \beta_0 + \beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_i \times Post_t) + e_{it}$$ 
-
-$$ \begin{aligned} I(Delay_{it}>0) &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
-&+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
-\end{aligned}$$
-
+# Logistic Regressions (Negative Delay)
 
 ```{r baseline_regressions, echo=FALSE, results='asis'}
 # Baseline Regressions 
 
-baseline_reg=glm(positive_delay~treat_i+
+baseline_reg=glm(negative_delay~treat_i+
                    post_t:treat_i+
                    post_t,
                  family='binomial',
                  data=reg_df)
 
-controls_and_no_fe=glm(positive_delay~treat_i+
+controls_and_no_fe=glm(negative_delay~treat_i+
                            post_t:treat_i+
                            post_t+
                             winsorized_initial_duration_in_days_i+
@@ -210,7 +202,7 @@ controls_and_no_fe=glm(positive_delay~treat_i+
                           data=reg_df)
 
 # time fixed effects also included in the following specs
-controls_and_time_fe=feglm(positive_delay~treat_i+
+controls_and_time_fe=feglm(negative_delay~treat_i+
                              post_t:treat_i+
                             winsorized_initial_duration_in_days_i+
                             winsorized_initial_budget_i+
@@ -222,7 +214,7 @@ controls_and_time_fe=feglm(positive_delay~treat_i+
                             contract_award_unique_key+product_or_service_code,
                            data=reg_df)
 
-controls_time_task_fe=feglm(positive_delay~treat_i+
+controls_time_task_fe=feglm(negative_delay~treat_i+
                               post_t:treat_i+
                             winsorized_initial_duration_in_days_i+
                             winsorized_initial_budget_i+
@@ -234,7 +226,7 @@ controls_time_task_fe=feglm(positive_delay~treat_i+
                             contract_award_unique_key+product_or_service_code,
                           data=reg_df)
 
-controls_and_all_fe=feglm(positive_delay~treat_i+
+controls_and_all_fe=feglm(negative_delay~treat_i+
                             post_t:treat_i+
                             winsorized_initial_duration_in_days_i+
                             winsorized_initial_budget_i+
@@ -260,7 +252,7 @@ texreg(list(baseline_reg,
        custom.coef.names = c("Constant","$Treat_i$","$Post_t$","$Treat_i \\times Post_t$"),
        custom.model.names=c("(1)","(2)","(3)","(4)","(5)"),
        custom.note="Each observation is a project-quarter. SEs are robust and clustered at the project level.",
-       custom.header=list("$I(Delay_it>0)$"=1:5),
+       custom.header=list("$I(Delay_{it}<0)$"=1:5),
        caption="",
       custom.gof.rows=list("Duration, Budget, Bids"=c(rep("No",1),rep("Yes",4)),
       "$Post_t \\times $  (Duration, Budget, Bids)"=c(rep("No",1),rep("Yes",4)),
@@ -275,16 +267,9 @@ texreg(list(baseline_reg,
 $$ CF_i = \begin{cases} 1, \text{ if project } i \text{ receives contract financing}\\
 0, \text{ otherwise} \end{cases}$$
 
-$$ \begin{aligned}
-I(Delay_{it}>0) &=& \beta_0+\beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_i \times Post_t) \\
-&+&\beta_4 CF_i + \beta_5 (CF_i \times Post_t) + \beta_6 (Treat_i \times Post_t \times CF_i) \\ 
-&+&X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
-\end{aligned}$$
-
-
 ```{r contract_financing, echo=FALSE, results='asis'}
 # Baseline Regressions 
-baseline_reg=glm(positive_delay~treat_i+
+baseline_reg=glm(negative_delay~treat_i+
                     post_t:treat_i+
                      post_t+
                     contract_financing_i+
@@ -293,7 +278,7 @@ baseline_reg=glm(positive_delay~treat_i+
                  family="binomial",
                   data=reg_df)
 
-controls_and_no_fe=glm(positive_delay~treat_i+
+controls_and_no_fe=glm(negative_delay~treat_i+
                             post_t+
                             post_t:treat_i+
                             contract_financing_i+
@@ -308,7 +293,7 @@ controls_and_no_fe=glm(positive_delay~treat_i+
                            family="binomial",
                           data=reg_df)
 
-controls_and_time_fe=feglm(positive_delay~treat_i+
+controls_and_time_fe=feglm(negative_delay~treat_i+
                             post_t:treat_i+
                             contract_financing_i+
                             post_t:contract_financing_i+
@@ -324,7 +309,7 @@ controls_and_time_fe=feglm(positive_delay~treat_i+
                           data=reg_df)
 
 # time fixed effects also included in the following specs
-controls_time_task_fe=feglm(positive_delay~treat_i+
+controls_time_task_fe=feglm(negative_delay~treat_i+
                             post_t:treat_i+
                             contract_financing_i+
                             post_t:contract_financing_i+
@@ -339,7 +324,7 @@ controls_time_task_fe=feglm(positive_delay~treat_i+
                             contract_award_unique_key,
                           data=reg_df)
 
-controls_and_all_fe=feglm(positive_delay~treat_i+
+controls_and_all_fe=feglm(negative_delay~treat_i+
                             post_t:treat_i+
                             contract_financing_i+
                             post_t:contract_financing_i+
@@ -374,7 +359,7 @@ texreg(list(baseline_reg,
                                 "$Treat_i \\times Post_t \\times CF_i$"),
        custom.model.names=c("(1)","(2)","(3)","(4)","(5)"),
        custom.note="Each observation is a project-quarter. SEs are robust and clustered at the project level.",
-       custom.header=list("$I(Delay_it>0)$"=1:5),
+       custom.header=list("$I(Delay_{it}<0)$"=1:5),
        caption="Contract Financing",
       custom.gof.rows=list("Duration, Budget, Bids"=c(rep("No",1),rep("Yes",4)),
       "$Post_t \\times $  (Duration, Budget, Bids)"=c(rep("No",1),rep("Yes",4)),
@@ -398,19 +383,11 @@ $$ SB_i = \begin{cases} 1, \text{ if project was signed before QuickPay}\\
 
 ### Subsample model
 
-For a subsample of competitive or noncompetitive projects: 
-
-$$ \begin{aligned} I(Delay_{it}>0) &=& \beta_0 +\beta_1 Treat_i+ \beta_2 SA_i+ \beta_3 Post_t \\&+& \beta_4 (Treat_i \times Post_t \times SA_i )+\beta_5 (Treat_i \times Post_t \times SB_i )+e_{it} \end{aligned} $$
-
-* According to our hypothesis, $\beta_4$ should be positive and significant for competitive projects, and insignificant for non-competitive projects. 
-
-* In the following regressions, we also control for the project's age. Project's age is defined as the number of quarters since it first showed up in the sample. We include the terciles of project's age as a control variable. 
-
 ```{r competition_delays_subsample, echo=FALSE, results='asis'}
 new_projects_after_quickpay=unique(subset(df_first_reported,action_date>as.Date('2011-04-27'))$contract_award_unique_key)
 reg_df[,project_signed_after_quickpay:=ifelse(contract_award_unique_key%in%new_projects_after_quickpay,1,0)]
 reg_df[,project_signed_before_quickpay:=ifelse(!contract_award_unique_key%in%new_projects_after_quickpay,1,0)]
-baseline_reg=glm(positive_delay~treat_i+
+baseline_reg=glm(negative_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -418,7 +395,7 @@ baseline_reg=glm(positive_delay~treat_i+
                                   family = 'binomial',
                                   data=subset(reg_df,competitively_awarded_i==1))
 
-controls_and_no_fe=glm(positive_delay~treat_i+
+controls_and_no_fe=glm(negative_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -432,7 +409,7 @@ controls_and_no_fe=glm(positive_delay~treat_i+
                            family='binomial',
                           data=subset(reg_df,competitively_awarded_i==1))
 
-controls_and_time_fe=feglm(positive_delay~treat_i+
+controls_and_time_fe=feglm(negative_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -446,7 +423,7 @@ controls_and_time_fe=feglm(positive_delay~treat_i+
                             contract_award_unique_key,
                           data=subset(reg_df,competitively_awarded_i==1))
 
-controls_time_task_fe=feglm(positive_delay~treat_i+
+controls_time_task_fe=feglm(negative_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -461,7 +438,7 @@ controls_time_task_fe=feglm(positive_delay~treat_i+
                             contract_award_unique_key,
                           data=subset(reg_df,competitively_awarded_i==1))
 
-controls_and_all_fe=feglm(positive_delay~treat_i+
+controls_and_all_fe=feglm(negative_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -497,7 +474,7 @@ texreg(list(baseline_reg,
                                "$Treat_i \\times SA_i \\times Post_t$"),
        custom.model.names=c("(1)","(2)","(3)","(4)","(5)"),
        custom.note="Each observation is a project-quarter. SEs are robust and clustered at the project level. Sample restricted to fully competed projects.",
-       custom.header=list("$I(Delay_it>0)$"=1:5),
+       custom.header=list("$I(Delay_{it}<0)$"=1:5),
        caption="Full Competition",
       custom.gof.rows=list("Duration, Budget, Bids"=c(rep("No",1),rep("Yes",4)),
       "$Post_t \\times $  (Duration, Budget, Bids)"=c(rep("No",1),rep("Yes",4)),
@@ -507,7 +484,7 @@ texreg(list(baseline_reg,
 ```
 
 ```{r non_competitive_delays_subsample, echo=FALSE, results='asis'}
-baseline_reg=glm(positive_delay~treat_i+
+baseline_reg=glm(negative_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -515,7 +492,7 @@ baseline_reg=glm(positive_delay~treat_i+
                                   family='binomial',
                                   data=subset(reg_df,competitively_awarded_i==0))
 
-controls_and_no_fe=glm(positive_delay~treat_i+
+controls_and_no_fe=glm(negative_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -529,7 +506,7 @@ controls_and_no_fe=glm(positive_delay~treat_i+
                             family='binomial',
                           data=subset(reg_df,competitively_awarded_i==0))
 
-controls_and_time_fe=feglm(positive_delay~treat_i+
+controls_and_time_fe=feglm(negative_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -543,7 +520,7 @@ controls_and_time_fe=feglm(positive_delay~treat_i+
                             contract_award_unique_key,
                           data=subset(reg_df,competitively_awarded_i==0))
 
-controls_time_task_fe=feglm(positive_delay~treat_i+
+controls_time_task_fe=feglm(negative_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -558,7 +535,7 @@ controls_time_task_fe=feglm(positive_delay~treat_i+
                             contract_award_unique_key,
                           data=subset(reg_df,competitively_awarded_i==0))
 
-controls_and_all_fe=feglm(positive_delay~treat_i+
+controls_and_all_fe=feglm(negative_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -593,7 +570,7 @@ texreg(list(baseline_reg,
                                "$Treat_i \\times SA_i \\times Post_t$"),
        custom.model.names=c("(1)","(2)","(3)","(4)","(5)"),
        custom.note="Each observation is a project-quarter. SEs are robust and clustered at the project level. Sample restricted to non-competed projects.",
-       custom.header=list("$I(Delay_it>0)$"=1:5),
+       custom.header=list("$I(Delay_{it}<0)$"=1:5),
        caption="Non-competitive projects",
       custom.gof.rows=list("Duration, Budget, Bids"=c(rep("No",1),rep("Yes",4)),
       "$Post_t \\times $  (Duration, Budget, Bids)"=c(rep("No",1),rep("Yes",4)),
@@ -605,18 +582,8 @@ texreg(list(baseline_reg,
 
 ### Four-way interaction
 
-We run the following model:
-
-$$\begin{aligned} I(Delay_{it}>0) &=& \beta_0 +\beta_1 Treat_i+ \beta_2 StartedAfterQP_i+ \beta_3 Post_t+ \beta_4 Competitive_i\\ && +  \beta_5 (Treat_i \times Competitive_i) + \beta_6 (Post_t \times Competitive_i)\\ && +  \beta_7 (StartedAfterQP_i \times Competitive_i) +\beta_8 (Treat_i \times Post_t)\\ && + \beta_9 (Treat_i \times Post_t \times Competitive_i) \\ && + \beta_{10} (Treat_i \times Post_t \times StartedAfterQP_i )\\ && + \beta_{11} (Treat_i \times Post_t \times StartedAfterQP_i \times Competitive_i) + e_{it} \end{aligned}$$
-
-**Interpretation:**
-
-* $\beta_9$ is the difference between treatment effect for competitive and non-competitive projects signed before quickpay.
-* $\beta_9 + \beta_{11}$ is the difference between treatment effect for competitive and non-competitive projects signed *after* quickpay.
-* $\beta_{11}$ is our coefficient of interest because it tells us how much of the difference is there due to "aggressive bidding" after the policy.
-
 ```{r competition_delays_combined, echo= FALSE, results ='asis'}
-baseline_reg=glm(positive_delay~treat_i+
+baseline_reg=glm(negative_delay~treat_i+
                                    project_signed_after_quickpay+
                                    competitively_awarded_i+
                      treat_i:competitively_awarded_i+
@@ -630,7 +597,7 @@ baseline_reg=glm(positive_delay~treat_i+
                      family='binomial',
                      data=reg_df)
 
-controls_and_no_fe=glm(positive_delay~treat_i+
+controls_and_no_fe=glm(negative_delay~treat_i+
                                    project_signed_after_quickpay+
                                    competitively_awarded_i+
                      treat_i:competitively_awarded_i+
@@ -650,7 +617,7 @@ controls_and_no_fe=glm(positive_delay~treat_i+
                           family='binomial',
                      data=reg_df)
 
-controls_and_time_fe=feglm(positive_delay~treat_i+
+controls_and_time_fe=feglm(negative_delay~treat_i+
                                    project_signed_after_quickpay+
                                    competitively_awarded_i+
                      treat_i:competitively_awarded_i+
@@ -670,7 +637,7 @@ controls_and_time_fe=feglm(positive_delay~treat_i+
                                    contract_award_unique_key, # clustered at project level
                                    data=reg_df)
 
-controls_time_task_fe=feglm(positive_delay~treat_i+
+controls_time_task_fe=feglm(negative_delay~treat_i+
                                    project_signed_after_quickpay+
                                    competitively_awarded_i+
                      treat_i:competitively_awarded_i+
@@ -691,7 +658,7 @@ controls_time_task_fe=feglm(positive_delay~treat_i+
                                    contract_award_unique_key, # clustered at project level
                                    data=reg_df)
 
-controls_and_all_fe=feglm(positive_delay~treat_i+
+controls_and_all_fe=feglm(negative_delay~treat_i+
                                    project_signed_after_quickpay+
                                    competitively_awarded_i+
                      treat_i:competitively_awarded_i+
@@ -737,7 +704,7 @@ texreg(list(baseline_reg,
                      "$Treat_i \\times Post_t \\times StartedAfterQP_i \\times Competitive_i$"),
        custom.model.names=c("(1)","(2)","(3)","(4)","(5)"),
        custom.note="Each observation is a project-quarter. SEs are robust and clustered at the project level.",
-       custom.header=list("$I(Delay_it>0)$"=1:5),
+       custom.header=list("$I(Delay_{it}<0)$"=1:5),
        caption="Competition: Four-way Interaction",
       custom.gof.rows=list("Duration, Budget, Bids"=c(rep("No",1),rep("Yes",4)),
       "$Post_t \\times $  (Duration, Budget, Bids)"=c(rep("No",1),rep("Yes",4)),
