@@ -31,8 +31,8 @@ library(scales)
 ```
 
 ```{r set_path_for_exporting, include=FALSE}
-tables_folder='~/Desktop/git_folders/QuickPay/QP_paper/Tables/percentage_delay_rate'
-figures_folder='~/Desktop/git_folders/QuickPay/QP_paper/Figures'
+tables_folder='~/Desktop/Research/QuickPay/paper/Tables/non_zero_delays'
+figures_folder='~/Desktop/Research/QuickPay/paper/Figures'
 data_folder='~/Dropbox/data_quickpay/qp_data/'
 ```
 
@@ -115,7 +115,6 @@ df_first_reported[,winsorized_initial_budget_i:=
 df_first_reported[,modification_number:=as.character(modification_number)]
 
 select_cols=c("contract_award_unique_key",
-              "recipient_duns",
               "naics_code",
               "product_or_service_code",
               "modification_number",
@@ -341,7 +340,7 @@ controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
@@ -368,7 +367,7 @@ base_table<-stargazer(baseline_reg,
                            c("Project age","No",rep("Yes",4)),
                            c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
-                           c("Contractor fixed effects",rep("No",4),rep("Yes",1))),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -381,6 +380,12 @@ base_table<-stargazer(baseline_reg,
           notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level."),
           header=F)
+
+base_table_tex=make_tex_pieces(base_table)
+# Write to file
+write(base_table_tex,
+      paste0(tables_folder,"/base_table_non_zero.tex"))
+
 ```
 
 
@@ -479,7 +484,7 @@ controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
@@ -519,7 +524,7 @@ contract_financing_table=stargazer(baseline_reg,
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project age",rep("No",1),rep("Yes",4)),
                            c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
-                           c("Contractor fixed effects",rep("No",4),rep("Yes",1))),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -635,7 +640,7 @@ controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             project_quarter_tercile|
-                            recipient_duns+
+                            naics_code+
                             product_or_service_code+
                             action_date_year_quarter|
                             0|
@@ -670,7 +675,7 @@ competitive_projects_table=stargazer(baseline_reg,
                            c("Project age",rep("No",1),rep("Yes",4)),
                            c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
-                           c("Contractor fixed effects",rep("No",4),rep("Yes",1))),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -763,7 +768,7 @@ controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             project_quarter_tercile|
-                            recipient_duns+
+                            naics_code+
                             product_or_service_code+
                             action_date_year_quarter|
                             0|
@@ -957,7 +962,7 @@ controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                             post_t:winsorized_initial_budget_i+
                             project_quarter_tercile|
                                    action_date_year_quarter+
-                       product_or_service_code+recipient_duns| # no fixed effects
+                       product_or_service_code+naics_code| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
                                    data=reg_df,
@@ -997,7 +1002,7 @@ four_way_interaction_table=stargazer(baseline_reg,
                            c("Project age",rep("No",2),rep("Yes",4)),
                            c("Year-Quarter fixed effects",rep("No",3),rep("Yes",3)),
                            c("Task fixed effects",rep("No",4),rep("Yes",2)),
-                           c("Contractor fixed effects",rep("No",5),rep("Yes",1))),
+                           c("Industry fixed effects",rep("No",5),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',

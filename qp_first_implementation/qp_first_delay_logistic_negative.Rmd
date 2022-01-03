@@ -32,8 +32,8 @@ library(alpaca)
 ```
 
 ```{r set_path_for_exporting, include=FALSE}
-tables_folder='~/Desktop/git_folders/QuickPay/QP_paper/Tables/percentage_delay_rate'
-figures_folder='~/Desktop/git_folders/QuickPay/QP_paper/Figures'
+tables_folder='~/Desktop/Research/QuickPay/paper/Tables/logistic_regressions'
+figures_folder='~/Desktop/Research/QuickPay/paper/Figures'
 data_folder='~/Dropbox/data_quickpay/qp_data/'
 ```
 
@@ -121,7 +121,6 @@ df_first_reported[,winsorized_initial_budget_i:=
 df_first_reported[,modification_number:=as.character(modification_number)]
 
 select_cols=c("contract_award_unique_key",
-              "recipient_duns",
               "naics_code",
               "product_or_service_code",
               "modification_number",
@@ -234,11 +233,11 @@ controls_and_all_fe=feglm(negative_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             contract_award_unique_key+product_or_service_code,
                           data=reg_df)
 
-texreg(list(baseline_reg,
+base_table_tex=texreg(list(baseline_reg,
             controls_and_no_fe,
             controls_and_time_fe,
             controls_time_task_fe,
@@ -258,7 +257,10 @@ texreg(list(baseline_reg,
       "$Post_t \\times $  (Duration, Budget, Bids)"=c(rep("No",1),rep("Yes",4)),
       "Year-Quarter FE"=c(rep("No",2),rep("Yes",3)),
       "Task FE"=c(rep("No",3),rep("Yes",2)),
-      "Contractor FE"=c(rep("No",4),rep("Yes",1))))
+      "Industry FE"=c(rep("No",4),rep("Yes",1))))
+
+write(base_table_tex,
+      paste0(tables_folder,"/base_negative_logistic.tex"))
 ```
 
 
@@ -335,7 +337,7 @@ controls_and_all_fe=feglm(negative_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             contract_award_unique_key,
                           data=reg_df)
 
@@ -365,7 +367,7 @@ texreg(list(baseline_reg,
       "$Post_t \\times $  (Duration, Budget, Bids)"=c(rep("No",1),rep("Yes",4)),
       "Year-Quarter FE"=c(rep("No",2),rep("Yes",3)),
       "Task FE"=c(rep("No",3),rep("Yes",2)),
-      "Contractor FE"=c(rep("No",4),rep("Yes",1))))
+      "Industry FE"=c(rep("No",4),rep("Yes",1))))
 
 ```
 
@@ -448,7 +450,7 @@ controls_and_all_fe=feglm(negative_delay~treat_i+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i|
-                            recipient_duns+
+                            naics_code+
                             product_or_service_code+
                             action_date_year_quarter|
                             contract_award_unique_key,
@@ -480,7 +482,7 @@ texreg(list(baseline_reg,
       "$Post_t \\times $  (Duration, Budget, Bids)"=c(rep("No",1),rep("Yes",4)),
       "Year-Quarter FE"=c(rep("No",2),rep("Yes",3)),
       "Task FE"=c(rep("No",3),rep("Yes",2)),
-      "Contractor FE"=c(rep("No",4),rep("Yes",1))))
+      "Industry FE"=c(rep("No",4),rep("Yes",1))))
 ```
 
 ```{r non_competitive_delays_subsample, echo=FALSE, results='asis'}
@@ -545,7 +547,7 @@ controls_and_all_fe=feglm(negative_delay~treat_i+
                             post_t:number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i|
-                            recipient_duns+
+                            naics_code+
                             product_or_service_code+
                             action_date_year_quarter|
                             contract_award_unique_key,
@@ -576,7 +578,7 @@ texreg(list(baseline_reg,
       "$Post_t \\times $  (Duration, Budget, Bids)"=c(rep("No",1),rep("Yes",4)),
       "Year-Quarter FE"=c(rep("No",2),rep("Yes",3)),
       "Task FE"=c(rep("No",3),rep("Yes",2)),
-      "Contractor FE"=c(rep("No",4),rep("Yes",1))))
+      "Industry FE"=c(rep("No",4),rep("Yes",1))))
 
 ```
 
@@ -675,7 +677,7 @@ controls_and_all_fe=feglm(negative_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i|
                                    action_date_year_quarter+
-                       product_or_service_code+recipient_duns| 
+                       product_or_service_code+naics_code| 
                                    contract_award_unique_key, # clustered at project level
                                    data=reg_df)
 
@@ -710,5 +712,5 @@ texreg(list(baseline_reg,
       "$Post_t \\times $  (Duration, Budget, Bids)"=c(rep("No",1),rep("Yes",4)),
       "Year-Quarter FE"=c(rep("No",2),rep("Yes",3)),
       "Task FE"=c(rep("No",3),rep("Yes",2)),
-      "Contractor FE"=c(rep("No",4),rep("Yes",1))))
+      "Industry FE"=c(rep("No",4),rep("Yes",1))))
 ```
