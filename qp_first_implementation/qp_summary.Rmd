@@ -1,0 +1,387 @@
+---
+title: "Summary Statistics QuickPay (2009-2012)"
+date: " `r format(Sys.time(), '%b %d, %Y')`"
+output: 
+  pdf_document:
+    keep_tex: true
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(openxlsx)
+library(tidyverse)
+library(dplyr)
+library(pryr)
+library(lfe) # linear fixed effects 
+library(DescTools) 
+library(zoo) # for year quarter
+library(stargazer)
+library(broom)
+library(data.table)
+library(scales)
+library(xtable)
+```
+
+```{r set_path_for_exporting, include=FALSE}
+tables_folder='~/Desktop/Research/QuickPay/paper/Tables/summary_stats'
+figures_folder='~/Desktop/Research/QuickPay/paper/Figures'
+data_folder='~/Dropbox/data_quickpay/qp_data/'
+```
+
+```{r read_data, include=FALSE}
+# Keep only projects whose start dates match with API one
+projects_to_keep=fread(paste0(data_folder,'projects_to_keep.csv'))
+
+# read quarterly resampled data
+df=fread(paste0(data_folder,'resampled_qp_data/qp_resampled_data_fy10_to_fy12_with_zero_obs.csv'))
+# specify date columns
+date_cols=c("action_date_year_quarter","last_reported_start_date","last_reported_end_date")
+df[,(date_cols):= lapply(.SD, as.Date), .SDcols = date_cols]
+
+# restrict to quarter ending June 30, 2012
+df=subset(df,as.Date(action_date_year_quarter)<max(as.Date('2012-07-01'))&
+             contract_award_unique_key%in%projects_to_keep$contract_award_unique_key)
+# data is truncated at July 1, 2012 -- 
+# so quarter ending Sept 30, 2012 will only have values as of July 1, 2012
+
+df_first_reported=fread(paste0(data_folder,'qp_data_first_reported.csv'))
+# contains time-invariant contract characteristics -- info when contract first appeared in the data
+
+```
+
+```{r assign_variables_1, include=FALSE}
+# Assign variables: Delay, Winsorized Delay, Post_t, Treat_i
+
+# sort by contract id and date 
+df=df[order(contract_award_unique_key,
+            action_date_year_quarter)]
+
+# determine quarter-to-quarter delay
+df[,delay:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1), 
+                  last_reported_end_date-lag(last_reported_end_date,1),NaN)]
+
+# winsorize quarter-to-quarter delay
+df[,winsorized_delay:=Winsorize(delay,na.rm=TRUE)]
+
+#Post_t: A dummy that period t is post-treatment
+df[,post_t:=ifelse(action_date_year_quarter>as.Date("2011-04-27"),1,0)]
+# quickpay implemented on 27 April 2011. So all quarters starting 30 June 2011 will be in post-period
+
+#Treat_i: A dummy that contract i is in the treatment group
+df[,treat_i:=ifelse(business_type=="S",1,0)]
+# quickpay was implemented for small business contracts
+
+# Project age is a highly skewed variable
+# assign number of quarters since project started: "project age" in some sense
+df[, project_quarter_age := rowid(contract_award_unique_key)]
+df[,project_quarter_tercile:=as.factor(ntile(project_quarter_age,3))]
+# Including it as fixed effects doesn't work because projects in treatment and control are not always in same "tercile" while controling for everything else. 
+```
+
+```{r assign_variables_2, include=FALSE}
+
+# ContractFinancing_i
+
+df_first_reported[,contract_financing_i:=ifelse(!is.null(contract_financing_code)&
+                                       !contract_financing_code%in%c("Z", ""),1,0)]
+
+# Competition_i
+df_first_reported[,competitively_awarded_i:=ifelse(!is.null(extent_competed_code)&
+                                          !extent_competed_code%in%c("","G","B", "C","E"),1,0)]
+
+# InitialDuration_i
+
+df_first_reported[,initial_duration_in_days_i:=
+                    as.numeric(
+                    as.Date(period_of_performance_current_end_date)-
+                    as.Date(period_of_performance_start_date))]
+
+df_first_reported[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(as.numeric(
+                    as.Date(period_of_performance_current_end_date)-
+                    as.Date(period_of_performance_start_date)),na.rm=T)]
+
+# InitialBudget_i
+
+df_first_reported[,winsorized_initial_budget_i:=
+                    Winsorize(base_and_all_options_value,na.rm=T)]
+
+# Change type to string modification number
+df_first_reported[,modification_number:=as.character(modification_number)]
+
+select_cols=c("contract_award_unique_key",
+              "naics_code",
+              "product_or_service_code",
+              "modification_number",
+              "number_of_offers_received",
+              "contract_financing_i",
+              "competitively_awarded_i",
+              "period_of_performance_start_date",
+              "initial_duration_in_days_i",
+              "winsorized_initial_duration_in_days_i",
+              "winsorized_initial_budget_i")
+
+# not necessary but speed efficient to set keys
+setkey(df_first_reported[,..select_cols],
+       contract_award_unique_key)
+setkey(df,contract_award_unique_key)
+```
+
+```{r combine_dfs, include=FALSE}
+# Combine all variables into dataframe needed for regression 
+reg_df=merge(df,
+             df_first_reported[,..select_cols],
+             all.x = TRUE, # keep values in df, add columns of df_first_reported_cols
+             by=c("contract_award_unique_key"))
+
+# sort by contract id and date (just to be doubly sure)
+reg_df=reg_df[order(contract_award_unique_key,
+            action_date_year_quarter)]
+
+```
+
+```{r percentage_delay,include=FALSE}
+
+reg_df[,period_of_performance_start_date:=as.Date(period_of_performance_start_date)]
+
+# "period_of_performance_start_date" here comes from first reported info
+# So it is the actual start date for a project
+# get project duration as of last quarter in the denominator
+reg_df[,percentage_delay:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),
+         delay/as.numeric(lag(last_reported_end_date,1)-lag(period_of_performance_start_date,1)),
+         NaN)]
+
+reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,na.rm=T)]
+```
+
+# Before QuickPay
+
+```{r summary_before_qp,include=FALSE}
+
+treated_before=subset(reg_df,
+                    post_t==0&treat_i==1)
+
+unique_treated_before=unique(treated_before,
+                    by='contract_award_unique_key')
+
+control_before=subset(reg_df,
+                    post_t==0&treat_i==0)
+unique_control_before=unique(control_before,
+                    by='contract_award_unique_key')
+
+
+summary_before= data.table(
+  Variable = c("Percentage delay (per quarter)",
+               "Initial duration (in days)",
+               "Initial budget",
+               "Number of offers",
+               "Number of tasks",
+               "Number of projects"),
+  T_Mean = c(round(mean(treated_before$wins_percentage_delay,na.rm=T),2),
+             round(mean(unique_treated_before$winsorized_initial_duration_in_days_i,na.rm=T),2),
+             round(mean(unique_treated_before$winsorized_initial_budget_i,na.rm=T),2),
+             round(mean(unique_treated_before$number_of_offers_received,na.rm=T),2),
+             rep("",2)),
+  `T_Std. dev` = c(round(sd(treated_before$wins_percentage_delay,na.rm=T),2),
+                   round(sd(unique_treated_before$winsorized_initial_duration_in_days_i,na.rm=T),2),
+                   round(sd(unique_treated_before$winsorized_initial_budget_i,na.rm=T),2),
+                   round(sd(unique_treated_before$number_of_offers_received,na.rm=T),2),
+                   rep("",2)),
+  T_Count=c(rep("",4),
+                   length(unique(treated_before$product_or_service_code)),
+                   length(unique(treated_before$contract_award_unique_key))),
+  C_Mean = c(round(mean(control_before$wins_percentage_delay,na.rm=T),2),
+                   round(mean(unique_control_before$winsorized_initial_duration_in_days_i,na.rm=T),2),
+                   round(mean(unique_control_before$winsorized_initial_budget_i,na.rm=T),2),
+                   round(mean(unique_control_before$number_of_offers_received,na.rm=T),2),
+                   rep("",2)),
+  `C_Std. dev` = c(round(sd(treated_before$wins_percentage_delay,na.rm=T),2),
+                   round(sd(unique_control_before$winsorized_initial_duration_in_days_i,na.rm=T),2),
+                   round(sd(unique_control_before$winsorized_initial_budget_i,na.rm=T),2),
+                   round(sd(unique_control_before$number_of_offers_received,na.rm=T),2),
+                   rep("",2)),
+  C_Count=c(rep("",4),
+                   length(unique(control_before$product_or_service_code)),
+                   length(unique(control_before$contract_award_unique_key)))
+
+)
+
+summary_before[,T_Mean:=formatC(as.numeric(T_Mean), 
+                             format = "f", 
+                             big.mark = ",", 
+                             drop0trailing = TRUE)]
+
+summary_before[,C_Mean:=formatC(as.numeric(C_Mean), 
+                             format = "f", 
+                             big.mark = ",", 
+                             drop0trailing = TRUE)]
+
+summary_before[,T_Count:=formatC(as.numeric(T_Count), 
+                             format = "f", 
+                             big.mark = ",", 
+                             drop0trailing = TRUE)]
+summary_before[,C_Count:=formatC(as.numeric(C_Count), 
+                             format = "f", 
+                             big.mark = ",", 
+                             drop0trailing = TRUE)]
+summary_before[,`T_Std. dev`:=formatC(as.numeric(`T_Std. dev`), 
+                             format = "f", 
+                             big.mark = ",", 
+                             drop0trailing = TRUE)]
+summary_before[,`C_Std. dev`:=formatC(as.numeric(`C_Std. dev`), 
+                             format = "f", 
+                             big.mark = ",", 
+                             drop0trailing = TRUE)]
+
+summary_before[] <- lapply(summary_before, 
+                           gsub, 
+                           pattern = "NA", 
+                           replacement = "-", 
+                           fixed = TRUE)
+
+setnames(summary_before,
+         c('Variable','T_Mean','T_Std. dev','T_Count','C_Mean','C_Std. dev','C_Count'),
+         c('','Mean','Std. dev','Count','Mean','Std. dev','Count'))
+
+
+addtorow <- list()
+addtorow$pos <- list(-1,0,6)
+addtorow$command <- as.vector(c(paste0('\\toprule & \\multicolumn{3}{c}{Treated projects}',
+                           '& \\multicolumn{3}{c}{Control projects}',
+                           '\\\\',
+                           '\\cmidrule(lr){2-4} \\cmidrule(lr){5-7}'),
+                           '\\cmidrule(lr){2-7}',
+                    '\\bottomrule'),
+                    mode="character")
+
+val <- xtable(summary_before,
+              booktabs=TRUE,
+              caption="Summary statistics: Before QuickPay (2009-2011)",
+              label="tab:summary_before_qp")
+print(val, 
+      add.to.row=addtorow,
+      include.rownames=FALSE,
+      hline.after = NULL,
+      caption.placement = "top",
+      file=paste0(tables_folder,'/summary_before_qp.tex')
+)
+```
+
+```{r summary_after_qp,include=FALSE}
+
+treated_after=subset(reg_df,
+                    post_t==1&treat_i==1)
+
+unique_treated_after=unique(treated_after,
+                    by='contract_award_unique_key')
+
+control_after=subset(reg_df,
+                    post_t==1&treat_i==0)
+unique_control_after=unique(control_after,
+                    by='contract_award_unique_key')
+
+
+summary_after= data.table(
+  Variable = c("Percentage delay (per quarter)",
+               "Initial duration (in days)",
+               "Initial budget",
+               "Number of offers",
+               "Number of tasks",
+               "Number of projects"),
+  T_Mean = c(round(mean(treated_after$wins_percentage_delay,na.rm=T),2),
+             round(mean(unique_treated_after$winsorized_initial_duration_in_days_i,na.rm=T),2),
+             round(mean(unique_treated_after$winsorized_initial_budget_i,na.rm=T),2),
+             round(mean(unique_treated_after$number_of_offers_received,na.rm=T),2),
+             rep("",2)),
+  `T_Std. dev` = c(round(sd(treated_after$wins_percentage_delay,na.rm=T),2),
+                   round(sd(unique_treated_after$winsorized_initial_duration_in_days_i,na.rm=T),2),
+                   round(sd(unique_treated_after$winsorized_initial_budget_i,na.rm=T),2),
+                   round(sd(unique_treated_after$number_of_offers_received,na.rm=T),2),
+                   rep("",2)),
+  T_Count=c(rep("",4),
+                   length(unique(treated_after$product_or_service_code)),
+                   length(unique(treated_after$contract_award_unique_key))),
+  C_Mean = c(round(mean(control_after$wins_percentage_delay,na.rm=T),2),
+                   round(mean(unique_control_after$winsorized_initial_duration_in_days_i,na.rm=T),2),
+                   round(mean(unique_control_after$winsorized_initial_budget_i,na.rm=T),2),
+                   round(mean(unique_control_after$number_of_offers_received,na.rm=T),2),
+                   rep("",2)),
+  `C_Std. dev` = c(round(sd(treated_after$wins_percentage_delay,na.rm=T),2),
+                   round(sd(unique_control_after$winsorized_initial_duration_in_days_i,na.rm=T),2),
+                   round(sd(unique_control_after$winsorized_initial_budget_i,na.rm=T),2),
+                   round(sd(unique_control_after$number_of_offers_received,na.rm=T),2),
+                   rep("",2)),
+  C_Count=c(rep("",4),
+                   length(unique(control_after$product_or_service_code)),
+                   length(unique(control_after$contract_award_unique_key)))
+
+)
+
+summary_after[,T_Mean:=formatC(as.numeric(T_Mean), 
+                             format = "f", 
+                             big.mark = ",", 
+                             drop0trailing = TRUE)]
+
+summary_after[,C_Mean:=formatC(as.numeric(C_Mean), 
+                             format = "f", 
+                             big.mark = ",", 
+                             drop0trailing = TRUE)]
+
+summary_after[,T_Count:=formatC(as.numeric(T_Count), 
+                             format = "f", 
+                             big.mark = ",", 
+                             drop0trailing = TRUE)]
+summary_after[,C_Count:=formatC(as.numeric(C_Count), 
+                             format = "f", 
+                             big.mark = ",", 
+                             drop0trailing = TRUE)]
+summary_after[,`T_Std. dev`:=formatC(as.numeric(`T_Std. dev`), 
+                             format = "f", 
+                             big.mark = ",", 
+                             drop0trailing = TRUE)]
+summary_after[,`C_Std. dev`:=formatC(as.numeric(`C_Std. dev`), 
+                             format = "f", 
+                             big.mark = ",", 
+                             drop0trailing = TRUE)]
+
+summary_after[] <- lapply(summary_after, 
+                           gsub, 
+                           pattern = "NA", 
+                           replacement = "-", 
+                           fixed = TRUE)
+setnames(summary_after,
+         c('Variable','T_Mean','T_Std. dev','T_Count','C_Mean','C_Std. dev','C_Count'),
+         c('','Mean','Std. dev','Count','Mean','Std. dev','Count'))
+
+addtorow <- list()
+addtorow$pos <- list(-1,0,6)
+addtorow$command <- as.vector(c(paste0('\\toprule & \\multicolumn{3}{c}{Treated projects}',
+                           '& \\multicolumn{3}{c}{Control projects}',
+                           '\\\\',
+                           '\\cmidrule(lr){2-4} \\cmidrule(lr){5-7}'),
+                           '\\cmidrule(lr){2-7}',
+                    '\\bottomrule'),
+                    mode="character")
+
+val <- xtable(summary_after,
+              booktabs=TRUE,
+              caption="Summary statistics: After QuickPay (2011-2012)",
+              label="tab:summary_after_qp")
+print(val, 
+      add.to.row=addtorow,
+      include.rownames=FALSE,
+      hline.after = NULL,
+      caption.placement = "top",
+      file=paste0(tables_folder,'/summary_after_qp.tex')
+)
+```
+
