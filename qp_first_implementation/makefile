@@ -15,6 +15,17 @@ all: qp_first_implementation.pdf \
 
 ################################################################################################################
 
+# Summary statistics
+
+qp_summary.pdf: qp_summary.Rmd  \
+		    $(filtered_data_directory)/projects_to_keep.csv \
+		    $(filtered_data_directory)/qp_data_first_reported.csv \
+		    $(filtered_data_directory)/resampled_qp_data/qp_resampled_data_fy10_to_fy12_with_zero_obs.csv
+	
+	Rscript -e 'rmarkdown::render("qp_summary.Rmd")'
+
+################################################################################################################
+
 # Budget Overruns
 
 # Sample restricted to those projects whose start dates (first value of "action_date") match with the "date_signed" from API
