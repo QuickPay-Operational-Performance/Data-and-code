@@ -74,7 +74,7 @@ qp_first_delay_two_quarters.pdf: qp_first_delay_two_quarters.Rmd \
 
 ################################################################################################################
 
-# Matched Regressions: Quarterly delay rate (in days)
+# Matched Regressions: Quarterly delay rate (in percentage)
 
 qp_first_matched.pdf: qp_first_matched.Rmd \
 			$(filtered_data_directory)/qp_first_matched_sample.csv \

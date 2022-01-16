@@ -31,7 +31,8 @@ library(scales)
 ``` 
 
 ```{r paths, include=FALSE}
-directory='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/'
+tables_folder='~/Desktop//Research/QuickPay/paper/Tables/robustness'
+directory='~/Dropbox/data_quickpay/qp_data/'
 ```
 
 ```{r read_data, include=FALSE}
@@ -110,8 +111,8 @@ df_first_reported[,winsorized_initial_duration_in_days_i:=Winsorize(as.numeric(
 df_first_reported[,winsorized_initial_budget_i:=Winsorize(base_and_all_options_value,na.rm=T)]
 
 select_cols=c("contract_award_unique_key",
-              "recipient_duns",
               "naics_code",
+              "recipient_duns",
               "product_or_service_code",
               "number_of_offers_received",
               "contract_financing_i",
@@ -213,6 +214,33 @@ ggplot(mean_delay, aes(x=year_quarter,
     panel.background = element_blank(),
     legend.text = element_text(size=12))
 ```
+
+```{r stargazer_format, include=FALSE}
+# Code to extract only the inner part (nested within tabular) of table from stargazer
+# We will use this along with threeparttable in latex later 
+# Code adapted from Patrick Baylis's blog on the topic:
+# https://www.patrickbaylis.com/blog/2019-11-25-r-reg-tables/
+make_tex_pieces <- function(stargazer_output) {
+  # Split up into header, footer, and inner
+  idx0 <- grep("begin{tabular}", stargazer_output, fixed = T) # Start of \begin{tabular}
+  idx1 <- grep("end{tabular}", stargazer_output, fixed = T) # End of \begin{tabular}
+  idx2<-grep("Adjusted",stargazer_output,fixed=T)
+  
+  tex_header <- c(stargazer_output[idx0],"\\toprule")
+  tex_footer <- c("\\bottomrule", stargazer_output[idx1])
+  tex_inner<-c(stargazer_output[(idx0+3):idx2])
+  
+  # Remove [-1.8ex] and replace \hline with \midrule
+  tex_inner <- gsub("\\\\[-[\\.0-9]+ex]", "", tex_inner)
+  
+  tex_inner <- gsub("\\hline ", "\\midrule", tex_inner)
+  # Return these as a 3 element list so that the user can insert header rows (column labels)
+  # and footer rows (summary statistics, fixed effects)
+  # list(header = tex_header, inner = tex_inner, footer = tex_footer)
+  c(tex_header,tex_inner,tex_footer)
+}
+```
+
 # Notation 
 
 * Project $i$, Year-Quarter $t$
@@ -261,7 +289,7 @@ setnames(sd_stats,c('winsorized_delay',
 
 # get num unique values of discrete variables
 cols_discrete=c("business_type",
-              "recipient_duns",
+              "naics_code",
               "product_or_service_code",
               "contract_award_unique_key",
               "post_t")
@@ -269,7 +297,7 @@ cols_discrete=c("business_type",
 num_unique_stats=reg_df[,..cols_discrete][, lapply(.SD, n_distinct, na.rm=TRUE), 
                          by=c('business_type','post_t')]
 
-setnames(num_unique_stats,c("recipient_duns",
+setnames(num_unique_stats,c("naics_code",
                             "product_or_service_code",
                             "contract_award_unique_key"),
                      c('number_of_firms',
@@ -309,7 +337,7 @@ all_summ=merge(all_summ,
                num_unique_stats,
                on=business_and_time)
 
-path='/Users/vibhutidhingra/Desktop/research/Git:Github/QuickPay/qp_data_and_code/qp_first_implementation/'
+path='~/Desktop/research/Git:Github/QuickPay/qp_data_and_code/qp_first_implementation/'
 # write.xlsx(all_summ, paste0(path,'summary_stats.xlsx'))
 ```
 # Parallel Trends Test
@@ -325,7 +353,7 @@ cluster_var = "contract_award_unique_key"
 
 # Estimating linear time trend before quickpay was implemented
 fixed_vars =  c("action_date_year_quarter",
-                "recipient_duns",
+                "naics_code",
                 "product_or_service_code")
 
 control_vars=c("winsorized_initial_duration_in_days_i",
@@ -441,14 +469,14 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-stargazer(baseline_reg,
+base_table=stargazer(baseline_reg,
           controls_and_no_fe,
           controls_and_time_fe,
           controls_time_task_fe,
@@ -469,7 +497,7 @@ stargazer(baseline_reg,
                            c("Project Age Tercile","No",rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -482,6 +510,11 @@ stargazer(baseline_reg,
           notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level."),
           header=F)
+
+base_table_tex=make_tex_pieces(base_table)
+# Write to file
+write(base_table_tex,
+      paste0(tables_folder,"/base_table_delay_days.tex"))
 ```
 
 # Competition 
@@ -661,7 +694,7 @@ select_cols_comp=c("contract_award_unique_key",
               "action_date",
               "contracting_officers_determination_of_business_size_code",
               "product_or_service_code",
-              "recipient_duns")
+              "naics_code")
 
 reg_df_first_reported=subset(df_first_reported,
                              action_date<=as.Date('2012-06-30'))[,..select_cols_comp]
@@ -841,7 +874,7 @@ all_fe=felm(winsorized_initial_duration_in_days_i~treat_i+
                                   treat_i:project_signed_after_quickpay|
                             product_or_service_code+
                             quarter_when_project_signed+
-                            recipient_duns|
+                            naics_code|
                             0|
                             contract_award_unique_key,
                           data=subset(reg_df_first_reported,
@@ -869,7 +902,7 @@ stargazer(baseline_reg,
           column.sep.width = "-2pt",
           add.lines = list(c("Year-Quarter Fixed Effects",rep("No",1),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",2),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",3),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",3),rep("Yes",1))),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
@@ -917,7 +950,7 @@ all_fe=felm(winsorized_initial_budget_i~treat_i+
                                   treat_i:project_signed_after_quickpay|
                             product_or_service_code+
                             quarter_when_project_signed+
-                            recipient_duns|
+                            naics_code|
                             0|
                             contract_award_unique_key,
                           data=subset(reg_df_first_reported,
@@ -945,7 +978,7 @@ stargazer(baseline_reg,
           column.sep.width = "-2pt",
           add.lines = list(c("Year-Quarter Fixed Effects",rep("No",1),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",2),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",3),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",3),rep("Yes",1))),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
@@ -1051,7 +1084,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             project_quarter_tercile|
-                            recipient_duns+
+                            naics_code+
                             product_or_service_code+
                             action_date_year_quarter|
                             0|
@@ -1086,7 +1119,7 @@ stargazer(baseline_reg,
                            c("Project age",rep("No",1),rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -1178,7 +1211,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             project_quarter_tercile|
-                            recipient_duns+
+                            naics_code+
                             product_or_service_code+
                             action_date_year_quarter|
                             0|
@@ -1186,7 +1219,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                           data=subset(reg_df,competitively_awarded_i==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
-# excluding firm fixed effects here to avoid overfitting because low sample size
+# excluding Industry Fixed Effects here to avoid overfitting because low sample size
 stargazer(baseline_reg,
           controls_and_no_fe,
           controls_and_time_fe,
@@ -1376,7 +1409,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_budget_i+
                             project_quarter_tercile|
                                    action_date_year_quarter+
-                       product_or_service_code+recipient_duns| # no fixed effects
+                       product_or_service_code+naics_code| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
                                    data=reg_df,
@@ -1417,7 +1450,7 @@ stargazer(baseline_reg,
                            c("Project age",rep("No",2),rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",3),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",4),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",5),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",5),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -1534,7 +1567,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
@@ -1575,7 +1608,7 @@ stargazer(baseline_reg,
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project Age Tercile",rep("No",1),rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -1679,7 +1712,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
@@ -1720,7 +1753,7 @@ stargazer(baseline_reg,
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -1825,7 +1858,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
@@ -1866,7 +1899,7 @@ stargazer(baseline_reg,
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -1891,7 +1924,7 @@ stargazer(baseline_reg,
 
 ```{r fao, include=FALSE}
 # read raw data
-df_raw=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/qp_data_fy10_to_fy18.csv')
+df_raw=fread('~/Dropbox/data_quickpay/qp_data/qp_data_fy10_to_fy18.csv')
 
 # restrict to quarters on/before June 30, 2012
 df_raw[,action_date_year_quarter:=as.Date(as.yearqtr(as.Date(action_date)),frac = 1)]
@@ -1907,7 +1940,7 @@ small_projects_fao=df_raw_first[,sum(sb_fao_before_qp), by= c('recipient_duns')]
 setnames(small_projects_fao, "V1", "sum_fao")
 
 # Get each firm's sales in FY 2010 from Intellect data 
-intellect_data=fread('/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/govt_weight_per_recipient.csv',select=c('recipient_duns','sales_fiscal_year','sales_volume'))
+intellect_data=fread('~/Dropbox/data_quickpay/qp_data/govt_weight_per_recipient.csv',select=c('recipient_duns','sales_fiscal_year','sales_volume'))
 intellect_data=subset(intellect_data,sales_fiscal_year=="2010 Sales Volume")
 
 # merge the sales data with fao data
@@ -2039,7 +2072,7 @@ all_fe_and_controls_reg=felm(winsorized_delay~treat_i+
                     post_t:winsorized_initial_duration_in_days_i+
                     post_t:winsorized_initial_budget_i+
                     post_t:number_of_offers_received|
-                    product_or_service_code+action_date_year_quarter+recipient_duns| # no fixed effects
+                    product_or_service_code+action_date_year_quarter+naics_code| # no fixed effects
                     0| # no IV
                   contract_award_unique_key, # clustered at project level
                   data=reg_df,
@@ -2082,7 +2115,7 @@ stargazer(baseline_reg,
                            c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))
                            ),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
@@ -2192,7 +2225,7 @@ all_fe_and_controls_reg=felm(winsorized_delay~treat_i+
                     post_t:winsorized_initial_duration_in_days_i+
                     post_t:winsorized_initial_budget_i+
                     post_t:number_of_offers_received|
-                    product_or_service_code+action_date_year_quarter+recipient_duns| # no fixed effects
+                    product_or_service_code+action_date_year_quarter+naics_code| # no fixed effects
                     0| # no IV
                   contract_award_unique_key, # clustered at project level
                   data=reg_df,
@@ -2226,7 +2259,7 @@ stargazer(baseline_reg,
                            c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))
                            ),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
@@ -2263,7 +2296,7 @@ $$ Delay_{ift} = \beta_0 + \beta_1 \theta_{if} + \beta_2 (\theta_{if} \times Pos
 
 **Assumption:** Parallel trends between large and small projects of the same firm.
 
-<!-- ![](/Users/vibhutidhingra/Desktop/cts_te.png){width=10%,height=10%} -->
+<!-- ![](~/Desktop/cts_te.png){width=10%,height=10%} -->
 
 ```{r continuous_treatment_regs, echo= FALSE, results='asis'}
 
@@ -2337,7 +2370,7 @@ all_fe_and_controls_reg=felm(winsorized_delay~theta_if+
                     post_t:winsorized_initial_duration_in_days_i+
                     post_t:winsorized_initial_budget_i+
                     post_t:number_of_offers_received|
-                    product_or_service_code+action_date_year_quarter+recipient_duns| # no fixed effects
+                    product_or_service_code+action_date_year_quarter+naics_code| # no fixed effects
                     0| # no IV
                   contract_award_unique_key, # clustered at project level
                   data=reg_df,
@@ -2368,7 +2401,7 @@ stargazer(baseline_reg,
                            c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))
                            ),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
@@ -2481,7 +2514,7 @@ all_fe_and_controls_reg=felm(winsorized_delay~theta_if+
                     post_t:winsorized_initial_duration_in_days_i+
                     post_t:winsorized_initial_budget_i+
                     post_t:number_of_offers_received|
-                    product_or_service_code+action_date_year_quarter+recipient_duns| # no fixed effects
+                    product_or_service_code+action_date_year_quarter+naics_code| # no fixed effects
                     0| # no IV
                   contract_award_unique_key, # clustered at project level
                   data=reg_df,
@@ -2514,7 +2547,7 @@ stargazer(baseline_reg,
                            c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))
                            ),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
@@ -2674,7 +2707,7 @@ all_fe_and_controls_reg=felm(winsorized_delay~low_if+
                     post_t:winsorized_initial_duration_in_days_i+
                     post_t:winsorized_initial_budget_i+
                     post_t:number_of_offers_received|
-                    recipient_duns+product_or_service_code+action_date_year_quarter| # no fixed effects
+                    naics_code+product_or_service_code+action_date_year_quarter| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
                   data=reg_df,
@@ -2710,7 +2743,7 @@ stargazer(baseline_reg,
                            c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))
                            ),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',

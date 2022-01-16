@@ -38,11 +38,13 @@ library(scales)
 ``` 
 
 ```{r paths, include=FALSE}
-directory='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/'
+tables_folder='~/Desktop/Research/QuickPay/paper/Tables/robustness'
+directory='~/Dropbox/data_quickpay/qp_data/'
 ```
 
 ```{r read_data, include=FALSE}
 
+# already includes only those projects whose start dates match with API
 df=fread(paste0(directory,'qp_first_matched_sample.csv'))
 # specify date columns
 date_cols=c("action_date_year_quarter","last_reported_start_date","last_reported_end_date")
@@ -109,15 +111,16 @@ df_first_reported[,winsorized_initial_duration_in_days_i:=Winsorize(as.numeric(
 df_first_reported[,winsorized_initial_budget_i:=Winsorize(base_and_all_options_value,na.rm=T)]
 
 select_cols=c("contract_award_unique_key",
-              "recipient_duns",
               "naics_code",
+              "recipient_duns",
               "contract_financing_i",
               "competitively_awarded_i",
               "performance_based_contract_i",
               "receives_financial_aid_i",
               "receives_contracts_and_financial_aid_i",
               "winsorized_initial_duration_in_days_i",
-              "winsorized_initial_budget_i")
+              "winsorized_initial_budget_i",
+              "period_of_performance_start_date")
 
 df_first_reported_cols=df_first_reported[,..select_cols]
 # not necessary but speed efficient to set keys
@@ -141,11 +144,51 @@ reg_df[,project_quarter_tercile:=as.factor(ntile(project_quarter_age,3))]
 
 ```
 
+```{r percentage_delay,include=FALSE}
+
+reg_df[,period_of_performance_start_date:=as.Date(period_of_performance_start_date)]
+
+# "period_of_performance_start_date" here comes from first reported info
+# So it is the actual start date for a project
+# get project duration as of last quarter in the denominator
+reg_df[,percentage_delay:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),
+         change_in_deadline/as.numeric(lag(last_reported_end_date,1)-lag(period_of_performance_start_date,1)),
+         NaN)]
+
+reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,na.rm=T)]
+```
+
+```{r stargazer_format, include=FALSE}
+# Code to extract only the inner part (nested within tabular) of table from stargazer
+# We will use this along with threeparttable in latex later 
+# Code adapted from Patrick Baylis's blog on the topic:
+# https://www.patrickbaylis.com/blog/2019-11-25-r-reg-tables/
+make_tex_pieces <- function(stargazer_output) {
+  # Split up into header, footer, and inner
+  idx0 <- grep("begin{tabular}", stargazer_output, fixed = T) # Start of \begin{tabular}
+  idx1 <- grep("end{tabular}", stargazer_output, fixed = T) # End of \begin{tabular}
+  idx2<-grep("Adjusted",stargazer_output,fixed=T)
+  
+  tex_header <- c(stargazer_output[idx0],"\\toprule")
+  tex_footer <- c("\\bottomrule", stargazer_output[idx1])
+  tex_inner<-c(stargazer_output[(idx0+3):idx2])
+  
+  # Remove [-1.8ex] and replace \hline with \midrule
+  tex_inner <- gsub("\\\\[-[\\.0-9]+ex]", "", tex_inner)
+  
+  tex_inner <- gsub("\\hline ", "\\midrule", tex_inner)
+  # Return these as a 3 element list so that the user can insert header rows (column labels)
+  # and footer rows (summary statistics, fixed effects)
+  # list(header = tex_header, inner = tex_inner, footer = tex_footer)
+  c(tex_header,tex_inner,tex_footer)
+}
+```
+
 # Delays over Time
 
 ```{r plot, echo=FALSE, results='asis'}
-mean_delay=df[!is.na(winsorized_delay) & action_date_year_quarter<=as.Date('2012-06-30'), 
-              mean(winsorized_delay),  
+mean_delay=reg_df[!is.na(wins_percentage_delay) & action_date_year_quarter<=as.Date('2012-06-30'), 
+              mean(wins_percentage_delay),  
               by = c('action_date_year_quarter','business_type')]
 mean_delay[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
 mean_delay=mean_delay[order(action_date_year_quarter,business_type)]
@@ -158,7 +201,7 @@ ggplot(mean_delay, aes(x=year_quarter,
     geom_line() +    
     scale_x_discrete(limits=mean_delay$year_quarter)+
     geom_point(size=3)+
-    labs(x="Year-Quarter", y = "Average delay rate per quarter (in days)")+  
+    labs(x="Year-Quarter", y = "Average delay rate per quarter (in percentage)")+  
     annotate("text", label = "QuickPay\n implemented", x = 8, y = 12,color="dimgrey")+
     geom_vline(xintercept = 10.2, linetype="solid", 
                 color = "gray", size=1.5)+
@@ -176,8 +219,8 @@ ggplot(mean_delay, aes(x=year_quarter,
 ```
 
 ```{r normalized_plot,echo=FALSE,results='asis'}
-small_baseline=subset(mean_delay,business_type=="S" & year_quarter=="2010-Mar")$V1
-large_baseline=subset(mean_delay,business_type=="O" & year_quarter=="2010-Mar")$V1
+small_baseline=subset(mean_delay,business_type=="S" & year_quarter=="2010-Jun")$V1
+large_baseline=subset(mean_delay,business_type=="O" & year_quarter=="2010-Jun")$V1
 
 mean_delay[,V2:=ifelse(business_type=="S",V1*100/small_baseline,V1*100/large_baseline)]
 
@@ -189,7 +232,7 @@ ggplot(mean_delay, aes(x=year_quarter,
     geom_line() +    
     scale_x_discrete(limits=mean_delay$year_quarter)+
     geom_point(size=3)+
-    labs(x="Year-Quarter", y = "Average delay rate per quarter (in days)")+  
+    labs(x="Year-Quarter", y = "Average delay rate per quarter (in percentage)")+  
     annotate("text", label = "QuickPay\n implemented", x = 8, y = 180,color="dimgrey")+
     geom_vline(xintercept = 10.2, linetype="solid", 
                 color = "gray", size=1.5)+
@@ -221,7 +264,7 @@ $$ Post_t = \begin{cases} 1, \text{ if year-quarter } t > \text{ April 27, 2011}
 # Parallel Trends Test
 
 Let $Time$ denote $q$-th quarter since the beginning of time horizon. For $Post_t =0$, we run the following regression:
-$$ Delay_{it} = \alpha+\beta_0 Treat_i + \beta_1 (Treat_i \times Time) + \beta_2 X_i + \mu_t + \theta_{firm} + \lambda_{task} +\epsilon_{it}$$
+$$ DelayRate_{it} = \alpha+\beta_0 Treat_i + \beta_1 (Treat_i \times Time) + \beta_2 X_i + \mu_t + \theta_{firm} + \lambda_{task} +\epsilon_{it}$$
 The coefficient of interest is $\beta_1$. If this is significant, we would find evidence of a linear time trend before quickpay implementation -- violating the parallel trends assumption.
 
 ```{r parallel_trends_test, echo=FALSE, results='asis'}
@@ -232,14 +275,14 @@ cluster_var = "contract_award_unique_key"
 
 # Estimating linear time trend before quickpay was implemented
 fixed_vars =  c("action_date_year_quarter",
-                "recipient_duns",
+                "naics_code",
                 "product_or_service_code")
 
 control_vars=c("winsorized_initial_duration_in_days_i",
                "winsorized_initial_budget_i",
                "number_of_offers_received")
 
-pt_formula=formula(paste("winsorized_delay~treat_i+
+pt_formula=formula(paste("wins_percentage_delay~treat_i+
                          quarter_number:treat_i+project_quarter_tercile+",
                          paste(control_vars,collapse="+"),
                          "|", paste(fixed_vars, collapse= "+"),
@@ -252,7 +295,7 @@ parallel_trend<-felm(pt_formula,
 
 stargazer(parallel_trend,
           title = "Linear Time Trend Before QuickPay",
-          dep.var.labels   = "$Delay_{it}$ (in days)",
+          dep.var.labels   = "$DelayRate_{it}$ (in percentage)",
           header=FALSE,
           object.names=FALSE, 
           model.numbers=FALSE,
@@ -270,15 +313,15 @@ stargazer(parallel_trend,
 
 # Baseline Regressions
 
-$$ Delay_{it} = \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t) + \epsilon_{it}$$ 
+$$ DelayRate_{it} = \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t) + \epsilon_{it}$$ 
 
-$$ \begin{aligned} Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
+$$ \begin{aligned} DelayRate_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}$$
 
 ```{r baseline_regressions, echo=FALSE, results='asis'}
 # Baseline Regressions 
-baseline_reg=felm(winsorized_delay~treat_i+
+baseline_reg=felm(wins_percentage_delay~treat_i+
                      post_t:treat_i+
                      post_t|
                     0| # no fixed effects
@@ -289,7 +332,7 @@ baseline_reg=felm(winsorized_delay~treat_i+
                   cmethod = "reghdfe")
 
 # time fixed effects also included in the following specs
-controls_and_no_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                            post_t:treat_i+
                            post_t+
                            project_quarter_tercile+
@@ -307,7 +350,7 @@ controls_and_no_fe=felm(winsorized_delay~treat_i+
                           cmethod = "reghdfe")
 
 # time fixed effects also included in the following specs
-controls_and_time_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                              post_t:treat_i+
                            project_quarter_tercile+
                             winsorized_initial_duration_in_days_i+
@@ -323,7 +366,7 @@ controls_and_time_fe=felm(winsorized_delay~treat_i+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_time_task_fe=felm(winsorized_delay~treat_i+
+controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                               post_t:treat_i+
                            project_quarter_tercile+
                             winsorized_initial_duration_in_days_i+
@@ -339,7 +382,7 @@ controls_time_task_fe=felm(winsorized_delay~treat_i+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_all_fe=felm(winsorized_delay~treat_i+
+controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                             post_t:treat_i+
                            project_quarter_tercile+
                             winsorized_initial_duration_in_days_i+
@@ -348,20 +391,20 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-stargazer(baseline_reg,
+base_table=stargazer(baseline_reg,
           controls_and_no_fe,
           controls_and_time_fe,
           controls_time_task_fe,
           controls_and_all_fe,
           title = "Quickpay 2009-2011",
-          dep.var.labels="$Delay_{it}$ (in days)",
+          dep.var.labels="$DelayRate_{it}$ (in percentage)",
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
           object.names=FALSE, 
@@ -376,7 +419,7 @@ stargazer(baseline_reg,
                            c("Project Age Tercile","No",rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -389,6 +432,11 @@ stargazer(baseline_reg,
           notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level."),
           header=F)
+
+base_table_tex=make_tex_pieces(base_table)
+# Write to file
+write(base_table_tex,
+      paste0(tables_folder,"/base_table_matched_pc_delay.tex"))
 ```
 
 ## Impact on bids, duration, and budget
@@ -417,7 +465,7 @@ select_cols_comp=c("contract_award_unique_key",
               "action_date",
               "contracting_officers_determination_of_business_size_code",
               "product_or_service_code",
-              "recipient_duns")
+              "naics_code")
 
 reg_df_first_reported=subset(df_first_reported,
                              action_date<=as.Date('2012-06-30'))[,..select_cols_comp]
@@ -598,7 +646,7 @@ all_fe=felm(winsorized_initial_duration_in_days_i~treat_i+
                                   treat_i:project_signed_after_quickpay|
                             product_or_service_code+
                             quarter_when_project_signed+
-                            recipient_duns|
+                            naics_code|
                             0|
                             contract_award_unique_key,
                           data=subset(reg_df_first_reported,
@@ -626,7 +674,7 @@ stargazer(baseline_reg,
           column.sep.width = "-2pt",
           add.lines = list(c("Year-Quarter Fixed Effects",rep("No",1),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",2),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",3),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",3),rep("Yes",1))),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
@@ -674,7 +722,7 @@ all_fe=felm(winsorized_initial_budget_i~treat_i+
                                   treat_i:project_signed_after_quickpay|
                             product_or_service_code+
                             quarter_when_project_signed+
-                            recipient_duns|
+                            naics_code|
                             0|
                             contract_award_unique_key,
                           data=subset(reg_df_first_reported,
@@ -702,7 +750,7 @@ stargazer(baseline_reg,
           column.sep.width = "-2pt",
           add.lines = list(c("Year-Quarter Fixed Effects",rep("No",1),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",2),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",3),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",3),rep("Yes",1))),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
@@ -724,7 +772,7 @@ $$ SB_i = \begin{cases} 1, \text{ if project was signed before QuickPay}\\
 
 For a subsample of competitive or noncompetitive projects: 
 
-$$ \begin{aligned} Delay_{it} &=& \beta_0 +\beta_1 Treat_i+ \beta_2 SA_i+ \beta_3 Post_t \\&+& \beta_4 (Treat_i \times Post_t \times SA_i )+\beta_5 (Treat_i \times Post_t \times SB_i )+\epsilon_{it} \end{aligned} $$
+$$ \begin{aligned} DelayRate_{it} &=& \beta_0 +\beta_1 Treat_i+ \beta_2 SA_i+ \beta_3 Post_t \\&+& \beta_4 (Treat_i \times Post_t \times SA_i )+\beta_5 (Treat_i \times Post_t \times SB_i )+\epsilon_{it} \end{aligned} $$
 
 * According to our hypothesis, $\beta_4$ should be positive and significant for competitive projects, and insignificant for non-competitive projects. 
 * In the following regressions, we also control for the project's age. Project's age is defined as the number of quarters since it first showed up in the sample. We include the terciles of project's age as a control variable. 
@@ -734,7 +782,7 @@ new_projects_after_quickpay=unique(subset(df_first_reported,action_date>as.Date(
 reg_df[,project_signed_after_quickpay:=ifelse(contract_award_unique_key%in%new_projects_after_quickpay,1,0)]
 reg_df[,project_signed_before_quickpay:=ifelse(!contract_award_unique_key%in%new_projects_after_quickpay,1,0)]
 
-baseline_reg=felm(winsorized_delay~treat_i+
+baseline_reg=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -745,7 +793,7 @@ baseline_reg=felm(winsorized_delay~treat_i+
                                   data=subset(reg_df,competitively_awarded_i==1),
                                   exactDOF = TRUE,
                                   cmethod = "reghdfe")
-controls_and_no_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -763,7 +811,7 @@ controls_and_no_fe=felm(winsorized_delay~treat_i+
                           data=subset(reg_df,competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
-controls_and_time_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -780,7 +828,7 @@ controls_and_time_fe=felm(winsorized_delay~treat_i+
                           data=subset(reg_df,competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
-controls_time_task_fe=felm(winsorized_delay~treat_i+
+controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -798,7 +846,7 @@ controls_time_task_fe=felm(winsorized_delay~treat_i+
                           data=subset(reg_df,competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
-controls_and_all_fe=felm(winsorized_delay~treat_i+
+controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -809,7 +857,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             project_quarter_tercile|
-                            recipient_duns+
+                            naics_code+
                             product_or_service_code+
                             action_date_year_quarter|
                             0|
@@ -825,7 +873,7 @@ stargazer(baseline_reg,
           digits=2,
           digits.extra=2,
           title = "Subsample of Competitive Projects: Quickpay 2009-2011",
-          dep.var.labels="$Delay_{it}$ (in days)",
+          dep.var.labels="$DelayRate_{it}$ (in percentage)",
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$",
                                "$SA_i$",
@@ -844,7 +892,7 @@ stargazer(baseline_reg,
                            c("Project age",rep("No",1),rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -861,7 +909,7 @@ stargazer(baseline_reg,
 ```
 
 ```{r non_competitive_delays_subsample, echo=FALSE, results='asis'}
-baseline_reg=felm(winsorized_delay~treat_i+
+baseline_reg=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -872,7 +920,7 @@ baseline_reg=felm(winsorized_delay~treat_i+
                                   data=subset(reg_df,competitively_awarded_i==0),
                                   exactDOF = TRUE,
                                   cmethod = "reghdfe")
-controls_and_no_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -890,7 +938,7 @@ controls_and_no_fe=felm(winsorized_delay~treat_i+
                           data=subset(reg_df,competitively_awarded_i==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
-controls_and_time_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -907,7 +955,7 @@ controls_and_time_fe=felm(winsorized_delay~treat_i+
                           data=subset(reg_df,competitively_awarded_i==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
-controls_time_task_fe=felm(winsorized_delay~treat_i+
+controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -925,7 +973,7 @@ controls_time_task_fe=felm(winsorized_delay~treat_i+
                           data=subset(reg_df,competitively_awarded_i==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
-controls_and_all_fe=felm(winsorized_delay~treat_i+
+controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
@@ -936,7 +984,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             project_quarter_tercile|
-                            recipient_duns+
+                            naics_code+
                             product_or_service_code+
                             action_date_year_quarter|
                             0|
@@ -944,7 +992,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                           data=subset(reg_df,competitively_awarded_i==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
-# excluding firm fixed effects here to avoid overfitting because low sample size
+# excluding Industry Fixed Effects here to avoid overfitting because low sample size
 stargazer(baseline_reg,
           controls_and_no_fe,
           controls_and_time_fe,
@@ -952,7 +1000,7 @@ stargazer(baseline_reg,
           digits=2,
           digits.extra=2,
           title = "Subsample of Non-competitive Projects: Quickpay 2009-2011",
-          dep.var.labels="$Delay_{it}$ (in days)",
+          dep.var.labels="$DelayRate_{it}$ (in percentage)",
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$",
                                "$SA_i$",
@@ -990,7 +1038,7 @@ stargazer(baseline_reg,
 
 We run the following model:
 
-$$\begin{aligned} Delay_{it} &=& \beta_0 +\beta_1 Treat_i+ \beta_2 StartedAfterQP_i+ \beta_3 Post_t+ \beta_4 Competitive_i\\ && +  \beta_5 (Treat_i \times Competitive_i) + \beta_6 (Post_t \times Competitive_i)\\ && +  \beta_7 (StartedAfterQP_i \times Competitive_i) +\beta_8 (Treat_i \times Post_t)\\ && + \beta_9 (Treat_i \times Post_t \times Competitive_i) \\ && + \beta_{10} (Treat_i \times Post_t \times StartedAfterQP_i )\\ && + \beta_{11} (Treat_i \times Post_t \times StartedAfterQP_i \times Competitive_i) + \epsilon_{it} \end{aligned}$$
+$$\begin{aligned} DelayRate_{it} &=& \beta_0 +\beta_1 Treat_i+ \beta_2 StartedAfterQP_i+ \beta_3 Post_t+ \beta_4 Competitive_i\\ && +  \beta_5 (Treat_i \times Competitive_i) + \beta_6 (Post_t \times Competitive_i)\\ && +  \beta_7 (StartedAfterQP_i \times Competitive_i) +\beta_8 (Treat_i \times Post_t)\\ && + \beta_9 (Treat_i \times Post_t \times Competitive_i) \\ && + \beta_{10} (Treat_i \times Post_t \times StartedAfterQP_i )\\ && + \beta_{11} (Treat_i \times Post_t \times StartedAfterQP_i \times Competitive_i) + \epsilon_{it} \end{aligned}$$
 
 **Interpretation:**
 
@@ -1000,7 +1048,7 @@ $$\begin{aligned} Delay_{it} &=& \beta_0 +\beta_1 Treat_i+ \beta_2 StartedAfterQ
 
 ```{r competition_delays_combined, echo= FALSE, results ='asis'}
 
-baseline_reg=felm(winsorized_delay~treat_i+
+baseline_reg=felm(wins_percentage_delay~treat_i+
                                    project_signed_after_quickpay+
                                    competitively_awarded_i+
                      treat_i:competitively_awarded_i+
@@ -1018,7 +1066,7 @@ baseline_reg=felm(winsorized_delay~treat_i+
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 
-controls_and_no_fe_no_age=felm(winsorized_delay~treat_i+
+controls_and_no_fe_no_age=felm(wins_percentage_delay~treat_i+
                                    project_signed_after_quickpay+
                                    competitively_awarded_i+
                      treat_i:competitively_awarded_i+
@@ -1042,7 +1090,7 @@ controls_and_no_fe_no_age=felm(winsorized_delay~treat_i+
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 
-controls_and_no_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                                    project_signed_after_quickpay+
                                    competitively_awarded_i+
                      treat_i:competitively_awarded_i+
@@ -1067,7 +1115,7 @@ controls_and_no_fe=felm(winsorized_delay~treat_i+
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 
-controls_and_time_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                                    project_signed_after_quickpay+
                                    competitively_awarded_i+
                      treat_i:competitively_awarded_i+
@@ -1091,7 +1139,7 @@ controls_and_time_fe=felm(winsorized_delay~treat_i+
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 
-controls_time_task_fe=felm(winsorized_delay~treat_i+
+controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                                    project_signed_after_quickpay+
                                    competitively_awarded_i+
                      treat_i:competitively_awarded_i+
@@ -1116,7 +1164,7 @@ controls_time_task_fe=felm(winsorized_delay~treat_i+
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 
-controls_and_all_fe=felm(winsorized_delay~treat_i+
+controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                                    project_signed_after_quickpay+
                                    competitively_awarded_i+
                      treat_i:competitively_awarded_i+
@@ -1134,7 +1182,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_budget_i+
                             project_quarter_tercile|
                                    action_date_year_quarter+
-                       product_or_service_code+recipient_duns| # no fixed effects
+                       product_or_service_code+naics_code| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
                                    data=reg_df,
@@ -1150,7 +1198,7 @@ stargazer(baseline_reg,
           digits=2,
           digits.extra=2,
           title = "Effect of Competition After QuickPay: Quickpay 2009-2011",
-          dep.var.labels="$Delay_{it}$ (in days)",
+          dep.var.labels="$DelayRate_{it}$ (in percentage)",
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$",
                                "$StartedAfterQP_i$",
@@ -1175,7 +1223,7 @@ stargazer(baseline_reg,
                            c("Project age",rep("No",2),rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",3),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",4),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",5),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",5),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -1199,7 +1247,7 @@ $$ CF_i = \begin{cases} 1, \text{ if project } i \text{ receives contract financ
 0, \text{ otherwise} \end{cases}$$
 
 $$ \begin{aligned}
-Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t) \\
+DelayRate_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t) \\
 &+&\beta_3 CF_i + \beta_4 (CF_i \times Post_t) + \beta_5 (Treat_i \times Post_t \times CF_i) \\ 
 &+&X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}$$
@@ -1207,7 +1255,7 @@ Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times
 
 ```{r contract_financing, echo=FALSE, results='asis'}
 # Baseline Regressions 
-baseline_reg=felm(winsorized_delay~treat_i+
+baseline_reg=felm(wins_percentage_delay~treat_i+
                     post_t:treat_i+
                      post_t+
                      project_quarter_tercile+
@@ -1221,7 +1269,7 @@ baseline_reg=felm(winsorized_delay~treat_i+
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
-controls_and_no_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                             post_t+
                            project_quarter_tercile+
                             post_t:treat_i+
@@ -1241,7 +1289,7 @@ controls_and_no_fe=felm(winsorized_delay~treat_i+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_time_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                            project_quarter_tercile+
                             post_t:treat_i+
                             contract_financing_i+
@@ -1261,7 +1309,7 @@ controls_and_time_fe=felm(winsorized_delay~treat_i+
                           cmethod = "reghdfe")
 
 # time fixed effects also included in the following specs
-controls_time_task_fe=felm(winsorized_delay~treat_i+
+controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                            project_quarter_tercile+
                             post_t:treat_i+
                             contract_financing_i+
@@ -1280,7 +1328,7 @@ controls_time_task_fe=felm(winsorized_delay~treat_i+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_all_fe=felm(winsorized_delay~treat_i+
+controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                            project_quarter_tercile+
                             post_t:treat_i+
                             contract_financing_i+
@@ -1292,7 +1340,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
@@ -1313,7 +1361,7 @@ stargazer(baseline_reg,
           digits=2,
           digits.extra=2,
           title = "Effect of Contract Financing: Quickpay 2009-2011",
-          dep.var.labels="$Delay_{it}$ (in days)",
+          dep.var.labels="$DelayRate_{it}$ (in percentage)",
           dep.var.caption = "",
           order=paste0("^", vars.order , "$"),
           covariate.labels = c("$Treat_i$",
@@ -1333,7 +1381,7 @@ stargazer(baseline_reg,
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project Age Tercile",rep("No",1),rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -1354,14 +1402,14 @@ $$ FinancialAid = \begin{cases} 1, \text{ if firm receives grants or is a c8A pa
 0, \text{ otherwise} \end{cases}$$
 
 $$ \begin{aligned}
-Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t) +\beta_3 FinancialAid \\
+DelayRate_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t) +\beta_3 FinancialAid \\
 &+& \beta_4 (FinancialAid \times Post_t) + \beta_5 (Treat_i \times Post_t \times FinancialAid) \\ 
 &+&X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}$$
 
 ```{r financial_aid, echo=FALSE, results='asis'}
 # Baseline Regressions 
-baseline_reg=felm(winsorized_delay~treat_i+post_t:treat_i+post_t+
+baseline_reg=felm(wins_percentage_delay~treat_i+post_t:treat_i+post_t+
                     receives_financial_aid_i+post_t:receives_financial_aid_i+
                     post_t:treat_i:receives_financial_aid_i|
                     0| # no fixed effects
@@ -1371,7 +1419,7 @@ baseline_reg=felm(winsorized_delay~treat_i+post_t:treat_i+post_t+
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
-controls_and_no_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                             post_t+
                             post_t:treat_i+
                             receives_financial_aid_i+
@@ -1390,7 +1438,7 @@ controls_and_no_fe=felm(winsorized_delay~treat_i+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_time_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                             post_t:treat_i+
                             receives_financial_aid_i+
                             post_t:receives_financial_aid_i+
@@ -1408,7 +1456,7 @@ controls_and_time_fe=felm(winsorized_delay~treat_i+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_time_task_fe=felm(winsorized_delay~treat_i+
+controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                             post_t:treat_i+
                             receives_financial_aid_i+
                             post_t:receives_financial_aid_i+
@@ -1426,7 +1474,7 @@ controls_time_task_fe=felm(winsorized_delay~treat_i+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_all_fe=felm(winsorized_delay~treat_i+
+controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                             post_t:treat_i+
                             receives_financial_aid_i+
                             post_t:receives_financial_aid_i+
@@ -1437,7 +1485,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
@@ -1458,7 +1506,7 @@ stargazer(baseline_reg,
           digits=2,
           digits.extra=2,
           title = "Effect of Grants or C8A Participant: Quickpay 2009-2011",
-          dep.var.labels="$Delay_{it}$ (in days)",
+          dep.var.labels="$DelayRate_{it}$ (in percentage)",
           dep.var.caption = "",
           order=paste0("^", vars.order , "$"),
           covariate.labels = c("$Treat_i$",
@@ -1478,7 +1526,7 @@ stargazer(baseline_reg,
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -1499,14 +1547,14 @@ $$ CFA = \begin{cases} 1, \text{ if firm receives "contracts and grants"}\\
 0, \text{ otherwise} \end{cases}$$
 
 $$ \begin{aligned}
-Delay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t) +\beta_3 CFA \\
+DelayRate_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t) +\beta_3 CFA \\
 &+& \beta_4 (CFA \times Post_t) + \beta_5 (Treat_i \times Post_t \times CFA) \\ 
 &+&X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}$$
 
 ```{r contracts_and_financial_aid, echo=FALSE, results='asis'}
 # Baseline Regressions 
-baseline_reg=felm(winsorized_delay~treat_i+post_t:treat_i+post_t+
+baseline_reg=felm(wins_percentage_delay~treat_i+post_t:treat_i+post_t+
                     receives_contracts_and_financial_aid_i+
                     post_t:receives_contracts_and_financial_aid_i+
                     post_t:treat_i:receives_contracts_and_financial_aid_i|
@@ -1517,7 +1565,7 @@ baseline_reg=felm(winsorized_delay~treat_i+post_t:treat_i+post_t+
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
-controls_and_no_fe=felm(winsorized_delay~treat_i+
+controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                             post_t+
                             post_t:treat_i+
                             receives_contracts_and_financial_aid_i+
@@ -1536,7 +1584,7 @@ controls_and_no_fe=felm(winsorized_delay~treat_i+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_time_fe=felm(winsorized_delay~treat_i+
+controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                             post_t:treat_i+
                             receives_contracts_and_financial_aid_i+
                             post_t:receives_contracts_and_financial_aid_i+
@@ -1554,7 +1602,7 @@ controls_and_time_fe=felm(winsorized_delay~treat_i+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_time_task_fe=felm(winsorized_delay~treat_i+
+controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                             post_t:treat_i+
                             receives_contracts_and_financial_aid_i+
                             post_t:receives_contracts_and_financial_aid_i+
@@ -1572,7 +1620,7 @@ controls_time_task_fe=felm(winsorized_delay~treat_i+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-controls_and_all_fe=felm(winsorized_delay~treat_i+
+controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                             post_t:treat_i+
                             receives_contracts_and_financial_aid_i+
                             post_t:receives_contracts_and_financial_aid_i+
@@ -1583,7 +1631,7 @@ controls_and_all_fe=felm(winsorized_delay~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
@@ -1604,7 +1652,7 @@ stargazer(baseline_reg,
           digits=2,
           digits.extra=2,
           title = "Effect of Contracts, Grants, or C8A Participant: Quickpay 2009-2011",
-          dep.var.labels="$Delay_{it}$ (in days)",
+          dep.var.labels="$DelayRate_{it}$ (in percentage)",
           dep.var.caption = "",
           order=paste0("^", vars.order , "$"),
           covariate.labels = c("$Treat_i$",
@@ -1624,7 +1672,7 @@ stargazer(baseline_reg,
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
+                           c("Industry Fixed Effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
