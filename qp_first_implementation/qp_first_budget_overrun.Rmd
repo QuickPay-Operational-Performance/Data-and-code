@@ -31,7 +31,8 @@ library(scales)
 ``` 
 
 ```{r paths, include=FALSE}
-directory='/Users/vibhutidhingra/Dropbox/data_quickpay/qp_data/'
+tables_folder='~/Desktop/Research/QuickPay/paper/Tables/robustness'
+directory='~/Dropbox/data_quickpay/qp_data/'
 ```
 
 ```{r read_data, include=FALSE}
@@ -147,6 +148,31 @@ reg_df[,project_quarter_tercile:=as.factor(ntile(project_quarter_age,3))]
 
 ```
 
+```{r stargazer_format, include=FALSE}
+# Code to extract only the inner part (nested within tabular) of table from stargazer
+# We will use this along with threeparttable in latex later 
+# Code adapted from Patrick Baylis's blog on the topic:
+# https://www.patrickbaylis.com/blog/2019-11-25-r-reg-tables/
+make_tex_pieces <- function(stargazer_output) {
+  # Split up into header, footer, and inner
+  idx0 <- grep("begin{tabular}", stargazer_output, fixed = T) # Start of \begin{tabular}
+  idx1 <- grep("end{tabular}", stargazer_output, fixed = T) # End of \begin{tabular}
+  idx2<-grep("Adjusted",stargazer_output,fixed=T)
+  
+  tex_header <- c(stargazer_output[idx0],"\\toprule")
+  tex_footer <- c("\\bottomrule", stargazer_output[idx1])
+  tex_inner<-c(stargazer_output[(idx0+3):idx2])
+  
+  # Remove [-1.8ex] and replace \hline with \midrule
+  tex_inner <- gsub("\\\\[-[\\.0-9]+ex]", "", tex_inner)
+  
+  tex_inner <- gsub("\\hline ", "\\midrule", tex_inner)
+  # Return these as a 3 element list so that the user can insert header rows (column labels)
+  # and footer rows (summary statistics, fixed effects)
+  # list(header = tex_header, inner = tex_inner, footer = tex_footer)
+  c(tex_header,tex_inner,tex_footer)
+}
+```
 # Note
 
 - Sample restricted to projects for which start dates matches the one in API
@@ -316,14 +342,14 @@ controls_and_all_fe=felm(winsorized_overrun~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-stargazer(baseline_reg,
+base_table=stargazer(baseline_reg,
           controls_and_no_fe,
           controls_and_time_fe,
           controls_time_task_fe,
@@ -344,7 +370,7 @@ stargazer(baseline_reg,
                            c("Project Age Tercile","No",rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
-                           c("Firm Fixed Effects",rep("No",4),rep("Yes",1))),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -357,6 +383,8 @@ stargazer(baseline_reg,
           notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level."),
           header=F)
+
+#base_table_cost_overruns.tex
 ```
 
 # Percentage Overrun
@@ -368,10 +396,11 @@ $$ \begin{aligned} PercentOverrun_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post
 \end{aligned}$$
 
 ```{r percentage_overrun,include=FALSE}
-reg_df[,percentage_overrun:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),
+reg_df[,percentage_overrun:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1) &
+                                     lag(last_reported_budget,1)>0,
          overrun/lag(last_reported_budget,1),
          NaN)]
-reg_df[,wins_percentage_overrun:=Winsorize(100*percentage_overrun,na.rm=T)]
+reg_df[,wins_percentage_overrun:=100*Winsorize(percentage_overrun,na.rm=T)]
 ```
 
 
@@ -396,7 +425,7 @@ ggplot(mean_overrun, aes(x=year_quarter,
     scale_x_discrete(limits=mean_overrun$year_quarter)+
     geom_point(size=3)+
     labs(x="Year-Quarter", y = "Average overrun rate per quarter")+  
-    annotate("text", label = "QuickPay\n implemented", x = 8, y = 30,color="dimgrey")+
+    annotate("text", label = "QuickPay\n implemented", x = 8, y = 1.2,color="dimgrey")+
     geom_vline(xintercept = 10.2, linetype="solid", 
                 color = "gray", size=1.5)+
     scale_shape_discrete(name  ="Business Size",
@@ -512,7 +541,7 @@ controls_and_all_fe=felm(wins_percentage_overrun~treat_i+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:winsorized_initial_budget_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
@@ -539,7 +568,7 @@ base_table<-stargazer(baseline_reg,
                            c("Project age","No",rep("Yes",4)),
                            c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
-                           c("Contractor fixed effects",rep("No",4),rep("Yes",1))),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
@@ -552,6 +581,11 @@ base_table<-stargazer(baseline_reg,
           notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level."),
           header=F)
+
+base_table_tex=make_tex_pieces(base_table)
+# Write to file
+write(base_table_tex,
+      paste0(tables_folder,"/base_table_cost_overruns.tex"))
 ```
 
 # Relative Overrun
@@ -695,7 +729,7 @@ controls_and_all_fe=felm(wins_relative_overrun~treat_i+
                             number_of_offers_received+
                             post_t:winsorized_initial_duration_in_days_i+
                             post_t:number_of_offers_received|
-                            recipient_duns+product_or_service_code+action_date_year_quarter|
+                            naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
                           data=reg_df, 
@@ -722,7 +756,7 @@ base_table<-stargazer(baseline_reg,
                            c("Project age","No",rep("Yes",4)),
                            c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
-                           c("Contractor fixed effects",rep("No",4),rep("Yes",1))),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                    'number_of_offers_received',
                    'post_t:winsorized_initial_duration_in_days_i',
