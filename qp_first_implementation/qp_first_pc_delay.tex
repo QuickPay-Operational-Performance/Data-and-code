@@ -65,7 +65,7 @@
 
 \title{Percentage Delay Rate: QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Jan 14, 2022}
+\date{\vspace{-2.5em}Jan 31, 2022}
 
 \begin{document}
 \maketitle
@@ -326,46 +326,47 @@ Adjusted R$^{2}$ & 0.01 & 0.01 & 0.01 & 0.07 & 0.07 \\
 \end{table}
 
 \begin{table}[H] \centering 
-  \caption{Non-competitive projects and QuickPay law} 
+  \caption{Effect of QuickPay on competitively awarded projects} 
   \label{} 
 \small 
-\begin{tabular}{@{\extracolsep{-2pt}}lcccc} 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{4}{c}{$PercentDelay_{it}$  } \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4)\\ 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & 1.15$^{***}$ & 1.14$^{***}$ & 1.16$^{***}$ & 0.02 \\ 
-  & (0.25) & (0.25) & (0.25) & (0.26) \\ 
-  & & & & \\ 
- $SA_i$ & $-$0.16 & 0.43$^{**}$ & 0.60$^{***}$ & 0.35 \\ 
-  & (0.19) & (0.20) & (0.23) & (0.23) \\ 
-  & & & & \\ 
- $Post_t$ & $-$0.46$^{**}$ & $-$1.01$^{***}$ &  &  \\ 
-  & (0.20) & (0.20) &  &  \\ 
-  & & & & \\ 
- $Treat_i \times SB_i \times Post_t$ & 1.12$^{***}$ & 1.12$^{***}$ & 1.08$^{***}$ & 0.75$^{**}$ \\ 
-  & (0.33) & (0.33) & (0.34) & (0.33) \\ 
-  & & & & \\ 
- $Treat_i \times SA_i \times Post_t$ & 0.20 & 0.18 & 0.19 & $-$0.29 \\ 
-  & (0.35) & (0.35) & (0.35) & (0.35) \\ 
-  & & & & \\ 
- Constant & 4.09$^{***}$ & 3.25$^{***}$ &  &  \\ 
-  & (0.16) & (0.17) &  &  \\ 
-  & & & & \\ 
+ $Treat_i$ & 1.15$^{***}$ & 1.14$^{***}$ & 1.16$^{***}$ & 0.02 & 0.18 \\ 
+  & (0.25) & (0.25) & (0.25) & (0.26) & (0.26) \\ 
+  & & & & & \\ 
+ $SA_i$ & $-$0.16 & 0.43$^{**}$ & 0.60$^{***}$ & 0.35 & 0.34 \\ 
+  & (0.19) & (0.20) & (0.23) & (0.23) & (0.23) \\ 
+  & & & & & \\ 
+ $Post_t$ & $-$0.46$^{**}$ & $-$1.01$^{***}$ &  &  &  \\ 
+  & (0.20) & (0.20) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times SB_i \times Post_t$ & 1.12$^{***}$ & 1.12$^{***}$ & 1.08$^{***}$ & 0.75$^{**}$ & 0.71$^{**}$ \\ 
+  & (0.33) & (0.33) & (0.34) & (0.33) & (0.34) \\ 
+  & & & & & \\ 
+ $Treat_i \times SA_i \times Post_t$ & 0.20 & 0.18 & 0.19 & $-$0.29 & $-$0.29 \\ 
+  & (0.35) & (0.35) & (0.35) & (0.35) & (0.35) \\ 
+  & & & & & \\ 
+ Constant & 4.09$^{***}$ & 3.25$^{***}$ &  &  &  \\ 
+  & (0.16) & (0.17) &  &  &  \\ 
+  & & & & & \\ 
 \hline \\[-1.8ex] 
-Project age & No & Yes & Yes & Yes \\ 
-Year-Quarter fixed effects & No & No & Yes & Yes \\ 
-Task fixed effects & No & No & No & Yes \\ 
-Observations & 52,735 & 52,735 & 52,735 & 52,735 \\ 
-R$^{2}$ & 0.003 & 0.01 & 0.01 & 0.07 \\ 
-Adjusted R$^{2}$ & 0.003 & 0.01 & 0.01 & 0.05 \\ 
+Project age & No & Yes & Yes & Yes & Yes \\ 
+Year-Quarter fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 52,735 & 52,735 & 52,735 & 52,735 & 52,735 \\ 
+R$^{2}$ & 0.003 & 0.01 & 0.01 & 0.07 & 0.07 \\ 
+Adjusted R$^{2}$ & 0.003 & 0.01 & 0.01 & 0.05 & 0.06 \\ 
 \hline 
 \hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{4}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{4}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{4}{r}{SEs are robust and clustered at the project level.} \\ 
- & \multicolumn{4}{r}{Sample restricted to non-competed projects.} \\ 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Sample restricted to non-competed projects.} \\ 
 \end{tabular} 
 \end{table}
 
@@ -499,7 +500,7 @@ We run the following model:
  $Treat_i$ & 1.15$^{***}$ & 1.15$^{***}$ & 1.13$^{***}$ & 1.15$^{***}$ & $-$0.16 & $-$0.25 \\ 
   & (0.25) & (0.25) & (0.25) & (0.25) & (0.25) & (0.25) \\ 
   & & & & & & \\ 
- $StartedAfterQP_i$ & $-$0.16 & $-$0.16 & 0.58$^{***}$ & 0.45$^{**}$ & 0.27 & 0.25 \\ 
+ $SA_i$ & $-$0.16 & $-$0.16 & 0.58$^{***}$ & 0.45$^{**}$ & 0.27 & 0.25 \\ 
   & (0.19) & (0.19) & (0.19) & (0.20) & (0.19) & (0.19) \\ 
   & & & & & & \\ 
  $Competitive_i$ & 1.85$^{***}$ & 1.85$^{***}$ & 1.86$^{***}$ & 1.89$^{***}$ & 0.56$^{***}$ & 0.61$^{***}$ \\ 
@@ -514,7 +515,7 @@ We run the following model:
  $Post_t \times Competitive_i$ & 1.17$^{***}$ & 1.17$^{***}$ & 1.13$^{***}$ & 1.12$^{***}$ & 0.16 & 0.09 \\ 
   & (0.24) & (0.24) & (0.24) & (0.24) & (0.23) & (0.23) \\ 
   & & & & & & \\ 
- $StartedAfterQP_i \times Competitive_i$ & $-$1.23$^{***}$ & $-$1.23$^{***}$ & $-$1.21$^{***}$ & $-$1.18$^{***}$ & $-$0.98$^{***}$ & $-$0.95$^{***}$ \\ 
+ $SA_i \times Competitive_i$ & $-$1.23$^{***}$ & $-$1.23$^{***}$ & $-$1.21$^{***}$ & $-$1.18$^{***}$ & $-$0.98$^{***}$ & $-$0.95$^{***}$ \\ 
   & (0.23) & (0.23) & (0.23) & (0.23) & (0.23) & (0.23) \\ 
   & & & & & & \\ 
  $Treat_i \times Post_t$ & 1.12$^{***}$ & 1.12$^{***}$ & 1.12$^{***}$ & 1.10$^{***}$ & 0.52 & 0.50 \\ 
@@ -523,10 +524,10 @@ We run the following model:
  $Treat_i \times Post_t \times Competitive_i$ & $-$0.69$^{*}$ & $-$0.69$^{*}$ & $-$0.73$^{*}$ & $-$0.70$^{*}$ & $-$0.05 & $-$0.02 \\ 
   & (0.37) & (0.37) & (0.37) & (0.37) & (0.37) & (0.37) \\ 
   & & & & & & \\ 
- $Treat_i \times Post_t \times StartedAfterQP_i$ & $-$0.92$^{***}$ & $-$0.92$^{***}$ & $-$0.95$^{***}$ & $-$0.90$^{***}$ & $-$0.84$^{**}$ & $-$0.86$^{**}$ \\ 
+ $Treat_i \times Post_t \times SA_i$ & $-$0.92$^{***}$ & $-$0.92$^{***}$ & $-$0.95$^{***}$ & $-$0.90$^{***}$ & $-$0.84$^{**}$ & $-$0.86$^{**}$ \\ 
   & (0.34) & (0.34) & (0.34) & (0.34) & (0.34) & (0.34) \\ 
   & & & & & & \\ 
- $Treat_i \times Post_t \times StartedAfterQP_i \times Competitive_i$ & 1.68$^{***}$ & 1.68$^{***}$ & 1.78$^{***}$ & 1.72$^{***}$ & 1.62$^{***}$ & 1.65$^{***}$ \\ 
+ $Treat_i \times Post_t \times SA_i \times Competitive_i$ & 1.68$^{***}$ & 1.68$^{***}$ & 1.78$^{***}$ & 1.72$^{***}$ & 1.62$^{***}$ & 1.65$^{***}$ \\ 
   & (0.38) & (0.38) & (0.38) & (0.38) & (0.38) & (0.38) \\ 
   & & & & & & \\ 
  Constant & 4.09$^{***}$ & 4.09$^{***}$ & 3.04$^{***}$ &  &  &  \\ 
