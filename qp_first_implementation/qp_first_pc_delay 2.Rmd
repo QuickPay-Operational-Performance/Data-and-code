@@ -197,6 +197,23 @@ reg_df[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
 # stage at end of quarter -- not using this!
 reg_df[,stage_aliter:=as.numeric(action_date_year_quarter-initial_start_date)/as.numeric(last_reported_end_date-initial_start_date)]
 
+
+reg_df[,stage_at_time_of_qp:=ifelse(action_date_year_quarter=="2011-03-31",
+                                    project_quarter_stage,
+                                    NaN)]
+projects_at_time_of_qp=subset(reg_df,!is.na(stage_at_time_of_qp))[,c('contract_award_unique_key',
+                                                                     'stage_at_time_of_qp')]
+
+reg_df=reg_df[,-c('stage_at_time_of_qp')]
+
+reg_df=merge(reg_df,
+             projects_at_time_of_qp,
+             by='contract_award_unique_key',
+             all.x=T)
+
+reg_df[,wins_stage_at_qp:=Winsorize(stage_at_time_of_qp,                    
+                              probs=c(0.025,0.975),
+                              na.rm=T)]
 ```
 
 # Percentage delays over time
@@ -573,9 +590,9 @@ m2=felm(wins_percentage_delay~treat_i+
           post_t:treat_i:stage_tercile+
           number_of_offers_received+
           log(1+winsorized_initial_budget_i)+
-          log(1+winsorized_initial_budget_i)+
+          log(1+winsorized_initial_duration_in_days_i)+
           post_t:log(1+winsorized_initial_budget_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
           post_t:number_of_offers_received+
           post_t|
           0| # no fixed effects
@@ -593,9 +610,9 @@ m3=felm(wins_percentage_delay~treat_i+
           post_t:treat_i:stage_tercile+
           number_of_offers_received+
           log(1+winsorized_initial_budget_i)+
-          log(1+winsorized_initial_budget_i)+
+          log(1+winsorized_initial_duration_in_days_i)+
           post_t:log(1+winsorized_initial_budget_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
           post_t:number_of_offers_received|
           action_date_year_quarter| # no fixed effects
           0| # no IV
@@ -612,9 +629,9 @@ m4=felm(wins_percentage_delay~treat_i+
           post_t:treat_i:stage_tercile+
           number_of_offers_received+
           log(1+winsorized_initial_budget_i)+
-          log(1+winsorized_initial_budget_i)+
+          log(1+winsorized_initial_duration_in_days_i)+
           post_t:log(1+winsorized_initial_budget_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
           post_t:number_of_offers_received|
           product_or_service_code+action_date_year_quarter| # no fixed effects
           0| # no IV
@@ -631,9 +648,9 @@ m5=felm(wins_percentage_delay~treat_i+
           post_t:treat_i:stage_tercile+
           number_of_offers_received+
           log(1+winsorized_initial_budget_i)+
-          log(1+winsorized_initial_budget_i)+
+          log(1+winsorized_initial_duration_in_days_i)+
           post_t:log(1+winsorized_initial_budget_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
           post_t:number_of_offers_received|
           product_or_service_code+naics_code+action_date_year_quarter| # no fixed effects
           0| # no IV
@@ -719,9 +736,9 @@ m2=felm(wins_percentage_delay~treat_i+
           post_t:treat_i:stage_tercile+
           number_of_offers_received+
           log(1+winsorized_initial_budget_i)+
-          log(1+winsorized_initial_budget_i)+
+          log(1+winsorized_initial_duration_in_days_i)+
           post_t:log(1+winsorized_initial_budget_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
           post_t:number_of_offers_received+
           post_t|
           0| # no fixed effects
@@ -739,9 +756,9 @@ m3=felm(wins_percentage_delay~treat_i+
           post_t:treat_i:stage_tercile+
           number_of_offers_received+
           log(1+winsorized_initial_budget_i)+
-          log(1+winsorized_initial_budget_i)+
+          log(1+winsorized_initial_duration_in_days_i)+
           post_t:log(1+winsorized_initial_budget_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
           post_t:number_of_offers_received|
           action_date_year_quarter| # no fixed effects
           0| # no IV
@@ -758,9 +775,9 @@ m4=felm(wins_percentage_delay~treat_i+
           post_t:treat_i:stage_tercile+
           number_of_offers_received+
           log(1+winsorized_initial_budget_i)+
-          log(1+winsorized_initial_budget_i)+
+          log(1+winsorized_initial_duration_in_days_i)+
           post_t:log(1+winsorized_initial_budget_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
           post_t:number_of_offers_received|
           product_or_service_code+action_date_year_quarter| # no fixed effects
           0| # no IV
@@ -777,9 +794,9 @@ m5=felm(wins_percentage_delay~treat_i+
           post_t:treat_i:stage_tercile+
           number_of_offers_received+
           log(1+winsorized_initial_budget_i)+
-          log(1+winsorized_initial_budget_i)+
+          log(1+winsorized_initial_duration_in_days_i)+
           post_t:log(1+winsorized_initial_budget_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
           post_t:number_of_offers_received|
           product_or_service_code+naics_code+action_date_year_quarter| # no fixed effects
           0| # no IV
@@ -827,6 +844,41 @@ stargazer(m1,m2,m3,m4,m5,
           notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level."),
           header=F)
+```
+
+# Event study
+
+```{r event_study, echo=FALSE, results='asis'}
+
+reg_df[,relative_quarter:=case_when(action_date_year_quarter=="2010-03-31"~-5,
+                  action_date_year_quarter=="2010-06-30"~-4,
+                  action_date_year_quarter=="2010-09-30"~-3,
+                  action_date_year_quarter=="2010-12-31"~-2,
+                  action_date_year_quarter=="2011-03-31"~-1,
+                  action_date_year_quarter=="2011-06-30"~0,
+                  action_date_year_quarter=="2011-09-30"~1,
+                  action_date_year_quarter=="2011-12-31"~2,
+                  action_date_year_quarter=="2012-03-31"~3,
+                  action_date_year_quarter=="2012-06-30"~4)]
+reg_df[, time_to_treat := ifelse(treat_i==1, relative_quarter, 0)]
+
+mod_twfe = fixest::feols(wins_percentage_delay ~ i(time_to_treat, treat_i, ref = -1) +
+                    	   	  treat_i+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received|   
+		  naics_code+product_or_service_code+action_date_year_quarter,        
+		 cluster = ~contract_award_unique_key,
+		 data = reg_df)
+
+fixest::iplot(mod_twfe, 
+      xlab = 'Quarter relative to QuickPay',
+      main = 'Effect on Percentage Delay Rate',
+      grid=F,
+      ylim.add=0.15,
+      zero.par=list(lwd=0.5),
+      x=c(-5:4))
 ```
 
 # Contract Financing
