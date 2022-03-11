@@ -29,6 +29,7 @@ library(broom)
 library(fixest)
 library(data.table)
 library(scales)
+library(MatchIt)
 ```
 
 ```{r set_path_for_exporting, include=FALSE}
@@ -103,12 +104,9 @@ df_first_reported[,contract_financing_i:=ifelse(!is.null(contract_financing_code
                                        !contract_financing_code%in%c("Z", ""),1,0)]
 # Receives financial assistance
 df_first_reported[,receives_financial_assistance:=ifelse(receives_grants=="t",1,0)]
-# Competition_i
-# df_first_reported[,competitively_awarded_i:=ifelse(!is.null(extent_competed_code)&
-#                                           !extent_competed_code%in%c("","G","B", "C","E"),1,0)]
 
-df_first_reported[,competitively_awarded_i:=ifelse(!is.null(extent_competed_code)&
-                                          !extent_competed_code%in%c("G","B", "C"),1,0)]
+# Competition_i
+df_first_reported[,competitively_awarded_i:=ifelse(!extent_competed_code%in%c("G","B", "C"),1,0)]
 
 df_first_reported[,initial_end_date:=period_of_performance_current_end_date]
 df_first_reported[,initial_start_date:=period_of_performance_start_date]
@@ -130,7 +128,8 @@ select_cols=c("contract_award_unique_key",
               "initial_end_date",
               "initial_start_date",
               "initial_duration_in_days_i",
-              "base_and_all_options_value")
+              "base_and_all_options_value",
+              "awarding_sub_agency_code")
 
 # not necessary but speed efficient to set keys
 setkey(df_first_reported[,..select_cols],
@@ -1010,7 +1009,7 @@ fixest::iplot(mod_twfe,
       xlab = 'Quarter relative to QuickPay',
       main = 'Effect on Average Percentage Delay Rate',
       grid=F,
-      ylim.add=0.25,
+      ylim.add=0.15,
       zero.par=list(lwd=0.5),
       ci.fill = T,
       pt.join = T,
