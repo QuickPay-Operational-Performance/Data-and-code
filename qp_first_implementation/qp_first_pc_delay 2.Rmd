@@ -48,17 +48,15 @@ date_cols=c("action_date_year_quarter","last_reported_start_date","last_reported
 df[,(date_cols):= lapply(.SD, as.Date), .SDcols = date_cols]
 
 # restrict to quarter ending June 30, 2012
-df=subset(df,as.Date(action_date_year_quarter)<max(as.Date('2012-07-01'))&
-             contract_award_unique_key%in%projects_to_keep$contract_award_unique_key)
+df=subset(df,as.Date(action_date_year_quarter)<as.Date('2012-07-01')&
+          contract_award_unique_key%in%projects_to_keep$contract_award_unique_key)
+
 # data is truncated at July 1, 2012 -- 
 # so quarter ending Sept 30, 2012 will only have values as of July 1, 2012
 
 df_first_reported=fread(paste0(data_folder,'qp_data_first_reported.csv'))
 # contains time-invariant contract characteristics -- info when contract first appeared in the data
 
-df_first_reported=subset(df_first_reported,
-                         as.Date(action_date)<as.Date('2012-07-01')&
-             contract_award_unique_key%in%projects_to_keep$contract_award_unique_key)
 ```
 
 ```{r assign_variables_1, include=FALSE}
@@ -84,7 +82,9 @@ df[,delay:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),
                   last_reported_end_date-lag(last_reported_end_date,1),NaN)]
 
 # winsorize quarter-to-quarter delay
-df[,winsorized_delay:=Winsorize(delay,na.rm=TRUE)]
+df[,winsorized_delay:=Winsorize(delay,
+                                probs=c(0.05,0.95),
+                                na.rm=TRUE)]
 
 #Post_t: A dummy that period t is post-treatment
 df[,post_t:=ifelse(action_date_year_quarter>as.Date("2011-04-27"),1,0)]
@@ -99,29 +99,25 @@ df[,treat_i:=ifelse(business_type=="S",1,0)]
 ```{r assign_variables_2, include=FALSE}
 
 # ContractFinancing_i
-
 df_first_reported[,contract_financing_i:=ifelse(!is.null(contract_financing_code)&
                                        !contract_financing_code%in%c("Z", ""),1,0)]
-
 # Receives financial assistance
-
 df_first_reported[,receives_financial_assistance:=ifelse(receives_grants=="t",1,0)]
-
 # Competition_i
+# df_first_reported[,competitively_awarded_i:=ifelse(!is.null(extent_competed_code)&
+#                                           !extent_competed_code%in%c("","G","B", "C","E"),1,0)]
+
 df_first_reported[,competitively_awarded_i:=ifelse(!is.null(extent_competed_code)&
-                                          !extent_competed_code%in%c("","G","B", "C","E"),1,0)]
+                                          !extent_competed_code%in%c("G","B", "C"),1,0)]
 
 df_first_reported[,initial_end_date:=period_of_performance_current_end_date]
 df_first_reported[,initial_start_date:=period_of_performance_start_date]
 
 # InitialDuration_i
-
 df_first_reported[,initial_duration_in_days_i:=
                     as.numeric(
                     as.Date(initial_end_date)-
                     as.Date(initial_start_date))]
-
-# Change type to string modification number
 
 select_cols=c("contract_award_unique_key",
               "naics_code",
@@ -155,14 +151,14 @@ reg_df[,action_date_year_quarter:=as.Date(action_date_year_quarter)]
 
 reg_df[,winsorized_initial_duration_in_days_i:=
                     Winsorize(initial_duration_in_days_i,
-                    probs=c(0.025,0.975),
+                    probs=c(0.05,0.95),
                     na.rm=T)]
 
 # InitialBudget_i
 
 reg_df[,winsorized_initial_budget_i:=
                     Winsorize(base_and_all_options_value,                    
-                              probs=c(0.025,0.975),
+                              probs=c(0.05,0.95),
                               na.rm=T)]
 
 # sort by contract id and date (just to be doubly sure)
@@ -185,7 +181,7 @@ reg_df[,percentage_delay:=ifelse(contract_award_unique_key==lag(contract_award_u
          NaN)]
 
 reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
-                              probs=c(0.025,0.975),
+                              probs=c(0.05,0.95),
                               na.rm=T)]
 
 # time spent in the project so far/total time of the project
@@ -195,7 +191,7 @@ reg_df[,project_quarter_stage:=ifelse(contract_award_unique_key==lag(contract_aw
 # (action_date_year_quarter-90) to get beginning of the quarter
 
 reg_df[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
-                              probs=c(0.025,0.975),
+                              probs=c(0.05,0.95),
                               na.rm=T)]
 
 # stage at end of quarter -- not using this!
@@ -216,7 +212,7 @@ reg_df[,stage_aliter:=as.numeric(action_date_year_quarter-initial_start_date)/as
 #              all.x=T)
 # 
 # reg_df[,wins_stage_at_qp:=Winsorize(stage_at_time_of_qp,                    
-#                               probs=c(0.025,0.975),
+#                               probs=c(0.05,0.95),
 #                               na.rm=T)]
 ```
 
@@ -1012,10 +1008,12 @@ mod_twfe = fixest::feols(wins_percentage_delay ~ i(time_to_treat, treat_i, ref =
 
 fixest::iplot(mod_twfe, 
       xlab = 'Quarter relative to QuickPay',
-      main = 'Effect on Percentage Delay Rate',
+      main = 'Effect on Average Percentage Delay Rate',
       grid=F,
-      ylim.add=0.15,
+      ylim.add=0.25,
       zero.par=list(lwd=0.5),
+      ci.fill = T,
+      pt.join = T,
       x=c(-5:4))
 ```
 
@@ -1634,7 +1632,7 @@ setnames(prop_cf,'V1','proportion_cf')
 reg_df=merge(reg_df,prop_cf,by=c('recipient_duns'))
 
 reg_df[,wins_proportion_cf:=Winsorize(proportion_cf,
-                                      probs=c(0.025,0.975),
+                                      probs=c(0.05,0.95),
                                       na.rm=T)]
 
 ggplot(reg_df, 
@@ -2108,7 +2106,7 @@ setnames(prop_grants,'V1','proportion_grants')
 reg_df=merge(reg_df,prop_grants,by=c('recipient_duns'))
 
 reg_df[,wins_proportion_grants:=Winsorize(proportion_grants,
-                                      probs=c(0.025,0.975),
+                                      probs=c(0.05,0.95),
                                       na.rm=T)]
 
 ggplot(reg_df, 
@@ -2133,11 +2131,6 @@ ggplot(reg_df,
 
 ```{r competition_bids, echo=FALSE, results='asis'}
 
-# Get bid metrics when projects were first signed
-# This is different from other regressions
-# Quarter fixed effects here mean quarters when the project was signed
-# Not the quarter over which the "delays" are measured elsewhere
-
 select_cols_comp=c("contract_award_unique_key",
               "number_of_offers_received",
               "competitively_awarded_i",
@@ -2153,10 +2146,11 @@ reg_df_first_reported=subset(df_first_reported,
                             
 reg_df_first_reported[,action_date_year_quarter:=as.Date(as.yearqtr(as.Date(action_date)),
                                                        frac = 1)]
-setnames(reg_df_first_reported,'action_date_year_quarter','quarter_when_project_signed')
 
+setnames(reg_df_first_reported,'action_date_year_quarter','quarter_when_project_signed')
 # defining as project_signed_after_quickpay to avoid clash with post_t variable later
 # these are essentially the same, but defined on different samples 
+
 reg_df_first_reported[,project_signed_after_quickpay:=
           ifelse(quarter_when_project_signed>as.Date('2011-04-27'),1,0)]
 
@@ -2165,12 +2159,12 @@ reg_df_first_reported[,treat_i:=
 
 reg_df_first_reported[,winsorized_initial_duration_in_days_i:=
           Winsorize(initial_duration_in_days_i,
-                    probs=c(0.025,0.975),
+                    probs=c(0.05,0.95),
                     na.rm=T)]
 
 reg_df_first_reported[,winsorized_initial_budget_i:=
           Winsorize(base_and_all_options_value,
-                    probs=c(0.025,0.975),
+                    probs=c(0.05,0.95),
                     na.rm=T)]
 
 bids=felm(number_of_offers_received~treat_i+
