@@ -195,24 +195,6 @@ reg_df[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
 
 # stage at end of quarter -- not using this!
 reg_df[,stage_aliter:=as.numeric(action_date_year_quarter-initial_start_date)/as.numeric(last_reported_end_date-initial_start_date)]
-# 
-# 
-# reg_df[,stage_at_time_of_qp:=ifelse(action_date_year_quarter=="2011-03-31",
-#                                     project_quarter_stage,
-#                                     NaN)]
-# projects_at_time_of_qp=subset(reg_df,!is.na(stage_at_time_of_qp))[,c('contract_award_unique_key',
-#                                                                      'stage_at_time_of_qp')]
-# 
-# reg_df=reg_df[,-c('stage_at_time_of_qp')]
-# 
-# reg_df=merge(reg_df,
-#              projects_at_time_of_qp,
-#              by='contract_award_unique_key',
-#              all.x=T)
-# 
-# reg_df[,wins_stage_at_qp:=Winsorize(stage_at_time_of_qp,                    
-#                               probs=c(0.05,0.95),
-#                               na.rm=T)]
 ```
 
 # Percentage delays over time

@@ -65,7 +65,7 @@
 
 \title{Logistic regression: Positive Delay Rate -- QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Jan 02, 2022}
+\date{\vspace{-2.5em}Mar 12, 2022}
 
 \begin{document}
 \maketitle
@@ -74,51 +74,86 @@
 \section{Logistic Regressions (Positive
 Delay)}\label{logistic-regressions-positive-delay}}
 
+\begin{verbatim}
+## NOTE: 242,688 observations removed because of NA values (LHS: 242,688).
+\end{verbatim}
+
+\begin{verbatim}
+## NOTE: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
+## NOTE: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
+\end{verbatim}
+
+\begin{verbatim}
+## NOTES: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
+##        442/0 fixed-effects (2,333 observations) removed because of only 0 (or only 1) outcomes.
+\end{verbatim}
+
+\begin{verbatim}
+## NOTES: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
+##        11/442/0 fixed-effects (2,377 observations) removed because of only 0 (or only 1) outcomes.
+\end{verbatim}
+
 \hypertarget{contract-financing}{%
 \section{Contract Financing}\label{contract-financing}}
 
 \[ CF_i = \begin{cases} 1, \text{ if project } i \text{ receives contract financing}\\
 0, \text{ otherwise} \end{cases}\]
 
-\begin{table}
-\begin{center}
-\begin{tabular}{l c c c c c}
-\hline
- & \multicolumn{5}{c}{$I(Delay_{it}>0)$} \\
-\cline{2-6}
- & (1) & (2) & (3) & (4) & (5) \\
-\hline
-Constant                                   & $-2.19^{***}$ & $-0.99^{***}$ &               &               &               \\
-                                           & $(0.02)$      & $(0.02)$      &               &               &               \\
-$Treat_i$                                  & $-0.41^{***}$ & $-0.27^{***}$ & $-0.27^{***}$ & $-0.18^{***}$ & $-0.20^{***}$ \\
-                                           & $(0.02)$      & $(0.02)$      & $(0.02)$      & $(0.03)$      & $(0.03)$      \\
-$Post_t$                                   & $0.09^{***}$  & $-0.30^{***}$ &               &               &               \\
-                                           & $(0.02)$      & $(0.03)$      &               &               &               \\
-$CF_i$                                     & $0.78^{***}$  & $0.62^{***}$  & $0.60^{***}$  & $0.08^{**}$   & $0.06^{*}$    \\
-                                           & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      \\
-$Treat_i \times Post_t$                    & $0.13^{***}$  & $0.16^{***}$  & $0.16^{***}$  & $0.12^{***}$  & $0.13^{***}$  \\
-                                           & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      \\
-$Post_t \times CF_i$                       & $0.01$        & $-0.06$       & $-0.05$       & $0.05$        & $0.06$        \\
-                                           & $(0.04)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      \\
-$Treat_i \times Post_t \times CF_i$        & $0.29^{***}$  & $0.08^{**}$   & $0.09^{**}$   & $0.02$        & $-0.01$       \\
-                                           & $(0.04)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      \\
-\hline
-Duration, Budget, Bids                     & No            & Yes           & Yes           & Yes           & Yes           \\
-$Post_t \times $  (Duration, Budget, Bids) & No            & Yes           & Yes           & Yes           & Yes           \\
-Year-Quarter FE                            & No            & No            & Yes           & Yes           & Yes           \\
-Task FE                                    & No            & No            & No            & Yes           & Yes           \\
-Industry FE                                & No            & No            & No            & No            & Yes           \\
-AIC                                        & $188883.22$   & $168397.79$   & $$            & $$            & $$            \\
-BIC                                        & $188957.20$   & $168534.05$   & $$            & $$            & $$            \\
-Log Likelihood                             & $-94434.61$   & $-84185.89$   & $$            & $$            & $$            \\
-Deviance                                   & $188869.22$   & $168371.79$   & $167397.17$   & $154961.96$   & $154227.35$   \\
-Num. obs.                                  & $287530$      & $263488$      & $263488$      & $260905$      & $260857$      \\
-\hline
-\multicolumn{6}{l}{\scriptsize{Each observation is a project-quarter. SEs are robust and clustered at the project level.}}
-\end{tabular}
-\caption{Contract Financing}
-\label{table:coefficients}
-\end{center}
+\begin{verbatim}
+## NOTE: 242,688 observations removed because of NA values (LHS: 242,688).
+\end{verbatim}
+
+\begin{verbatim}
+## NOTE: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
+## NOTE: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
+\end{verbatim}
+
+\begin{verbatim}
+## NOTES: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
+##        442/0 fixed-effects (2,333 observations) removed because of only 0 (or only 1) outcomes.
+\end{verbatim}
+
+\begin{verbatim}
+## NOTES: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
+##        11/442/0 fixed-effects (2,377 observations) removed because of only 0 (or only 1) outcomes.
+\end{verbatim}
+
+\begin{table}[htbp]
+   \centering
+   \caption{Logit model: Effect of QuickPay}
+   \begin{tabular}{lccccc}
+      \tabularnewline\midrule\midrule
+      Dependent Variable: & \multicolumn{5}{c}{I(Delay>0)}\\
+      Model:                                        & (1)           & (2)           & (3)           & (4)           & (5)\\
+      \midrule \emph{Variables} &   &   &   &   &  \\
+      (Intercept)                                   & -2.04$^{***}$ & 2.97$^{***}$  &               &               &   \\
+                                                    & (0.02)        & (0.12)        &               &               &   \\
+      $Treat_i$                                     & -0.60$^{***}$ & -0.21$^{***}$ & -0.22$^{***}$ & -0.22$^{***}$ & -0.23$^{***}$\\
+                                                    & (0.03)        & (0.03)        & (0.03)        & (0.03)        & (0.03)\\
+      $Post_t$                                      & 0.02          & -1.41$^{***}$ &               &               &   \\
+                                                    & (0.02)        & (0.13)        &               &               &   \\
+      $CF_i$                                        & 0.45$^{***}$  & 0.61$^{***}$  & 0.59$^{***}$  & 0.07          & 0.06\\
+                                                    & (0.04)        & (0.05)        & (0.05)        & (0.05)        & (0.05)\\
+      $Treat_i$ $\times$ $Post_t$                  & 0.31$^{***}$  & 0.28$^{***}$  & 0.29$^{***}$  & 0.28$^{***}$  & 0.29$^{***}$\\
+                                                    & (0.03)        & (0.04)        & (0.04)        & (0.04)        & (0.04)\\
+      $Treat_i$ $\times$ $CF_i$                    & 0.69$^{***}$  & 0.22$^{***}$  & 0.22$^{***}$  & 0.15$^{**}$   & 0.14$^{**}$\\
+                                                    & (0.06)        & (0.07)        & (0.07)        & (0.07)        & (0.07)\\
+      $Post_t$ $\times$ $CF_i$                     & 0.36$^{***}$  & 0.04          & 0.05          & 0.10$^{*}$    & 0.11$^{**}$\\
+                                                    & (0.05)        & (0.06)        & (0.06)        & (0.06)        & (0.06)\\
+      $Treat_i$ $\times$ $Post_t$ $\times$ $CF_i$ & -0.39$^{***}$ & -0.34$^{***}$ & -0.33$^{***}$ & -0.25$^{***}$ & -0.27$^{***}$\\
+                                                    & (0.07)        & (0.08)        & (0.08)        & (0.08)        & (0.08)\\
+      \midrule \emph{Fixed-effects} &   &   &   &   &  \\
+      Time                                          &               &               & Yes           & Yes           & Yes\\
+      Task code                                     &               &               &               & Yes           & Yes\\
+      NAICS code                                    &               &               &               &               & Yes\\
+      \midrule \emph{Fit statistics} &   &   &   &   &  \\
+      Observations                                  & 260,211       & 236,115       & 236,115       & 233,782       & 233,738\\
+      Squared Correlation                           & 0.02          & 0.27          & 0.27          & 0.31          & 0.31\\
+      Pseudo R$^2$                                  & 0.02          & 0.27          & 0.27          & 0.32          & 0.32\\
+      BIC                                           & 177,520.7     & 128,498.6     & 128,442.2     & 130,820.3     & 130,991.5\\
+      \midrule\midrule\multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
 \end{table}
 
 \hypertarget{competition}{%
@@ -137,136 +172,178 @@ Define
 \hypertarget{subsample-model}{%
 \subsubsection{Subsample model}\label{subsample-model}}
 
-\begin{table}
-\begin{center}
-\begin{tabular}{l c c c c c}
-\hline
- & \multicolumn{5}{c}{$I(Delay_{it}>0)$} \\
-\cline{2-6}
- & (1) & (2) & (3) & (4) & (5) \\
-\hline
-Constant                                   & $-1.98^{***}$ & $-0.90^{***}$ &               &               &               \\
-                                           & $(0.02)$      & $(0.02)$      &               &               &               \\
-$Treat_i$                                  & $-0.55^{***}$ & $-0.31^{***}$ & $-0.31^{***}$ & $-0.17^{***}$ & $-0.20^{***}$ \\
-                                           & $(0.02)$      & $(0.02)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      \\
-$SA_i$                                     & $-0.41^{***}$ & $-0.53^{***}$ & $-0.79^{***}$ & $-0.70^{***}$ & $-0.69^{***}$ \\
-                                           & $(0.02)$      & $(0.02)$      & $(0.03)$      & $(0.03)$      & $(0.03)$      \\
-$Post_t$                                   & $0.35^{***}$  & $0.01$        &               &               &               \\
-                                           & $(0.02)$      & $(0.03)$      &               &               &               \\
-$Treat_i \times SB_i \times Post_t$        & $0.07^{**}$   & $0.15^{***}$  & $0.17^{***}$  & $0.14^{***}$  & $0.15^{***}$  \\
-                                           & $(0.03)$      & $(0.03)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      \\
-$Treat_i \times SA_i \times Post_t$        & $0.24^{***}$  & $0.17^{***}$  & $0.16^{***}$  & $0.21^{***}$  & $0.20^{***}$  \\
-                                           & $(0.03)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      & $(0.04)$      \\
-\hline
-Duration, Budget, Bids                     & No            & Yes           & Yes           & Yes           & Yes           \\
-$Post_t \times $  (Duration, Budget, Bids) & No            & Yes           & Yes           & Yes           & Yes           \\
-Year-Quarter FE                            & No            & No            & Yes           & Yes           & Yes           \\
-Task FE                                    & No            & No            & No            & Yes           & Yes           \\
-Industry FE                                & No            & No            & No            & No            & Yes           \\
-AIC                                        & $158229.54$   & $139557.11$   & $$            & $$            & $$            \\
-BIC                                        & $158291.74$   & $139680.42$   & $$            & $$            & $$            \\
-Log Likelihood                             & $-79108.77$   & $-69766.56$   & $$            & $$            & $$            \\
-Deviance                                   & $158217.54$   & $139533.11$   & $138121.15$   & $126129.81$   & $125545.81$   \\
-Num. obs.                                  & $234573$      & $214421$      & $214421$      & $212123$      & $212084$      \\
-\hline
-\multicolumn{6}{l}{\scriptsize{Each observation is a project-quarter. SEs are robust and clustered at the project level. Sample restricted to fully competed projects.}}
-\end{tabular}
-\caption{Full Competition}
-\label{table:coefficients}
-\end{center}
+\begin{verbatim}
+## NOTE: 202,813 observations removed because of NA values (LHS: 202,813).
+\end{verbatim}
+
+\begin{verbatim}
+## NOTE: 224,438 observations removed because of NA values (LHS: 202,813, RHS: 224,438).
+## NOTE: 224,438 observations removed because of NA values (LHS: 202,813, RHS: 224,438).
+\end{verbatim}
+
+\begin{verbatim}
+## NOTES: 224,438 observations removed because of NA values (LHS: 202,813, RHS: 224,438).
+##        417/0 fixed-effects (2,096 observations) removed because of only 0 (or only 1) outcomes.
+\end{verbatim}
+
+\begin{verbatim}
+## NOTES: 224,438 observations removed because of NA values (LHS: 202,813, RHS: 224,438).
+##        11/417/0 fixed-effects (2,133 observations) removed because of only 0 (or only 1) outcomes.
+\end{verbatim}
+
+\begin{table}[htbp]
+   \centering
+   \caption{Logit model: Effect of QuickPay on Competitive Projects}
+   \begin{tabular}{lccccc}
+      \tabularnewline\midrule\midrule
+      Dependent Variable: & \multicolumn{5}{c}{I(Delay>0)}\\
+      Model:                                        & (1)           & (2)           & (3)           & (4)           & (5)\\
+      \midrule \emph{Variables} &   &   &   &   &  \\
+      (Intercept)                                   & -1.90$^{***}$ & 2.73$^{***}$  &               &               &   \\
+                                                    & (0.02)        & (0.13)        &               &               &   \\
+      $Treat_i$                                     & -0.60$^{***}$ & -0.16$^{***}$ & -0.18$^{***}$ & -0.16$^{***}$ & -0.18$^{***}$\\
+                                                    & (0.03)        & (0.03)        & (0.03)        & (0.03)        & (0.03)\\
+      $SA_i$                                        & -0.53$^{***}$ & 0.00          & -0.10$^{***}$ & -0.13$^{***}$ & -0.12$^{***}$\\
+                                                    & (0.03)        & (0.03)        & (0.04)        & (0.04)        & (0.04)\\
+      $Post_t$                                      & 0.41$^{***}$  & -1.50$^{***}$ &               &               &   \\
+                                                    & (0.02)        & (0.15)        &               &               &   \\
+      $Treat_i$ $\times$ $Post_t$ $\times$ $SB_i$ & 0.07$^{*}$    & 0.16$^{***}$  & 0.18$^{***}$  & 0.22$^{***}$  & 0.23$^{***}$\\
+                                                    & (0.03)        & (0.04)        & (0.04)        & (0.04)        & (0.04)\\
+      $Treat_i$ $\times$ $SA_i$ $\times$ $Post_t$ & 0.30$^{***}$  & 0.16$^{***}$  & 0.17$^{***}$  & 0.26$^{***}$  & 0.25$^{***}$\\
+                                                    & (0.04)        & (0.04)        & (0.04)        & (0.04)        & (0.04)\\
+      \midrule \emph{Fixed-effects} &   &   &   &   &  \\
+      Time                                          &               &               & Yes           & Yes           & Yes\\
+      Task code                                     &               &               &               & Yes           & Yes\\
+      NAICS code                                    &               &               &               &               & Yes\\
+      \midrule \emph{Fit statistics} &   &   &   &   &  \\
+      Observations                                  & 214,460       & 192,835       & 192,835       & 190,739       & 190,702\\
+      Squared Correlation                           & 0.01          & 0.27          & 0.27          & 0.32          & 0.32\\
+      Pseudo R$^2$                                  & 0.01          & 0.27          & 0.27          & 0.32          & 0.33\\
+      BIC                                           & 148,987.7     & 106,925.0     & 106,818.7     & 107,652.4     & 107,950.7\\
+      \midrule\midrule\multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
 \end{table}
 
-\begin{table}
-\begin{center}
-\begin{tabular}{l c c c c c}
-\hline
- & \multicolumn{5}{c}{$I(Delay_{it}>0)$} \\
-\cline{2-6}
- & (1) & (2) & (3) & (4) & (5) \\
-\hline
-Constant                                   & $-2.40^{***}$ & $-0.92^{***}$ &               &               &               \\
-                                           & $(0.04)$      & $(0.21)$      &               &               &               \\
-$Treat_i$                                  & $0.27^{***}$  & $0.17^{***}$  & $0.19^{***}$  & $-0.16^{**}$  & $-0.14^{**}$  \\
-                                           & $(0.05)$      & $(0.06)$      & $(0.06)$      & $(0.07)$      & $(0.07)$      \\
-$SA_i$                                     & $-0.14^{***}$ & $-0.29^{***}$ & $-0.49^{***}$ & $-0.53^{***}$ & $-0.51^{***}$ \\
-                                           & $(0.05)$      & $(0.05)$      & $(0.06)$      & $(0.07)$      & $(0.07)$      \\
-$Post_t$                                   & $-0.02$       & $0.03$        &               &               &               \\
-                                           & $(0.05)$      & $(0.22)$      &               &               &               \\
-$Treat_i \times SB_i \times Post_t$        & $0.28^{***}$  & $0.28^{***}$  & $0.28^{***}$  & $0.29^{***}$  & $0.28^{***}$  \\
-                                           & $(0.07)$      & $(0.08)$      & $(0.08)$      & $(0.08)$      & $(0.08)$      \\
-$Treat_i \times SA_i \times Post_t$        & $0.11$        & $0.04$        & $0.05$        & $0.08$        & $0.05$        \\
-                                           & $(0.08)$      & $(0.08)$      & $(0.08)$      & $(0.09)$      & $(0.09)$      \\
-\hline
-Duration, Budget, Bids                     & No            & Yes           & Yes           & Yes           & Yes           \\
-$Post_t \times $  (Duration, Budget, Bids) & No            & Yes           & Yes           & Yes           & Yes           \\
-Year-Quarter FE                            & No            & No            & Yes           & Yes           & Yes           \\
-Task FE                                    & No            & No            & No            & Yes           & Yes           \\
-Industry FE                                & No            & No            & No            & No            & Yes           \\
-AIC                                        & $32508.38$    & $28815.35$    & $$            & $$            & $$            \\
-BIC                                        & $32561.64$    & $28920.97$    & $$            & $$            & $$            \\
-Log Likelihood                             & $-16248.19$   & $-14395.68$   & $$            & $$            & $$            \\
-Deviance                                   & $32496.38$    & $28791.35$    & $28610.62$    & $26220.54$    & $26010.75$    \\
-Num. obs.                                  & $52957$       & $49067$       & $49067$       & $47130$       & $47114$       \\
-\hline
-\multicolumn{6}{l}{\scriptsize{Each observation is a project-quarter. SEs are robust and clustered at the project level. Sample restricted to non-competed projects.}}
-\end{tabular}
-\caption{Non-competitive projects}
-\label{table:coefficients}
-\end{center}
+\begin{verbatim}
+## NOTE: 39,875 observations removed because of NA values (LHS: 39,875).
+\end{verbatim}
+
+\begin{verbatim}
+## NOTE: 42,346 observations removed because of NA values (LHS: 39,875, RHS: 42,346).
+## NOTE: 42,346 observations removed because of NA values (LHS: 39,875, RHS: 42,346).
+\end{verbatim}
+
+\begin{verbatim}
+## NOTES: 42,346 observations removed because of NA values (LHS: 39,875, RHS: 42,346).
+##        361/0 fixed-effects (1,668 observations) removed because of only 0 (or only 1) outcomes.
+\end{verbatim}
+
+\begin{verbatim}
+## NOTES: 42,346 observations removed because of NA values (LHS: 39,875, RHS: 42,346).
+##        9/361/0 fixed-effects (1,680 observations) removed because of only 0 (or only 1) outcomes.
+\end{verbatim}
+
+\begin{table}[htbp]
+   \centering
+   \caption{Logit model: Effect of QuickPay on Non-Competitive Projects}
+   \begin{tabular}{lccccc}
+      \tabularnewline\midrule\midrule
+      Dependent Variable: & \multicolumn{5}{c}{I(Delay>0)}\\
+      Model:                                        & (1)           & (2)          & (3)          & (4)          & (5)\\
+      \midrule \emph{Variables} &   &   &   &   &  \\
+      (Intercept)                                   & -2.29$^{***}$ & 3.17$^{***}$ &              &              &   \\
+                                                    & (0.04)        & (0.31)       &              &              &   \\
+      $Treat_i$                                     & 0.28$^{***}$  & 0.13$^{**}$  & 0.12$^{**}$  & -0.14$^{**}$ & -0.14$^{**}$\\
+                                                    & (0.06)        & (0.06)       & (0.06)       & (0.07)       & (0.07)\\
+      $SA_i$                                        & -0.25$^{***}$ & 0.05         & -0.02        & -0.09        & -0.06\\
+                                                    & (0.06)        & (0.06)       & (0.08)       & (0.08)       & (0.08)\\
+      $Post_t$                                      & 0.02          & -0.54        &              &              &   \\
+                                                    & (0.05)        & (0.37)       &              &              &   \\
+      $Treat_i$ $\times$ $Post_t$ $\times$ $SB_i$ & 0.42$^{***}$  & 0.28$^{***}$ & 0.30$^{***}$ & 0.31$^{***}$ & 0.31$^{***}$\\
+                                                    & (0.08)        & (0.08)       & (0.08)       & (0.09)       & (0.09)\\
+      $Treat_i$ $\times$ $SA_i$ $\times$ $Post_t$ & 0.14$^{*}$    & 0.05         & 0.06         & 0.02         & -0.01\\
+                                                    & (0.08)        & (0.09)       & (0.09)       & (0.09)       & (0.09)\\
+      \midrule \emph{Fixed-effects} &   &   &   &   &  \\
+      Time                                          &               &              & Yes          & Yes          & Yes\\
+      Task code                                     &               &              &              & Yes          & Yes\\
+      NAICS code                                    &               &              &              &              & Yes\\
+      \midrule \emph{Fit statistics} &   &   &   &   &  \\
+      Observations                                  & 45,751        & 43,280       & 43,280       & 41,612       & 41,600\\
+      Squared Correlation                           & 0.009         & 0.25         & 0.25         & 0.29         & 0.29\\
+      Pseudo R$^2$                                  & 0.01          & 0.25         & 0.25         & 0.30         & 0.30\\
+      BIC                                           & 30,320.7      & 22,645.7     & 22,706.9     & 25,805.5     & 26,177.3\\
+      \midrule\midrule\multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
 \end{table}
 
 \hypertarget{four-way-interaction}{%
 \subsubsection{Four-way interaction}\label{four-way-interaction}}
 
-\begin{table}
-\begin{center}
-\begin{tabular}{l c c c c c}
-\hline
- & \multicolumn{5}{c}{$I(Delay_{it}>0)$} \\
-\cline{2-6}
- & (1) & (2) & (3) & (4) & (5) \\
-\hline
-Constant                                                             & $-2.40^{***}$ & $-1.09^{***}$ &               &               &               \\
-                                                                     & $(0.04)$      & $(0.04)$      &               &               &               \\
-$Treat_i$                                                            & $0.27^{***}$  & $0.16^{***}$  & $0.17^{***}$  & $-0.17^{***}$ & $-0.21^{***}$ \\
-                                                                     & $(0.05)$      & $(0.06)$      & $(0.06)$      & $(0.06)$      & $(0.06)$      \\
-$StartedAfterQP_i$                                                   & $-0.14^{***}$ & $-0.27^{***}$ & $-0.55^{***}$ & $-0.54^{***}$ & $-0.52^{***}$ \\
-                                                                     & $(0.05)$      & $(0.05)$      & $(0.06)$      & $(0.06)$      & $(0.06)$      \\
-$Competitive_i$                                                      & $0.42^{***}$  & $0.18^{***}$  & $0.20^{***}$  & $-0.08$       & $-0.07$       \\
-                                                                     & $(0.04)$      & $(0.04)$      & $(0.05)$      & $(0.05)$      & $(0.05)$      \\
-$Post_t$                                                             & $-0.02$       & $-0.26^{***}$ &               &               &               \\
-                                                                     & $(0.05)$      & $(0.06)$      &               &               &               \\
-$Treat_i \times Competitive_i$                                       & $-0.82^{***}$ & $-0.48^{***}$ & $-0.49^{***}$ & $-0.01$       & $0.01$        \\
-                                                                     & $(0.06)$      & $(0.06)$      & $(0.06)$      & $(0.07)$      & $(0.07)$      \\
-$Post_t \times Competitive_i$                                        & $0.37^{***}$  & $0.31^{***}$  & $0.31^{***}$  & $0.14^{**}$   & $0.15^{**}$   \\
-                                                                     & $(0.06)$      & $(0.06)$      & $(0.06)$      & $(0.06)$      & $(0.06)$      \\
-$StartedAfterQP_i \times Competitive_i$                              & $-0.27^{***}$ & $-0.26^{***}$ & $-0.24^{***}$ & $-0.16^{**}$  & $-0.17^{***}$ \\
-                                                                     & $(0.06)$      & $(0.06)$      & $(0.06)$      & $(0.07)$      & $(0.06)$      \\
-$Treat_i \times Post_t$                                              & $0.28^{***}$  & $0.29^{***}$  & $0.29^{***}$  & $0.19^{**}$   & $0.21^{**}$   \\
-                                                                     & $(0.07)$      & $(0.08)$      & $(0.08)$      & $(0.08)$      & $(0.08)$      \\
-$Treat_i \times Post_t \times Competitive_i$                         & $-0.21^{***}$ & $-0.13$       & $-0.12$       & $-0.05$       & $-0.06$       \\
-                                                                     & $(0.08)$      & $(0.08)$      & $(0.09)$      & $(0.09)$      & $(0.09)$      \\
-$Treat_i \times Post_t \times StartedAfterQP_i$                      & $-0.17^{**}$  & $-0.25^{***}$ & $-0.23^{***}$ & $-0.20^{**}$  & $-0.23^{***}$ \\
-                                                                     & $(0.07)$      & $(0.08)$      & $(0.08)$      & $(0.09)$      & $(0.09)$      \\
-$Treat_i \times Post_t \times StartedAfterQP_i \times Competitive_i$ & $0.34^{***}$  & $0.27^{***}$  & $0.22^{**}$   & $0.26^{***}$  & $0.28^{***}$  \\
-                                                                     & $(0.08)$      & $(0.08)$      & $(0.09)$      & $(0.09)$      & $(0.09)$      \\
-\hline
-Duration, Budget, Bids                                               & No            & Yes           & Yes           & Yes           & Yes           \\
-$Post_t \times $  (Duration, Budget, Bids)                           & No            & Yes           & Yes           & Yes           & Yes           \\
-Year-Quarter FE                                                      & No            & No            & Yes           & Yes           & Yes           \\
-Task FE                                                              & No            & No            & No            & Yes           & Yes           \\
-Industry FE                                                          & No            & No            & No            & No            & Yes           \\
-AIC                                                                  & $190737.92$   & $168464.56$   & $$            & $$            & $$            \\
-BIC                                                                  & $190864.75$   & $168653.23$   & $$            & $$            & $$            \\
-Log Likelihood                                                       & $-95356.96$   & $-84214.28$   & $$            & $$            & $$            \\
-Deviance                                                             & $190713.92$   & $168428.56$   & $166855.10$   & $153931.94$   & $153205.56$   \\
-Num. obs.                                                            & $287530$      & $263488$      & $263488$      & $260905$      & $260853$      \\
-\hline
-\multicolumn{6}{l}{\scriptsize{Each observation is a project-quarter. SEs are robust and clustered at the project level.}}
-\end{tabular}
-\caption{Competition: Four-way Interaction}
-\label{table:coefficients}
-\end{center}
+\begin{verbatim}
+## NOTE: 242,744 observations removed because of NA values (LHS: 242,688, RHS: 242,744).
+\end{verbatim}
+
+\begin{verbatim}
+## NOTE: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
+## NOTE: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
+\end{verbatim}
+
+\begin{verbatim}
+## NOTES: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
+##        0/442 fixed-effects (2,333 observations) removed because of only 0 (or only 1) outcomes.
+\end{verbatim}
+
+\begin{verbatim}
+## NOTES: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
+##        0/442/11 fixed-effects (2,377 observations) removed because of only 0 (or only 1) outcomes.
+\end{verbatim}
+
+\begin{table}[htbp]
+   \centering
+   \caption{Logit model: Effect of QuickPay on Non-Competitive Projects}
+   \begin{tabular}{lccccc}
+      \tabularnewline\midrule\midrule
+      Dependent Variable: & \multicolumn{5}{c}{I(Delay>0)}\\
+      Model:                                                                  & (1)           & (2)           & (3)           & (4)           & (5)\\
+      \midrule \emph{Variables} &   &   &   &   &  \\
+      (Intercept)                                                             & -0.54$^{***}$ & 2.73$^{***}$  &               &               &   \\
+                                                                              & (0.04)        & (0.12)        &               &               &   \\
+      $Treat_i$                                                               & 0.23$^{***}$  & 0.11$^{*}$    & 0.10          & -0.23$^{***}$ & -0.24$^{***}$\\
+                                                                              & (0.06)        & (0.06)        & (0.06)        & (0.07)        & (0.07)\\
+      $SA_i$                                                                  & 0.49$^{***}$  & 0.11$^{**}$   & 0.01          & -0.01         & 0.00\\
+                                                                              & (0.05)        & (0.06)        & (0.06)        & (0.06)        & (0.06)\\
+      $Competitive_i$                                                         & 0.32$^{***}$  & 0.03          & 0.04          & -0.20$^{***}$ & -0.16$^{***}$\\
+                                                                              & (0.04)        & (0.05)        & (0.05)        & (0.05)        & (0.05)\\
+      $Post_t$                                                                & -0.61$^{***}$ & -1.58$^{***}$ &               &               &   \\
+                                                                              & (0.05)        & (0.15)        &               &               &   \\
+      $Treat_i$ $\times$ $Competitive_i$                                     & -0.68$^{***}$ & -0.28$^{***}$ & -0.29$^{***}$ & 0.06          & 0.06\\
+                                                                              & (0.06)        & (0.07)        & (0.07)        & (0.07)        & (0.07)\\
+      $Competitive_i$ $\times$ $Post_t$                                      & 0.31$^{***}$  & 0.27$^{***}$  & 0.26$^{***}$  & 0.13$^{*}$    & 0.12$^{*}$\\
+                                                                              & (0.06)        & (0.07)        & (0.07)        & (0.07)        & (0.07)\\
+      $SA_i$ $\times$ $Competitive_i$                                        & -0.18$^{***}$ & -0.13$^{**}$  & -0.12$^{*}$   & -0.13$^{*}$   & -0.13$^{**}$\\
+                                                                              & (0.06)        & (0.06)        & (0.06)        & (0.07)        & (0.07)\\
+      $Treat_i$ $\times$ $Post_t$                                            & 0.32$^{***}$  & 0.30$^{***}$  & 0.32$^{***}$  & 0.28$^{***}$  & 0.29$^{***}$\\
+                                                                              & (0.08)        & (0.08)        & (0.08)        & (0.09)        & (0.09)\\
+      $Treat_i$ $\times$ $Competitive_i$ $\times$ $Post_t$                  & -0.27$^{***}$ & -0.13         & -0.13         & -0.06         & -0.06\\
+                                                                              & (0.08)        & (0.09)        & (0.09)        & (0.10)        & (0.10)\\
+      $Treat_i$ $\times$ $SA_i$ $\times$ $Post_t$                           & -0.21$^{***}$ & -0.23$^{***}$ & -0.23$^{***}$ & -0.28$^{***}$ & -0.31$^{***}$\\
+                                                                              & (0.08)        & (0.08)        & (0.08)        & (0.09)        & (0.09)\\
+      $Treat_i$ $\times$ $SA_i$ $\times$ $Competitive_i$ $\times$ $Post_t$ & 0.37$^{***}$  & 0.22$^{**}$   & 0.21$^{**}$   & 0.31$^{***}$  & 0.32$^{***}$\\
+                                                                              & (0.09)        & (0.09)        & (0.09)        & (0.10)        & (0.10)\\
+      \midrule \emph{Fixed-effects} &   &   &   &   &  \\
+      Time                                                                    &               &               & Yes           & Yes           & Yes\\
+      Task code                                                               &               &               &               & Yes           & Yes\\
+      NAICS code                                                              &               &               &               &               & Yes\\
+      \midrule \emph{Fit statistics} &   &   &   &   &  \\
+      Observations                                                            & 260,155       & 236,115       & 236,115       & 233,782       & 233,738\\
+      Squared Correlation                                                     & 0.21          & 0.27          & 0.27          & 0.31          & 0.31\\
+      Pseudo R$^2$                                                            & 0.16          & 0.26          & 0.26          & 0.32          & 0.32\\
+      BIC                                                                     & 152,425.5     & 129,642.1     & 129,534.9     & 130,853.8     & 131,028.1\\
+      \midrule\midrule\multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
 \end{table}
 
 \end{document}
