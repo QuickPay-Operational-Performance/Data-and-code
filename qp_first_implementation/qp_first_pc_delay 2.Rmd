@@ -978,6 +978,8 @@ stargazer(m1,m2,m3,m4,m5,
 
 # Event study
 
+$Delay_{it}=\beta_0 + beta_1 Treat_i + \beta_2 Treat_i \times Quarter_t + \gamma_{task} + \theta_{naics}+\lambda_{quarter}+\nu_{sub-agency}+\epsilon_{it}$
+
 ```{r event_study, echo=FALSE, results='asis'}
 
 reg_df[,relative_quarter:=case_when(action_date_year_quarter=="2010-03-31"~-5,
@@ -993,15 +995,8 @@ reg_df[,relative_quarter:=case_when(action_date_year_quarter=="2010-03-31"~-5,
 reg_df[, time_to_treat := ifelse(treat_i==1, relative_quarter, 0)]
 
 mod_twfe = fixest::feols(wins_percentage_delay ~ i(time_to_treat, treat_i, ref = -1) +
-                    	   	  treat_i+
-                            log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:number_of_offers_received|   
-		  naics_code+product_or_service_code+action_date_year_quarter,        
+                    	   	  treat_i|   
+		  awarding_sub_agency_code+naics_code+product_or_service_code+action_date_year_quarter,        
 		 cluster = ~contract_award_unique_key,
 		 data = reg_df)
 
@@ -1009,7 +1004,7 @@ fixest::iplot(mod_twfe,
       xlab = 'Quarter relative to QuickPay',
       main = 'Effect on Average Percentage Delay Rate',
       grid=F,
-      ylim.add=0.15,
+      ylim.add=0.20,
       zero.par=list(lwd=0.5),
       ci.fill = T,
       pt.join = T,
