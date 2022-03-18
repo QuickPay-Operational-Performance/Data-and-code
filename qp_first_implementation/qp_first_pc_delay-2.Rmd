@@ -2110,6 +2110,7 @@ ggplot(reg_df,
 select_cols_comp=c("contract_award_unique_key",
               "number_of_offers_received",
               "competitively_awarded_i",
+              "other_than_full_and_open_competition_code",
               "initial_duration_in_days_i",
               "base_and_all_options_value",
               "action_date",
@@ -2128,7 +2129,7 @@ setnames(reg_df_first_reported,'action_date_year_quarter','quarter_when_project_
 # these are essentially the same, but defined on different samples 
 
 reg_df_first_reported[,project_signed_after_quickpay:=
-          ifelse(quarter_when_project_signed>as.Date('2011-04-27'),1,0)]
+          ifelse(quarter_when_project_signed>=as.Date('2011-04-27'),1,0)]
 
 reg_df_first_reported[,treat_i:=
           ifelse(contracting_officers_determination_of_business_size_code=="S",1,0)]
@@ -2150,7 +2151,7 @@ bids=felm(number_of_offers_received~treat_i+
                             0|
                             contract_award_unique_key,
                           data=subset(reg_df_first_reported,
-                                      competitively_awarded_i==1), 
+                                      competitively_awarded_i==1),
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
