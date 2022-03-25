@@ -36,6 +36,7 @@ figures_folder='~/Desktop/Research/QuickPay/paper/Figures'
 data_folder='~/Dropbox/data_quickpay/qp_data/'
 ```
 
+
 ```{r read_data, include=FALSE}
 # Keep only projects whose start dates match with API one
 projects_to_keep=fread(paste0(data_folder,'projects_to_keep.csv'))
@@ -47,8 +48,9 @@ date_cols=c("action_date_year_quarter","last_reported_start_date","last_reported
 df[,(date_cols):= lapply(.SD, as.Date), .SDcols = date_cols]
 
 # restrict to quarter ending June 30, 2012
-df=subset(df,as.Date(action_date_year_quarter)<max(as.Date('2012-07-01'))&
-             contract_award_unique_key%in%projects_to_keep$contract_award_unique_key)
+df=subset(df,as.Date(action_date_year_quarter)<as.Date('2012-07-01')&
+          contract_award_unique_key%in%projects_to_keep$contract_award_unique_key)
+
 # data is truncated at July 1, 2012 -- 
 # so quarter ending Sept 30, 2012 will only have values as of July 1, 2012
 
@@ -60,6 +62,17 @@ df_first_reported=fread(paste0(data_folder,'qp_data_first_reported.csv'))
 ```{r assign_variables_1, include=FALSE}
 # Assign variables: Delay, Winsorized Delay, Post_t, Treat_i
 
+# some projects have action dates beyond project end date 
+# some could indicate projects that ended in the beginning of a quarter -- so taking 90 days difference
+# dropping these -- likely admin/documentation changes
+
+df[,diff_end_date_and_action_date:=as.numeric(last_reported_end_date-action_date_year_quarter)]
+# to ensure project ended sometime this quarter
+df=subset(df,diff_end_date_and_action_date>-90)
+
+
+# AD: 2015-06-30; End Date: 2015-03-31
+
 # sort by contract id and date 
 df=df[order(contract_award_unique_key,
             action_date_year_quarter)]
@@ -67,6 +80,11 @@ df=df[order(contract_award_unique_key,
 # determine quarter-to-quarter delay
 df[,delay:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1), 
                   last_reported_end_date-lag(last_reported_end_date,1),NaN)]
+
+# winsorize quarter-to-quarter delay
+df[,winsorized_delay:=Winsorize(delay,
+                                probs=c(0.05,0.95),
+                                na.rm=TRUE)]
 
 #Post_t: A dummy that period t is post-treatment
 df[,post_t:=ifelse(action_date_year_quarter>as.Date("2011-04-27"),1,0)]
@@ -76,55 +94,41 @@ df[,post_t:=ifelse(action_date_year_quarter>as.Date("2011-04-27"),1,0)]
 df[,treat_i:=ifelse(business_type=="S",1,0)]
 # quickpay was implemented for small business contracts
 
-# Project age is a highly skewed variable
-# assign number of quarters since project started: "project age" in some sense
-df[, project_quarter_age := rowid(contract_award_unique_key)]
-df[,project_quarter_tercile:=as.factor(ntile(project_quarter_age,3))]
-# Including it as fixed effects doesn't work because projects in treatment and control are not always in same "tercile" while controling for everything else. 
 ```
 
 ```{r assign_variables_2, include=FALSE}
 
 # ContractFinancing_i
-
 df_first_reported[,contract_financing_i:=ifelse(!is.null(contract_financing_code)&
                                        !contract_financing_code%in%c("Z", ""),1,0)]
+# Receives financial assistance
+df_first_reported[,receives_financial_assistance:=ifelse(receives_grants=="t",1,0)]
 
 # Competition_i
-df_first_reported[,competitively_awarded_i:=ifelse(!is.null(extent_competed_code)&
-                                          !extent_competed_code%in%c("","G","B", "C","E"),1,0)]
+df_first_reported[,competitively_awarded_i:=ifelse(!extent_competed_code%in%c("G","B", "C"),1,0)]
+
+df_first_reported[,initial_end_date:=period_of_performance_current_end_date]
+df_first_reported[,initial_start_date:=period_of_performance_start_date]
 
 # InitialDuration_i
-
 df_first_reported[,initial_duration_in_days_i:=
                     as.numeric(
-                    as.Date(period_of_performance_current_end_date)-
-                    as.Date(period_of_performance_start_date))]
-
-df_first_reported[,winsorized_initial_duration_in_days_i:=
-                    Winsorize(as.numeric(
-                    as.Date(period_of_performance_current_end_date)-
-                    as.Date(period_of_performance_start_date)),na.rm=T)]
-
-# InitialBudget_i
-
-df_first_reported[,winsorized_initial_budget_i:=
-                    Winsorize(base_and_all_options_value,na.rm=T)]
-
-# Change type to string modification number
-df_first_reported[,modification_number:=as.character(modification_number)]
+                    as.Date(initial_end_date)-
+                    as.Date(initial_start_date))]
 
 select_cols=c("contract_award_unique_key",
               "naics_code",
               "product_or_service_code",
-              "modification_number",
               "number_of_offers_received",
               "contract_financing_i",
+              "receives_financial_assistance",
               "competitively_awarded_i",
-              "period_of_performance_start_date",
+              "recipient_duns",
+              "initial_end_date",
+              "initial_start_date",
               "initial_duration_in_days_i",
-              "winsorized_initial_duration_in_days_i",
-              "winsorized_initial_budget_i")
+              "base_and_all_options_value",
+              "awarding_sub_agency_code")
 
 # not necessary but speed efficient to set keys
 setkey(df_first_reported[,..select_cols],
@@ -139,30 +143,89 @@ reg_df=merge(df,
              all.x = TRUE, # keep values in df, add columns of df_first_reported_cols
              by=c("contract_award_unique_key"))
 
+reg_df[,initial_start_date:=as.Date(initial_start_date)]
+reg_df[,initial_end_date:=as.Date(initial_end_date)]
+reg_df[,action_date_year_quarter:=as.Date(action_date_year_quarter)]
+```
+
+```{r percentage_delay,include=FALSE}
 # sort by contract id and date (just to be doubly sure)
 reg_df=reg_df[order(contract_award_unique_key,
             action_date_year_quarter)]
 
-```
-
-```{r percentage_delay,include=FALSE}
-
-reg_df[,period_of_performance_start_date:=as.Date(period_of_performance_start_date)]
+reg_df[,last_reported_duration:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),
+                                      as.numeric(lag(last_reported_end_date,1)-initial_start_date),
+                                      initial_duration_in_days_i)]
 
 # "period_of_performance_start_date" here comes from first reported info
 # So it is the actual start date for a project
 # get project duration as of last quarter in the denominator
 reg_df[,percentage_delay:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),
-         delay/(as.numeric(lag(last_reported_end_date,1)-lag(period_of_performance_start_date,1))),
+         delay/last_reported_duration,
          NaN)]
+
+reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+# time spent in the project so far/total time of the project
+# if project was active in previous quarter
+reg_df[,project_quarter_stage:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),as.numeric(lag(action_date_year_quarter,1)-initial_start_date)/as.numeric(lag(last_reported_end_date,1)-initial_start_date),NaN)]
+
 ```
 
-```{r remove_zeros_and_winsorize,include=FALSE}
+```{r positive_delays,include=FALSE}
 
-reg_df=subset(reg_df,percentage_delay!=0 & !is.infinite(percentage_delay))
-reg_df[,winsorized_delay:=Winsorize(delay,na.rm=T)]
-reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,na.rm=T)]
+reg_df_positive=subset(reg_df,percentage_delay>0 & !is.infinite(percentage_delay))
+reg_df_positive[,winsorized_delay:=Winsorize(delay,na.rm=T)]
+reg_df_positive[,wins_percentage_delay:=Winsorize(100*percentage_delay,na.rm=T)]
+reg_df_positive[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(initial_duration_in_days_i,
+                    probs=c(0.05,0.95),
+                    na.rm=T)]
+reg_df_positive[,winsorized_initial_budget_i:=
+                    Winsorize(base_and_all_options_value,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+reg_df_positive[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+```
 
+```{r negative_delays,include=FALSE}
+
+reg_df_negative=subset(reg_df,percentage_delay<0 & !is.infinite(percentage_delay))
+reg_df_negative[,winsorized_delay:=Winsorize(delay,na.rm=T)]
+reg_df_negative[,wins_percentage_delay:=Winsorize(100*percentage_delay,na.rm=T)]
+reg_df_negative[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(initial_duration_in_days_i,
+                    probs=c(0.05,0.95),
+                    na.rm=T)]
+reg_df_negative[,winsorized_initial_budget_i:=
+                    Winsorize(base_and_all_options_value,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+reg_df_negative[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+```
+
+```{r non_zero_delays,include=FALSE}
+reg_df_non_zero=subset(reg_df,percentage_delay!=0 & !is.infinite(percentage_delay))
+reg_df_non_zero[,winsorized_delay:=Winsorize(delay,na.rm=T)]
+reg_df_non_zero[,wins_percentage_delay:=Winsorize(100*percentage_delay,na.rm=T)]
+reg_df_non_zero[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(initial_duration_in_days_i,
+                    probs=c(0.05,0.95),
+                    na.rm=T)]
+reg_df_non_zero[,winsorized_initial_budget_i:=
+                    Winsorize(base_and_all_options_value,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+reg_df_non_zero[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
 ```
 # Percentage delays over time
 
@@ -173,7 +236,7 @@ reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,na.rm=T)]
 
 
 ```{r plot_pc_delay, echo=FALSE, results='asis'}
-mean_delay=reg_df[!is.na(wins_percentage_delay) 
+mean_delay=reg_df_non_zero[!is.na(wins_percentage_delay) 
                   & action_date_year_quarter<=as.Date('2012-06-30'), 
               mean(wins_percentage_delay),  
               by = c('action_date_year_quarter','business_type')]
@@ -271,6 +334,7 @@ $$ \begin{aligned} PercentDelay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}$$
 
+## Non-zero Delays
 
 ```{r baseline_regressions, echo=FALSE, results='asis'}
 # Baseline Regressions 
@@ -280,70 +344,70 @@ baseline_reg=felm(wins_percentage_delay~treat_i+
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
-                  data=reg_df, 
+                  data=reg_df_non_zero, 
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 # time fixed effects also included in the following specs
 controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                            post_t:treat_i+
                            post_t+
-                           project_quarter_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             0|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_non_zero, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 # time fixed effects also included in the following specs
 controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                              post_t:treat_i+
-                           project_quarter_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_non_zero, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                               post_t:treat_i+
-                           project_quarter_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_non_zero, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                             post_t:treat_i+
-                           project_quarter_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_non_zero, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 base_table<-stargazer(baseline_reg,
@@ -364,17 +428,17 @@ base_table<-stargazer(baseline_reg,
           column.sep.width = "-2pt",
           add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
                            c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
-                           c("Project age","No",rep("Yes",4)),
+                           c("Project stage","No",rep("Yes",4)),
                            c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
-                   'post_t:winsorized_initial_duration_in_days_i',
-                   'post_t:winsorized_initial_budget_i',
+                   'post_t:log(1+winsorized_initial_duration_in_days_i)',
+                   'post_t:log(1+winsorized_initial_budget_i)',
                    'post_t:number_of_offers_received',
-                   'project_quarter_tercile'),
+                   'wins_project_quarter_stage'),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
@@ -388,6 +452,241 @@ write(base_table_tex,
 
 ```
 
+## Positive Delays
+
+```{r baseline_regressions_positive, echo=FALSE, results='asis'}
+# Baseline Regressions 
+baseline_reg=felm(wins_percentage_delay~treat_i+
+                     post_t:treat_i+
+                     post_t|
+                    0| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df_positive, 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+# time fixed effects also included in the following specs
+controls_and_no_fe=felm(wins_percentage_delay~treat_i+
+                           post_t:treat_i+
+                           post_t+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            0|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df_positive, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+# time fixed effects also included in the following specs
+controls_and_time_fe=felm(wins_percentage_delay~treat_i+
+                             post_t:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df_positive, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+controls_time_task_fe=felm(wins_percentage_delay~treat_i+
+                              post_t:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df_positive, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+controls_and_all_fe=felm(wins_percentage_delay~treat_i+
+                            post_t:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df_positive, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+base_table<-stargazer(baseline_reg,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
+          title = "Effect of QuickPay on project delay rates",
+          dep.var.labels="$PercentDelay_{it}$",
+          dep.var.caption = "",
+          covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          digits=2,
+          digits.extra=2,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
+                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
+                           c("Project stage","No",rep("Yes",4)),
+                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Task fixed effects",rep("No",3),rep("Yes",2)),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
+          omit=c('winsorized_initial_duration_in_days_i',
+                  'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'post_t:log(1+winsorized_initial_duration_in_days_i)',
+                   'post_t:log(1+winsorized_initial_budget_i)',
+                   'post_t:number_of_offers_received',
+                   'wins_project_quarter_stage'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level."),
+          header=F)
+
+base_table_tex=make_tex_pieces(base_table)
+# Write to file
+write(base_table_tex,
+      paste0(tables_folder,"/base_table_positive.tex"))
+
+```
+
+## Negative Delays
+
+```{r baseline_regressions_negative, echo=FALSE, results='asis'}
+# Baseline Regressions 
+baseline_reg=felm(wins_percentage_delay~treat_i+
+                     post_t:treat_i+
+                     post_t|
+                    0| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df_negative, 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+# time fixed effects also included in the following specs
+controls_and_no_fe=felm(wins_percentage_delay~treat_i+
+                           post_t:treat_i+
+                           post_t+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            0|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df_negative, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+# time fixed effects also included in the following specs
+controls_and_time_fe=felm(wins_percentage_delay~treat_i+
+                             post_t:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df_negative, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+controls_time_task_fe=felm(wins_percentage_delay~treat_i+
+                              post_t:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df_negative, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+controls_and_all_fe=felm(wins_percentage_delay~treat_i+
+                            post_t:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df_negative, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+base_table<-stargazer(baseline_reg,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
+          title = "Effect of QuickPay on project delay rates",
+          dep.var.labels="$PercentDelay_{it}$",
+          dep.var.caption = "",
+          covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          digits=2,
+          digits.extra=2,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
+                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
+                           c("Project stage","No",rep("Yes",4)),
+                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Task fixed effects",rep("No",3),rep("Yes",2)),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
+          omit=c('winsorized_initial_duration_in_days_i',
+                  'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'post_t:log(1+winsorized_initial_duration_in_days_i)',
+                   'post_t:log(1+winsorized_initial_budget_i)',
+                   'post_t:number_of_offers_received',
+                   'wins_project_quarter_stage'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level."),
+          header=F)
+
+base_table_tex=make_tex_pieces(base_table)
+# Write to file
+write(base_table_tex,
+      paste0(tables_folder,"/base_table_negative.tex"))
+
+```
 
 # Contract Financing
 
@@ -401,93 +700,98 @@ PercentDelay_{it} &=& \beta_0+\beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_
 \end{aligned}$$
 
 
-```{r contract_financing, echo=FALSE, results='asis'}
+```{r contract_financing, eval=FALSE, echo=FALSE}
 # Baseline Regressions 
 baseline_reg=felm(wins_percentage_delay~treat_i+
-                    post_t:treat_i+
-                     post_t+
-                    contract_financing_i+
-                    post_t:contract_financing_i+
-                    post_t:treat_i:contract_financing_i|
+                            post_t+
+                            treat_i:contract_financing_i+
+                            post_t:treat_i+
+                            contract_financing_i+
+                            post_t:contract_financing_i+
+                            post_t:treat_i:contract_financing_i|
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
-                  data=reg_df, 
+                  data=reg_df_non_zero, 
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
 controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                             post_t+
-                           project_quarter_tercile+
+                            treat_i:contract_financing_i+
                             post_t:treat_i+
                             contract_financing_i+
                             post_t:contract_financing_i+
                             post_t:treat_i:contract_financing_i+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             0|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_non_zero, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_time_fe=felm(wins_percentage_delay~treat_i+
-                           project_quarter_tercile+
+                            treat_i:contract_financing_i+
                             post_t:treat_i+
                             contract_financing_i+
                             post_t:contract_financing_i+
                             post_t:treat_i:contract_financing_i+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_non_zero, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 # time fixed effects also included in the following specs
 controls_time_task_fe=felm(wins_percentage_delay~treat_i+
-                           project_quarter_tercile+
+                            treat_i:contract_financing_i+
                             post_t:treat_i+
                             contract_financing_i+
                             post_t:contract_financing_i+
                             post_t:treat_i:contract_financing_i+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_non_zero, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_all_fe=felm(wins_percentage_delay~treat_i+
-                           project_quarter_tercile+
+                            treat_i:contract_financing_i+
                             post_t:treat_i+
                             contract_financing_i+
                             post_t:contract_financing_i+
                             post_t:treat_i:contract_financing_i+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_non_zero, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 vars.order=c('treat_i',
@@ -495,6 +799,7 @@ vars.order=c('treat_i',
               'treat_i:post_t',
               'contract_financing_i',
               'post_t:contract_financing_i',
+             'treat_i:contract_financing_i',
               'treat_i:post_t:contract_financing_i')
 contract_financing_table=stargazer(baseline_reg,
           controls_and_no_fe,
@@ -512,6 +817,7 @@ contract_financing_table=stargazer(baseline_reg,
                                "$Treat_i \\times Post_t$",
                                "$CF_i$",
                                "$Post_t \\times CF_i$",
+                               "$Treat_i \\times CF_i$",
                                "$Post_t \\times CF_i \\times Treat_i$",
                                "Constant"),
           object.names=FALSE, 
@@ -528,10 +834,10 @@ contract_financing_table=stargazer(baseline_reg,
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
-                   'post_t:winsorized_initial_duration_in_days_i',
-                   'post_t:winsorized_initial_budget_i',
+                   'post_t:log(1+winsorized_initial_duration_in_days_i)',
+                   'post_t:log(1+winsorized_initial_budget_i)',
                    'post_t:number_of_offers_received',
-                 'project_quarter_tercile'),
+                 'wins_project_quarter_stage'),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
@@ -563,8 +869,8 @@ $$ \begin{aligned} PercentDelay_{it} &=& \beta_0 +\beta_1 Treat_i+ \beta_2 SA_i+
 
 ```{r competition_delays_subsample, echo=FALSE, results='asis'}
 new_projects_after_quickpay=unique(subset(df_first_reported,action_date>as.Date('2011-04-27'))$contract_award_unique_key)
-reg_df[,project_signed_after_quickpay:=ifelse(contract_award_unique_key%in%new_projects_after_quickpay,1,0)]
-reg_df[,project_signed_before_quickpay:=ifelse(!contract_award_unique_key%in%new_projects_after_quickpay,1,0)]
+reg_df_non_zero[,project_signed_after_quickpay:=ifelse(contract_award_unique_key%in%new_projects_after_quickpay,1,0)]
+reg_df_non_zero[,project_signed_before_quickpay:=ifelse(!contract_award_unique_key%in%new_projects_after_quickpay,1,0)]
 baseline_reg=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
@@ -573,7 +879,7 @@ baseline_reg=felm(wins_percentage_delay~treat_i+
                                   0| # no fixed effects
                                   0| # no IV
                                   contract_award_unique_key, # clustered at project level
-                                  data=subset(reg_df,competitively_awarded_i==1),
+                                  data=subset(reg_df_non_zero,competitively_awarded_i==1),
                                   exactDOF = TRUE,
                                   cmethod = "reghdfe")
 controls_and_no_fe=felm(wins_percentage_delay~treat_i+
@@ -581,71 +887,71 @@ controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
                                   post_t+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            project_quarter_tercile|
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            log(wins_project_quarter_stage)|
                             0|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_non_zero,competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            project_quarter_tercile|
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            log(wins_project_quarter_stage)|
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_non_zero,competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            project_quarter_tercile|
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            log(wins_project_quarter_stage)|
                             product_or_service_code+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_non_zero,competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            project_quarter_tercile|
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            log(wins_project_quarter_stage)|
                             naics_code+
                             product_or_service_code+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1), 
+                          data=subset(reg_df_non_zero,competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 competitive_projects_table=stargazer(baseline_reg,
@@ -679,10 +985,10 @@ competitive_projects_table=stargazer(baseline_reg,
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
-                   'post_t:winsorized_initial_duration_in_days_i',
-                   'post_t:winsorized_initial_budget_i',
+                   'post_t:log(1+winsorized_initial_duration_in_days_i)',
+                   'post_t:log(1+winsorized_initial_budget_i)',
                    'post_t:number_of_offers_received',
-                   'project_quarter_tercile'),
+                   'wins_project_quarter_stage'),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
@@ -701,7 +1007,7 @@ baseline_reg=felm(wins_percentage_delay~treat_i+
                                   0| # no fixed effects
                                   0| # no IV
                                   contract_award_unique_key, # clustered at project level
-                                  data=subset(reg_df,competitively_awarded_i==0),
+                                  data=subset(reg_df_non_zero,competitively_awarded_i==0),
                                   exactDOF = TRUE,
                                   cmethod = "reghdfe")
 controls_and_no_fe=felm(wins_percentage_delay~treat_i+
@@ -709,71 +1015,71 @@ controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
                                   post_t+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            project_quarter_tercile|
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            log(wins_project_quarter_stage)|
                             0|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==0), 
+                          data=subset(reg_df_non_zero,competitively_awarded_i==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            project_quarter_tercile|
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            log(wins_project_quarter_stage)|
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==0), 
+                          data=subset(reg_df_non_zero,competitively_awarded_i==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            project_quarter_tercile|
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            log(wins_project_quarter_stage)|
                             product_or_service_code+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==0), 
+                          data=subset(reg_df_non_zero,competitively_awarded_i==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
                                   treat_i:post_t:project_signed_after_quickpay+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            project_quarter_tercile|
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            log(wins_project_quarter_stage)|
                             naics_code+
                             product_or_service_code+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==0), 
+                          data=subset(reg_df_non_zero,competitively_awarded_i==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
@@ -807,10 +1113,10 @@ non_competitive_projects_table=stargazer(baseline_reg,
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
-                   'post_t:winsorized_initial_duration_in_days_i',
-                   'post_t:winsorized_initial_budget_i',
+                   'post_t:log(1+winsorized_initial_duration_in_days_i)',
+                   'post_t:log(1+winsorized_initial_budget_i)',
                    'post_t:number_of_offers_received',
-                   'project_quarter_tercile'),
+                   'wins_project_quarter_stage'),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
@@ -847,7 +1153,7 @@ baseline_reg=felm(wins_percentage_delay~treat_i+
                                    0| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
-                                   data=reg_df,
+                                   data=reg_df_non_zero,
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 controls_and_no_fe_no_age=felm(wins_percentage_delay~treat_i+
@@ -861,16 +1167,16 @@ controls_and_no_fe_no_age=felm(wins_percentage_delay~treat_i+
                      treat_i:post_t:project_signed_after_quickpay+
                      treat_i:post_t:project_signed_after_quickpay:competitively_awarded_i+
                      post_t+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i|
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)|
                                    0| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
-                                   data=reg_df,
+                                   data=reg_df_non_zero,
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 controls_and_no_fe=felm(wins_percentage_delay~treat_i+
@@ -884,17 +1190,17 @@ controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                      treat_i:post_t:project_signed_after_quickpay+
                      treat_i:post_t:project_signed_after_quickpay:competitively_awarded_i+
                      post_t+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            project_quarter_tercile|
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            log(wins_project_quarter_stage)|
                                    0| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
-                                   data=reg_df,
+                                   data=reg_df_non_zero,
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 controls_and_time_fe=felm(wins_percentage_delay~treat_i+
@@ -907,17 +1213,17 @@ controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                      treat_i:post_t:competitively_awarded_i+
                      treat_i:post_t:project_signed_after_quickpay+
                      treat_i:post_t:project_signed_after_quickpay:competitively_awarded_i+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            project_quarter_tercile|
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            log(wins_project_quarter_stage)|
                                    action_date_year_quarter| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
-                                   data=reg_df,
+                                   data=reg_df_non_zero,
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 controls_time_task_fe=felm(wins_percentage_delay~treat_i+
@@ -930,18 +1236,18 @@ controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                      treat_i:post_t:competitively_awarded_i+
                      treat_i:post_t:project_signed_after_quickpay+
                      treat_i:post_t:project_signed_after_quickpay:competitively_awarded_i+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            project_quarter_tercile|
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            log(wins_project_quarter_stage)|
                                    action_date_year_quarter+
                        product_or_service_code| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
-                                   data=reg_df,
+                                   data=reg_df_non_zero,
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 controls_and_all_fe=felm(wins_percentage_delay~treat_i+
@@ -954,18 +1260,18 @@ controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                      treat_i:post_t:competitively_awarded_i+
                      treat_i:post_t:project_signed_after_quickpay+
                      treat_i:post_t:project_signed_after_quickpay:competitively_awarded_i+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
-                            project_quarter_tercile|
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            log(wins_project_quarter_stage)|
                                    action_date_year_quarter+
                        product_or_service_code+naics_code| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
-                                   data=reg_df,
+                                   data=reg_df_non_zero,
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 four_way_interaction_table=stargazer(baseline_reg,
@@ -1006,10 +1312,10 @@ four_way_interaction_table=stargazer(baseline_reg,
           omit=c('winsorized_initial_duration_in_days_i',
                   'winsorized_initial_budget_i',
                    'number_of_offers_received',
-                   'post_t:winsorized_initial_duration_in_days_i',
-                   'post_t:winsorized_initial_budget_i',
+                   'post_t:log(1+winsorized_initial_duration_in_days_i)',
+                   'post_t:log(1+winsorized_initial_budget_i)',
                    'post_t:number_of_offers_received',
-                   'project_quarter_tercile'),
+                   'wins_project_quarter_stage'),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",

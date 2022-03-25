@@ -29,6 +29,7 @@ library(broom)
 library(fixest)
 library(data.table)
 library(scales)
+library(coefplot)
 library(MatchIt)
 ```
 
@@ -245,6 +246,57 @@ ggplot(mean_delay, aes(x=year_quarter,
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
     legend.text = element_text(size=11))
+```
+
+## Demeaned delay rate (in percentage)
+
+* Subtract the average pre-quickpay delay rate from each observation
+
+
+```{r demeaned_plot,echo=FALSE,results='asis'}
+pre_qp_mean_small=mean(subset(mean_delay,
+                         action_date_year_quarter<=as.Date('2011-04-27') &
+                           business_type=="S")$V1,na.rm=T)
+pre_qp_mean_large=mean(subset(mean_delay,
+                              action_date_year_quarter<=as.Date('2011-04-27') &
+                                business_type=="O")$V1,na.rm=T)
+
+mean_delay[,demeaned_delay:=ifelse(business_type=="S",
+                                   V1-pre_qp_mean_small,
+                                   V1-pre_qp_mean_large)]
+
+ggplot(mean_delay, aes(x=year_quarter,
+                       y=demeaned_delay, 
+                       group = business_type))+
+  geom_line(aes(linetype=business_type, color=business_type),
+            alpha=0.7) +    
+  scale_x_discrete(limits=mean_delay$year_quarter)+
+  geom_point(aes(shape=business_type),size=1.5)+  
+  annotate("text", label = "QuickPay", x = 12, y = 3.13,color="dimgrey")+
+  geom_vline(xintercept = 10.2, linetype="solid", 
+             color = "light gray", size=1) +
+  theme_minimal()+
+  labs(x="Year-Quarter", 
+       y = "Average percentage delay rate per quarter")+
+  scale_linetype_manual(name  ="Business Size",
+                        breaks=c("O", "S"),
+                        labels=c("Large", "Small"),
+                        values=c("solid","dashed"))+
+  scale_color_manual(name  ="Business Size",
+                     breaks=c("O", "S"),
+                     labels=c("Large", "Small"),
+                     values=c('gray','black'))+
+  scale_shape_manual(name  ="Business Size",
+                     breaks=c("O", "S"),
+                     labels=c("Large", "Small"),
+                     values=c(1,2))+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11))
 ```
 
 ## Normalized delay rate (in percentage)
@@ -682,6 +734,116 @@ stargazer(m1,m2,m3,m4,m5,
 
 ```
 
+## Stage Quintile Regression Plots
+
+```{r stage_quintile, echo=FALSE,results='asis'}
+
+
+reg_df[,stage_quintile:=as.factor(ntile(project_quarter_stage,5))]
+
+# tidy(lm(wins_percentage_delay~treat_i*post_t*num_projects_tile,
+#         data=reg_df))
+
+m1=felm(wins_percentage_delay~treat_i+
+               treat_i:post_t+
+            log(1+winsorized_initial_duration_in_days_i)+
+            log(1+winsorized_initial_budget_i)+
+            number_of_offers_received+
+            post_t:log(1+winsorized_initial_duration_in_days_i)+
+            post_t:log(1+winsorized_initial_budget_i)+
+            post_t:number_of_offers_received|
+            naics_code+product_or_service_code+action_date_year_quarter|
+            0|
+            contract_award_unique_key,
+          data=subset(reg_df,stage_quintile=="1"),
+          exactDOF = TRUE, 
+          cmethod = "reghdfe")
+
+
+m2=felm(wins_percentage_delay~treat_i+
+          treat_i:post_t+
+          log(1+winsorized_initial_duration_in_days_i)+
+          log(1+winsorized_initial_budget_i)+
+          number_of_offers_received+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:number_of_offers_received|
+          naics_code+product_or_service_code+action_date_year_quarter|
+          0|
+          contract_award_unique_key,
+        data=subset(reg_df,stage_quintile=="2"),
+        exactDOF = TRUE, 
+        cmethod = "reghdfe")
+
+m3=felm(wins_percentage_delay~treat_i+
+             treat_i:post_t+
+             log(1+winsorized_initial_duration_in_days_i)+
+             log(1+winsorized_initial_budget_i)+
+             number_of_offers_received+
+             post_t:log(1+winsorized_initial_duration_in_days_i)+
+             post_t:log(1+winsorized_initial_budget_i)+
+             post_t:number_of_offers_received|
+             naics_code+product_or_service_code+action_date_year_quarter|
+             0|
+             contract_award_unique_key,
+           data=subset(reg_df,stage_quintile=="3"),
+           exactDOF = TRUE, 
+           cmethod = "reghdfe")
+
+m4=felm(wins_percentage_delay~treat_i+
+          treat_i:post_t+
+          log(1+winsorized_initial_duration_in_days_i)+
+          log(1+winsorized_initial_budget_i)+
+          number_of_offers_received+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:number_of_offers_received|
+          naics_code+product_or_service_code+action_date_year_quarter|
+          0|
+          contract_award_unique_key,
+        data=subset(reg_df,stage_quintile=="4"),
+        exactDOF = TRUE, 
+        cmethod = "reghdfe")
+
+m5=felm(wins_percentage_delay~treat_i+
+          treat_i:post_t+
+          log(1+winsorized_initial_duration_in_days_i)+
+          log(1+winsorized_initial_budget_i)+
+          number_of_offers_received+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:number_of_offers_received|
+          naics_code+product_or_service_code+action_date_year_quarter|
+          0|
+          contract_award_unique_key,
+        data=subset(reg_df,stage_quintile=="5" & 
+                      project_quarter_stage<100),
+        exactDOF = TRUE, 
+        cmethod = "reghdfe")
+
+data_to_plot=multiplot(m1,m2,m3,m4,m5,
+          coefficients ="treat_i:post_t",
+          plot=F)
+data_to_plot=setDT(data_to_plot)
+data_to_plot[,`Project stage quintile`:=c(1,2,3,4,5)]
+data_to_plot[,`Project stage quintile`:=as.factor(`Project stage quintile`)]
+
+ggplot(data_to_plot,aes(x=`Project stage quintile`,y=Value))+
+  geom_point(size=2,alpha=0.7)+
+  geom_errorbar(aes(ymin = LowInner, 
+                    ymax = HighInner),
+                width=0.05,
+                alpha=0.5)+
+theme_minimal()+ 
+  theme(panel.border = element_rect(color="black",fill=NA), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        plot.title = element_text(hjust = 0.5))+
+  theme(legend.position="bottom")+
+  ylab("Point estimate")
+```
+
+## Logged Stage Regressions
 ```{r stage_regs_log, warning=FALSE, echo=FALSE, results='asis'}
 
 m1=felm(wins_percentage_delay~treat_i+
@@ -988,9 +1150,13 @@ fixest::iplot(mod_twfe,
       grid=F,
       ylim.add=0.20,
       zero.par=list(lwd=0.5),
-      ci.fill = T,
+      #ci.fill = T,
       pt.join = T,
       x=c(-5:4))
+
+# f=fixest::iplot(mod_twfe,only.params=T,
+#       x=c(-5:4))
+# f$prms
 ```
 
 # Contract Financing
