@@ -734,107 +734,49 @@ stargazer(m1,m2,m3,m4,m5,
 
 ```
 
-## Stage Quintile Regression Plots
+## Stage quintile Regression Plots
 
-```{r stage_quintile, echo=FALSE,results='asis'}
+```{r stage_quintile, echo=FALSE, results='asis'}
 
+reg_df[,stage_quintile:=ntile(project_quarter_stage,10)]
 
-reg_df[,stage_quintile:=as.factor(ntile(project_quarter_stage,5))]
+df_main=data.frame()
+for(i in 1:length(unique(reg_df$stage_quintile))){
+#  print(i)
+  tryCatch({
+  a=tidy(felm(wins_percentage_delay~treat_i+
+                treat_i:post_t+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                number_of_offers_received+
+                post_t:log(1+winsorized_initial_duration_in_days_i)+
+                post_t:log(1+winsorized_initial_budget_i)+
+                post_t:number_of_offers_received|
+                naics_code+product_or_service_code+action_date_year_quarter|
+                0|
+                contract_award_unique_key,
+              data=subset(reg_df,project_quarter_stage<=100 &
+                            stage_quintile==i),
+              exactDOF = TRUE, 
+              cmethod = "reghdfe"),
+              conf.int=T)[5,]
+    a['Project stage quintile']=i
+    assign(paste0("df", i), value = a)
+    df_main=rbind(df_main,get(paste0("df", i)))}, error=function(e){})
+}
 
-# tidy(lm(wins_percentage_delay~treat_i*post_t*num_projects_tile,
-#         data=reg_df))
+setDT(df_main)[,`Project stage quintile`:=as.factor(`Project stage quintile`)]
 
-m1=felm(wins_percentage_delay~treat_i+
-               treat_i:post_t+
-            log(1+winsorized_initial_duration_in_days_i)+
-            log(1+winsorized_initial_budget_i)+
-            number_of_offers_received+
-            post_t:log(1+winsorized_initial_duration_in_days_i)+
-            post_t:log(1+winsorized_initial_budget_i)+
-            post_t:number_of_offers_received|
-            naics_code+product_or_service_code+action_date_year_quarter|
-            0|
-            contract_award_unique_key,
-          data=subset(reg_df,stage_quintile=="1"),
-          exactDOF = TRUE, 
-          cmethod = "reghdfe")
-
-
-m2=felm(wins_percentage_delay~treat_i+
-          treat_i:post_t+
-          log(1+winsorized_initial_duration_in_days_i)+
-          log(1+winsorized_initial_budget_i)+
-          number_of_offers_received+
-          post_t:log(1+winsorized_initial_duration_in_days_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
-          post_t:number_of_offers_received|
-          naics_code+product_or_service_code+action_date_year_quarter|
-          0|
-          contract_award_unique_key,
-        data=subset(reg_df,stage_quintile=="2"),
-        exactDOF = TRUE, 
-        cmethod = "reghdfe")
-
-m3=felm(wins_percentage_delay~treat_i+
-             treat_i:post_t+
-             log(1+winsorized_initial_duration_in_days_i)+
-             log(1+winsorized_initial_budget_i)+
-             number_of_offers_received+
-             post_t:log(1+winsorized_initial_duration_in_days_i)+
-             post_t:log(1+winsorized_initial_budget_i)+
-             post_t:number_of_offers_received|
-             naics_code+product_or_service_code+action_date_year_quarter|
-             0|
-             contract_award_unique_key,
-           data=subset(reg_df,stage_quintile=="3"),
-           exactDOF = TRUE, 
-           cmethod = "reghdfe")
-
-m4=felm(wins_percentage_delay~treat_i+
-          treat_i:post_t+
-          log(1+winsorized_initial_duration_in_days_i)+
-          log(1+winsorized_initial_budget_i)+
-          number_of_offers_received+
-          post_t:log(1+winsorized_initial_duration_in_days_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
-          post_t:number_of_offers_received|
-          naics_code+product_or_service_code+action_date_year_quarter|
-          0|
-          contract_award_unique_key,
-        data=subset(reg_df,stage_quintile=="4"),
-        exactDOF = TRUE, 
-        cmethod = "reghdfe")
-
-m5=felm(wins_percentage_delay~treat_i+
-          treat_i:post_t+
-          log(1+winsorized_initial_duration_in_days_i)+
-          log(1+winsorized_initial_budget_i)+
-          number_of_offers_received+
-          post_t:log(1+winsorized_initial_duration_in_days_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
-          post_t:number_of_offers_received|
-          naics_code+product_or_service_code+action_date_year_quarter|
-          0|
-          contract_award_unique_key,
-        data=subset(reg_df,stage_quintile=="5" & 
-                      project_quarter_stage<100),
-        exactDOF = TRUE, 
-        cmethod = "reghdfe")
-
-data_to_plot=multiplot(m1,m2,m3,m4,m5,
-          coefficients ="treat_i:post_t",
-          plot=F)
-data_to_plot=setDT(data_to_plot)
-data_to_plot[,`Project stage quintile`:=c(1,2,3,4,5)]
-data_to_plot[,`Project stage quintile`:=as.factor(`Project stage quintile`)]
-
-ggplot(data_to_plot,aes(x=`Project stage quintile`,y=Value))+
+# Instead of having a zero line, show gray as p.value>0.1 & black as p.value<0.1
+ggplot(df_main,
+       aes(x=`Project stage quintile`,y=estimate))+
   geom_point(size=2,alpha=0.7)+
-  geom_errorbar(aes(ymin = LowInner, 
-                    ymax = HighInner),
+  geom_errorbar(aes(ymin = conf.low, 
+                    ymax = conf.high),
                 width=0.05,
                 alpha=0.5)+
-theme_minimal()+ 
+  geom_hline(yintercept =0)+
+  theme_minimal()+ 
   theme(panel.border = element_rect(color="black",fill=NA), 
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), 
@@ -844,6 +786,7 @@ theme_minimal()+
 ```
 
 ## Logged Stage Regressions
+
 ```{r stage_regs_log, warning=FALSE, echo=FALSE, results='asis'}
 
 m1=felm(wins_percentage_delay~treat_i+
@@ -1122,7 +1065,7 @@ stargazer(m1,m2,m3,m4,m5,
 
 # Event study
 
-$Delay_{it}=\beta_0 + beta_1 Treat_i + \beta_2 Treat_i \times Quarter_t + \gamma_{task} + \theta_{naics}+\lambda_{quarter}+\nu_{sub-agency}+\epsilon_{it}$
+$PercentDelay_{it}=\beta_0 + \beta_1 Treat_i + \beta_2 Treat_i \times Quarter_t + \gamma_{task} + \theta_{naics}+\lambda_{quarter}+\nu_{sub-agency}+\epsilon_{it}$
 
 ```{r event_study, echo=FALSE, results='asis'}
 
@@ -1144,19 +1087,33 @@ mod_twfe = fixest::feols(wins_percentage_delay ~ i(time_to_treat, treat_i, ref =
 		 cluster = ~contract_award_unique_key,
 		 data = reg_df)
 
-fixest::iplot(mod_twfe, 
+fixest::iplot(mod_twfe,
       xlab = 'Quarter relative to QuickPay',
       main = 'Effect on Average Percentage Delay Rate',
       grid=F,
-      ylim.add=0.20,
-      zero.par=list(lwd=0.5),
-      #ci.fill = T,
+      ylim.add=0.25,
+      zero.par=list(lwd=0.25),
+      ref.line.par = list(col = "black", lty=3, lwd=0.8), #lty= linetype, lwd=linewidth
       pt.join = T,
       x=c(-5:4))
 
-# f=fixest::iplot(mod_twfe,only.params=T,
-#       x=c(-5:4))
-# f$prms
+# data_event_study=fixest::iplot(mod_twfe,only.params=T,
+#       x=c(-5:4))$prms
+# 
+# ggplot(data_event_study,aes(x=as.factor(x),y=y))+
+#   geom_point(size=2,alpha=0.7)+
+#   geom_errorbar(aes(ymin = ci_low, 
+#                     ymax = ci_high),
+#                 width=0.05,
+#                 alpha=0.5)+
+#   geom_hline(yintercept =0)+
+# theme_minimal()+ 
+#   theme(panel.border = element_rect(color="black",fill=NA), 
+#         panel.grid.major = element_blank(),
+#         panel.grid.minor = element_blank(), 
+#         plot.title = element_text(hjust = 0.5))+
+#   theme(legend.position="bottom")+
+#   ylab("Point estimate")+ ylim(-1.05, 2.5)
 ```
 
 # Contract Financing
