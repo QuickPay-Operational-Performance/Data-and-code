@@ -734,11 +734,79 @@ stargazer(m1,m2,m3,m4,m5,
 
 ```
 
-## Stage quintile Regression Plots
+## Stage decile Regression Plots
+
+```{r stage_decile, echo=FALSE, results='asis'}
+
+reg_df[,stage_decile:=ntile(project_quarter_stage,10)]
+
+df_main=data.frame()
+for(i in 1:length(unique(reg_df$stage_decile))){
+#  print(i)
+  tryCatch({
+  a=tidy(felm(wins_percentage_delay~treat_i+
+                treat_i:post_t+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                number_of_offers_received+
+                post_t:log(1+winsorized_initial_duration_in_days_i)+
+                post_t:log(1+winsorized_initial_budget_i)+
+                post_t:number_of_offers_received|
+                naics_code+product_or_service_code+action_date_year_quarter|
+                0|
+                contract_award_unique_key,
+              data=subset(reg_df,project_quarter_stage<=100 &
+                            stage_decile==i),
+              exactDOF = TRUE, 
+              cmethod = "reghdfe"),
+              conf.int=T)[5,]
+    a['Project stage decile']=i
+    assign(paste0("df", i), value = a)
+    df_main=rbind(df_main,get(paste0("df", i)))}, error=function(e){})
+}
+
+setDT(df_main)[,`Project stage decile`:=as.factor(`Project stage decile`)]
+
+df_main[,color:=ifelse(p.value<=0.1,"black","dark grey")]
+
+# Instead of having a zero line, show gray as p.value>0.1 & black as p.value<0.1
+ggplot(df_main,
+       aes(x=`Project stage decile`,y=estimate))+
+  geom_point(size=2,alpha=0.7,color=df_main$color)+
+  geom_errorbar(aes(ymin = conf.low, 
+                    ymax = conf.high),
+                width=0.05,
+                alpha=0.7,
+                color=df_main$color)+
+  geom_hline(yintercept =0,alpha=0.6)+
+  theme_minimal()+ 
+  theme(panel.border = element_rect(color="black",fill=NA), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        plot.title = element_text(hjust = 0.5))+
+  theme(legend.position="bottom")+
+  ylab("Point estimate (Percentage Delay Rate)")
+
+
+min_value=subset(reg_df,project_quarter_stage>=0 & project_quarter_stage<=100 & !is.na(project_quarter_stage))[,round(min(project_quarter_stage),2),by=stage_decile][order(stage_decile)]
+
+setnames(min_value,'V1','Min stage')
+
+
+max_value=subset(reg_df,project_quarter_stage>=0 & project_quarter_stage<=100 & !is.na(project_quarter_stage))[,round(max(project_quarter_stage),2),by=stage_decile][order(stage_decile)]
+
+setnames(max_value,'V1','Max stage')
+
+stats_stage_decile=merge(min_value,max_value,by='stage_decile')
+print(stats_stage_decile)
+
+```
+
+## Stage Quintile
 
 ```{r stage_quintile, echo=FALSE, results='asis'}
 
-reg_df[,stage_quintile:=ntile(project_quarter_stage,10)]
+reg_df[,stage_quintile:=ntile(project_quarter_stage,5)]
 
 df_main=data.frame()
 for(i in 1:length(unique(reg_df$stage_quintile))){
@@ -767,22 +835,38 @@ for(i in 1:length(unique(reg_df$stage_quintile))){
 
 setDT(df_main)[,`Project stage quintile`:=as.factor(`Project stage quintile`)]
 
+df_main[,color:=ifelse(p.value<=0.1,"black","dark grey")]
+
 # Instead of having a zero line, show gray as p.value>0.1 & black as p.value<0.1
 ggplot(df_main,
        aes(x=`Project stage quintile`,y=estimate))+
-  geom_point(size=2,alpha=0.7)+
+  geom_point(size=2,alpha=0.7,color=df_main$color)+
   geom_errorbar(aes(ymin = conf.low, 
                     ymax = conf.high),
                 width=0.05,
-                alpha=0.5)+
-  geom_hline(yintercept =0)+
+                alpha=0.7,
+                color=df_main$color)+
+  geom_hline(yintercept =0,alpha=0.6)+
   theme_minimal()+ 
   theme(panel.border = element_rect(color="black",fill=NA), 
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), 
         plot.title = element_text(hjust = 0.5))+
   theme(legend.position="bottom")+
-  ylab("Point estimate")
+  ylab("Point estimate (Percentage Delay Rate)")
+
+
+min_value=subset(reg_df,project_quarter_stage>=0 & project_quarter_stage<=100 & !is.na(project_quarter_stage))[,round(min(project_quarter_stage),2),by=stage_quintile][order(stage_quintile)]
+
+setnames(min_value,'V1','Min stage')
+
+
+max_value=subset(reg_df,project_quarter_stage>=0 & project_quarter_stage<=100 & !is.na(project_quarter_stage))[,round(max(project_quarter_stage),2),by=stage_quintile][order(stage_quintile)]
+
+setnames(max_value,'V1','Max stage')
+
+stats_stage=merge(min_value,max_value,by='stage_quintile')
+print(stats_stage)
 ```
 
 ## Logged Stage Regressions
