@@ -764,7 +764,7 @@ for(i in 1:length(unique(reg_df$stage_decile))){
                 naics_code+product_or_service_code+action_date_year_quarter|
                 0|
                 contract_award_unique_key,
-              data=subset(reg_df,project_quarter_stage<=100 &
+              data=subset(reg_df,project_quarter_stage<=1 &
                             stage_decile==i),
               exactDOF = TRUE, 
               cmethod = "reghdfe"),
@@ -812,7 +812,7 @@ min_value=subset(reg_df,project_quarter_stage>=0 & project_quarter_stage<=100 & 
 setnames(min_value,'V1','Min stage')
 
 
-max_value=subset(reg_df,project_quarter_stage>=0 & project_quarter_stage<=100 & !is.na(project_quarter_stage))[,round(max(project_quarter_stage),2),by=stage_decile][order(stage_decile)]
+max_value=subset(reg_df,project_quarter_stage>=0 & project_quarter_stage<=1 & !is.na(project_quarter_stage))[,round(max(project_quarter_stage),2),by=stage_decile][order(stage_decile)]
 
 setnames(max_value,'V1','Max stage')
 
@@ -842,7 +842,7 @@ for(i in 1:length(unique(reg_df$stage_quintile))){
                 naics_code+product_or_service_code+action_date_year_quarter|
                 0|
                 contract_award_unique_key,
-              data=subset(reg_df,project_quarter_stage<=100 &
+              data=subset(reg_df,project_quarter_stage<=1 &
                             stage_quintile==i),
               exactDOF = TRUE, 
               cmethod = "reghdfe"),
@@ -884,12 +884,12 @@ ggsave(path=figures_folder,
        bg="white",
        filename = "stage_quintiles.png")
 
-min_value=subset(reg_df,project_quarter_stage>=0 & project_quarter_stage<=100 & !is.na(project_quarter_stage))[,round(min(project_quarter_stage),2),by=stage_quintile][order(stage_quintile)]
+min_value=subset(reg_df,project_quarter_stage>=0 & project_quarter_stage<=1 & !is.na(project_quarter_stage))[,round(min(project_quarter_stage),2),by=stage_quintile][order(stage_quintile)]
 
 setnames(min_value,'V1','Min stage')
 
 
-max_value=subset(reg_df,project_quarter_stage>=0 & project_quarter_stage<=100 & !is.na(project_quarter_stage))[,round(max(project_quarter_stage),2),by=stage_quintile][order(stage_quintile)]
+max_value=subset(reg_df,project_quarter_stage>=0 & project_quarter_stage<=1 & !is.na(project_quarter_stage))[,round(max(project_quarter_stage),2),by=stage_quintile][order(stage_quintile)]
 
 setnames(max_value,'V1','Max stage')
 
