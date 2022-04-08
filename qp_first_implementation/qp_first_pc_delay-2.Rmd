@@ -34,8 +34,8 @@ library(MatchIt)
 ```
 
 ```{r set_path_for_exporting, include=FALSE}
-# tables_folder='~/Desktop/Research/QuickPay/paper/Tables/percentage_delay_rate'
-# figures_folder='~/Desktop/Research/QuickPay/paper/Figures'
+tables_folder='~/Desktop/Research/QuickPay/paper/Tables/percentage_delay_rate'
+figures_folder='~/Desktop/Research/QuickPay/paper/Figures'
 data_folder='~/Dropbox/data_quickpay/qp_data/'
 ```
 
@@ -277,7 +277,7 @@ ggplot(mean_delay, aes(x=year_quarter,
              color = "light gray", size=1) +
   theme_minimal()+
   labs(x="Year-Quarter", 
-       y = "Average percentage delay rate per quarter")+
+       y = "Average percentage delay rate per quarter \n (demeaned by average delay rate before QuickPay)")+
   scale_linetype_manual(name  ="Business Size",
                         breaks=c("O", "S"),
                         labels=c("Large", "Small"),
@@ -297,6 +297,14 @@ ggplot(mean_delay, aes(x=year_quarter,
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         legend.text = element_text(size=11))
+
+ggsave(path=figures_folder,
+       bg="white",
+       width = 8,
+       height = 5,
+       filename = "pc_delay_demeaned.png")
+
+
 ```
 
 ## Normalized delay rate (in percentage)
@@ -339,10 +347,11 @@ ggplot(mean_delay, aes(x=year_quarter,
         panel.grid.minor = element_blank(),
     legend.text = element_text(size=11))
 
-# ggsave(path=figures_folder,
-#        width = 8,
-#        height = 5,
-#        filename = "pc_delay_normalized.png")
+ggsave(path=figures_folder,
+       width = 8,
+       height = 5,
+       bg="white",
+       filename = "pc_delay_normalized.png")
 
 ```
 
@@ -474,7 +483,7 @@ base_table<-stargazer(baseline_reg,
           add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
                            c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
                            c("Project stage","No",rep("Yes",4)),
-                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
@@ -490,10 +499,10 @@ base_table<-stargazer(baseline_reg,
                   "SEs are robust and clustered at the project level."),
           header=F)
 
-# base_table_tex=make_tex_pieces(base_table)
-# # Write to file
-# write(base_table_tex,
-#       paste0(tables_folder,"/base_table.tex"))
+base_table_tex=make_tex_pieces(base_table)
+# Write to file
+write(base_table_tex,
+      paste0(tables_folder,"/base_table.tex"))
 
 ```
 
@@ -717,7 +726,7 @@ stargazer(m1,m2,m3,m4,m5,
           column.sep.width = "-2pt",
           add.lines = list(
                            c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
-                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
@@ -767,18 +776,22 @@ for(i in 1:length(unique(reg_df$stage_decile))){
 
 setDT(df_main)[,`Project stage decile`:=as.factor(`Project stage decile`)]
 
-df_main[,color:=ifelse(p.value<=0.1,"black","dark grey")]
+#df_main[,color:=ifelse(p.value<=0.1,"black","dark grey")]
+
+df_main[,color:="black"]
 
 # Instead of having a zero line, show gray as p.value>0.1 & black as p.value<0.1
 ggplot(df_main,
-       aes(x=`Project stage decile`,y=estimate))+
-  geom_point(size=2,alpha=0.7,color=df_main$color)+
+       aes(x=`Project stage decile`,y=estimate,group=1))+
+  geom_point(size=1,alpha=0.7,color=df_main$color)+
+  geom_line(alpha=0.7,size=0.25)+
   geom_errorbar(aes(ymin = conf.low, 
                     ymax = conf.high),
                 width=0.05,
+                size=0.25,
                 alpha=0.7,
                 color=df_main$color)+
-  geom_hline(yintercept =0,alpha=0.6)+
+  geom_hline(yintercept =0,alpha=0.6,size=0.15)+
   theme_minimal()+ 
   theme(panel.border = element_rect(color="black",fill=NA), 
         panel.grid.major = element_blank(),
@@ -787,6 +800,12 @@ ggplot(df_main,
   theme(legend.position="bottom")+
   ylab("Point estimate (Percentage Delay Rate)")
 
+
+ggsave(path=figures_folder,
+       width = 8,
+       height = 5,
+       bg="white",
+       filename = "stage_deciles.png")
 
 min_value=subset(reg_df,project_quarter_stage>=0 & project_quarter_stage<=100 & !is.na(project_quarter_stage))[,round(min(project_quarter_stage),2),by=stage_decile][order(stage_decile)]
 
@@ -835,18 +854,22 @@ for(i in 1:length(unique(reg_df$stage_quintile))){
 
 setDT(df_main)[,`Project stage quintile`:=as.factor(`Project stage quintile`)]
 
-df_main[,color:=ifelse(p.value<=0.1,"black","dark grey")]
+#df_main[,color:=ifelse(p.value<=0.1,"black","dark grey")]
+
+df_main[,color:="black"]
 
 # Instead of having a zero line, show gray as p.value>0.1 & black as p.value<0.1
 ggplot(df_main,
-       aes(x=`Project stage quintile`,y=estimate))+
-  geom_point(size=2,alpha=0.7,color=df_main$color)+
+       aes(x=`Project stage quintile`,y=estimate,group=1))+
+  geom_point(size=1,alpha=0.7,color=df_main$color)+
+  geom_line(alpha=0.7,size=0.25)+
   geom_errorbar(aes(ymin = conf.low, 
                     ymax = conf.high),
                 width=0.05,
+                size=0.25,
                 alpha=0.7,
                 color=df_main$color)+
-  geom_hline(yintercept =0,alpha=0.6)+
+  geom_hline(yintercept =0,alpha=0.6,size=0.15)+
   theme_minimal()+ 
   theme(panel.border = element_rect(color="black",fill=NA), 
         panel.grid.major = element_blank(),
@@ -855,6 +878,11 @@ ggplot(df_main,
   theme(legend.position="bottom")+
   ylab("Point estimate (Percentage Delay Rate)")
 
+ggsave(path=figures_folder,
+       width = 8,
+       height = 5,
+       bg="white",
+       filename = "stage_quintiles.png")
 
 min_value=subset(reg_df,project_quarter_stage>=0 & project_quarter_stage<=100 & !is.na(project_quarter_stage))[,round(min(project_quarter_stage),2),by=stage_quintile][order(stage_quintile)]
 
@@ -964,7 +992,7 @@ m5=felm(wins_percentage_delay~treat_i+
         exactDOF = TRUE,
         cmethod = "reghdfe")
 
-stargazer(m1,m2,m3,m4,m5,
+stage_log_regs=stargazer(m1,m2,m3,m4,m5,
           digits=2,
           digits.extra=2,
           title = "Project Stage and QuickPay reform",
@@ -985,7 +1013,7 @@ stargazer(m1,m2,m3,m4,m5,
           column.sep.width = "-2pt",
           add.lines = list(
                            c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
-                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
@@ -999,6 +1027,11 @@ stargazer(m1,m2,m3,m4,m5,
           notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level."),
           header=F)
+
+stage_table_tex=make_tex_pieces(stage_log_regs)
+# Write to file
+write(stage_table_tex,
+      paste0(tables_folder,"/stage_table_tex.tex"))
 
 ```
 
@@ -1131,7 +1164,7 @@ stargazer(m1,m2,m3,m4,m5,
           column.sep.width = "-2pt",
           add.lines = list(
                            c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
-                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
@@ -1334,7 +1367,7 @@ contract_financing_table=stargazer(baseline_reg,
           add.lines = list(
                            c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project stage",rep("No",1),rep("Yes",4)),
-                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
@@ -1479,7 +1512,7 @@ contract_financing_table=stargazer(baseline_reg,
           add.lines = list(
                            c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project stage",rep("No",1),rep("Yes",4)),
-                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
@@ -1629,7 +1662,7 @@ contract_financing_table=stargazer(baseline_reg,
           add.lines = list(
                            c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project stage",rep("No",1),rep("Yes",4)),
-                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
@@ -1787,7 +1820,7 @@ contract_financing_table=stargazer(baseline_reg,
           add.lines = list(
                            c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project stage",rep("No",1),rep("Yes",4)),
-                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
@@ -1961,7 +1994,7 @@ financial_assistance_table=stargazer(baseline_reg,
           add.lines = list(
                            c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project stage",rep("No",1),rep("Yes",4)),
-                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
@@ -2106,7 +2139,7 @@ financial_assistance_table=stargazer(baseline_reg,
           add.lines = list(
                            c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project stage",rep("No",1),rep("Yes",4)),
-                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
@@ -2122,10 +2155,10 @@ financial_assistance_table=stargazer(baseline_reg,
                   "SEs are robust and clustered at the project level."),
           header=F)
 
-# financial_assistance_tex=make_tex_pieces(financial_assistance_table)
-# # Write to file
-# write(financial_assistance_tex,
-#       paste0(tables_folder,"/financial_assistance_table.tex"))
+financial_assistance_tex=make_tex_pieces(financial_assistance_table)
+# Write to file
+write(financial_assistance_tex,
+      paste0(tables_folder,"/financial_assistance_table_pre_qp.tex"))
 
 ```
 
@@ -2261,7 +2294,7 @@ contract_financing_table=stargazer(baseline_reg,
           add.lines = list(
                            c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
                            c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project stage",rep("No",1),rep("Yes",4)),
-                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('winsorized_initial_duration_in_days_i',
@@ -2410,10 +2443,10 @@ bidding_metrics_table=stargazer(bids,
                   "Sample restricted to fully competed projects."),
           header=F)
 
-# bidding_metrics_table_tex=make_tex_pieces(bidding_metrics_table)
-# # Write to file
-# write(bidding_metrics_table_tex,
-#       paste0(tables_folder,"/bidding_metrics_table.tex"))
+bidding_metrics_table_tex=make_tex_pieces(bidding_metrics_table)
+# Write to file
+write(bidding_metrics_table_tex,
+      paste0(tables_folder,"/bidding_metrics_table.tex"))
 
 ```
 
@@ -2558,7 +2591,7 @@ competitive_projects_table=stargazer(baseline_reg,
                            # c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
                            # c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
                            c("Project stage",rep("No",1),rep("Yes",4)),
-                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c(
@@ -2576,10 +2609,10 @@ competitive_projects_table=stargazer(baseline_reg,
                   "Sample restricted to fully competed projects."),
           header=F)
 
-# competitive_projects_tex=make_tex_pieces(competitive_projects_table)
-# # Write to file
-# write(competitive_projects_tex,
-#       paste0(tables_folder,"/competitive_projects_table.tex"))
+competitive_projects_tex=make_tex_pieces(competitive_projects_table)
+# Write to file
+write(competitive_projects_tex,
+      paste0(tables_folder,"/competitive_projects_table.tex"))
 
 ```
 
@@ -2694,7 +2727,7 @@ non_competitive_projects_table=stargazer(baseline_reg,
                            # c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
                            # c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),
                            c("Project stage",rep("No",1),rep("Yes",4)),
-                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c(
@@ -2712,10 +2745,10 @@ non_competitive_projects_table=stargazer(baseline_reg,
                   "Sample restricted to non-competed projects."),
           header=F)
 
-# non_competitive_projects_tex=make_tex_pieces(non_competitive_projects_table)
-# # Write to file
-# write(non_competitive_projects_tex,
-#       paste0(tables_folder,"/non_competitive_projects_table.tex"))
+non_competitive_projects_tex=make_tex_pieces(non_competitive_projects_table)
+# Write to file
+write(non_competitive_projects_tex,
+      paste0(tables_folder,"/non_competitive_projects_table.tex"))
 
 ```
 
@@ -2805,7 +2838,7 @@ competitive_projects_table_ii=stargazer(baseline_reg,
           column.sep.width = "-2pt",
           add.lines = list(
                            c("Project stage",rep("No",1),rep("Yes",4)),
-                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('wins_project_quarter_stage'),
@@ -2816,10 +2849,10 @@ competitive_projects_table_ii=stargazer(baseline_reg,
                   "Sample restricted to fully competed projects."),
           header=F)
 
-# competitive_projects_tex_ii=make_tex_pieces(competitive_projects_table_ii)
-# # Write to file
-# write(competitive_projects_tex_ii,
-#       paste0(tables_folder,"/competitive_projects_table_2.tex"))
+competitive_projects_tex_ii=make_tex_pieces(competitive_projects_table_ii)
+# Write to file
+write(competitive_projects_tex_ii,
+      paste0(tables_folder,"/competitive_projects_table_2.tex"))
 ```
 
 ```{r non_competition_subsample_ii, echo=FALSE, results='asis'}
@@ -2906,7 +2939,7 @@ non_competitive_projects_table_ii=stargazer(baseline_reg,
           column.sep.width = "-2pt",
           add.lines = list(
                            c("Project stage",rep("No",1),rep("Yes",4)),
-                           c("Year-Quarter fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
           omit=c('wins_project_quarter_stage'),
@@ -2917,10 +2950,10 @@ non_competitive_projects_table_ii=stargazer(baseline_reg,
                   "Sample restricted to non-competed projects."),
           header=F)
 
-# non_competitive_projects_tex_ii=make_tex_pieces(non_competitive_projects_table_ii)
-# # Write to file
-# write(non_competitive_projects_tex_ii,
-#       paste0(tables_folder,"/non_competitive_projects_table_2.tex"))
+non_competitive_projects_tex_ii=make_tex_pieces(non_competitive_projects_table_ii)
+# Write to file
+write(non_competitive_projects_tex_ii,
+      paste0(tables_folder,"/non_competitive_projects_table_2.tex"))
 
 ```
 
@@ -3104,7 +3137,7 @@ four_way_interaction_table=stargazer(baseline_reg,
                            # c("Duration, Budget, Bids",rep("No",1),rep("Yes",5)),
                            # c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",5)),
                            c("Project stage",rep("No",2),rep("Yes",4)),
-                           c("Year-Quarter fixed effects",rep("No",3),rep("Yes",3)),
+                           c("Time fixed effects",rep("No",3),rep("Yes",3)),
                            c("Task fixed effects",rep("No",4),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",5),rep("Yes",1))),
           omit=c(
@@ -3121,8 +3154,8 @@ four_way_interaction_table=stargazer(baseline_reg,
                   "SEs are robust and clustered at the project level."),
           header=F)
 
-# four_way_interaction_table_tex=make_tex_pieces(four_way_interaction_table)
-# # Write to file
-# write(four_way_interaction_table_tex,
-#       paste0(tables_folder,"/four_way_interaction_table.tex"))
+four_way_interaction_table_tex=make_tex_pieces(four_way_interaction_table)
+# Write to file
+write(four_way_interaction_table_tex,
+      paste0(tables_folder,"/four_way_interaction_table.tex"))
 ```
