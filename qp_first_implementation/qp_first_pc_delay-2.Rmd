@@ -273,11 +273,12 @@ ggplot(mean_delay, aes(x=year_quarter,
   scale_x_discrete(limits=mean_delay$year_quarter)+
   geom_point(aes(shape=business_type),size=1.5)+  
   annotate("text", label = "QuickPay", x = 12, y = 3.13,color="dimgrey")+
-  geom_vline(xintercept = 10.2, linetype="solid", 
-             color = "light gray", size=1) +
+  # geom_vline(xintercept = 10.2, linetype="solid", 
+  #            color = "light gray", size=1) +
+  geom_vline(xintercept =10.2,alpha=0.8,size=0.15,linetype="solid")+
   theme_minimal()+
   labs(x="Year-Quarter", 
-       y = "Average percentage delay rate per quarter \n (demeaned by average delay rate before QuickPay)")+
+       y = "Average percentage delay rate")+
   scale_linetype_manual(name  ="Business Size",
                         breaks=c("O", "S"),
                         labels=c("Large", "Small"),
@@ -296,7 +297,8 @@ ggplot(mean_delay, aes(x=year_quarter,
         panel.background = element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
-        legend.text = element_text(size=11))
+        legend.text = element_text(size=11))+
+  coord_fixed(ratio=2)
 
 ggsave(path=figures_folder,
        bg="white",
@@ -862,7 +864,7 @@ df_main[,color:="black"]
 ggplot(df_main,
        aes(x=`Project stage quintile`,y=estimate,group=1))+
   geom_point(size=1,alpha=0.7,color=df_main$color)+
-  geom_line(alpha=0.7,size=0.25)+
+ # geom_line(alpha=0.7,size=0.25)+
   geom_errorbar(aes(ymin = conf.low, 
                     ymax = conf.high),
                 width=0.05,
@@ -876,7 +878,8 @@ ggplot(df_main,
         panel.grid.minor = element_blank(), 
         plot.title = element_text(hjust = 0.5))+
   theme(legend.position="bottom")+
-  ylab("Point estimate (Percentage Delay Rate)")
+  ylab("Point estimate \n (Percentage Delay Rate)")+ 
+  coord_fixed(ratio=0.5)
 
 ggsave(path=figures_folder,
        width = 8,
@@ -1204,33 +1207,48 @@ mod_twfe = fixest::feols(wins_percentage_delay ~ i(time_to_treat, treat_i, ref =
 		 cluster = ~contract_award_unique_key,
 		 data = reg_df)
 
-fixest::iplot(mod_twfe,
-      xlab = 'Quarter relative to QuickPay',
-      main = 'Effect on Average Percentage Delay Rate',
-      grid=F,
-      ylim.add=0.25,
-      zero.par=list(lwd=0.25),
-      ref.line.par = list(col = "black", lty=3, lwd=0.8), #lty= linetype, lwd=linewidth
-      pt.join = T,
-      x=c(-5:4))
+# Default event study plot
+# fixest::iplot(mod_twfe,
+#       xlab = 'Quarter relative to QuickPay',
+#       main = 'Effect on Average Percentage Delay Rate',
+#       grid=F,
+#       ylim.add=0.25,
+#       zero.par=list(lwd=0.25),
+#       ref.line.par = list(col = "black", lty=3, lwd=0.8), #lty= linetype, lwd=linewidth
+#       pt.join = T,
+#       x=c(-5:4))
 
-# data_event_study=fixest::iplot(mod_twfe,only.params=T,
-#       x=c(-5:4))$prms
-# 
-# ggplot(data_event_study,aes(x=as.factor(x),y=y))+
-#   geom_point(size=2,alpha=0.7)+
-#   geom_errorbar(aes(ymin = ci_low, 
-#                     ymax = ci_high),
-#                 width=0.05,
-#                 alpha=0.5)+
-#   geom_hline(yintercept =0)+
-# theme_minimal()+ 
-#   theme(panel.border = element_rect(color="black",fill=NA), 
-#         panel.grid.major = element_blank(),
-#         panel.grid.minor = element_blank(), 
-#         plot.title = element_text(hjust = 0.5))+
-#   theme(legend.position="bottom")+
-#   ylab("Point estimate")+ ylim(-1.05, 2.5)
+data_event_study=fixest::iplot(mod_twfe,only.params=T,
+      x=c(-5:4))$prms
+setDT(data_event_study)[,`Quarter relative to QuickPay`:=as.factor(x)]
+
+ggplot(data_event_study,aes(x=`Quarter relative to QuickPay`,
+                            y=y,
+                            group=1))+
+  geom_point(size=1,alpha=0.7)+
+  geom_errorbar(aes(ymin = ci_low, 
+                    ymax = ci_high),
+                width=0.05,
+                size=0.25,
+                alpha=0.7)+
+  geom_line(alpha=0.7,size=0.25)+
+  geom_hline(yintercept =0,alpha=0.6,size=0.15)+
+  geom_vline(xintercept =5,alpha=0.8,size=0.15,linetype="solid")+
+  theme_minimal()+ 
+  theme(panel.border = element_rect(color="black",fill=NA), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        plot.title = element_text(hjust = 0.5))+
+  theme(legend.position="bottom")+
+  ylab("Point estimate \n (Percentage Delay Rate)")+ 
+  ylim(-1.05, 2.5)+ 
+  coord_fixed(ratio=1)
+
+ggsave(path=figures_folder,
+       width = 8,
+       height = 5,
+       bg="white",
+       filename = "event_study_plot.png")
 ```
 
 # Contract Financing

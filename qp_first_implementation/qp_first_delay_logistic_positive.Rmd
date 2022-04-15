@@ -283,7 +283,7 @@ setFixest_dict(c("treat_i"="$Treat_i$",
                  "naics_code"="NAICS code",
                  "action_date_year_quarter"="Time",
                  "contract_award_unique_key"="Project ID",
-                 "positive_delay"="I(Delay>0)"))
+                 "positive_delay"="$I(Delay>0)$"))
 
 etable(baseline_reg,
        controls_and_no_fe,
@@ -299,7 +299,7 @@ etable(baseline_reg,
               'Project stage',
               'Initial duration'),
        digits.stats = 2,
-       file=paste0(tables_folder,"/base_positive_logistic.tex"))
+       file=paste0(tables_folder,"/base_negative_logistic.tex"))
 
 # write(base_table_tex,
 #       paste0(tables_folder,"/base_positive_logistic.tex"))
@@ -407,7 +407,7 @@ setFixest_dict(c("treat_i"="$Treat_i$",
                  "naics_code"="NAICS code",
                  "action_date_year_quarter"="Time",
                  "contract_award_unique_key"="Project ID",
-                 "positive_delay"="I(Delay>0)"))
+                 "positive_delay"="$I(Delay>0)$"))
 
 etable(baseline_reg,
        controls_and_no_fe,
@@ -535,7 +535,7 @@ setFixest_dict(c("treat_i"="$Treat_i$",
                  "naics_code"="NAICS code",
                  "action_date_year_quarter"="Time",
                  "contract_award_unique_key"="Project ID",
-                 "positive_delay"="I(Delay>0)"))
+                 "positive_delay"="$I(Delay>0)$"))
 
 etable(baseline_reg,
        controls_and_no_fe,
@@ -645,7 +645,7 @@ setFixest_dict(c("treat_i"="$Treat_i$",
                  "naics_code"="NAICS code",
                  "action_date_year_quarter"="Time",
                  "contract_award_unique_key"="Project ID",
-                 "positive_delay"="I(Delay>0)"))
+                 "positive_delay"="$I(Delay>0)$"))
 
 etable(baseline_reg,
        controls_and_no_fe,
@@ -786,7 +786,7 @@ setFixest_dict(c("treat_i"="$Treat_i$",
                  "naics_code"="NAICS code",
                  "action_date_year_quarter"="Time",
                  "contract_award_unique_key"="Project ID",
-                 "positive_delay"="I(Delay>0)",
+                 "positive_delay"="$I(Delay>0)$",
                  "competitively_awarded_i"="$Competitive_i$"))
 
 etable(baseline_reg,
