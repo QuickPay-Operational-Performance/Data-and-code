@@ -283,7 +283,7 @@ setFixest_dict(c("treat_i"="$Treat_i$",
                  "naics_code"="NAICS code",
                  "action_date_year_quarter"="Time",
                  "contract_award_unique_key"="Project ID",
-                 "negative_delay"="$I(Delay<0)$"))
+                 "negative_delay"="$I(Delay_{it}<0)$"))
 
 etable(baseline_reg,
        controls_and_no_fe,
@@ -299,10 +299,10 @@ etable(baseline_reg,
               'Project stage',
               'Initial duration'),
        digits.stats = 2,
-       file=paste0(tables_folder,"/base_positive_logistic.tex"))
+       file=paste0(tables_folder,"/base_negative_logistic.tex"))
 
 # write(base_table_tex,
-#       paste0(tables_folder,"/base_positive_logistic.tex"))
+#       paste0(tables_folder,"/base_negative_logistic.tex"))
 
 ```
 
@@ -422,6 +422,8 @@ etable(baseline_reg,
               'Number of offers received',
               'Project stage',
               'Initial duration'),
+       extralines=list("Controls"=c("", rep("Yes",4)),
+                       "Controls $\\times Post_t$"=c("", rep("Yes",4))),
        digits.stats = 2)
 
 ```

@@ -248,10 +248,9 @@ ggplot(mean_delay, aes(x=year_quarter,
     legend.text = element_text(size=11))
 ```
 
-## Demeaned delay rate (in percentage)
+# Demeaned delay rate (in percentage)
 
 * Subtract the average pre-quickpay delay rate from each observation
-
 
 ```{r demeaned_plot,echo=FALSE,results='asis'}
 pre_qp_mean_small=mean(subset(mean_delay,
@@ -268,36 +267,37 @@ mean_delay[,demeaned_delay:=ifelse(business_type=="S",
 ggplot(mean_delay, aes(x=year_quarter,
                        y=demeaned_delay, 
                        group = business_type))+
-  geom_line(aes(linetype=business_type, color=business_type),
-            alpha=0.7) +    
+  geom_line(aes(linetype=business_type, color=business_type),alpha=0.7) +    
   scale_x_discrete(limits=mean_delay$year_quarter)+
   geom_point(aes(shape=business_type),size=1.5)+  
-  annotate("text", label = "QuickPay", x = 12, y = 3.13,color="dimgrey")+
+#  annotate("text", label = "QuickPay", x = 12, y = 3.13,color="dimgrey")+
   # geom_vline(xintercept = 10.2, linetype="solid", 
   #            color = "light gray", size=1) +
   geom_vline(xintercept =10.2,alpha=0.8,size=0.15,linetype="solid")+
   theme_minimal()+
-  labs(x="Year-Quarter", 
+  labs(x="Time", 
        y = "Average percentage delay rate")+
-  scale_linetype_manual(name  ="Business Size",
-                        breaks=c("O", "S"),
-                        labels=c("Large", "Small"),
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", "O"),
+                        labels=c("Treated","Controls"),
                         values=c("solid","dashed"))+
-  scale_color_manual(name  ="Business Size",
-                     breaks=c("O", "S"),
-                     labels=c("Large", "Small"),
-                     values=c('gray','black'))+
-  scale_shape_manual(name  ="Business Size",
-                     breaks=c("O", "S"),
-                     labels=c("Large", "Small"),
-                     values=c(1,2))+
+  scale_color_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Controls"),
+                     values=c('black','black'))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Controls"),
+                     values=c(16,17))+
   theme(axis.text.x = element_text(angle = 90),
         axis.line = element_blank(),
         panel.border = element_rect(fill=NA),
         panel.background = element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
-        legend.text = element_text(size=11))+
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))+
   coord_fixed(ratio=2)
 
 ggsave(path=figures_folder,
@@ -305,8 +305,6 @@ ggsave(path=figures_folder,
        width = 8,
        height = 5,
        filename = "pc_delay_demeaned.png")
-
-
 ```
 
 ## Normalized delay rate (in percentage)
@@ -2180,6 +2178,58 @@ write(financial_assistance_tex,
 
 ```
 
+```{r financial_assistance_plot, echo=FALSE, results='asis'}
+
+reg_df_fin=subset(reg_df,initial_start_date<=as.Date('2011-04-26'))
+df_main=data.frame()
+for(i in 1:length(unique(reg_df_fin$receives_financial_assistance))){
+#  print(i)
+  tryCatch({
+  a=tidy(felm(wins_percentage_delay~treat_i+
+                treat_i:post_t+
+                log(wins_project_quarter_stage)|
+                naics_code+product_or_service_code+action_date_year_quarter|
+                0|
+                contract_award_unique_key,
+              data=subset(reg_df_fin,receives_financial_assistance==i-1),
+              exactDOF = TRUE, 
+              cmethod = "reghdfe"),
+              conf.int=T)[3,]
+    a['Contractor receives financial assistance']=ifelse(i-1==1,"Yes","No")
+    assign(paste0("df", i), value = a)
+    df_main=rbind(df_main,get(paste0("df", i)))}, error=function(e){})
+}
+
+#setDT(df_main)[,color:=ifelse(p.value<=0.1,"black","dark grey")]
+
+setDT(df_main)[,color:='black']
+
+# Instead of having a zero line, show gray as p.value>0.1 & black as p.value<0.1
+ggplot(df_main,
+       aes(x=`Contractor receives financial assistance`,y=estimate,group=1))+
+  geom_point(size=1,alpha=0.7,color=df_main$color)+
+  geom_errorbar(aes(ymin = conf.low, 
+                    ymax = conf.high),
+                width=0.05,
+                size=0.25,
+                alpha=0.7,
+                color=df_main$color)+
+#  geom_hline(yintercept =0,alpha=0.6,size=0.15)+
+  theme_minimal()+ 
+  theme(panel.border = element_rect(color="black",fill=NA), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        plot.title = element_text(hjust = 0.5))+
+  theme(legend.position="bottom")+
+  ylab("Point estimate \n (Percentage Delay Rate)")+ 
+  coord_fixed(ratio=0.10)
+
+ggsave(path=figures_folder,
+       width = 8,
+       height = 5,
+       bg="white",
+       filename = "financial_assistance_plot.png")
+```
 ## Firm level financial constraints (on/before June 2010)
 
 ```{r any_grants, echo=FALSE, results='asis'}
@@ -2767,6 +2817,102 @@ non_competitive_projects_tex=make_tex_pieces(non_competitive_projects_table)
 # Write to file
 write(non_competitive_projects_tex,
       paste0(tables_folder,"/non_competitive_projects_table.tex"))
+
+```
+
+```{r subsample_plot,echo=FALSE, results='asis'}
+
+# Get the value of "treat_i:post_t:project_signed_after_quickpay" for competed & 
+# non-competed projects 
+
+df_main=data.frame()
+for(i in 1:length(unique(reg_df$competitively_awarded_i))){
+#  print(i)
+  tryCatch({
+  results=tidy(felm(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t:project_signed_before_quickpay+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                                  log(wins_project_quarter_stage)|
+                naics_code+product_or_service_code+action_date_year_quarter|
+                0|
+                contract_award_unique_key,
+              data=subset(reg_df,competitively_awarded_i==i-1),
+              exactDOF = TRUE, 
+              cmethod = "reghdfe"),
+              conf.int=T)
+    a=results[5,]
+    a['Project competitively awarded']=ifelse(i-1==1,"Competed","Not competed")
+    assign(paste0("df", i), value = a)
+    df_main=rbind(df_main,get(paste0("df", i)))}, error=function(e){})
+}
+
+# Get the value of "treat_i:post_t:project_signed_before_quickpay" for competed & 
+# non-competed projects 
+
+df_main_2=data.frame()
+for(i in 1:length(unique(reg_df$competitively_awarded_i))){
+#  print(i)
+  tryCatch({
+  results=tidy(felm(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t:project_signed_before_quickpay+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                                  log(wins_project_quarter_stage)|
+                naics_code+product_or_service_code+action_date_year_quarter|
+                0|
+                contract_award_unique_key,
+              data=subset(reg_df,competitively_awarded_i==i-1),
+              exactDOF = TRUE, 
+              cmethod = "reghdfe"),
+              conf.int=T)
+    a=results[4,]
+    a['Project competitively awarded']=ifelse(i-1==1,"Competed","Not competed")
+    assign(paste0("df", i), value = a)
+    df_main_2=rbind(df_main_2,get(paste0("df", i)))}, error=function(e){})
+}
+
+# combine in one for plots
+df_main=rbind(df_main,df_main_2)
+
+setDT(df_main)[,color:=ifelse(term=="treat_i:project_signed_after_quickpay:post_t",
+                              "red",
+                              "blue")]
+
+# Instead of having a zero line, show gray as p.value>0.1 & black as p.value<0.1
+plot=ggplot(df_main,
+       aes(x=`Project competitively awarded`,
+           y=estimate,
+           group=term))+
+  geom_point(aes(color=term),
+             size=1,
+             alpha=0.7,
+             position = position_dodge(width = 0.2))+
+  geom_errorbar(aes(ymin = conf.low, 
+                    ymax = conf.high,
+                    color=term),
+                width=0.05,
+                size=0.25,
+                alpha=0.7,
+                position = position_dodge(width = 0.2))+
+  scale_color_manual(values=c("blue","red"),
+                     labels=c("Project started before QuickPay","Project started after QuickPay"),
+                     name="")+
+  theme_minimal()+ 
+  theme(panel.border = element_rect(color="black",fill=NA), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        plot.title = element_text(hjust = 0.5))+
+  theme(legend.position="bottom")+ 
+  xlab("")+
+  ylab("Point estimate")+
+  coord_fixed(ratio=0.15)
+
+ggsave(path=figures_folder,
+       width = 8,
+       height = 5,
+       bg="white",
+       filename = "competition_plot.png")
 
 ```
 
