@@ -1,4 +1,10 @@
+library(panelView)
+library(data.table)
+
+data_folder='~/Dropbox/data_quickpay/qp_data/'
+
 df=fread(paste0(data_folder,'resampled_qp_data/qp_resampled_data_fy10_to_fy12_with_zero_obs.csv'))
+df[,action_date_year_quarter:=as.Date(action_date_year_quarter)]
 df[,treated:=ifelse(business_type=="S" &
                       action_date_year_quarter>=as.Date('2011-04-27'),1,0)]
 

@@ -31,6 +31,8 @@ library(data.table)
 library(scales)
 library(coefplot)
 library(MatchIt)
+library(pBrackets)
+library(grid)
 ```
 
 ```{r set_path_for_exporting, include=FALSE}
@@ -198,6 +200,107 @@ reg_df[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
 reg_df[,stage_aliter:=as.numeric(action_date_year_quarter-initial_start_date)/as.numeric(last_reported_end_date-initial_start_date)]
 ```
 
+# Delay days over time
+
+```{r plot_delay_days, echo=FALSE, results='asis'}
+mean_delay=reg_df[!is.na(winsorized_delay) 
+                  & action_date_year_quarter<=as.Date('2012-06-30'), 
+              mean(winsorized_delay),  
+              by = c('action_date_year_quarter','business_type')]
+mean_delay[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
+mean_delay=mean_delay[order(action_date_year_quarter,business_type)]
+
+ggplot(mean_delay, aes(x=year_quarter,
+                                   y=V1, 
+                                   group = business_type))+
+  geom_line(aes(linetype=business_type, color=business_type),
+            alpha=0.7) +    
+  scale_x_discrete(limits=mean_delay$year_quarter)+
+  geom_point(aes(shape=business_type),size=1.5)+  
+  annotate("text", label = "QuickPay", x = 12, y = 3.13,color="dimgrey")+
+  geom_vline(xintercept = 10.2, linetype="solid", 
+             color = "light gray", size=1) +
+  theme_minimal()+
+  labs(x="Year-Quarter", 
+       y = "Average delay rate (in days) per quarter")+
+  scale_linetype_manual(name  ="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"),
+                        values=c("solid","dashed"))+
+  scale_color_manual(name  ="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"),
+                     values=c('gray','black'))+
+  scale_shape_manual(name  ="Business Size",
+                          breaks=c("O", "S"),
+                          labels=c("Large", "Small"),
+                     values=c(1,2))+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+    legend.text = element_text(size=11))
+```
+
+# Delay days over time (de-meaned)
+
+```{r demeaned_plot_delay_days,echo=FALSE,results='asis'}
+pre_qp_mean_small=mean(subset(mean_delay,
+                         action_date_year_quarter<=as.Date('2011-04-27') &
+                           business_type=="S")$V1,na.rm=T)
+pre_qp_mean_large=mean(subset(mean_delay,
+                              action_date_year_quarter<=as.Date('2011-04-27') &
+                                business_type=="O")$V1,na.rm=T)
+
+mean_delay[,demeaned_delay:=ifelse(business_type=="S",
+                                   V1-pre_qp_mean_small,
+                                   V1-pre_qp_mean_large)]
+
+ggplot(mean_delay, aes(x=year_quarter,
+                       y=demeaned_delay, 
+                       group = business_type))+
+  geom_line(aes(linetype=business_type, color=business_type),alpha=0.7) +    
+  scale_x_discrete(limits=mean_delay$year_quarter)+
+  geom_point(aes(shape=business_type),size=1.5)+  
+#  annotate("text", label = "QuickPay", x = 12, y = 3.13,color="dimgrey")+
+  # geom_vline(xintercept = 10.2, linetype="solid", 
+  #            color = "light gray", size=1) +
+  geom_vline(xintercept =10.2,alpha=0.8,size=0.15,linetype="solid")+
+  theme_minimal()+
+  labs(x="Time", 
+       y = "Average delay rate (in days)")+
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", "O"),
+                        labels=c("Treated","Control"),
+                        values=c("solid","dashed"))+
+  scale_color_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c('black','black'))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c(16,17))+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))+
+  coord_fixed(ratio=1)
+
+ggsave(path=figures_folder,
+       bg="white",
+       width = 8,
+       height = 5,
+       filename = "delay_days_demeaned.png")
+```
+
 # Percentage delays over time
 
 * Sample restricted to projects for which start dates matches the one in API
@@ -279,15 +382,15 @@ ggplot(mean_delay, aes(x=year_quarter,
        y = "Average percentage delay rate")+
   scale_linetype_manual(name  ="",
                         breaks=c("S", "O"),
-                        labels=c("Treated","Controls"),
+                        labels=c("Treated","Control"),
                         values=c("solid","dashed"))+
   scale_color_manual(name  ="",
                      breaks=c("S", "O"),
-                     labels=c("Treated","Controls"),
+                     labels=c("Treated","Control"),
                      values=c('black','black'))+
   scale_shape_manual(name  ="",
                      breaks=c("S", "O"),
-                     labels=c("Treated","Controls"),
+                     labels=c("Treated","Control"),
                      values=c(16,17))+
   theme(axis.text.x = element_text(angle = 90),
         axis.line = element_blank(),
@@ -503,6 +606,349 @@ base_table_tex=make_tex_pieces(base_table)
 # Write to file
 write(base_table_tex,
       paste0(tables_folder,"/base_table.tex"))
+
+```
+
+# Event study
+
+$PercentDelay_{it}=\beta_0 + \beta_1 Treat_i + \beta_2 Treat_i \times Quarter_t + \gamma_{task} + \theta_{naics}+\lambda_{quarter}+\nu_{sub-agency}+\epsilon_{it}$
+
+```{r event_study, echo=FALSE, results='asis'}
+
+reg_df[,relative_quarter:=case_when(action_date_year_quarter=="2010-03-31"~-5,
+                  action_date_year_quarter=="2010-06-30"~-4,
+                  action_date_year_quarter=="2010-09-30"~-3,
+                  action_date_year_quarter=="2010-12-31"~-2,
+                  action_date_year_quarter=="2011-03-31"~-1,
+                  action_date_year_quarter=="2011-06-30"~0,
+                  action_date_year_quarter=="2011-09-30"~1,
+                  action_date_year_quarter=="2011-12-31"~2,
+                  action_date_year_quarter=="2012-03-31"~3,
+                  action_date_year_quarter=="2012-06-30"~4)]
+reg_df[, time_to_treat := ifelse(treat_i==1, relative_quarter, 0)]
+
+mod_twfe = fixest::feols(wins_percentage_delay ~ i(time_to_treat, treat_i, ref = -1) +
+                    	   	  treat_i|   
+		  awarding_sub_agency_code+naics_code+product_or_service_code+action_date_year_quarter,        
+		 cluster = ~contract_award_unique_key,
+		 data = reg_df)
+
+# Default event study plot
+# fixest::iplot(mod_twfe,
+#       xlab = 'Quarter relative to QuickPay',
+#       main = 'Effect on Average Percentage Delay Rate',
+#       grid=F,
+#       ylim.add=0.25,
+#       zero.par=list(lwd=0.25),
+#       ref.line.par = list(col = "black", lty=3, lwd=0.8), #lty= linetype, lwd=linewidth
+#       pt.join = T,
+#       x=c(-5:4))
+
+data_event_study=fixest::iplot(mod_twfe,only.params=T,
+      x=c(-5:4))$prms
+setDT(data_event_study)[,`Quarter relative to QuickPay`:=as.factor(x)]
+
+ggplot(data_event_study,aes(x=`Quarter relative to QuickPay`,
+                            y=y,
+                            group=1))+
+  geom_point(size=1,alpha=0.7)+
+  geom_errorbar(aes(ymin = ci_low, 
+                    ymax = ci_high),
+                width=0.05,
+                size=0.25,
+                alpha=0.7)+
+  geom_line(alpha=0.7,size=0.25)+
+  geom_hline(yintercept =0,alpha=0.6,size=0.15)+
+  geom_vline(xintercept =5,alpha=0.8,size=0.15,linetype="solid")+
+  theme_minimal()+ 
+  theme(panel.border = element_rect(color="black",fill=NA), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        plot.title = element_text(hjust = 0.5))+
+  theme(legend.position="bottom")+
+  ylab("Point estimate \n (Percentage Delay Rate)")+ 
+  ylim(-1.05, 2.5)+ 
+  coord_fixed(ratio=1)
+
+ggsave(path=figures_folder,
+       width = 8,
+       height = 5,
+       bg="white",
+       filename = "event_study_plot.png")
+```
+
+# Parallel Trends Test
+
+```{r parallel_trends_test, echo=FALSE, results='asis'}
+df_qn<-unique(reg_df,by='action_date_year_quarter')[,"action_date_year_quarter"]
+df_qn=df_qn[order(action_date_year_quarter)][,quarter_number:=seq.int(nrow(df_qn))]
+reg_df=merge(reg_df,df_qn,by='action_date_year_quarter')
+
+# Baseline Regressions 
+m1=felm(wins_percentage_delay~treat_i+
+                     quarter_number:treat_i+
+                    quarter_number|
+                    0| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=subset(reg_df, post_t==0),
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+
+# time fixed effects also included in the following specs
+
+m2=felm(wins_percentage_delay~treat_i+
+                           quarter_number:treat_i+
+                           quarter_number+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:number_of_offers_received|
+                            0|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, post_t==0),
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+# time fixed effects also included in the following specs
+m3=felm(wins_percentage_delay~treat_i+
+                             quarter_number:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, post_t==0), 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+m4=felm(wins_percentage_delay~treat_i+
+                              quarter_number:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, post_t==0), 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+m5=felm(wins_percentage_delay~treat_i+
+                            quarter_number:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, post_t==0), 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+stargazer(m1,m2,m3,m4,m5,
+          title = "Linear Time Trend Before QuickPay",
+          dep.var.labels="$PercentDelay_{it}$",
+          dep.var.caption = "",
+          covariate.labels = c("$Treat_i$","$QuarterNum$","$Treat_i \\times QuarterNum$","Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          digits=2,
+          digits.extra=2,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
+                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
+                           c("Project stage","No",rep("Yes",4)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Task fixed effects",rep("No",3),rep("Yes",2)),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
+          omit=c('winsorized_initial_duration_in_days_i',
+                  'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'quarter_number:winsorized_initial_duration_in_days_i',
+                   'quarter_number:winsorized_initial_budget_i',
+                   'quarter_number:number_of_offers_received',
+                   'wins_project_quarter_stage'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level.",
+                  "Observations are for quarters before quickpay."),
+          header=F)
+```
+
+# Placebo Test
+
+```{r placebo_regressions, eval=FALSE}
+
+reg_df_placebo=subset(reg_df,post_t==0)
+
+reg_df_placebo[,wins_percentage_delay:=Winsorize(100*percentage_delay,
+                               probs=c(0.025,0.975),
+                               na.rm=T)]
+
+reg_df_placebo[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+reg_df_placebo[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(initial_duration_in_days_i,
+                    probs=c(0.025,0.975),
+                    na.rm=T)]
+
+# InitialBudget_i
+
+reg_df_placebo[,winsorized_initial_budget_i:=
+                    Winsorize(base_and_all_options_value,                    
+                              probs=c(0.025,0.975),
+                              na.rm=T)]
+
+# use winsorized delay because fewer quarters & percentage delay requires project to be active for at least two quarters
+df_main=data.frame()
+for(i in 3:5){
+#  print(i)
+  tryCatch({
+  reg_df_placebo[,placebo_post_t:=ifelse(quarter_number>=i,1,0)]  
+  a1=tidy(felm(wins_percentage_delay~treat_i+
+                treat_i:placebo_post_t+
+                placebo_post_t|
+                0|
+                0|
+                contract_award_unique_key,
+              data=reg_df_placebo,
+              exactDOF = TRUE, 
+              cmethod = "reghdfe"),
+              conf.int=T)
+    a2=tidy(felm(wins_percentage_delay~treat_i+
+                treat_i:placebo_post_t+
+                placebo_post_t+  
+                log(wins_project_quarter_stage)+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                number_of_offers_received+
+                placebo_post_t:log(1+winsorized_initial_duration_in_days_i)+
+                placebo_post_t:log(1+winsorized_initial_budget_i)+
+                placebo_post_t:number_of_offers_received|
+                0|
+                0|
+                contract_award_unique_key,
+              data=reg_df_placebo,
+              exactDOF = TRUE, 
+              cmethod = "reghdfe"),
+              conf.int=T)
+      a3=tidy(felm(wins_percentage_delay~treat_i+
+                treat_i:placebo_post_t+
+                log(wins_project_quarter_stage)+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                number_of_offers_received+
+                placebo_post_t:log(1+winsorized_initial_duration_in_days_i)+
+                placebo_post_t:log(1+winsorized_initial_budget_i)+
+                placebo_post_t:number_of_offers_received|
+                action_date_year_quarter|
+                0|
+                contract_award_unique_key,
+              data=reg_df_placebo,
+              exactDOF = TRUE, 
+              cmethod = "reghdfe"),
+              conf.int=T)
+        a4=tidy(felm(wins_percentage_delay~treat_i+
+                treat_i:placebo_post_t+
+                log(wins_project_quarter_stage)+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                number_of_offers_received+
+                placebo_post_t:log(1+winsorized_initial_duration_in_days_i)+
+                placebo_post_t:log(1+winsorized_initial_budget_i)+
+                placebo_post_t:number_of_offers_received|
+                product_or_service_code+
+                action_date_year_quarter|
+                0|
+                contract_award_unique_key,
+              data=reg_df_placebo,
+              exactDOF = TRUE, 
+              cmethod = "reghdfe"),
+              conf.int=T)
+        a5=tidy(felm(wins_percentage_delay~treat_i+
+                treat_i:placebo_post_t+
+                log(wins_project_quarter_stage)+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                number_of_offers_received+
+                placebo_post_t:log(1+winsorized_initial_duration_in_days_i)+
+                placebo_post_t:log(1+winsorized_initial_budget_i)+
+                placebo_post_t:number_of_offers_received|
+                naics_code+
+                product_or_service_code+
+                action_date_year_quarter|
+                0|
+                contract_award_unique_key,
+              data=reg_df_placebo,
+              exactDOF = TRUE, 
+              cmethod = "reghdfe"),
+              conf.int=T)
+    a1=subset(a1,term=='treat_i:placebo_post_t')
+    a2=subset(a2,term=='treat_i:placebo_post_t')
+    a3=subset(a3,term=='treat_i:placebo_post_t')
+    a4=subset(a4,term=='treat_i:placebo_post_t')
+    a5=subset(a5,term=='treat_i:placebo_post_t')
+    a=rbind(a1,a2,a3,a4,a5)
+    a['Placebo Treatment Time']= unique(subset(reg_df_placebo,
+                                        quarter_number==i)$action_date_year_quarter)
+    assign(paste0("df", i), value = a)
+    df_main=rbind(df_main,get(paste0("df", i)))}, error=function(e){})
+}
+
+setDT(df_main)[,reg_number:=as.factor(seq.int(nrow(df_main)))]
+
+ggplot(df_main,aes(x=reg_number,
+                            y=estimate,
+                            group=1))+
+  geom_point(size=1,alpha=0.7)+
+  geom_errorbar(aes(ymin = conf.low, 
+                    ymax = conf.high),
+                width=0.015,
+                size=0.25,
+                alpha=0.7)+
+  geom_hline(yintercept =0,alpha=0.6,size=0.15)+
+  theme_minimal()+ 
+  theme(panel.border = element_rect(color="black",fill=NA), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_blank())+
+  theme(legend.position="bottom")+
+  ylab("Point estimate \n (Percentage Delay Rate)")+
+  xlab("")+
+  #ylim(-1.05, 2.5)+ 
+  coord_fixed(ratio=0.7)
+grid.brackets(184, 195, 56, 195, type = 1)
+grid.text(x=unit(125,'native'), y=unit(220,'native'),
+  label=expression(paste('Jun-2010'),just = "centre",'type=4'))
+grid.brackets(330, 195, 200, 195, type = 1)
+grid.text(x=unit(280,'native'), y=unit(220,'native'),
+  label=expression(paste('Sept-2010'),just = "centre",'type=4'))
+grid.brackets(480, 195, 360, 195, type = 1)
+grid.text(x=unit(430,'native'), y=unit(220,'native'),
+  label=expression(paste('Dec-2010'),just = "centre",'type=4'))
+grid.text(x=unit(280,'native'), y=unit(250,'native'),
+  label=expression(paste('Placebo treatment time'),just = "centre",'type=4'))
 
 ```
 
@@ -846,7 +1292,8 @@ for(i in 1:length(unique(reg_df$stage_quintile))){
                             stage_quintile==i),
               exactDOF = TRUE, 
               cmethod = "reghdfe"),
-              conf.int=T)[5,]
+              conf.int=T)
+    a=subset(a,term=='treat_i:post_t')
     a['Project stage quintile']=i
     assign(paste0("df", i), value = a)
     df_main=rbind(df_main,get(paste0("df", i)))}, error=function(e){})
@@ -1179,74 +1626,6 @@ stargazer(m1,m2,m3,m4,m5,
           notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level."),
           header=F)
-```
-
-# Event study
-
-$PercentDelay_{it}=\beta_0 + \beta_1 Treat_i + \beta_2 Treat_i \times Quarter_t + \gamma_{task} + \theta_{naics}+\lambda_{quarter}+\nu_{sub-agency}+\epsilon_{it}$
-
-```{r event_study, echo=FALSE, results='asis'}
-
-reg_df[,relative_quarter:=case_when(action_date_year_quarter=="2010-03-31"~-5,
-                  action_date_year_quarter=="2010-06-30"~-4,
-                  action_date_year_quarter=="2010-09-30"~-3,
-                  action_date_year_quarter=="2010-12-31"~-2,
-                  action_date_year_quarter=="2011-03-31"~-1,
-                  action_date_year_quarter=="2011-06-30"~0,
-                  action_date_year_quarter=="2011-09-30"~1,
-                  action_date_year_quarter=="2011-12-31"~2,
-                  action_date_year_quarter=="2012-03-31"~3,
-                  action_date_year_quarter=="2012-06-30"~4)]
-reg_df[, time_to_treat := ifelse(treat_i==1, relative_quarter, 0)]
-
-mod_twfe = fixest::feols(wins_percentage_delay ~ i(time_to_treat, treat_i, ref = -1) +
-                    	   	  treat_i|   
-		  awarding_sub_agency_code+naics_code+product_or_service_code+action_date_year_quarter,        
-		 cluster = ~contract_award_unique_key,
-		 data = reg_df)
-
-# Default event study plot
-# fixest::iplot(mod_twfe,
-#       xlab = 'Quarter relative to QuickPay',
-#       main = 'Effect on Average Percentage Delay Rate',
-#       grid=F,
-#       ylim.add=0.25,
-#       zero.par=list(lwd=0.25),
-#       ref.line.par = list(col = "black", lty=3, lwd=0.8), #lty= linetype, lwd=linewidth
-#       pt.join = T,
-#       x=c(-5:4))
-
-data_event_study=fixest::iplot(mod_twfe,only.params=T,
-      x=c(-5:4))$prms
-setDT(data_event_study)[,`Quarter relative to QuickPay`:=as.factor(x)]
-
-ggplot(data_event_study,aes(x=`Quarter relative to QuickPay`,
-                            y=y,
-                            group=1))+
-  geom_point(size=1,alpha=0.7)+
-  geom_errorbar(aes(ymin = ci_low, 
-                    ymax = ci_high),
-                width=0.05,
-                size=0.25,
-                alpha=0.7)+
-  geom_line(alpha=0.7,size=0.25)+
-  geom_hline(yintercept =0,alpha=0.6,size=0.15)+
-  geom_vline(xintercept =5,alpha=0.8,size=0.15,linetype="solid")+
-  theme_minimal()+ 
-  theme(panel.border = element_rect(color="black",fill=NA), 
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(), 
-        plot.title = element_text(hjust = 0.5))+
-  theme(legend.position="bottom")+
-  ylab("Point estimate \n (Percentage Delay Rate)")+ 
-  ylim(-1.05, 2.5)+ 
-  coord_fixed(ratio=1)
-
-ggsave(path=figures_folder,
-       width = 8,
-       height = 5,
-       bg="white",
-       filename = "event_study_plot.png")
 ```
 
 # Contract Financing
@@ -2194,7 +2573,8 @@ for(i in 1:length(unique(reg_df_fin$receives_financial_assistance))){
               data=subset(reg_df_fin,receives_financial_assistance==i-1),
               exactDOF = TRUE, 
               cmethod = "reghdfe"),
-              conf.int=T)[3,]
+              conf.int=T)
+    a=subset(a,term=='treat_i:post_t')
     a['Contractor receives financial assistance']=ifelse(i-1==1,"Yes","No")
     assign(paste0("df", i), value = a)
     df_main=rbind(df_main,get(paste0("df", i)))}, error=function(e){})
@@ -2210,7 +2590,7 @@ ggplot(df_main,
   geom_point(size=1,alpha=0.7,color=df_main$color)+
   geom_errorbar(aes(ymin = conf.low, 
                     ymax = conf.high),
-                width=0.05,
+                width=0.015,
                 size=0.25,
                 alpha=0.7,
                 color=df_main$color)+
@@ -2841,7 +3221,7 @@ for(i in 1:length(unique(reg_df$competitively_awarded_i))){
               exactDOF = TRUE, 
               cmethod = "reghdfe"),
               conf.int=T)
-    a=results[5,]
+    a=subset(results,term=='treat_i:project_signed_after_quickpay:post_t')
     a['Project competitively awarded']=ifelse(i-1==1,"Competed","Not competed")
     assign(paste0("df", i), value = a)
     df_main=rbind(df_main,get(paste0("df", i)))}, error=function(e){})
@@ -2866,7 +3246,7 @@ for(i in 1:length(unique(reg_df$competitively_awarded_i))){
               exactDOF = TRUE, 
               cmethod = "reghdfe"),
               conf.int=T)
-    a=results[4,]
+    a=subset(results,term=='treat_i:post_t:project_signed_before_quickpay')
     a['Project competitively awarded']=ifelse(i-1==1,"Competed","Not competed")
     assign(paste0("df", i), value = a)
     df_main_2=rbind(df_main_2,get(paste0("df", i)))}, error=function(e){})
@@ -2891,7 +3271,7 @@ plot=ggplot(df_main,
   geom_errorbar(aes(ymin = conf.low, 
                     ymax = conf.high,
                     color=term),
-                width=0.05,
+                width=0.015,
                 size=0.25,
                 alpha=0.7,
                 position = position_dodge(width = 0.2))+
@@ -2902,11 +3282,14 @@ plot=ggplot(df_main,
   theme(panel.border = element_rect(color="black",fill=NA), 
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), 
-        plot.title = element_text(hjust = 0.5))+
-  theme(legend.position="bottom")+ 
+        plot.title = element_text(hjust = 0.5),
+        legend.position="bottom",
+        legend.key.width=unit(1.5,"cm"))+ 
   xlab("")+
   ylab("Point estimate")+
   coord_fixed(ratio=0.15)
+
+plot
 
 ggsave(path=figures_folder,
        width = 8,

@@ -15,33 +15,59 @@ project_stage=ggplot(reg_df,
 
 
 duration=ggplot(reg_df, 
-                   aes(x=log(1+winsorized_initial_duration_in_days_i), 
+                   aes(x=winsorized_initial_duration_in_days_i, 
                        linetype=business_type)) +
   geom_density(color="black",size=0.3)+  
-  theme_minimal()+ 
+  theme_minimal()+
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", "O"),
+                        labels=c("Treated","Control"),
+                        values=c("solid","dashed"))+
+  scale_color_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c('black','black'))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c(16,17))+ 
   theme(panel.border = element_rect(color="black",fill=NA), 
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), 
+        legend.text = element_text(size=11),
         axis.title=element_blank(),
         plot.title = element_text(hjust = 0.5))+ 
   labs(linetype='Business type')+
   theme(legend.position="bottom")+
-  xlim(0,2.5)+
+  xlim(5,600)+
   ggtitle("Initial duration")
 
 budget=ggplot(reg_df, 
-                aes(x=log(winsorized_initial_budget_i), 
+                aes(x=log(1+winsorized_initial_budget_i), 
                     linetype=business_type)) +
   geom_density(color="black",size=0.3)+  
-  theme_minimal()+ 
+  theme_minimal()+
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", "O"),
+                        labels=c("Treated","Control"),
+                        values=c("solid","dashed"))+
+  scale_color_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c('black','black'))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c(16,17))+ 
   theme(panel.border = element_rect(color="black",fill=NA), 
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), 
         axis.title=element_blank(),
-        plot.title = element_text(hjust = 0.5))+ 
+        plot.title = element_text(hjust = 0.5),
+        legend.text = element_text(size=11))+ 
   labs(linetype='Business type')+
   theme(legend.position="bottom")+
-  xlim(4,14)+
+  xlim(6,14)+
   ggtitle("Initial budget")
 
 num_offers=ggplot(reg_df, 
@@ -134,8 +160,13 @@ annotate_figure(figure,
 #        dpi=320)
 
 #### NAICS 4-digit ####
+naics=readxl::read_xlsx('/Users/vibhutid_admin/Desktop/Research/QuickPay/naics.xlsx')
+setDT(naics)[,NAICS:=as.character(NAICS)]
+
 reg_df[,naics_code_4D:=substr(naics_code,1,4)]
-naics_4D=ggplot(reg_df, aes(x=as.factor(naics_code_4D), 
+reg_df=merge(reg_df,naics,by.x='naics_code_4D',by.y='NAICS')
+
+naics_4D=ggplot(reg_df, aes(x=Description, 
                             group = business_type)) + 
   geom_bar(aes(y = ..prop..,
                #linetype=business_type,
@@ -154,11 +185,12 @@ naics_4D=ggplot(reg_df, aes(x=as.factor(naics_code_4D),
         panel.grid.minor = element_blank(),
         axis.title=element_blank(),
         plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+        plot.margin = unit(c(1,1,0.5,0.5), "cm"),
+        axis.text.x = element_text(angle = 45, hjust=1))+
   labs(linetype='Group')+
   theme(legend.position="bottom")+ 
   ggtitle("Industry code (Four-digit NAICS)")+
-  coord_fixed(ratio=12)
+  coord_fixed(ratio=14)
 
 ggsave("~/Desktop/Research/QuickPay/paper/Figures/naics_dist.jpeg",
        bg="white",
@@ -199,11 +231,11 @@ competed_projects=ggplot(reg_df, aes(x=competed,
 
 #### PSC ####
 
-reg_df[,psc_code_3D:=substr(product_or_service_code,1,3)]
+reg_df[,psc_code_2D:=substr(product_or_service_code,1,2)]
 
-reg_df2=subset(reg_df,psc_code_3D%in%unique(reg_df$psc_code_3D)[1:50])
+reg_df2=subset(reg_df,psc_code_2D%in%unique(reg_df$psc_code_2D)[3:42])
 
-psc_code_3D=ggplot(reg_df2, aes(x=as.factor(psc_code_3D), 
+psc_code_2D=ggplot(reg_df2, aes(x=as.factor(psc_code_2D), 
                             group = business_type)) + 
   geom_bar(aes(y = ..prop..,
                #linetype=business_type,
@@ -224,3 +256,4 @@ psc_code_3D=ggplot(reg_df2, aes(x=as.factor(psc_code_3D),
        y='Proportion')+
   theme(legend.position="bottom")+
   ggtitle("Task code (Two-digit)")
+psc_code_2D
