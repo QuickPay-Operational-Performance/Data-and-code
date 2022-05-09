@@ -629,7 +629,7 @@ reg_df[, time_to_treat := ifelse(treat_i==1, relative_quarter, 0)]
 
 mod_twfe = fixest::feols(wins_percentage_delay ~ i(time_to_treat, treat_i, ref = -1) +
                     	   	  treat_i|   
-		  awarding_sub_agency_code+naics_code+product_or_service_code+action_date_year_quarter,        
+		  naics_code+product_or_service_code+action_date_year_quarter,        
 		 cluster = ~contract_award_unique_key,
 		 data = reg_df)
 
@@ -651,24 +651,29 @@ setDT(data_event_study)[,`Quarter relative to QuickPay`:=as.factor(x)]
 ggplot(data_event_study,aes(x=`Quarter relative to QuickPay`,
                             y=y,
                             group=1))+
-  geom_point(size=1,alpha=0.7)+
+  geom_point(size=1.5,alpha=0.7)+
   geom_errorbar(aes(ymin = ci_low, 
                     ymax = ci_high),
-                width=0.05,
+                width=0.01,
                 size=0.25,
                 alpha=0.7)+
-  geom_line(alpha=0.7,size=0.25)+
+#  geom_line(alpha=0.7,size=0.25)+
   geom_hline(yintercept =0,alpha=0.6,size=0.15)+
-  geom_vline(xintercept =5,alpha=0.8,size=0.15,linetype="solid")+
+  geom_vline(xintercept =5.5,alpha=0.8,size=0.15,linetype="dashed")+
   theme_minimal()+ 
-  theme(panel.border = element_rect(color="black",fill=NA), 
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(size=11),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
         panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(), 
-        plot.title = element_text(hjust = 0.5))+
+        panel.grid.minor = element_blank(),
+    legend.text = element_text(size=11))+
   theme(legend.position="bottom")+
   ylab("Point estimate \n (Percentage Delay Rate)")+ 
-  ylim(-1.05, 2.5)+ 
-  coord_fixed(ratio=1)
+  #ylim(-1.05, 2.5)+
+  scale_y_continuous(breaks = seq(-1, 3, 1))+
+  coord_fixed(ratio=2)
 
 ggsave(path=figures_folder,
        width = 8,
@@ -760,7 +765,7 @@ m5=felm(wins_percentage_delay~treat_i+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-stargazer(m1,m2,m3,m4,m5,
+pt=stargazer(m1,m2,m3,m4,m5,
           title = "Linear Time Trend Before QuickPay",
           dep.var.labels="$PercentDelay_{it}$",
           dep.var.caption = "",
@@ -791,6 +796,11 @@ stargazer(m1,m2,m3,m4,m5,
                   "SEs are robust and clustered at the project level.",
                   "Observations are for quarters before quickpay."),
           header=F)
+
+pt_table_tex=make_tex_pieces(pt)
+# Write to file
+write(pt_table_tex,
+      paste0(tables_folder,"/parallel_trends_test.tex"))
 ```
 
 # Placebo Test
@@ -949,6 +959,173 @@ grid.text(x=unit(430,'native'), y=unit(220,'native'),
   label=expression(paste('Dec-2010'),just = "centre",'type=4'))
 grid.text(x=unit(280,'native'), y=unit(250,'native'),
   label=expression(paste('Placebo treatment time'),just = "centre",'type=4'))
+
+```
+
+# Summary statistics
+
+```{r summary_stats, include=FALSE}
+
+treated_projs_preqp=subset(reg_df,treat_i==1 & post_t==0)
+control_projs_preqp=subset(reg_df,treat_i==0 & post_t==0)
+
+# Percentage delay
+mean(treated_projs_preqp$wins_percentage_delay,na.rm=T)
+sd(treated_projs_preqp$wins_percentage_delay,na.rm=T)
+nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay)))
+
+mean(control_projs_preqp$wins_percentage_delay,na.rm=T)
+sd(control_projs_preqp$wins_percentage_delay,na.rm=T)
+nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay)))
+
+# Initial duration
+mean(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
+sd(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
+nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(winsorized_initial_duration_in_days_i)))
+
+mean(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
+sd(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
+nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(winsorized_initial_duration_in_days_i)))
+
+# Initial budget
+mean(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
+sd(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
+nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(winsorized_initial_budget_i)))
+
+mean(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
+sd(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
+nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(winsorized_initial_budget_i)))
+
+# Number of offers
+
+mean(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
+sd(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
+nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(number_of_offers_received)))
+
+mean(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
+sd(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
+nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(number_of_offers_received)))
+
+# Project stage
+
+mean(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
+sd(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
+nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(wins_project_quarter_stage)))
+
+mean(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
+sd(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
+nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(wins_project_quarter_stage)))
+
+
+# Positive delay rate
+
+treated_projs_preqp[,positive_delay:=ifelse(delay>0,1,0)]
+control_projs_preqp[,positive_delay:=ifelse(delay>0,1,0)]
+
+mean(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$positive_delay,na.rm=T)
+sd(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$positive_delay,na.rm=T)
+nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(positive_delay)))
+
+mean(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$positive_delay,na.rm=T)
+sd(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$positive_delay,na.rm=T)
+nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(positive_delay)))
+
+# Negative delay rate
+
+treated_projs_preqp[,negative_delay:=ifelse(delay<0,1,0)]
+control_projs_preqp[,negative_delay:=ifelse(delay<0,1,0)]
+
+mean(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$negative_delay,na.rm=T)
+sd(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$negative_delay,na.rm=T)
+nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(negative_delay)))
+
+mean(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$negative_delay,na.rm=T)
+sd(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$negative_delay,na.rm=T)
+nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(negative_delay)))
+
+# Financial assistance
+
+mean(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$receives_financial_assistance,na.rm=T)
+sd(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$receives_financial_assistance,na.rm=T)
+nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(receives_financial_assistance)))
+
+mean(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$receives_financial_assistance,na.rm=T)
+sd(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$receives_financial_assistance,na.rm=T)
+nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(receives_financial_assistance)))
+
+# Competition
+
+mean(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$competitively_awarded_i,na.rm=T)
+sd(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$competitively_awarded_i,na.rm=T)
+nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(competitively_awarded_i)))
+
+mean(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$competitively_awarded_i,na.rm=T)
+sd(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$competitively_awarded_i,na.rm=T)
+nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
+                                !is.na(competitively_awarded_i)))
+
+# Number of tasks
+
+n_distinct(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$product_or_service_code)
+
+n_distinct(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$product_or_service_code)
+
+# Number of industries
+
+n_distinct(subset(treated_projs_preqp,
+            !is.na(wins_percentage_delay))$naics_code)
+
+n_distinct(subset(control_projs_preqp,
+            !is.na(wins_percentage_delay))$naics_code)
 
 ```
 
