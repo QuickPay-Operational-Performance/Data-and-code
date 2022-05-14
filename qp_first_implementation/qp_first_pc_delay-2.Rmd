@@ -805,7 +805,7 @@ write(pt_table_tex,
 
 # Placebo Test
 
-```{r placebo_regressions, eval=FALSE}
+```{r placebo_regressions, eval=FALSE, include=FALSE}
 
 reg_df_placebo=subset(reg_df,post_t==0)
 
@@ -1110,6 +1110,17 @@ sd(subset(control_projs_preqp,
             !is.na(wins_percentage_delay))$competitively_awarded_i,na.rm=T)
 nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
                                 !is.na(competitively_awarded_i)))
+
+# Bid Metrics for Competitive Projects
+
+mean(subset(treated_projs_preqp,competitively_awarded_i==1 &
+!is.na(number_of_offers_received))$number_of_offers_received,na.rm=T)
+
+mean(subset(treated_projs_preqp,competitively_awarded_i==1 &
+!is.na(winsorized_initial_duration_in_days_i))$winsorized_initial_duration_in_days_i,na.rm=T)
+
+mean(subset(treated_projs_preqp,competitively_awarded_i==1 &
+!is.na(winsorized_initial_budget_i))$winsorized_initial_budget_i,na.rm=T)
 
 # Number of tasks
 
@@ -2978,6 +2989,7 @@ select_cols_comp=c("contract_award_unique_key",
               "other_than_full_and_open_competition_code",
               "initial_duration_in_days_i",
               "base_and_all_options_value",
+              "naics_code",
               "action_date",
               "contracting_officers_determination_of_business_size_code",
               "product_or_service_code",
