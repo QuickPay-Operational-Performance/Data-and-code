@@ -41,46 +41,6 @@
   pdfcreator={LaTeX via pandoc}}
 \urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
-\usepackage{color}
-\usepackage{fancyvrb}
-\newcommand{\VerbBar}{|}
-\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
-\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
-% Add ',fontsize=\small' for more characters per line
-\usepackage{framed}
-\definecolor{shadecolor}{RGB}{248,248,248}
-\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
-\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
-\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
-\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\BuiltInTok}[1]{#1}
-\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
-\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
-\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
-\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
-\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
-\newcommand{\ExtensionTok}[1]{#1}
-\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
-\newcommand{\ImportTok}[1]{#1}
-\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
-\newcommand{\NormalTok}[1]{#1}
-\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
-\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
-\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
-\newcommand{\RegionMarkerTok}[1]{#1}
-\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
-\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
-\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
 \usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
@@ -105,7 +65,7 @@
 
 \title{Percentage Delay Rate: QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}May 05, 2022}
+\date{\vspace{-2.5em}May 16, 2022}
 
 \begin{document}
 \maketitle
@@ -274,162 +234,97 @@ Adjusted R$^{2}$ & 0.01 & 0.26 & 0.26 & 0.31 & 0.31 \\
 \hypertarget{placebo-test}{%
 \section{Placebo Test}\label{placebo-test}}
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{reg\_df\_placebo}\OtherTok{=}\FunctionTok{subset}\NormalTok{(reg\_df,post\_t}\SpecialCharTok{==}\DecValTok{0}\NormalTok{)}
+\hypertarget{placebo-regression-tables}{%
+\subsection{Placebo Regression Tables}\label{placebo-regression-tables}}
 
-\NormalTok{reg\_df\_placebo[,wins\_percentage\_delay}\SpecialCharTok{:}\ErrorTok{=}\FunctionTok{Winsorize}\NormalTok{(}\DecValTok{100}\SpecialCharTok{*}\NormalTok{percentage\_delay,}
-                               \AttributeTok{probs=}\FunctionTok{c}\NormalTok{(}\FloatTok{0.025}\NormalTok{,}\FloatTok{0.975}\NormalTok{),}
-                               \AttributeTok{na.rm=}\NormalTok{T)]}
+{[}1{]} 3
 
-\NormalTok{reg\_df\_placebo[,wins\_project\_quarter\_stage}\SpecialCharTok{:}\ErrorTok{=}\FunctionTok{Winsorize}\NormalTok{(project\_quarter\_stage,                    }
-                              \AttributeTok{probs=}\FunctionTok{c}\NormalTok{(}\FloatTok{0.05}\NormalTok{,}\FloatTok{0.95}\NormalTok{),}
-                              \AttributeTok{na.rm=}\NormalTok{T)]}
+\begin{table}[H] \centering 
+  \caption{Placebo test: Treatment Time 2010-06-30} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$4.50$^{***}$ & $-$4.12$^{***}$ & $-$4.13$^{***}$ & $-$2.77$^{***}$ & $-$2.99$^{***}$ \\ 
+  & (0.78) & (0.70) & (0.70) & (0.67) & (0.67) \\ 
+  & & & & & \\ 
+ $Post$ & 2.49$^{***}$ & $-$8.64$^{*}$ &  &  &  \\ 
+  & (0.67) & (4.70) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post$ & $-$1.25 & 0.64 & 0.62 & 0.83 & 0.91 \\ 
+  & (0.81) & (0.73) & (0.73) & (0.71) & (0.70) \\ 
+  & & & & & \\ 
+ Constant & 10.33$^{***}$ & 122.58$^{***}$ &  &  &  \\ 
+  & (0.65) & (4.49) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 97,705 & 90,650 & 90,650 & 90,650 & 90,650 \\ 
+R$^{2}$ & 0.01 & 0.32 & 0.32 & 0.37 & 0.37 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.32 & 0.32 & 0.36 & 0.36 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Observations are for quarters before quickpay.} \\ 
+\end{tabular} 
+\end{table}
 
-\NormalTok{reg\_df\_placebo[,winsorized\_initial\_duration\_in\_days\_i}\SpecialCharTok{:}\ErrorTok{=}
-                    \FunctionTok{Winsorize}\NormalTok{(initial\_duration\_in\_days\_i,}
-                    \AttributeTok{probs=}\FunctionTok{c}\NormalTok{(}\FloatTok{0.025}\NormalTok{,}\FloatTok{0.975}\NormalTok{),}
-                    \AttributeTok{na.rm=}\NormalTok{T)]}
+{[}1{]} 4
 
-\CommentTok{\# InitialBudget\_i}
+\begin{table}[H] \centering 
+  \caption{Placebo test: Treatment Time 2010-09-30} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$4.58$^{***}$ & $-$3.43$^{***}$ & $-$3.43$^{***}$ & $-$2.21$^{***}$ & $-$2.45$^{***}$ \\ 
+  & (0.49) & (0.42) & (0.42) & (0.42) & (0.41) \\ 
+  & & & & & \\ 
+ $Post$ & 2.52$^{***}$ & $-$12.11$^{***}$ &  &  &  \\ 
+  & (0.47) & (3.07) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post$ & $-$1.40$^{**}$ & $-$0.20 & $-$0.19 & 0.26 & 0.38 \\ 
+  & (0.56) & (0.49) & (0.49) & (0.48) & (0.48) \\ 
+  & & & & & \\ 
+ Constant & 10.68$^{***}$ & 124.33$^{***}$ &  &  &  \\ 
+  & (0.41) & (2.70) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 97,705 & 90,650 & 90,650 & 90,650 & 90,650 \\ 
+R$^{2}$ & 0.01 & 0.32 & 0.32 & 0.37 & 0.37 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.32 & 0.32 & 0.36 & 0.36 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Observations are for quarters before quickpay.} \\ 
+\end{tabular} 
+\end{table}
 
-\NormalTok{reg\_df\_placebo[,winsorized\_initial\_budget\_i}\SpecialCharTok{:}\ErrorTok{=}
-                    \FunctionTok{Winsorize}\NormalTok{(base\_and\_all\_options\_value,                    }
-                              \AttributeTok{probs=}\FunctionTok{c}\NormalTok{(}\FloatTok{0.025}\NormalTok{,}\FloatTok{0.975}\NormalTok{),}
-                              \AttributeTok{na.rm=}\NormalTok{T)]}
-
-\CommentTok{\# use winsorized delay because fewer quarters \& percentage delay requires project to be active for at least two quarters}
-\NormalTok{df\_main}\OtherTok{=}\FunctionTok{data.frame}\NormalTok{()}
-\ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{3}\SpecialCharTok{:}\DecValTok{5}\NormalTok{)\{}
-\CommentTok{\#  print(i)}
-  \FunctionTok{tryCatch}\NormalTok{(\{}
-\NormalTok{  reg\_df\_placebo[,placebo\_post\_t}\SpecialCharTok{:}\ErrorTok{=}\FunctionTok{ifelse}\NormalTok{(quarter\_number}\SpecialCharTok{\textgreater{}=}\NormalTok{i,}\DecValTok{1}\NormalTok{,}\DecValTok{0}\NormalTok{)]  }
-\NormalTok{  a1}\OtherTok{=}\FunctionTok{tidy}\NormalTok{(}\FunctionTok{felm}\NormalTok{(wins\_percentage\_delay}\SpecialCharTok{\textasciitilde{}}\NormalTok{treat\_i}\SpecialCharTok{+}
-\NormalTok{                treat\_i}\SpecialCharTok{:}\NormalTok{placebo\_post\_t}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{|}
-                \DecValTok{0}\SpecialCharTok{|}
-                \DecValTok{0}\SpecialCharTok{|}
-\NormalTok{                contract\_award\_unique\_key,}
-              \AttributeTok{data=}\NormalTok{reg\_df\_placebo,}
-              \AttributeTok{exactDOF =} \ConstantTok{TRUE}\NormalTok{, }
-              \AttributeTok{cmethod =} \StringTok{"reghdfe"}\NormalTok{),}
-              \AttributeTok{conf.int=}\NormalTok{T)}
-\NormalTok{    a2}\OtherTok{=}\FunctionTok{tidy}\NormalTok{(}\FunctionTok{felm}\NormalTok{(wins\_percentage\_delay}\SpecialCharTok{\textasciitilde{}}\NormalTok{treat\_i}\SpecialCharTok{+}
-\NormalTok{                treat\_i}\SpecialCharTok{:}\NormalTok{placebo\_post\_t}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{+}  
-                \FunctionTok{log}\NormalTok{(wins\_project\_quarter\_stage)}\SpecialCharTok{+}
-                \FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_duration\_in\_days\_i)}\SpecialCharTok{+}
-                \FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_budget\_i)}\SpecialCharTok{+}
-\NormalTok{                number\_of\_offers\_received}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{:}\FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_duration\_in\_days\_i)}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{:}\FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_budget\_i)}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{:}\NormalTok{number\_of\_offers\_received}\SpecialCharTok{|}
-                \DecValTok{0}\SpecialCharTok{|}
-                \DecValTok{0}\SpecialCharTok{|}
-\NormalTok{                contract\_award\_unique\_key,}
-              \AttributeTok{data=}\NormalTok{reg\_df\_placebo,}
-              \AttributeTok{exactDOF =} \ConstantTok{TRUE}\NormalTok{, }
-              \AttributeTok{cmethod =} \StringTok{"reghdfe"}\NormalTok{),}
-              \AttributeTok{conf.int=}\NormalTok{T)}
-\NormalTok{      a3}\OtherTok{=}\FunctionTok{tidy}\NormalTok{(}\FunctionTok{felm}\NormalTok{(wins\_percentage\_delay}\SpecialCharTok{\textasciitilde{}}\NormalTok{treat\_i}\SpecialCharTok{+}
-\NormalTok{                treat\_i}\SpecialCharTok{:}\NormalTok{placebo\_post\_t}\SpecialCharTok{+}
-                \FunctionTok{log}\NormalTok{(wins\_project\_quarter\_stage)}\SpecialCharTok{+}
-                \FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_duration\_in\_days\_i)}\SpecialCharTok{+}
-                \FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_budget\_i)}\SpecialCharTok{+}
-\NormalTok{                number\_of\_offers\_received}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{:}\FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_duration\_in\_days\_i)}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{:}\FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_budget\_i)}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{:}\NormalTok{number\_of\_offers\_received}\SpecialCharTok{|}
-\NormalTok{                action\_date\_year\_quarter}\SpecialCharTok{|}
-                \DecValTok{0}\SpecialCharTok{|}
-\NormalTok{                contract\_award\_unique\_key,}
-              \AttributeTok{data=}\NormalTok{reg\_df\_placebo,}
-              \AttributeTok{exactDOF =} \ConstantTok{TRUE}\NormalTok{, }
-              \AttributeTok{cmethod =} \StringTok{"reghdfe"}\NormalTok{),}
-              \AttributeTok{conf.int=}\NormalTok{T)}
-\NormalTok{        a4}\OtherTok{=}\FunctionTok{tidy}\NormalTok{(}\FunctionTok{felm}\NormalTok{(wins\_percentage\_delay}\SpecialCharTok{\textasciitilde{}}\NormalTok{treat\_i}\SpecialCharTok{+}
-\NormalTok{                treat\_i}\SpecialCharTok{:}\NormalTok{placebo\_post\_t}\SpecialCharTok{+}
-                \FunctionTok{log}\NormalTok{(wins\_project\_quarter\_stage)}\SpecialCharTok{+}
-                \FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_duration\_in\_days\_i)}\SpecialCharTok{+}
-                \FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_budget\_i)}\SpecialCharTok{+}
-\NormalTok{                number\_of\_offers\_received}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{:}\FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_duration\_in\_days\_i)}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{:}\FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_budget\_i)}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{:}\NormalTok{number\_of\_offers\_received}\SpecialCharTok{|}
-\NormalTok{                product\_or\_service\_code}\SpecialCharTok{+}
-\NormalTok{                action\_date\_year\_quarter}\SpecialCharTok{|}
-                \DecValTok{0}\SpecialCharTok{|}
-\NormalTok{                contract\_award\_unique\_key,}
-              \AttributeTok{data=}\NormalTok{reg\_df\_placebo,}
-              \AttributeTok{exactDOF =} \ConstantTok{TRUE}\NormalTok{, }
-              \AttributeTok{cmethod =} \StringTok{"reghdfe"}\NormalTok{),}
-              \AttributeTok{conf.int=}\NormalTok{T)}
-\NormalTok{        a5}\OtherTok{=}\FunctionTok{tidy}\NormalTok{(}\FunctionTok{felm}\NormalTok{(wins\_percentage\_delay}\SpecialCharTok{\textasciitilde{}}\NormalTok{treat\_i}\SpecialCharTok{+}
-\NormalTok{                treat\_i}\SpecialCharTok{:}\NormalTok{placebo\_post\_t}\SpecialCharTok{+}
-                \FunctionTok{log}\NormalTok{(wins\_project\_quarter\_stage)}\SpecialCharTok{+}
-                \FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_duration\_in\_days\_i)}\SpecialCharTok{+}
-                \FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_budget\_i)}\SpecialCharTok{+}
-\NormalTok{                number\_of\_offers\_received}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{:}\FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_duration\_in\_days\_i)}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{:}\FunctionTok{log}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\NormalTok{winsorized\_initial\_budget\_i)}\SpecialCharTok{+}
-\NormalTok{                placebo\_post\_t}\SpecialCharTok{:}\NormalTok{number\_of\_offers\_received}\SpecialCharTok{|}
-\NormalTok{                naics\_code}\SpecialCharTok{+}
-\NormalTok{                product\_or\_service\_code}\SpecialCharTok{+}
-\NormalTok{                action\_date\_year\_quarter}\SpecialCharTok{|}
-                \DecValTok{0}\SpecialCharTok{|}
-\NormalTok{                contract\_award\_unique\_key,}
-              \AttributeTok{data=}\NormalTok{reg\_df\_placebo,}
-              \AttributeTok{exactDOF =} \ConstantTok{TRUE}\NormalTok{, }
-              \AttributeTok{cmethod =} \StringTok{"reghdfe"}\NormalTok{),}
-              \AttributeTok{conf.int=}\NormalTok{T)}
-\NormalTok{    a1}\OtherTok{=}\FunctionTok{subset}\NormalTok{(a1,term}\SpecialCharTok{==}\StringTok{\textquotesingle{}treat\_i:placebo\_post\_t\textquotesingle{}}\NormalTok{)}
-\NormalTok{    a2}\OtherTok{=}\FunctionTok{subset}\NormalTok{(a2,term}\SpecialCharTok{==}\StringTok{\textquotesingle{}treat\_i:placebo\_post\_t\textquotesingle{}}\NormalTok{)}
-\NormalTok{    a3}\OtherTok{=}\FunctionTok{subset}\NormalTok{(a3,term}\SpecialCharTok{==}\StringTok{\textquotesingle{}treat\_i:placebo\_post\_t\textquotesingle{}}\NormalTok{)}
-\NormalTok{    a4}\OtherTok{=}\FunctionTok{subset}\NormalTok{(a4,term}\SpecialCharTok{==}\StringTok{\textquotesingle{}treat\_i:placebo\_post\_t\textquotesingle{}}\NormalTok{)}
-\NormalTok{    a5}\OtherTok{=}\FunctionTok{subset}\NormalTok{(a5,term}\SpecialCharTok{==}\StringTok{\textquotesingle{}treat\_i:placebo\_post\_t\textquotesingle{}}\NormalTok{)}
-\NormalTok{    a}\OtherTok{=}\FunctionTok{rbind}\NormalTok{(a1,a2,a3,a4,a5)}
-\NormalTok{    a[}\StringTok{\textquotesingle{}Placebo Treatment Time\textquotesingle{}}\NormalTok{]}\OtherTok{=} \FunctionTok{unique}\NormalTok{(}\FunctionTok{subset}\NormalTok{(reg\_df\_placebo,}
-\NormalTok{                                        quarter\_number}\SpecialCharTok{==}\NormalTok{i)}\SpecialCharTok{$}\NormalTok{action\_date\_year\_quarter)}
-    \FunctionTok{assign}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"df"}\NormalTok{, i), }\AttributeTok{value =}\NormalTok{ a)}
-\NormalTok{    df\_main}\OtherTok{=}\FunctionTok{rbind}\NormalTok{(df\_main,}\FunctionTok{get}\NormalTok{(}\FunctionTok{paste0}\NormalTok{(}\StringTok{"df"}\NormalTok{, i)))\}, }\AttributeTok{error=}\ControlFlowTok{function}\NormalTok{(e)\{\})}
-\NormalTok{\}}
-
-\FunctionTok{setDT}\NormalTok{(df\_main)[,reg\_number}\SpecialCharTok{:}\ErrorTok{=}\FunctionTok{as.factor}\NormalTok{(}\FunctionTok{seq.int}\NormalTok{(}\FunctionTok{nrow}\NormalTok{(df\_main)))]}
-
-\FunctionTok{ggplot}\NormalTok{(df\_main,}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{reg\_number,}
-                            \AttributeTok{y=}\NormalTok{estimate,}
-                            \AttributeTok{group=}\DecValTok{1}\NormalTok{))}\SpecialCharTok{+}
-  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{size=}\DecValTok{1}\NormalTok{,}\AttributeTok{alpha=}\FloatTok{0.7}\NormalTok{)}\SpecialCharTok{+}
-  \FunctionTok{geom\_errorbar}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{ymin =}\NormalTok{ conf.low, }
-                    \AttributeTok{ymax =}\NormalTok{ conf.high),}
-                \AttributeTok{width=}\FloatTok{0.015}\NormalTok{,}
-                \AttributeTok{size=}\FloatTok{0.25}\NormalTok{,}
-                \AttributeTok{alpha=}\FloatTok{0.7}\NormalTok{)}\SpecialCharTok{+}
-  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =}\DecValTok{0}\NormalTok{,}\AttributeTok{alpha=}\FloatTok{0.6}\NormalTok{,}\AttributeTok{size=}\FloatTok{0.15}\NormalTok{)}\SpecialCharTok{+}
-  \FunctionTok{theme\_minimal}\NormalTok{()}\SpecialCharTok{+} 
-  \FunctionTok{theme}\NormalTok{(}\AttributeTok{panel.border =} \FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{color=}\StringTok{"black"}\NormalTok{,}\AttributeTok{fill=}\ConstantTok{NA}\NormalTok{), }
-        \AttributeTok{panel.grid.major =} \FunctionTok{element\_blank}\NormalTok{(),}
-        \AttributeTok{panel.grid.minor =} \FunctionTok{element\_blank}\NormalTok{(), }
-        \AttributeTok{plot.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{hjust =} \FloatTok{0.5}\NormalTok{),}
-        \AttributeTok{axis.text.x =} \FunctionTok{element\_blank}\NormalTok{())}\SpecialCharTok{+}
-  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position=}\StringTok{"bottom"}\NormalTok{)}\SpecialCharTok{+}
-  \FunctionTok{ylab}\NormalTok{(}\StringTok{"Point estimate }\SpecialCharTok{\textbackslash{}n}\StringTok{ (Percentage Delay Rate)"}\NormalTok{)}\SpecialCharTok{+}
-  \FunctionTok{xlab}\NormalTok{(}\StringTok{""}\NormalTok{)}\SpecialCharTok{+}
-  \CommentTok{\#ylim({-}1.05, 2.5)+ }
-  \FunctionTok{coord\_fixed}\NormalTok{(}\AttributeTok{ratio=}\FloatTok{0.7}\NormalTok{)}
-\FunctionTok{grid.brackets}\NormalTok{(}\DecValTok{184}\NormalTok{, }\DecValTok{195}\NormalTok{, }\DecValTok{56}\NormalTok{, }\DecValTok{195}\NormalTok{, }\AttributeTok{type =} \DecValTok{1}\NormalTok{)}
-\FunctionTok{grid.text}\NormalTok{(}\AttributeTok{x=}\FunctionTok{unit}\NormalTok{(}\DecValTok{125}\NormalTok{,}\StringTok{\textquotesingle{}native\textquotesingle{}}\NormalTok{), }\AttributeTok{y=}\FunctionTok{unit}\NormalTok{(}\DecValTok{220}\NormalTok{,}\StringTok{\textquotesingle{}native\textquotesingle{}}\NormalTok{),}
-  \AttributeTok{label=}\FunctionTok{expression}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\StringTok{\textquotesingle{}Jun{-}2010\textquotesingle{}}\NormalTok{),}\AttributeTok{just =} \StringTok{"centre"}\NormalTok{,}\StringTok{\textquotesingle{}type=4\textquotesingle{}}\NormalTok{))}
-\FunctionTok{grid.brackets}\NormalTok{(}\DecValTok{330}\NormalTok{, }\DecValTok{195}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{195}\NormalTok{, }\AttributeTok{type =} \DecValTok{1}\NormalTok{)}
-\FunctionTok{grid.text}\NormalTok{(}\AttributeTok{x=}\FunctionTok{unit}\NormalTok{(}\DecValTok{280}\NormalTok{,}\StringTok{\textquotesingle{}native\textquotesingle{}}\NormalTok{), }\AttributeTok{y=}\FunctionTok{unit}\NormalTok{(}\DecValTok{220}\NormalTok{,}\StringTok{\textquotesingle{}native\textquotesingle{}}\NormalTok{),}
-  \AttributeTok{label=}\FunctionTok{expression}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\StringTok{\textquotesingle{}Sept{-}2010\textquotesingle{}}\NormalTok{),}\AttributeTok{just =} \StringTok{"centre"}\NormalTok{,}\StringTok{\textquotesingle{}type=4\textquotesingle{}}\NormalTok{))}
-\FunctionTok{grid.brackets}\NormalTok{(}\DecValTok{480}\NormalTok{, }\DecValTok{195}\NormalTok{, }\DecValTok{360}\NormalTok{, }\DecValTok{195}\NormalTok{, }\AttributeTok{type =} \DecValTok{1}\NormalTok{)}
-\FunctionTok{grid.text}\NormalTok{(}\AttributeTok{x=}\FunctionTok{unit}\NormalTok{(}\DecValTok{430}\NormalTok{,}\StringTok{\textquotesingle{}native\textquotesingle{}}\NormalTok{), }\AttributeTok{y=}\FunctionTok{unit}\NormalTok{(}\DecValTok{220}\NormalTok{,}\StringTok{\textquotesingle{}native\textquotesingle{}}\NormalTok{),}
-  \AttributeTok{label=}\FunctionTok{expression}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\StringTok{\textquotesingle{}Dec{-}2010\textquotesingle{}}\NormalTok{),}\AttributeTok{just =} \StringTok{"centre"}\NormalTok{,}\StringTok{\textquotesingle{}type=4\textquotesingle{}}\NormalTok{))}
-\FunctionTok{grid.text}\NormalTok{(}\AttributeTok{x=}\FunctionTok{unit}\NormalTok{(}\DecValTok{280}\NormalTok{,}\StringTok{\textquotesingle{}native\textquotesingle{}}\NormalTok{), }\AttributeTok{y=}\FunctionTok{unit}\NormalTok{(}\DecValTok{250}\NormalTok{,}\StringTok{\textquotesingle{}native\textquotesingle{}}\NormalTok{),}
-  \AttributeTok{label=}\FunctionTok{expression}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\StringTok{\textquotesingle{}Placebo treatment time\textquotesingle{}}\NormalTok{),}\AttributeTok{just =} \StringTok{"centre"}\NormalTok{,}\StringTok{\textquotesingle{}type=4\textquotesingle{}}\NormalTok{))}
-\end{Highlighting}
-\end{Shaded}
+\hypertarget{summary-statistics}{%
+\section{Summary statistics}\label{summary-statistics}}
 
 \hypertarget{project-stage}{%
 \section{Project Stage}\label{project-stage}}

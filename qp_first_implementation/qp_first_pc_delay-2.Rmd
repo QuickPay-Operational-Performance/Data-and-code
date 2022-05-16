@@ -962,6 +962,155 @@ grid.text(x=unit(280,'native'), y=unit(250,'native'),
 
 ```
 
+## Placebo Regression Tables
+
+```{r placebo_tables, echo=FALSE, results='asis'}
+reg_df_placebo=subset(reg_df,post_t==0)
+
+reg_df_placebo[,wins_percentage_delay:=Winsorize(100*percentage_delay,
+                               probs=c(0.025,0.975),
+                               na.rm=T)]
+
+reg_df_placebo[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+reg_df_placebo[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(initial_duration_in_days_i,
+                    probs=c(0.025,0.975),
+                    na.rm=T)]
+
+# InitialBudget_i
+
+reg_df_placebo[,winsorized_initial_budget_i:=
+                    Winsorize(base_and_all_options_value,                    
+                              probs=c(0.025,0.975),
+                              na.rm=T)]
+for(i in 3:4){
+  print(i)
+  reg_df_placebo[,placebo_post_t:=ifelse(quarter_number>=i,1,0)]  
+  a1=felm(wins_percentage_delay~treat_i+
+                treat_i:placebo_post_t+
+                placebo_post_t|
+                0|
+                0|
+                contract_award_unique_key,
+              data=reg_df_placebo,
+              exactDOF = TRUE, 
+              cmethod = "reghdfe")
+    a2=felm(wins_percentage_delay~treat_i+
+                treat_i:placebo_post_t+
+                placebo_post_t+  
+                log(wins_project_quarter_stage)+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                number_of_offers_received+
+                placebo_post_t:log(1+winsorized_initial_duration_in_days_i)+
+                placebo_post_t:log(1+winsorized_initial_budget_i)+
+                placebo_post_t:number_of_offers_received|
+                0|
+                0|
+                contract_award_unique_key,
+              data=reg_df_placebo,
+              exactDOF = TRUE, 
+              cmethod = "reghdfe")
+      a3=felm(wins_percentage_delay~treat_i+
+                treat_i:placebo_post_t+
+                log(wins_project_quarter_stage)+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                number_of_offers_received+
+                placebo_post_t:log(1+winsorized_initial_duration_in_days_i)+
+                placebo_post_t:log(1+winsorized_initial_budget_i)+
+                placebo_post_t:number_of_offers_received|
+                action_date_year_quarter|
+                0|
+                contract_award_unique_key,
+              data=reg_df_placebo,
+              exactDOF = TRUE, 
+              cmethod = "reghdfe")
+        a4=felm(wins_percentage_delay~treat_i+
+                treat_i:placebo_post_t+
+                log(wins_project_quarter_stage)+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                number_of_offers_received+
+                placebo_post_t:log(1+winsorized_initial_duration_in_days_i)+
+                placebo_post_t:log(1+winsorized_initial_budget_i)+
+                placebo_post_t:number_of_offers_received|
+                product_or_service_code+
+                action_date_year_quarter|
+                0|
+                contract_award_unique_key,
+              data=reg_df_placebo,
+              exactDOF = TRUE, 
+              cmethod = "reghdfe")
+        a5=felm(wins_percentage_delay~treat_i+
+                treat_i:placebo_post_t+
+                log(wins_project_quarter_stage)+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                number_of_offers_received+
+                placebo_post_t:log(1+winsorized_initial_duration_in_days_i)+
+                placebo_post_t:log(1+winsorized_initial_budget_i)+
+                placebo_post_t:number_of_offers_received|
+                naics_code+
+                product_or_service_code+
+                action_date_year_quarter|
+                0|
+                contract_award_unique_key,
+              data=reg_df_placebo,
+              exactDOF = TRUE, 
+              cmethod = "reghdfe")
+        
+placebo_table=stargazer(a1,a2,a3,a4,a5,
+          title = paste0("Placebo test: Treatment Time ",
+                         as.character(unique(subset(reg_df_placebo,
+                                        quarter_number==i)$action_date_year_quarter))),
+          dep.var.labels="$PercentDelay_{it}$",
+          dep.var.caption = "",
+          covariate.labels = c("$Treat_i$","$Post$","$Treat_i \\times Post$","Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          digits=2,
+          digits.extra=2,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
+                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
+                           c("Project stage","No",rep("Yes",4)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Task fixed effects",rep("No",3),rep("Yes",2)),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
+          omit=c('winsorized_initial_duration_in_days_i',
+                  'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'quarter_number:winsorized_initial_duration_in_days_i',
+                   'quarter_number:winsorized_initial_budget_i',
+                   'quarter_number:number_of_offers_received',
+                   'wins_project_quarter_stage'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level.",
+                  "Observations are for quarters before quickpay."),
+          header=F)
+
+placebo_folder='~/Desktop/Research/QuickPay/paper/Tables/robustness'
+
+placebo_table_tex=make_tex_pieces(placebo_table)
+# Write to file
+write(placebo_table_tex,
+      paste0(placebo_folder,
+             "/placebo_table_time_",
+             as.character(unique(subset(reg_df_placebo,
+                quarter_number==i)$action_date_year_quarter)),
+             ".tex"))
+}
+
+```
+
 # Summary statistics
 
 ```{r summary_stats, include=FALSE}
