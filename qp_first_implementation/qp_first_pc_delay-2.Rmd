@@ -1552,6 +1552,14 @@ projects_per_quarter=reg_df[,n_distinct(contract_award_unique_key),
                                by='action_date_year_quarter']
 setnames(projects_per_quarter,'V1','num_projects')
 
+small_projects_per_quarter=subset(reg_df,treat_i==1)[,n_distinct(contract_award_unique_key),
+                               by='action_date_year_quarter']
+setnames(small_projects_per_quarter,'V1','num_small_projects')
+
+large_projects_per_quarter=subset(reg_df,treat_i==0)[,n_distinct(contract_award_unique_key),
+                               by='action_date_year_quarter']
+setnames(large_projects_per_quarter,'V1','num_large_projects')
+
 contractors_per_quarter=reg_df[,n_distinct(recipient_duns),
                                by='action_date_year_quarter']
 setnames(contractors_per_quarter,'V1','num_contractors')
@@ -1560,17 +1568,46 @@ projects_per_contractor=merge(projects_per_quarter,
                               contractors_per_quarter,
                               by='action_date_year_quarter')
 
+projects_per_contractor=merge(projects_per_contractor,
+                              small_projects_per_quarter,
+                              by='action_date_year_quarter')
+
+projects_per_contractor=merge(projects_per_contractor,
+                              large_projects_per_quarter,
+                              by='action_date_year_quarter')
+
 projects_per_contractor[,projects_per_contractor:=num_projects/num_contractors]
+projects_per_contractor[,small_projects_per_contractor:=num_small_projects/num_contractors]
+projects_per_contractor[,large_projects_per_contractor:=num_large_projects/num_contractors]
+
+
+projects_per_contractor <- melt(projects_per_contractor, 
+                                id = "action_date_year_quarter", 
+                                measure = c("projects_per_contractor",
+                                            "small_projects_per_contractor",
+                                            "large_projects_per_contractor"))
 
 ggplot(projects_per_contractor,
        aes(x=as.factor(action_date_year_quarter),
-           y=projects_per_contractor,
-           group=1))+
-geom_line(alpha=0.7)+
-geom_point(size=1.5)+
+           y=value,
+           group=variable))+
+geom_line(aes(linetype=variable),alpha=0.7)+
+geom_point(aes(shape=variable),size=1.5)+
   theme_minimal()+
   labs(x="Time", 
        y = "Number of projects per contractor")+
+  scale_linetype_manual(name  ="",
+                        breaks=c("projects_per_contractor", 
+                                 "small_projects_per_contractor",
+                                 "large_projects_per_contractor"),
+                        labels=c("All","Treated","Control"),
+                        values=c("solid","dotted","dashed"))+
+  scale_shape_manual(name  ="",
+                        breaks=c("projects_per_contractor", 
+                                 "small_projects_per_contractor",
+                                 "large_projects_per_contractor"),
+                        labels=c("All","Treated","Control"),
+                     values=c(19,16,17))+
   theme(axis.text.x = element_text(angle = 90),
         axis.line = element_blank(),
         panel.border = element_rect(fill=NA),
@@ -1799,6 +1836,16 @@ projects_per_quarter=subset(reg_df,recipient_duns%in%contractors_active_before_q
                                by='action_date_year_quarter']
 setnames(projects_per_quarter,'V1','num_projects')
 
+small_projects_per_quarter=subset(reg_df,recipient_duns%in%contractors_active_before_quickpay&
+                                    treat_i==1)[,n_distinct(contract_award_unique_key),
+                               by='action_date_year_quarter']
+setnames(small_projects_per_quarter,'V1','num_small_projects')
+
+large_projects_per_quarter=subset(reg_df,recipient_duns%in%contractors_active_before_quickpay&
+                                    treat_i==0)[,n_distinct(contract_award_unique_key),
+                               by='action_date_year_quarter']
+setnames(large_projects_per_quarter,'V1','num_large_projects')
+
 contractors_per_quarter=subset(reg_df,recipient_duns%in%contractors_active_before_quickpay)[,n_distinct(recipient_duns),
                                by='action_date_year_quarter']
 setnames(contractors_per_quarter,'V1','num_contractors')
@@ -1807,17 +1854,46 @@ projects_per_contractor=merge(projects_per_quarter,
                               contractors_per_quarter,
                               by='action_date_year_quarter')
 
+projects_per_contractor=merge(projects_per_contractor,
+                              small_projects_per_quarter,
+                              by='action_date_year_quarter')
+
+projects_per_contractor=merge(projects_per_contractor,
+                              large_projects_per_quarter,
+                              by='action_date_year_quarter')
+
 projects_per_contractor[,projects_per_contractor:=num_projects/num_contractors]
+projects_per_contractor[,small_projects_per_contractor:=num_small_projects/num_contractors]
+projects_per_contractor[,large_projects_per_contractor:=num_large_projects/num_contractors]
+
+
+projects_per_contractor <- melt(projects_per_contractor, 
+                                id = "action_date_year_quarter", 
+                                measure = c("projects_per_contractor",
+                                            "small_projects_per_contractor",
+                                            "large_projects_per_contractor"))
 
 ggplot(projects_per_contractor,
        aes(x=as.factor(action_date_year_quarter),
-           y=projects_per_contractor,
-           group=1))+
-geom_line(alpha=0.7)+
-geom_point(size=1.5)+
+           y=value,
+           group=variable))+
+geom_line(aes(linetype=variable),alpha=0.7)+
+geom_point(aes(shape=variable),size=1.5)+
   theme_minimal()+
   labs(x="Time", 
        y = "Number of projects per contractor")+
+  scale_linetype_manual(name  ="",
+                        breaks=c("projects_per_contractor", 
+                                 "small_projects_per_contractor",
+                                 "large_projects_per_contractor"),
+                        labels=c("All","Treated","Control"),
+                        values=c("solid","dotted","dashed"))+
+  scale_shape_manual(name  ="",
+                        breaks=c("projects_per_contractor", 
+                                 "small_projects_per_contractor",
+                                 "large_projects_per_contractor"),
+                        labels=c("All","Treated","Control"),
+                     values=c(19,16,17))+
   theme(axis.text.x = element_text(angle = 90),
         axis.line = element_blank(),
         panel.border = element_rect(fill=NA),
