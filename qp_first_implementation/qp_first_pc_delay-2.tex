@@ -65,7 +65,7 @@
 
 \title{Percentage Delay Rate: QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Jul 11, 2022}
+\date{\vspace{-2.5em}Jul 14, 2022}
 
 \begin{document}
 \maketitle
@@ -326,144 +326,93 @@ Adjusted R$^{2}$ & 0.01 & 0.32 & 0.32 & 0.36 & 0.36 \\
 \hypertarget{summary-statistics}{%
 \section{Summary statistics}\label{summary-statistics}}
 
-\hypertarget{number-of-projects}{%
-\section{Number of Projects}\label{number-of-projects}}
+\hypertarget{number-of-projects-per-contractor}{%
+\section{Number of projects per
+contractor}\label{number-of-projects-per-contractor}}
 
-\hypertarget{full-sample}{%
-\subsection{Full Sample}\label{full-sample}}
+\hypertarget{contractors-holding-only-small-or-only-large-projects}{%
+\subsection{Contractors holding only small or only large
+projects}\label{contractors-holding-only-small-or-only-large-projects}}
 
 \includegraphics{qp_first_pc_delay-2_files/figure-latex/num_projects_0-1.pdf}
-
-\hypertarget{continuous-version-full-sample}{%
-\subsubsection{Continuous version: Full
-Sample}\label{continuous-version-full-sample}}
 
 \begin{table}[H] \centering 
   \caption{Num Contractor Projects and QuickPay reform} 
   \label{} 
 \small 
-\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\begin{tabular}{@{\extracolsep{-2pt}}lcc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\\[-1.8ex] & \multicolumn{2}{c}{Number of projects} \\ 
+\\[-1.8ex] & (1) & (2)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$0.24$^{*}$ & $-$0.95$^{***}$ & $-$0.96$^{***}$ & $-$0.57$^{***}$ & $-$0.56$^{***}$ \\ 
-  & (0.14) & (0.12) & (0.12) & (0.12) & (0.12) \\ 
-  & & & & & \\ 
- $Post_t$ & 1.08$^{***}$ & $-$8.01$^{***}$ &  &  &  \\ 
-  & (0.13) & (0.80) &  &  &  \\ 
-  & & & & & \\ 
- Num Contractor Projects & 0.01$^{***}$ & 0.004$^{***}$ & 0.004$^{***}$ & 0.01$^{***}$ & 0.01$^{***}$ \\ 
-  & (0.001) & (0.0004) & (0.0004) & (0.0004) & (0.0004) \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t$ & $-$0.001 & 1.20$^{***}$ & 1.20$^{***}$ & 0.82$^{***}$ & 0.84$^{***}$ \\ 
-  & (0.16) & (0.15) & (0.15) & (0.15) & (0.15) \\ 
-  & & & & & \\ 
- $Post_t \times$ Num Contractor Projects & $-$0.01$^{***}$ & $-$0.002$^{***}$ & $-$0.002$^{***}$ & $-$0.005$^{***}$ & $-$0.005$^{***}$ \\ 
-  & (0.001) & (0.0004) & (0.0004) & (0.0004) & (0.0004) \\ 
-  & & & & & \\ 
- $Treat_i \times$ Num Contractor Projects & $-$0.02$^{***}$ & $-$0.01$^{***}$ & $-$0.01$^{***}$ & $-$0.01$^{***}$ & $-$0.01$^{***}$ \\ 
-  & (0.001) & (0.001) & (0.001) & (0.001) & (0.001) \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t \times$ Num Contractor Projects & 0.01$^{***}$ & 0.0002 & 0.0005 & 0.003$^{***}$ & 0.003$^{***}$ \\ 
-  & (0.001) & (0.001) & (0.001) & (0.001) & (0.001) \\ 
-  & & & & & \\ 
- Constant & 4.68$^{***}$ & 52.97$^{***}$ &  &  &  \\ 
-  & (0.11) & (0.61) &  &  &  \\ 
-  & & & & & \\ 
+ $Treat_i$ & $-$2.03$^{***}$ & $-$2.03$^{***}$ \\ 
+  & (0.39) & (0.39) \\ 
+  & & \\ 
+ $Post_t$ & 0.94$^{**}$ &  \\ 
+  & (0.41) &  \\ 
+  & & \\ 
+ $Treat_i \times Post_t$ & $-$0.58 & $-$0.58 \\ 
+  & (0.41) & (0.41) \\ 
+  & & \\ 
+ Constant & 5.03$^{***}$ &  \\ 
+  & (0.38) &  \\ 
+  & & \\ 
 \hline \\[-1.8ex] 
-Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
-$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
-Project stage & No & Yes & Yes & Yes & Yes \\ 
-Time fixed effects & No & No & Yes & Yes & Yes \\ 
-Task fixed effects & No & No & No & Yes & Yes \\ 
-Industry fixed effects & No & No & No & No & Yes \\ 
-Observations & 260,056 & 235,960 & 235,960 & 235,960 & 235,960 \\ 
-R$^{2}$ & 0.01 & 0.22 & 0.22 & 0.25 & 0.26 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.22 & 0.22 & 0.25 & 0.25 \\ 
+Time fixed effects & No & Yes \\ 
+Observations & 84,391 & 84,391 \\ 
+R$^{2}$ & 0.005 & 0.01 \\ 
+Adjusted R$^{2}$ & 0.005 & 0.01 \\ 
 \hline 
 \hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\textit{Note:}  & \multicolumn{2}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{2}{r}{Each observation is a contractor-quarter.} \\ 
+ & \multicolumn{2}{r}{SEs are robust and clustered at the contractor level.} \\ 
+ & \multicolumn{2}{r}{Sample restricted to contractors performing only one type of project.} \\ 
 \end{tabular} 
 \end{table}
 
-\hypertarget{discrete-version-full-sample}{%
-\subsection{Discrete version: Full
-Sample}\label{discrete-version-full-sample}}
-
-\includegraphics{qp_first_pc_delay-2_files/figure-latex/num_projs_discrete-1.pdf}
-
-\hypertarget{restricted-sample-contractors-active-before-quickpay}{%
-\subsection{Restricted Sample: Contractors active before
-QuickPay}\label{restricted-sample-contractors-active-before-quickpay}}
+\hypertarget{contractors-holding-at-least-one-small-project-are-treated}{%
+\subsection{Contractors holding at least one small project are
+``treated''}\label{contractors-holding-at-least-one-small-project-are-treated}}
 
 \includegraphics{qp_first_pc_delay-2_files/figure-latex/num_projects_1-1.pdf}
 
-\hypertarget{continuous-version-restricted-sample}{%
-\subsubsection{Continuous version: Restricted
-Sample}\label{continuous-version-restricted-sample}}
-
 \begin{table}[H] \centering 
-  \caption{Num Contractor Projects and QuickPay reform: Restricted Sample} 
+  \caption{Num Contractor Projects and QuickPay reform} 
   \label{} 
 \small 
-\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\begin{tabular}{@{\extracolsep{-2pt}}lcc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\\[-1.8ex] & \multicolumn{2}{c}{Number of projects} \\ 
+\\[-1.8ex] & (1) & (2)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$0.24$^{*}$ & $-$0.95$^{***}$ & $-$0.96$^{***}$ & $-$0.58$^{***}$ & $-$0.56$^{***}$ \\ 
-  & (0.14) & (0.12) & (0.12) & (0.12) & (0.12) \\ 
-  & & & & & \\ 
- $Post_t$ & 1.06$^{***}$ & $-$8.72$^{***}$ &  &  &  \\ 
-  & (0.13) & (0.81) &  &  &  \\ 
-  & & & & & \\ 
- Num Contractor Projects & 0.01$^{***}$ & 0.004$^{***}$ & 0.004$^{***}$ & 0.01$^{***}$ & 0.01$^{***}$ \\ 
-  & (0.001) & (0.0004) & (0.0004) & (0.0004) & (0.0004) \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t$ & $-$0.05 & 1.16$^{***}$ & 1.16$^{***}$ & 0.83$^{***}$ & 0.87$^{***}$ \\ 
-  & (0.17) & (0.15) & (0.15) & (0.15) & (0.15) \\ 
-  & & & & & \\ 
- $Post_t \times$ Num Contractor Projects & $-$0.01$^{***}$ & $-$0.002$^{***}$ & $-$0.002$^{***}$ & $-$0.005$^{***}$ & $-$0.005$^{***}$ \\ 
-  & (0.001) & (0.0004) & (0.0004) & (0.0004) & (0.0004) \\ 
-  & & & & & \\ 
- $Treat_i \times$ Num Contractor Projects & $-$0.02$^{***}$ & $-$0.01$^{***}$ & $-$0.01$^{***}$ & $-$0.01$^{***}$ & $-$0.01$^{***}$ \\ 
-  & (0.001) & (0.001) & (0.001) & (0.001) & (0.001) \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t \times$ Num Contractor Projects & 0.01$^{***}$ & 0.001 & 0.001 & 0.003$^{***}$ & 0.003$^{***}$ \\ 
-  & (0.001) & (0.001) & (0.001) & (0.001) & (0.001) \\ 
-  & & & & & \\ 
- Constant & 4.68$^{***}$ & 52.97$^{***}$ &  &  &  \\ 
-  & (0.11) & (0.61) &  &  &  \\ 
-  & & & & & \\ 
+ $Treat_i$ & $-$0.37 & $-$0.35 \\ 
+  & (0.43) & (0.43) \\ 
+  & & \\ 
+ $Post_t$ & 0.94$^{**}$ &  \\ 
+  & (0.41) &  \\ 
+  & & \\ 
+ $Treat_i \times Post_t$ & $-$0.25 & $-$0.27 \\ 
+  & (0.42) & (0.42) \\ 
+  & & \\ 
+ Constant & 5.03$^{***}$ &  \\ 
+  & (0.38) &  \\ 
+  & & \\ 
 \hline \\[-1.8ex] 
-Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
-$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
-Project stage & No & Yes & Yes & Yes & Yes \\ 
-Time fixed effects & No & No & Yes & Yes & Yes \\ 
-Task fixed effects & No & No & No & Yes & Yes \\ 
-Industry fixed effects & No & No & No & No & Yes \\ 
-Observations & 252,031 & 228,843 & 228,843 & 228,843 & 228,843 \\ 
-R$^{2}$ & 0.01 & 0.22 & 0.22 & 0.25 & 0.26 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.22 & 0.22 & 0.25 & 0.25 \\ 
+Time fixed effects & No & Yes \\ 
+Observations & 97,640 & 97,640 \\ 
+R$^{2}$ & 0.0004 & 0.001 \\ 
+Adjusted R$^{2}$ & 0.0003 & 0.001 \\ 
 \hline 
 \hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
- & \multicolumn{5}{r}{Sample restricted to contractors active before QuickPay.} \\ 
+\textit{Note:}  & \multicolumn{2}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{2}{r}{Each observation is a contractor-quarter.} \\ 
+ & \multicolumn{2}{r}{SEs are robust and clustered at the contractor level.} \\ 
+ & \multicolumn{2}{r}{Sample restricted to contractors performing only one type of project.} \\ 
 \end{tabular} 
 \end{table}
-
-\hypertarget{discrete-version-restricted-sample}{%
-\subsubsection{Discrete version: Restricted
-Sample}\label{discrete-version-restricted-sample}}
-
-\includegraphics{qp_first_pc_delay-2_files/figure-latex/num_projs_discrete_restricted-1.pdf}
 
 \hypertarget{project-portfolio-continuous}{%
 \section{Project portfolio:
