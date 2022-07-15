@@ -1550,6 +1550,7 @@ n_distinct(subset(control_projs_postqp,
 
 contractor_one_type=reg_df[,n_distinct(treat_i),by='recipient_duns']
 contractor_one_type=unique(subset(contractor_one_type,V1==1& !is.na(recipient_duns))$recipient_duns)
+active_before_qp=unique(subset(reg_df,post_t==0)$recipient_duns)
 
 reg_df_one_type=subset(reg_df,recipient_duns%in%contractor_one_type)
 
@@ -1575,7 +1576,7 @@ ggplot(projects_plot,
   geom_point(aes(shape=business_type),size=1.5)+
   theme_minimal()+
   labs(x="Time", 
-       y = "Number of projects per contractor")+
+       y = "Average number of projects per contractor")+
   scale_linetype_manual(name  ="",
                         breaks=c("S", 
                                  "O"),
@@ -1638,7 +1639,6 @@ num_projects_table=stargazer(m1,m2,
           header=F)
 ```
 
-
 ## Contractors holding at least one small project are "treated"
 
 ```{r num_projects_1,warning=FALSE, echo=FALSE, results='asis'}
@@ -1670,7 +1670,7 @@ ggplot(projects_plot,
   geom_point(aes(shape=business_type),size=1.5)+
   theme_minimal()+
   labs(x="Time", 
-       y = "Number of projects per contractor")+
+       y = "Average number of projects per contractor")+
   scale_linetype_manual(name  ="",
                         breaks=c("S", 
                                  "O"),
@@ -1714,6 +1714,201 @@ num_projects_table=stargazer(m1,m2,
           digits.extra=2,
           title = "Num Contractor Projects and QuickPay reform",
           dep.var.labels="Number of projects",
+          dep.var.caption = "",
+          covariate.labels =c("$Treat_i$",
+                               "$Post_t$",
+                               "$Treat_i \\times Post_t$",
+                               "Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Time fixed effects",rep("No",1),rep("Yes",1))),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a contractor-quarter.",
+                  "SEs are robust and clustered at the contractor level."),
+          header=F)
+```
+
+# Total budget 
+
+## Contractors holding only small or only large projects
+
+```{r budget_0,warning=FALSE, echo=FALSE, results='asis'}
+
+contractor_one_type=reg_df[,n_distinct(treat_i),by='recipient_duns']
+contractor_one_type=unique(subset(contractor_one_type,V1==1& !is.na(recipient_duns))$recipient_duns)
+active_before_qp=unique(subset(reg_df,post_t==0)$recipient_duns)
+
+reg_df_one_type=subset(reg_df,recipient_duns%in%contractor_one_type)
+
+contractor_quarter=reg_df_one_type[,sum(winsorized_initial_budget_i),
+                                   by=c('recipient_duns',
+                                        'action_date_year_quarter')]
+setnames(contractor_quarter,'V1','total_budget_across_projects')
+contractor_quarter[,post_t:=ifelse(action_date_year_quarter>as.Date('2011-04-27'),1,0)]
+
+contractor_quarter=merge(contractor_quarter,
+                         unique(reg_df_one_type[,c('recipient_duns','treat_i')]),
+                         by='recipient_duns')
+
+contractor_quarter[,business_type:=ifelse(treat_i==1,"S","O")]
+
+projects_plot=contractor_quarter[,mean(total_budget_across_projects),
+                by=c('action_date_year_quarter','business_type')]
+
+ggplot(projects_plot,
+       aes(x=as.factor(action_date_year_quarter),
+           y=V1,
+           group=business_type))+
+  geom_line(aes(linetype=business_type),alpha=0.7)+
+  geom_point(aes(shape=business_type),size=1.5)+
+  theme_minimal()+
+  labs(x="Time", 
+       y = "Average budget across projects per contractor")+
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", 
+                                 "O"),
+                        labels=c("Treated","Control"),
+                        values=c("solid","dashed"))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", 
+                              "O"),
+                     labels=c("Treated","Control"),
+                     values=c(16,17))+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))
+
+m1=felm(total_budget_across_projects~treat_i+
+          post_t:treat_i+post_t|
+          0| # no fixed effects
+          0| # no IV
+          recipient_duns, # clustered at the contractor level
+        data=contractor_quarter,
+        exactDOF = TRUE, 
+        cmethod = "reghdfe")
+
+m2=felm(total_budget_across_projects~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter| # no fixed effects
+          0| # no IV
+          recipient_duns, # clustered at the contractor level
+        data=contractor_quarter,
+        exactDOF = TRUE, 
+        cmethod = "reghdfe")
+
+num_projects_table=stargazer(m1,m2,
+          digits=2,
+          digits.extra=2,
+          title = "Contractor Project Budget and QuickPay reform",
+          dep.var.labels="Total budget",
+          dep.var.caption = "",
+          covariate.labels =c("$Treat_i$",
+                               "$Post_t$",
+                               "$Treat_i \\times Post_t$",
+                               "Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Time fixed effects",rep("No",1),rep("Yes",1))),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a contractor-quarter.",
+                  "SEs are robust and clustered at the contractor level.",
+                  "Sample restricted to contractors performing only one type of project."),
+          header=F)
+```
+
+# Number of tasks
+
+## Contractors holding only small or only large projects
+
+```{r tasks_0,warning=FALSE, echo=FALSE, results='asis'}
+
+contractor_one_type=reg_df[,n_distinct(treat_i),by='recipient_duns']
+contractor_one_type=unique(subset(contractor_one_type,V1==1& !is.na(recipient_duns))$recipient_duns)
+active_before_qp=unique(subset(reg_df,post_t==0)$recipient_duns)
+
+reg_df_one_type=subset(reg_df,recipient_duns%in%contractor_one_type)
+
+contractor_quarter=reg_df_one_type[,n_distinct(product_or_service_code),
+                                   by=c('recipient_duns',
+                                        'action_date_year_quarter')]
+setnames(contractor_quarter,'V1','number_of_tasks')
+contractor_quarter[,post_t:=ifelse(action_date_year_quarter>as.Date('2011-04-27'),1,0)]
+
+contractor_quarter=merge(contractor_quarter,
+                         unique(reg_df_one_type[,c('recipient_duns','treat_i')]),
+                         by='recipient_duns')
+
+contractor_quarter[,business_type:=ifelse(treat_i==1,"S","O")]
+
+projects_plot=contractor_quarter[,mean(number_of_tasks),
+                by=c('action_date_year_quarter','business_type')]
+
+ggplot(projects_plot,
+       aes(x=as.factor(action_date_year_quarter),
+           y=V1,
+           group=business_type))+
+  geom_line(aes(linetype=business_type),alpha=0.7)+
+  geom_point(aes(shape=business_type),size=1.5)+
+  theme_minimal()+
+  labs(x="Time", 
+       y = "Average number of tasks per contractor")+
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", 
+                                 "O"),
+                        labels=c("Treated","Control"),
+                        values=c("solid","dashed"))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", 
+                              "O"),
+                     labels=c("Treated","Control"),
+                     values=c(16,17))+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))
+
+m1=felm(number_of_tasks~treat_i+
+          post_t:treat_i+post_t|
+          0| # no fixed effects
+          0| # no IV
+          recipient_duns, # clustered at the contractor level
+        data=contractor_quarter,
+        exactDOF = TRUE, 
+        cmethod = "reghdfe")
+
+m2=felm(number_of_tasks~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter| # no fixed effects
+          0| # no IV
+          recipient_duns, # clustered at the contractor level
+        data=contractor_quarter,
+        exactDOF = TRUE, 
+        cmethod = "reghdfe")
+
+num_projects_table=stargazer(m1,m2,
+          digits=2,
+          digits.extra=2,
+          title = "Contractor Project Tasks and QuickPay reform",
+          dep.var.labels="Number of tasks",
           dep.var.caption = "",
           covariate.labels =c("$Treat_i$",
                                "$Post_t$",
