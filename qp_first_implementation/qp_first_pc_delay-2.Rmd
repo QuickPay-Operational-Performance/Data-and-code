@@ -2527,6 +2527,64 @@ portfolio_table=stargazer(m1,m2,m3,m4,m5,
 
 ### Pre-defined proportions 
 
+```{r project_portfolio_discrete_halves,warning=FALSE, echo=FALSE, results='asis'}
+
+reg_df_num_large_projects[,proportion_large_projects:=case_when(
+  prop_large_projects<=0.50~"0-50%",
+  (prop_large_projects>0.50)&(prop_large_projects<=1)~"50-100%")]
+
+df_main=data.frame()
+for(i in 1:length(unique(reg_df_num_large_projects$proportion_large_projects))){
+#  print(i)
+  tryCatch({
+  a=tidy(felm(wins_percentage_delay~treat_i+
+                treat_i:post_t+
+                log(wins_project_quarter_stage)+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                number_of_offers_received+
+                post_t:log(1+winsorized_initial_duration_in_days_i)+
+                post_t:log(1+winsorized_initial_budget_i)+
+                post_t:number_of_offers_received|
+                naics_code+product_or_service_code+action_date_year_quarter|
+                0|
+                contract_award_unique_key,
+              data=subset(reg_df_num_large_projects,
+                          proportion_large_projects==unique(reg_df_num_large_projects$proportion_large_projects)[i]),
+              exactDOF = TRUE, 
+              cmethod = "reghdfe"),
+              conf.int=T)
+    a=subset(a,term=='treat_i:post_t')
+    a['Proportion of large projects']=unique(reg_df_num_large_projects$proportion_large_projects)[i]
+    assign(paste0("df", i), value = a)
+    df_main=rbind(df_main,get(paste0("df", i)))}, error=function(e){})
+}
+
+#df_main[,color:=ifelse(p.value<=0.1,"black","dark grey")]
+
+setDT(df_main)[,color:="black"]
+
+# Instead of having a zero line, show gray as p.value>0.1 & black as p.value<0.1
+ggplot(df_main,
+       aes(x=`Proportion of large projects`,y=estimate,group=1))+
+  geom_point(size=1,alpha=0.7,color=df_main$color)+
+ # geom_line(alpha=0.7,size=0.25)+
+  geom_errorbar(aes(ymin = conf.low, 
+                    ymax = conf.high),
+                width=0.05,
+                size=0.25,
+                alpha=0.7,
+                color=df_main$color)+
+  geom_hline(yintercept =0,alpha=0.6,size=0.15)+
+  theme_minimal()+ 
+  theme(panel.border = element_rect(color="black",fill=NA), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        plot.title = element_text(hjust = 0.5))+
+  theme(legend.position="bottom")+
+  ylab("Point estimate \n (Percentage Delay Rate)")
+```
+
 ```{r project_portfolio_discrete_defined,warning=FALSE, echo=FALSE, results='asis'}
 
 reg_df_num_large_projects[,proportion_large_projects:=case_when(
