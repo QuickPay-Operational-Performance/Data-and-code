@@ -65,7 +65,7 @@
 
 \title{Percentage Delay Rate: QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Aug 08, 2022}
+\date{\vspace{-2.5em}Aug 11, 2022}
 
 \begin{document}
 \maketitle
@@ -674,6 +674,78 @@ Adjusted R$^{2}$ & 0.01 & 0.17 & 0.17 & 0.21 & 0.21 \\
 \end{tabular} 
 \end{table}
 
+\hypertarget{regression-3-indicator-for-small-project-with-existing-large-project}{%
+\subsection{Regression 3: Indicator for small project with existing
+large
+project}\label{regression-3-indicator-for-small-project-with-existing-large-project}}
+
+\begin{itemize}
+\tightlist
+\item
+  \(Treat_{i,l}\) is an indicator that equals 1 for small projects with
+  co-existing large projects, and is zero otherwise.
+\item
+  \(Treat_{i,l}=1 \implies Treat_i = 1\). This means we have:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \(Treat_{i,l} \times Post_t = Treat_i \times Treat_{i,l} \times Post_t\)
+  \item
+    \(Treat_{i,l} \times Treat_i = Treat_{i,l}\)
+  \end{itemize}
+\item
+  Large projects with parallel small projects are removed to get a clean
+  control group.
+\end{itemize}
+
+\begin{table}[H] \centering 
+  \caption{Project Portfolio and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$3.61$^{***}$ & $-$2.45$^{***}$ & $-$2.51$^{***}$ & $-$1.29$^{***}$ & $-$1.26$^{***}$ \\ 
+  & (0.15) & (0.15) & (0.15) & (0.15) & (0.15) \\ 
+  & & & & & \\ 
+ $Treat_{i,l}$ & 2.41$^{***}$ & 1.38$^{***}$ & 1.41$^{***}$ & 0.41$^{***}$ & 0.35$^{***}$ \\ 
+  & (0.14) & (0.13) & (0.13) & (0.13) & (0.13) \\ 
+  & & & & & \\ 
+ $Post_t$ & $-$0.10 & $-$5.88$^{***}$ &  &  &  \\ 
+  & (0.12) & (0.88) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 0.54$^{***}$ & 0.53$^{***}$ & 0.56$^{***}$ & 0.44$^{**}$ & 0.53$^{***}$ \\ 
+  & (0.19) & (0.19) & (0.19) & (0.19) & (0.19) \\ 
+  & & & & & \\ 
+ $Treat_{i,l} \times Post_t$ & 0.67$^{***}$ & 0.66$^{***}$ & 0.65$^{***}$ & 0.68$^{***}$ & 0.62$^{***}$ \\ 
+  & (0.17) & (0.18) & (0.17) & (0.17) & (0.17) \\ 
+  & & & & & \\ 
+ Constant & 5.59$^{***}$ & 48.60$^{***}$ &  &  &  \\ 
+  & (0.10) & (0.68) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 237,093 & 214,622 & 214,622 & 214,622 & 214,622 \\ 
+R$^{2}$ & 0.004 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
+Adjusted R$^{2}$ & 0.004 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Large projects with parallel small projects are removed.} \\ 
+\end{tabular} 
+\end{table}
+
 \hypertarget{mediator-number-of-large-projects}{%
 \subsubsection{Mediator: Number of Large
 Projects}\label{mediator-number-of-large-projects}}
@@ -730,60 +802,9 @@ Adjusted R$^{2}$ & 0.02 & 0.18 & 0.18 & 0.21 & 0.21 \\
 \end{tabular} 
 \end{table}
 
-\hypertarget{mediator-total-projects}{%
-\subsubsection{Mediator: Total Projects}\label{mediator-total-projects}}
-
-\begin{table}[H] \centering 
-  \caption{Project Portfolio and QuickPay reform} 
-  \label{} 
-\small 
-\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
-\\[-1.8ex]\hline 
-\hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
-\hline \\[-1.8ex] 
- $Treat_i$ & $-$3.92$^{***}$ & $-$4.13$^{***}$ & $-$4.05$^{***}$ & $-$1.54$^{***}$ & $-$1.45$^{***}$ \\ 
-  & (0.23) & (0.22) & (0.22) & (0.22) & (0.22) \\ 
-  & & & & & \\ 
- $Post_t$ & $-$0.18 & $-$9.26$^{***}$ &  &  &  \\ 
-  & (0.14) & (1.28) &  &  &  \\ 
-  & & & & & \\ 
- Total projects & $-$0.01$^{***}$ & $-$0.01$^{***}$ & $-$0.01$^{***}$ & 0.001 & $-$0.0001 \\ 
-  & (0.0003) & (0.0004) & (0.0004) & (0.0005) & (0.001) \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t$ & 0.74$^{***}$ & 1.69$^{***}$ & 1.58$^{***}$ & 0.65$^{**}$ & 0.67$^{**}$ \\ 
-  & (0.29) & (0.28) & (0.28) & (0.28) & (0.28) \\ 
-  & & & & & \\ 
- $Post_t \times$ Total projects & 0.01$^{***}$ & 0.01$^{***}$ & 0.01$^{***}$ & $-$0.0004 & $-$0.001 \\ 
-  & (0.0003) & (0.0004) & (0.0004) & (0.0004) & (0.0004) \\ 
-  & & & & & \\ 
- $Treat_i \times$ Total projects & 0.01$^{***}$ & 0.01$^{***}$ & 0.01$^{***}$ & $-$0.0004 & 0.0001 \\ 
-  & (0.001) & (0.001) & (0.001) & (0.001) & (0.001) \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t \times$ Total projects & $-$0.01$^{***}$ & $-$0.01$^{***}$ & $-$0.01$^{***}$ & $-$0.001 & $-$0.001 \\ 
-  & (0.001) & (0.001) & (0.001) & (0.001) & (0.001) \\ 
-  & & & & & \\ 
- Constant & 6.53$^{***}$ & 52.62$^{***}$ &  &  &  \\ 
-  & (0.12) & (1.01) &  &  &  \\ 
-  & & & & & \\ 
-\hline \\[-1.8ex] 
-Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
-$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
-Project stage & No & Yes & Yes & Yes & Yes \\ 
-Time fixed effects & No & No & Yes & Yes & Yes \\ 
-Task fixed effects & No & No & No & Yes & Yes \\ 
-Industry fixed effects & No & No & No & No & Yes \\ 
-Observations & 121,083 & 113,568 & 113,568 & 113,568 & 113,568 \\ 
-R$^{2}$ & 0.02 & 0.18 & 0.18 & 0.21 & 0.22 \\ 
-Adjusted R$^{2}$ & 0.02 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
-\hline 
-\hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
-\end{tabular} 
-\end{table}
+\hypertarget{archived-mediator-total-projects}{%
+\subsubsection{{[}ARCHIVED{]} Mediator: Total
+Projects}\label{archived-mediator-total-projects}}
 
 \hypertarget{archived-project-portfolio-num-large-projectstotal-projects}{%
 \section{{[}Archived{]} Project portfolio: Num Large Projects/Total
