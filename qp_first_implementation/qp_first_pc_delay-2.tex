@@ -33,13 +33,6 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
-\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
-\hypersetup{
-  pdftitle={Percentage Delay Rate: QuickPay (2009-2012)},
-  hidelinks,
-  pdfcreator={LaTeX via pandoc}}
-\urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
 \makeatletter
@@ -62,10 +55,17 @@
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Percentage Delay Rate: QuickPay (2009-2012)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
 
 \title{Percentage Delay Rate: QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Aug 11, 2022}
+\date{\vspace{-2.5em}Aug 15, 2022}
 
 \begin{document}
 \maketitle
@@ -746,9 +746,77 @@ Adjusted R$^{2}$ & 0.004 & 0.18 & 0.18 & 0.21 & 0.21 \\
 \end{tabular} 
 \end{table}
 
-\hypertarget{mediator-number-of-large-projects}{%
-\subsubsection{Mediator: Number of Large
-Projects}\label{mediator-number-of-large-projects}}
+\hypertarget{regression-4a-indicator-for-parallel-large-project}{%
+\subsection{Regression 4A: Indicator for Parallel Large
+Project}\label{regression-4a-indicator-for-parallel-large-project}}
+
+\begin{itemize}
+\tightlist
+\item
+  Concurrent Large Project\(_{i,t}\) is an indicator that equals one if
+  the contractor has at least one other large project in the same
+  quarter.
+\item
+  Large projects with parallel small projects are removed to get a clean
+  control group.
+\end{itemize}
+
+\begin{table}[H] \centering 
+  \caption{Project Portfolio and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$3.11$^{***}$ & $-$3.46$^{***}$ & $-$3.51$^{***}$ & $-$2.01$^{***}$ & $-$1.98$^{***}$ \\ 
+  & (0.37) & (0.31) & (0.31) & (0.31) & (0.31) \\ 
+  & & & & & \\ 
+ Concurrent Large Project$_{i,t}$ & $-$1.92$^{***}$ & $-$2.51$^{***}$ & $-$2.52$^{***}$ & $-$1.23$^{***}$ & $-$1.18$^{***}$ \\ 
+  & (0.38) & (0.31) & (0.31) & (0.32) & (0.32) \\ 
+  & & & & & \\ 
+ $Post_t$ & 0.45 & $-$6.64$^{***}$ &  &  &  \\ 
+  & (0.45) & (0.98) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times $ Concurrent Large Project$_{i,t}$ & $-$0.46 & 1.45$^{***}$ & 1.39$^{***}$ & 0.84$^{**}$ & 0.78$^{**}$ \\ 
+  & (0.41) & (0.35) & (0.35) & (0.35) & (0.36) \\ 
+  & & & & & \\ 
+ $Post_t \times $ Concurrent Large Project$_{i,t}$ & $-$0.58 & 0.72$^{*}$ & 0.74$^{*}$ & 0.34 & 0.31 \\ 
+  & (0.47) & (0.41) & (0.41) & (0.41) & (0.41) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 0.55 & 1.74$^{***}$ & 1.78$^{***}$ & 1.40$^{***}$ & 1.39$^{***}$ \\ 
+  & (0.46) & (0.41) & (0.41) & (0.41) & (0.41) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t \times$ Concurrent Large Project$_{i,t}$ & 0.12 & $-$1.25$^{***}$ & $-$1.21$^{***}$ & $-$1.25$^{***}$ & $-$1.09$^{**}$ \\ 
+  & (0.51) & (0.46) & (0.46) & (0.46) & (0.46) \\ 
+  & & & & & \\ 
+ Constant & 7.32$^{***}$ & 50.90$^{***}$ &  &  &  \\ 
+  & (0.37) & (0.75) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 237,093 & 214,622 & 214,622 & 214,622 & 214,622 \\ 
+R$^{2}$ & 0.004 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
+Adjusted R$^{2}$ & 0.003 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Large projects with parallel small projects are removed.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{regression-4b-number-of-large-projects}{%
+\subsection{Regression 4B: Number of Large
+Projects}\label{regression-4b-number-of-large-projects}}
 
 \begin{table}[H] \centering 
   \caption{Project Portfolio and QuickPay reform} 
