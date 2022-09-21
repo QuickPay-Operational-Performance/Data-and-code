@@ -2217,9 +2217,9 @@ write(portfolio_large_projs_did_tex,
              "/portfolio_large_projs_did.tex"))
 ```
 
-### Intensity with Number of Small Projects
+### Intensity with Number of Small Projects [Archived]
 
-```{r project_portfolio_spillover_intensity, echo=FALSE,results='asis',warning=FALSE}
+```{r project_portfolio_spillover_intensity, eval=FALSE, echo=FALSE,results='asis',warning=FALSE}
 
 num_small_projs=subset(reg_df,treat_i==1)[,n_distinct(contract_award_unique_key),
                                           by=c('recipient_duns','action_date_year_quarter')]
@@ -2346,21 +2346,25 @@ portfolio_large_projs_did_intensity=stargazer(m1,m2,m3,m4,m5,
           #         "Treat is an indicator that equals one for LARGE projects that have at least one parallel small project in the same quarter, and is zero otherwise."),
           header=F)
 ```
-## Regression 2
+
+## Regression 2 [Archived]
 
 * Treat equals one for small projects with at least one large project in the same quarter.
 * Treat is zero for large projects with NO small project in the same quarter.
 * Treat is not defined for other cases i.e, only small projects or large projects with small projects are excluded.
-                  
-```{r project_portfolio_spillover_1,warning=FALSE, echo=FALSE, results='asis'}
 
+```{r pp_setup,warning=FALSE,echo=FALSE,results='asis'}
 reg_df[,treat_small_with_large:=case_when(
   treat_i==1&contractor_quarter%in%contractors_holding_both_large_and_small_projects~1,
   treat_i==0&contractor_quarter%in%contractors_holding_only_large_projects~0,
   treat_i==1&contractor_quarter%in%contractors_holding_only_small_projects~NaN,
   treat_i==0&contractor_quarter%in%contractors_holding_both_large_and_small_projects~NaN,
 )]
-                                         
+   
+```
+
+```{r project_portfolio_spillover_1,eval=FALSE, warning=FALSE, echo=FALSE, results='asis'}
+
 m1=felm(wins_percentage_delay~treat_small_with_large+
                             post_t:treat_small_with_large+
                             post_t|
@@ -2601,7 +2605,7 @@ m5=felm(wins_percentage_delay~treat_new+
         exactDOF = TRUE,
         cmethod = "reghdfe")
 
-stargazer(m1,m2,m3,m4,m5,
+portfolio_did=stargazer(m1,m2,m3,m4,m5,
           digits=2,
           digits.extra=2,
           title = "Project Portfolio and QuickPay reform",
@@ -2638,14 +2642,20 @@ stargazer(m1,m2,m3,m4,m5,
                   "Large projects with parallel small projects are removed."),
           header=F)
 
+
+portfolio_did_tex=make_tex_pieces(portfolio_did)
+# Write to file
+write(portfolio_did_tex,
+      paste0(tables_folder,
+             "/portfolio_did_tex.tex"))
 ```
 
-## Regression 4A: Indicator for Parallel Large Project
+## Regression 4A: Indicator for Parallel Large Project [Archived]
 
 * Concurrent Large Project$_{i,t}$ is an indicator that equals one if the contractor has at least one other large project in the same quarter.
 * Large projects with parallel small projects are removed to get a clean control group.
 
-```{r project_portfolio_parallel_large,warning=FALSE, echo=FALSE, results='asis'}
+```{r project_portfolio_parallel_large, eval=FALSE,warning=FALSE, echo=FALSE, results='asis'}
 
 num_large_projs=subset(reg_df,treat_i==0)[,n_distinct(contract_award_unique_key),
                           by=c('recipient_duns','action_date_year_quarter')]
