@@ -200,6 +200,53 @@ reg_df[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
 reg_df[,stage_aliter:=as.numeric(action_date_year_quarter-initial_start_date)/as.numeric(last_reported_end_date-initial_start_date)]
 ```
 
+```{r contractor_one_type,include=FALSE}
+one_type_contractors=reg_df[,n_distinct(treat_i),by='recipient_duns']
+one_type_contractors=unique(subset(one_type_contractors,V1==1 &
+                                     !is.na(recipient_duns))$recipient_duns)
+
+reg_df_one_type=subset(reg_df,recipient_duns%in%one_type_contractors)
+
+reg_df_one_type[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+# time spent in the project so far/total time of the project
+# if project was active in previous quarter
+reg_df_one_type[,project_quarter_stage:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),as.numeric(lag(action_date_year_quarter,1)-initial_start_date)/as.numeric(lag(last_reported_end_date,1)-initial_start_date),NaN)]
+
+# (action_date_year_quarter-90) to get beginning of the quarter
+
+reg_df_one_type[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+# stage at end of quarter -- not using this!
+reg_df_one_type[,stage_aliter:=as.numeric(action_date_year_quarter-initial_start_date)/as.numeric(last_reported_end_date-initial_start_date)]
+```
+
+```{r contractor_two_type, include=FALSE}
+two_type_contractors=reg_df[,n_distinct(treat_i),by='recipient_duns']
+two_type_contractors=unique(subset(two_type_contractors,V1==2 &
+                                     !is.na(recipient_duns))$recipient_duns)
+
+reg_df_two_type=subset(reg_df,recipient_duns%in%two_type_contractors)
+
+reg_df_two_type[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+# time spent in the project so far/total time of the project
+# if project was active in previous quarter
+reg_df_two_type[,project_quarter_stage:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),as.numeric(lag(action_date_year_quarter,1)-initial_start_date)/as.numeric(lag(last_reported_end_date,1)-initial_start_date),NaN)]
+
+# (action_date_year_quarter-90) to get beginning of the quarter
+
+reg_df_two_type[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+```
 # Delay days over time
 
 ```{r plot_delay_days, echo=FALSE, results='asis'}
@@ -458,6 +505,61 @@ ggsave(path=figures_folder,
 
 ```
 
+## Normalized percentage delay: Four groups
+
+```{r normalized_four_groups, echo=FALSE, results='asis'}
+
+reg_df[,group_name:=case_when(business_type=="S" & 
+                                    recipient_duns%in%one_type_contractors~"Small only",
+                                  business_type=="O" & 
+                                    recipient_duns%in%one_type_contractors~"Large only",
+                                  business_type=="S" & 
+                                    recipient_duns%in%two_type_contractors~"Small (with large)",
+                                  business_type=="O" & 
+                                    recipient_duns%in%two_type_contractors~"Large (with small)")]
+
+
+mean_delay=reg_df[!is.na(wins_percentage_delay) 
+                  & action_date_year_quarter<=as.Date('2012-06-30'), 
+              mean(wins_percentage_delay),  
+              by = c('action_date_year_quarter','group_name')]
+mean_delay[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
+mean_delay=mean_delay[order(action_date_year_quarter,group_name)]
+
+
+only_large_baseline=subset(mean_delay,year_quarter=='2010-Mar' & group_name=="Large only")$V1
+only_small_baseline=subset(mean_delay,year_quarter=='2010-Mar' & group_name=="Small only")$V1
+
+conc_large_baseline=subset(mean_delay,year_quarter=='2010-Mar' & group_name=="Large (with small)")$V1
+conc_small_baseline=subset(mean_delay,year_quarter=='2010-Mar' & group_name=="Small (with large)")$V1
+
+mean_delay[,V2:=case_when(group_name=="Small only"~V1*100/only_small_baseline,
+                          group_name=="Large only"~V1*100/only_large_baseline,
+                          group_name=="Small (with large)"~V1*100/conc_small_baseline,
+                          group_name=="Large (with small)"~V1*100/conc_large_baseline)]
+
+ggplot(mean_delay, aes(x=year_quarter,
+                                   y=V2, 
+                                   group = group_name))+
+  geom_line(aes(linetype=group_name, color=group_name),
+            alpha=0.7) +    
+  scale_x_discrete(limits=mean_delay$year_quarter)+
+  geom_point(aes(shape=group_name),size=1.5)+  
+  annotate("text", label = "QuickPay", x = 22, y = 70,color="dimgrey")+
+  geom_vline(xintercept = 20.2, linetype="solid", 
+             color = "light gray", size=1) +
+  theme_minimal()+
+  labs(x="Year-Quarter", 
+       y = "Average percentage delay rate per quarter \n (normalized by delay in 2010-Mar) ")+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+    legend.text = element_text(size=11))
+```
+
 ```{r stargazer_format, include=FALSE}
 # Code to extract only the inner part (nested within tabular) of table from stargazer
 # We will use this along with threeparttable in latex later 
@@ -612,11 +714,6 @@ write(base_table_tex,
 ## Contractors performing only one type of project (Restricted sample)
 
 ```{r baseline_regressions_one_type, echo=FALSE, results='asis'}
-
-one_type_contractors=reg_df[,n_distinct(treat_i),by='recipient_duns']
-one_type_contractors=unique(subset(one_type_contractors,V1==1 &
-                                     !is.na(recipient_duns))$recipient_duns)
-reg_df_one_type=subset(reg_df,recipient_duns%in%one_type_contractors)
 
 # Baseline Regressions 
 baseline_reg=felm(wins_percentage_delay~treat_i+
