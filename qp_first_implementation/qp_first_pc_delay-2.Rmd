@@ -16,6 +16,8 @@ header-includes:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Setup
+
 ```{r packages,warning=FALSE,message=FALSE,include=FALSE}
 library(openxlsx)
 library(tidyverse)
@@ -247,9 +249,10 @@ reg_df_two_type[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
                               na.rm=T)]
 
 ```
-# Delay days over time
 
-```{r plot_delay_days, echo=FALSE, results='asis'}
+# Delay days over time [Archived]
+
+```{r plot_delay_days, eval=FALSE, echo=FALSE, results='asis'}
 mean_delay=reg_df[!is.na(winsorized_delay) 
                   & action_date_year_quarter<=as.Date('2012-06-30'), 
               mean(winsorized_delay),  
@@ -291,9 +294,17 @@ ggplot(mean_delay, aes(x=year_quarter,
     legend.text = element_text(size=11))
 ```
 
-# Delay days over time (de-meaned)
+# Delay days over time (de-meaned) [Archived]
 
-```{r demeaned_plot_delay_days,echo=FALSE,results='asis'}
+```{r demeaned_plot_delay_days,eval=FALSE, echo=FALSE,results='asis'}
+
+mean_delay=reg_df[!is.na(winsorized_delay) 
+                  & action_date_year_quarter<=as.Date('2012-06-30'), 
+              mean(winsorized_delay),  
+              by = c('action_date_year_quarter','business_type')]
+mean_delay[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
+mean_delay=mean_delay[order(action_date_year_quarter,business_type)]
+
 pre_qp_mean_small=mean(subset(mean_delay,
                          action_date_year_quarter<=as.Date('2011-04-27') &
                            business_type=="S")$V1,na.rm=T)
@@ -348,7 +359,72 @@ ggsave(path=figures_folder,
        filename = "delay_days_demeaned.png")
 ```
 
-# Percentage delays over time
+# Delay days over time (de-meaned) -- One type of contractor
+
+```{r demeaned_plot_delay_days_one_type,echo=FALSE,results='asis'}
+
+mean_delay=reg_df_one_type[!is.na(winsorized_delay) 
+                  & action_date_year_quarter<=as.Date('2012-06-30'), 
+              mean(winsorized_delay),  
+              by = c('action_date_year_quarter','business_type')]
+mean_delay[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
+mean_delay=mean_delay[order(action_date_year_quarter,business_type)]
+
+pre_qp_mean_small=mean(subset(mean_delay,
+                         action_date_year_quarter<=as.Date('2011-04-27') &
+                           business_type=="S")$V1,na.rm=T)
+pre_qp_mean_large=mean(subset(mean_delay,
+                              action_date_year_quarter<=as.Date('2011-04-27') &
+                                business_type=="O")$V1,na.rm=T)
+
+mean_delay[,demeaned_delay:=ifelse(business_type=="S",
+                                   V1-pre_qp_mean_small,
+                                   V1-pre_qp_mean_large)]
+
+ggplot(mean_delay, aes(x=year_quarter,
+                       y=demeaned_delay, 
+                       group = business_type))+
+  geom_line(aes(linetype=business_type, color=business_type),alpha=0.7) +    
+  scale_x_discrete(limits=mean_delay$year_quarter)+
+  geom_point(aes(shape=business_type),size=1.5)+  
+#  annotate("text", label = "QuickPay", x = 12, y = 3.13,color="dimgrey")+
+  # geom_vline(xintercept = 10.2, linetype="solid", 
+  #            color = "light gray", size=1) +
+  geom_vline(xintercept =10.2,alpha=0.8,size=0.15,linetype="solid")+
+  theme_minimal()+
+  labs(x="Time", 
+       y = "Average delay rate (in days)")+
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", "O"),
+                        labels=c("Treated","Control"),
+                        values=c("solid","dashed"))+
+  scale_color_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c('black','black'))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c(16,17))+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))+
+  coord_fixed(ratio=1)
+
+ggsave(path=figures_folder,
+       bg="white",
+       width = 8,
+       height = 5,
+       filename = "delay_days_demeaned_one_type.png")
+```
+
+# Percentage delays over time [Archived]
 
 * Sample restricted to projects for which start dates matches the one in API
    * This is done by using first reported "action_date" and "date_signed" 
@@ -356,7 +432,7 @@ ggsave(path=figures_folder,
     * $Duration_{i,t-1} = Deadline_{i,t-1} - StartDate_i$
 
 
-```{r plot_pc_delay, echo=FALSE, results='asis'}
+```{r plot_pc_delay, eval=FALSE, echo=FALSE, results='asis'}
 mean_delay=reg_df[!is.na(wins_percentage_delay) 
                   & action_date_year_quarter<=as.Date('2012-06-30'), 
               mean(wins_percentage_delay),  
@@ -398,11 +474,20 @@ ggplot(mean_delay, aes(x=year_quarter,
     legend.text = element_text(size=11))
 ```
 
-# Demeaned delay rate (in percentage)
+# Demeaned delay rate (in percentage) [Archived]
 
 * Subtract the average pre-quickpay delay rate from each observation
 
-```{r demeaned_plot,echo=FALSE,results='asis'}
+```{r demeaned_plot, eval=FALSE, echo=FALSE,results='asis'}
+
+mean_delay=reg_df[!is.na(wins_percentage_delay) 
+                  & action_date_year_quarter<=as.Date('2012-06-30'), 
+              mean(wins_percentage_delay),  
+              by = c('action_date_year_quarter','business_type')]
+mean_delay[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
+mean_delay=mean_delay[order(action_date_year_quarter,business_type)]
+
+
 pre_qp_mean_small=mean(subset(mean_delay,
                          action_date_year_quarter<=as.Date('2011-04-27') &
                            business_type=="S")$V1,na.rm=T)
@@ -457,9 +542,77 @@ ggsave(path=figures_folder,
        filename = "pc_delay_demeaned.png")
 ```
 
-## Normalized delay rate (in percentage)
+# Demeaned delay rate (in percentage) -- One type contractor
 
-```{r normalized_plot,echo=FALSE, results='asis'}
+* Subtract the average pre-quickpay delay rate from each observation
+
+```{r demeaned_plot_one_type,echo=FALSE,results='asis'}
+
+mean_delay=reg_df_one_type[!is.na(wins_percentage_delay) 
+                  & action_date_year_quarter<=as.Date('2012-06-30'), 
+              mean(wins_percentage_delay),  
+              by = c('action_date_year_quarter','business_type')]
+mean_delay[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
+mean_delay=mean_delay[order(action_date_year_quarter,business_type)]
+
+
+pre_qp_mean_small=mean(subset(mean_delay,
+                         action_date_year_quarter<=as.Date('2011-04-27') &
+                           business_type=="S")$V1,na.rm=T)
+pre_qp_mean_large=mean(subset(mean_delay,
+                              action_date_year_quarter<=as.Date('2011-04-27') &
+                                business_type=="O")$V1,na.rm=T)
+
+mean_delay[,demeaned_delay:=ifelse(business_type=="S",
+                                   V1-pre_qp_mean_small,
+                                   V1-pre_qp_mean_large)]
+
+ggplot(mean_delay, aes(x=year_quarter,
+                       y=demeaned_delay, 
+                       group = business_type))+
+  geom_line(aes(linetype=business_type, color=business_type),alpha=0.7) +    
+  scale_x_discrete(limits=mean_delay$year_quarter)+
+  geom_point(aes(shape=business_type),size=1.5)+  
+#  annotate("text", label = "QuickPay", x = 12, y = 3.13,color="dimgrey")+
+  # geom_vline(xintercept = 10.2, linetype="solid", 
+  #            color = "light gray", size=1) +
+  geom_vline(xintercept =10.2,alpha=0.8,size=0.15,linetype="solid")+
+  theme_minimal()+
+  labs(x="Time", 
+       y = "Average percentage delay rate")+
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", "O"),
+                        labels=c("Treated","Control"),
+                        values=c("solid","dashed"))+
+  scale_color_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c('black','black'))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c(16,17))+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))+
+  coord_fixed(ratio=2)
+
+ggsave(path=figures_folder,
+       bg="white",
+       width = 8,
+       height = 5,
+       filename = "pc_delay_demeaned_one_type.png")
+```
+
+# Normalized delay rate (in percentage) [Archived]
+
+```{r normalized_plot,eval=FALSE, echo=FALSE, results='asis'}
 large_baseline=subset(mean_delay,year_quarter=='2010-Mar' & business_type=="O")$V1
 small_baseline=subset(mean_delay,year_quarter=='2010-Mar' & business_type=="S")$V1
 mean_delay[,V2:=ifelse(business_type=="S",V1*100/small_baseline,V1*100/large_baseline)]
@@ -505,9 +658,9 @@ ggsave(path=figures_folder,
 
 ```
 
-## Normalized percentage delay: Four groups
+# Normalized percentage delay: Four groups [Archived]
 
-```{r normalized_four_groups, echo=FALSE, results='asis'}
+```{r normalized_four_groups, eval=FALSE, echo=FALSE, results='asis'}
 
 reg_df[,group_name:=case_when(business_type=="S" & 
                                     recipient_duns%in%one_type_contractors~"Small only",
@@ -903,12 +1056,90 @@ ggsave(path=figures_folder,
        filename = "event_study_plot.png")
 ```
 
-# Parallel Trends Test
+## Event Study -- One Type
+
+```{r event_study_one_type, echo=FALSE, results='asis'}
+
+reg_df_one_type[,relative_quarter:=case_when(action_date_year_quarter=="2010-03-31"~-5,
+                  action_date_year_quarter=="2010-06-30"~-4,
+                  action_date_year_quarter=="2010-09-30"~-3,
+                  action_date_year_quarter=="2010-12-31"~-2,
+                  action_date_year_quarter=="2011-03-31"~-1,
+                  action_date_year_quarter=="2011-06-30"~0,
+                  action_date_year_quarter=="2011-09-30"~1,
+                  action_date_year_quarter=="2011-12-31"~2,
+                  action_date_year_quarter=="2012-03-31"~3,
+                  action_date_year_quarter=="2012-06-30"~4)]
+reg_df_one_type[, time_to_treat := ifelse(treat_i==1, relative_quarter, 0)]
+
+mod_twfe = fixest::feols(winsorized_delay ~ i(time_to_treat, treat_i, ref = -1) +
+                    	   	  treat_i+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|   
+		  naics_code+product_or_service_code+action_date_year_quarter,        
+		 cluster = ~contract_award_unique_key,
+		 data = reg_df_one_type)
+
+# Default event study plot
+# fixest::iplot(mod_twfe,
+#       xlab = 'Quarter relative to QuickPay',
+#       main = 'Effect on Average Percentage Delay Rate',
+#       grid=F,
+#       ylim.add=0.25,
+#       zero.par=list(lwd=0.25),
+#       ref.line.par = list(col = "black", lty=3, lwd=0.8), #lty= linetype, lwd=linewidth
+#       pt.join = T,
+#       x=c(-5:4))
+
+data_event_study=fixest::iplot(mod_twfe,only.params=T,
+      x=c(-5:4))$prms
+setDT(data_event_study)[,`Quarter relative to QuickPay`:=as.factor(x)]
+
+ggplot(data_event_study,aes(x=`Quarter relative to QuickPay`,
+                            y=y,
+                            group=1))+
+  geom_point(size=1.5,alpha=0.7)+
+  geom_errorbar(aes(ymin = ci_low, 
+                    ymax = ci_high),
+                width=0.01,
+                size=0.25,
+                alpha=0.7)+
+#  geom_line(alpha=0.7,size=0.25)+
+  geom_hline(yintercept =0,alpha=0.6,size=0.15)+
+  geom_vline(xintercept =5.5,alpha=0.8,size=0.15,linetype="dashed")+
+  theme_minimal()+ 
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(size=11),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+    legend.text = element_text(size=11))+
+  theme(legend.position="bottom")+
+  ylab("Point estimate \n (Percentage Delay Rate)")+ 
+  #ylim(-1.05, 2.5)+
+  scale_y_continuous(breaks = seq(-1, 3, 1))+
+  coord_fixed(ratio=0.6)
+
+ggsave(path=figures_folder,
+       width = 8,
+       height = 5,
+       bg="white",
+       filename = "event_study_plot_one_type.png")
+```
+
+# Parallel Trends Test -- One Type
 
 ```{r parallel_trends_test, echo=FALSE, results='asis'}
-df_qn<-unique(reg_df,by='action_date_year_quarter')[,"action_date_year_quarter"]
+df_qn<-unique(reg_df_one_type,by='action_date_year_quarter')[,"action_date_year_quarter"]
 df_qn=df_qn[order(action_date_year_quarter)][,quarter_number:=seq.int(nrow(df_qn))]
-reg_df=merge(reg_df,df_qn,by='action_date_year_quarter')
+reg_df_one_type=merge(reg_df_one_type,df_qn,by='action_date_year_quarter')
 
 # Baseline Regressions 
 m1=felm(wins_percentage_delay~treat_i+
@@ -917,7 +1148,7 @@ m1=felm(wins_percentage_delay~treat_i+
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
-                  data=subset(reg_df, post_t==0),
+                  data=subset(reg_df_one_type, post_t==0),
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 
@@ -936,7 +1167,7 @@ m2=felm(wins_percentage_delay~treat_i+
                             0|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df, post_t==0),
+                          data=subset(reg_df_one_type, post_t==0),
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 # time fixed effects also included in the following specs
@@ -952,7 +1183,7 @@ m3=felm(wins_percentage_delay~treat_i+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df, post_t==0), 
+                          data=subset(reg_df_one_type, post_t==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 m4=felm(wins_percentage_delay~treat_i+
@@ -967,7 +1198,7 @@ m4=felm(wins_percentage_delay~treat_i+
                             product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df, post_t==0), 
+                          data=subset(reg_df_one_type, post_t==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 m5=felm(wins_percentage_delay~treat_i+
@@ -982,7 +1213,7 @@ m5=felm(wins_percentage_delay~treat_i+
                             naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df, post_t==0), 
+                          data=subset(reg_df_one_type, post_t==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
@@ -1021,14 +1252,14 @@ pt=stargazer(m1,m2,m3,m4,m5,
 pt_table_tex=make_tex_pieces(pt)
 # Write to file
 write(pt_table_tex,
-      paste0(tables_folder,"/parallel_trends_test.tex"))
+      paste0(tables_folder,"/parallel_trends_test_one_type.tex"))
 ```
 
-# Placebo Test
+# Placebo Test -- One type
 
 ```{r placebo_regressions, eval=FALSE, include=FALSE}
 
-reg_df_placebo=subset(reg_df,post_t==0)
+reg_df_placebo=subset(reg_df_one_type,post_t==0)
 
 reg_df_placebo[,wins_percentage_delay:=Winsorize(100*percentage_delay,
                                probs=c(0.025,0.975),
@@ -1050,9 +1281,8 @@ reg_df_placebo[,winsorized_initial_budget_i:=
                               probs=c(0.025,0.975),
                               na.rm=T)]
 
-# use winsorized delay because fewer quarters & percentage delay requires project to be active for at least two quarters
 df_main=data.frame()
-for(i in 3:5){
+for(i in 3:4){
 #  print(i)
   tryCatch({
   reg_df_placebo[,placebo_post_t:=ifelse(quarter_number>=i,1,0)]  
@@ -1183,10 +1413,10 @@ grid.text(x=unit(280,'native'), y=unit(250,'native'),
 
 ```
 
-## Placebo Regression Tables
+## Placebo Regression Tables -- One type
 
 ```{r placebo_tables, echo=FALSE, results='asis'}
-reg_df_placebo=subset(reg_df,post_t==0)
+reg_df_placebo=subset(reg_df_one_type,post_t==0)
 
 reg_df_placebo[,wins_percentage_delay:=Winsorize(100*percentage_delay,
                                probs=c(0.025,0.975),
@@ -1207,7 +1437,7 @@ reg_df_placebo[,winsorized_initial_budget_i:=
                     Winsorize(base_and_all_options_value,                    
                               probs=c(0.025,0.975),
                               na.rm=T)]
-for(i in 3:4){
+for(i in 4:5){
   print(i)
   reg_df_placebo[,placebo_post_t:=ifelse(quarter_number>=i,1,0)]  
   a1=felm(wins_percentage_delay~treat_i+
@@ -1324,7 +1554,7 @@ placebo_table_tex=make_tex_pieces(placebo_table)
 # Write to file
 write(placebo_table_tex,
       paste0(placebo_folder,
-             "/placebo_table_time_",
+             "/one_type_placebo_table_time_",
              as.character(unique(subset(reg_df_placebo,
                 quarter_number==i)$action_date_year_quarter)),
              ".tex"))
@@ -2902,7 +3132,7 @@ stargazer(m1,m2,m3,m4,m5,
           header=F)
 ```
 
-## Regression 4B: Number of Large Projects
+## Regression 4B: Number of Large Projects [Archived]
 
 ```{r project_portfolio_setup, warning=FALSE, echo=FALSE, results='asis'}
 
@@ -2930,7 +3160,7 @@ reg_df_num_large_projects[,total_projects:=num_large_projects+num_small_projects
 
 ```
 
-```{r project_portfolio_num_large_clean_control, warning=FALSE, echo=FALSE, results='asis'}
+```{r project_portfolio_num_large_clean_control,eval=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 m1=felm(wins_percentage_delay~treat_small_with_large+
                     post_t:treat_small_with_large+
                      post_t+
@@ -4751,19 +4981,19 @@ ggplot(df_main,
 $Stage_{it}=\frac{ActionDate_{t-1}-StartDate_i}{Duration_{i,t-1}}$
 $Stage_{it}=\frac{(t-1)-StartDate_i}{Duration_{i,t-1}}$
 
-```{r stage_plots_1, warning=FALSE, echo=FALSE, results='asis'}
+```{r stage_plots_1, eval=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 hist(reg_df$wins_project_quarter_stage,
      xlab='Project stage',
      main=NULL)
 ```
 
-```{r stage_plots_2, warning=FALSE, echo=FALSE, results='asis'}
+```{r stage_plots_2, eval=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 hist(log(reg_df$wins_project_quarter_stage),
      xlab='Project stage (Logged)',
      main=NULL)
 ```
 
-```{r stage_plots_3, warning=FALSE, echo=FALSE, results='asis'}
+```{r stage_plots_3, eval=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 ggplot(reg_df, 
        aes(x=(wins_project_quarter_stage), 
            linetype=business_type)) +
@@ -4780,11 +5010,15 @@ ggplot(reg_df,
   xlim(0,1)
 ```
 
-
-```{r stage_plots_tercile_1, warning=FALSE, echo=FALSE, results='asis'}
+```{r define_tercile, include=FALSE}
 reg_df[,stage_tercile:=as.factor(ntile(project_quarter_stage,3))]
 reg_df[,stage_tercile:=relevel(stage_tercile,ref="1")]
 
+reg_df_one_type[,stage_tercile:=as.factor(ntile(project_quarter_stage,3))]
+reg_df_one_type[,stage_tercile:=relevel(stage_tercile,ref="1")]
+```
+
+```{r stage_plots_tercile_1, eval=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 a=subset(reg_df,stage_tercile=='1')
 ggplot(a,
 aes(x=(wins_project_quarter_stage),
@@ -4804,7 +5038,7 @@ xlim(0,1)+
 ggtitle("Early stage projects")
 ```
 
-```{r stage_plots_tercile_2, warning=FALSE, echo=FALSE, results='asis'}
+```{r stage_plots_tercile_2,eval=FALSE,  warning=FALSE, echo=FALSE, results='asis'}
 a=subset(reg_df,stage_tercile=='2')
 ggplot(a,
 aes(x=(wins_project_quarter_stage),
@@ -4824,7 +5058,7 @@ xlim(0,1)+
     ggtitle("Medium stage projects")
 ```
 
-```{r stage_plots_tercile_3, warning=FALSE, echo=FALSE, results='asis'}
+```{r stage_plots_tercile_3, eval=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 a=subset(reg_df,stage_tercile=='3')
 ggplot(a,
 aes(x=(wins_project_quarter_stage),
@@ -4982,7 +5216,7 @@ stargazer(m1,m2,m3,m4,m5,
 
 ## Stage decile Regression Plots
 
-```{r stage_decile, echo=FALSE, results='asis'}
+```{r stage_decile,eval=FALSE,  echo=FALSE, results='asis'}
 
 reg_df[,stage_decile:=ntile(project_quarter_stage,10)]
 
@@ -5060,7 +5294,7 @@ print(stats_stage_decile)
 
 ## Stage Quintile
 
-```{r stage_quintile, echo=FALSE, results='asis'}
+```{r stage_quintile, eval=FALSE,  echo=FALSE, results='asis'}
 
 reg_df[,stage_quintile:=ntile(project_quarter_stage,5)]
 
@@ -5275,6 +5509,7 @@ write(stage_table_tex,
 ```
 
 ### Restricted sample: One type
+
 ```{r stage_regs_log_one_type, warning=FALSE, echo=FALSE, results='asis'}
 
 m1=felm(wins_percentage_delay~treat_i+
@@ -5412,7 +5647,85 @@ write(stage_table_tex,
 
 ```
 
-## Aliter: Stage definition
+## Stage Quintile -- One Type
+
+```{r stage_quintile_one_type, echo=FALSE, results='asis'}
+
+reg_df_one_type[,stage_quintile:=ntile(project_quarter_stage,5)]
+
+df_main=data.frame()
+for(i in 1:length(unique(reg_df_one_type$stage_quintile))){
+#  print(i)
+  tryCatch({
+  a=tidy(felm(wins_percentage_delay~treat_i+
+                treat_i:post_t+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                number_of_offers_received+
+                post_t:log(1+winsorized_initial_duration_in_days_i)+
+                post_t:log(1+winsorized_initial_budget_i)+
+                post_t:number_of_offers_received|
+                naics_code+product_or_service_code+action_date_year_quarter|
+                0|
+                contract_award_unique_key,
+              data=subset(reg_df_one_type,project_quarter_stage<=1 &
+                            stage_quintile==i),
+              exactDOF = TRUE, 
+              cmethod = "reghdfe"),
+              conf.int=T)
+    a=subset(a,term=='treat_i:post_t')
+    a['Project stage quintile']=i
+    assign(paste0("df", i), value = a)
+    df_main=rbind(df_main,get(paste0("df", i)))}, error=function(e){})
+}
+
+setDT(df_main)[,`Project stage quintile`:=as.factor(`Project stage quintile`)]
+
+#df_main[,color:=ifelse(p.value<=0.1,"black","dark grey")]
+
+df_main[,color:="black"]
+
+# Instead of having a zero line, show gray as p.value>0.1 & black as p.value<0.1
+ggplot(df_main,
+       aes(x=`Project stage quintile`,y=estimate,group=1))+
+  geom_point(size=1,alpha=0.7,color=df_main$color)+
+ # geom_line(alpha=0.7,size=0.25)+
+  geom_errorbar(aes(ymin = conf.low, 
+                    ymax = conf.high),
+                width=0.05,
+                size=0.25,
+                alpha=0.7,
+                color=df_main$color)+
+  geom_hline(yintercept =0,alpha=0.6,size=0.15)+
+  theme_minimal()+ 
+  theme(panel.border = element_rect(color="black",fill=NA), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        plot.title = element_text(hjust = 0.5))+
+  theme(legend.position="bottom")+
+  ylab("Point estimate \n (Percentage Delay Rate)")+ 
+  coord_fixed(ratio=0.5)
+
+ggsave(path=figures_folder,
+       width = 8,
+       height = 5,
+       bg="white",
+       filename = "stage_quintiles_one_type.png")
+
+min_value=subset(reg_df_one_type,project_quarter_stage>=0 & project_quarter_stage<=1 & !is.na(project_quarter_stage))[,round(min(project_quarter_stage),2),by=stage_quintile][order(stage_quintile)]
+
+setnames(min_value,'V1','Min stage')
+
+
+max_value=subset(reg_df_one_type,project_quarter_stage>=0 & project_quarter_stage<=1 & !is.na(project_quarter_stage))[,round(max(project_quarter_stage),2),by=stage_quintile][order(stage_quintile)]
+
+setnames(max_value,'V1','Max stage')
+
+stats_stage=merge(min_value,max_value,by='stage_quintile')
+print(stats_stage)
+```
+
+## Aliter: Stage definition [Archived]
 
 * $t$ indicates the end of the quarter
 
@@ -5420,7 +5733,7 @@ $Stage_{it}=\frac{ActionDate_{t}-StartDate_i}{Duration_{i,t}}$
 $Stage_{it}=\frac{t-StartDate_i}{Duration_{i,t}}$
 
 
-```{r stage_regs_aliter, warning=FALSE, echo=FALSE, results='asis'}
+```{r stage_regs_aliter,eval=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 
 reg_df[,stage_tercile:=as.factor(ntile(stage_aliter,3))]
 reg_df[,stage_tercile:=relevel(stage_tercile,ref="1")]
@@ -5557,7 +5870,7 @@ stargazer(m1,m2,m3,m4,m5,
           header=F)
 ```
 
-# Contract Financing
+# Contract Financing [Archived]
 
 $$ CF_i = \begin{cases} 1, \text{ if project } i \text{ receives contract financing}\\
 0, \text{ otherwise} \end{cases}$$
@@ -5569,7 +5882,7 @@ PercentDelay_{it} &=& \beta_0+\beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_
 \end{aligned}$$
 
 
-```{r contract_financing, echo=FALSE, results='asis'}
+```{r contract_financing, eval=FALSE, echo=FALSE, results='asis'}
 
 # Baseline Regressions 
 baseline_reg=felm(wins_percentage_delay~treat_i+
@@ -5716,7 +6029,7 @@ contract_financing_table=stargazer(baseline_reg,
 
 ## With Treat x CF term
 
-```{r contract_financing_2, echo=FALSE, results='asis'}
+```{r contract_financing_2, eval=FALSE, echo=FALSE, results='asis'}
 # Baseline Regressions 
 baseline_reg=felm(wins_percentage_delay~treat_i+
                     post_t:treat_i+
@@ -5865,7 +6178,7 @@ contract_financing_table=stargazer(baseline_reg,
 * Sample restricted to projects that started on or before June 2010
 * Jobs act was launched in Sept 2010
 
-```{r cf_3, echo=FALSE, results='asis'}
+```{r cf_3, echo=FALSE, eval=FALSE, results='asis'}
 
 # Baseline Regressions 
 baseline_reg=felm(wins_percentage_delay~treat_i+
@@ -6014,7 +6327,7 @@ contract_financing_table=stargazer(baseline_reg,
 * $CF=1$ if contractor was receiving financing on any project prior on or before June 2010
 * Jobs act was launched in Sept 2010
 
-```{r any_cf, echo=FALSE, results='asis'}
+```{r any_cf, echo=FALSE, eval=FALSE, results='asis'}
 
 any_cf=na.omit(subset(reg_df,
                       action_date_year_quarter<=as.Date("2010-06-30"))[,sum(contract_financing_i),
@@ -6162,7 +6475,7 @@ contract_financing_table=stargazer(baseline_reg,
 ```
 
 ## Plots
-```{r cf_plots, echo=FALSE, results='asis'}
+```{r cf_plots, echo=FALSE, eval=FALSE, results='asis'}
 prop_cf=na.omit(subset(reg_df,
                       action_date_year_quarter<=as.Date("2010-06-30"))[,sum(contract_financing_i)/length(contract_financing_i),
                                                                        by=c('recipient_duns')])
@@ -6196,9 +6509,9 @@ ggplot(reg_df,
 * $CF=1$ if receives_grants=='t'
 * The variable "receives_grants" used to be called "receives financial assistance"
 
-## All projects 
+## All projects [Archived]
 
-```{r receives_grants_1, echo=FALSE, results='asis'}
+```{r receives_grants_1, eval=FALSE, echo=FALSE, results='asis'}
 # Baseline Regressions 
 baseline_reg=felm(wins_percentage_delay~treat_i+
                     post_t:treat_i+
@@ -6486,7 +6799,7 @@ write(financial_assistance_tex,
 
 ```
 
-### Restricted Sample: One type
+## Projects active on/before June 2010 -- One type
 
 ```{r receives_grants_2_one_type, echo=FALSE, results='asis'}
 # Baseline Regressions 
@@ -6632,7 +6945,7 @@ write(financial_assistance_tex,
 
 ```
 
-```{r financial_assistance_plot, echo=FALSE, results='asis'}
+```{r financial_assistance_plot, eval=FALSE, echo=FALSE, results='asis'}
 
 reg_df_fin=subset(reg_df,initial_start_date<=as.Date('2011-04-26'))
 df_main=data.frame()
@@ -6685,9 +6998,9 @@ ggsave(path=figures_folder,
        bg="white",
        filename = "financial_assistance_plot.png")
 ```
-## Firm level financial constraints (on/before June 2010)
+## Firm level financial constraints (on/before June 2010) [Archived]
 
-```{r any_grants, echo=FALSE, results='asis'}
+```{r any_grants, eval=FALSE, echo=FALSE, results='asis'}
 
 any_grants=na.omit(subset(reg_df,
                       action_date_year_quarter<=as.Date("2010-06-30"))[,sum(receives_financial_assistance),
@@ -6833,9 +7146,9 @@ contract_financing_table=stargazer(baseline_reg,
                   "SEs are robust and clustered at the project level."),
           header=F)
 ```
-## Plots
+## Plots [Archived]
 
-```{r grants_plots, echo=FALSE, results='asis'}
+```{r grants_plots, eval=FALSE, echo=FALSE, results='asis'}
 prop_grants=na.omit(subset(reg_df,
                       action_date_year_quarter<=as.Date("2010-06-30"))[,sum(receives_financial_assistance)/length(receives_financial_assistance),
                                                                        by=c('recipient_duns')])
@@ -6983,7 +7296,7 @@ $$ SA_i = \begin{cases} 1, \text{ if project was signed after QuickPay}\\
 $$ SB_i = \begin{cases} 1, \text{ if project was signed before QuickPay}\\
 0, \text{ otherwise} \end{cases}$$
 
-### Subsample model
+### Subsample model [Archived]
 
 For a subsample of competitive or noncompetitive projects: 
 
@@ -7002,7 +7315,9 @@ reg_df[,project_signed_after_quickpay:=case_when(initial_start_date>=as.Date('20
 
 reg_df[,project_signed_before_quickpay:=case_when(initial_start_date<as.Date('2011-04-27') ~1,
                                                  initial_start_date>=as.Date('2011-04-27') ~0)]
+```
 
+```{r competition_delays_subsample_regs, eval=FALSE, echo=FALSE, results='asis'}
                                                  
 baseline_reg=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
@@ -7140,7 +7455,7 @@ write(competitive_projects_tex,
 
 ```
 
-```{r non_competitive_delays_subsample, echo=FALSE, results='asis'}
+```{r non_competitive_delays_subsample, eval=FALSE, echo=FALSE, results='asis'}
 baseline_reg=felm(wins_percentage_delay~treat_i+
                                   project_signed_after_quickpay+
                                   treat_i:post_t:project_signed_before_quickpay+
@@ -7276,7 +7591,7 @@ write(non_competitive_projects_tex,
 
 ```
 
-```{r subsample_plot,echo=FALSE, results='asis'}
+```{r subsample_plot,eval=FALSE, echo=FALSE, results='asis'}
 
 # Get the value of "treat_i:post_t:project_signed_after_quickpay" for competed & 
 # non-competed projects 
@@ -7580,7 +7895,19 @@ write(non_competitive_projects_tex_ii,
 
 ```
 
-#### Restricted Sample: One type
+### Subsample Model II: One type
+
+```{r setup_8,echo=FALSE,results='asis'}
+
+reg_df_one_type[,project_signed_after_quickpay:=case_when(initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter>=as.Date('2011-04-27')~1,
+                                                 initial_start_date<as.Date('2011-04-27') ~ 0,
+                                                 initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter<as.Date('2011-04-27')~NaN)]
+
+reg_df_one_type[,project_signed_before_quickpay:=case_when(initial_start_date<as.Date('2011-04-27') ~1,
+                                                 initial_start_date>=as.Date('2011-04-27') ~0)]
+```
 
 ```{r competition_subsample_ii_one_type, echo=FALSE, results='asis'}
 
@@ -7592,8 +7919,7 @@ baseline_reg=felm(wins_percentage_delay~treat_i+
                                   0| # no fixed effects
                                   0| # no IV
                                   contract_award_unique_key, # clustered at project level
-                                  data=subset(reg_df,competitively_awarded_i==1 &
-                                                recipient_duns%in%one_type_contractors),
+                                  data=subset(reg_df_one_type,competitively_awarded_i==1),
                                   exactDOF = TRUE,
                                   cmethod = "reghdfe")
 controls_and_no_fe=felm(wins_percentage_delay~treat_i+
@@ -7605,8 +7931,7 @@ controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                             0|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1 &
-                                                recipient_duns%in%one_type_contractors), 
+                          data=subset(reg_df_one_type,competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_time_fe=felm(wins_percentage_delay~treat_i+
@@ -7617,8 +7942,7 @@ controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1 &
-                                                recipient_duns%in%one_type_contractors), 
+                          data=subset(reg_df_one_type,competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_time_task_fe=felm(wins_percentage_delay~treat_i+
@@ -7630,8 +7954,7 @@ controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1 &
-                                                recipient_duns%in%one_type_contractors), 
+                          data=subset(reg_df_one_type,competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_all_fe=felm(wins_percentage_delay~treat_i+
@@ -7644,8 +7967,7 @@ controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==1 &
-                                                recipient_duns%in%one_type_contractors), 
+                          data=subset(reg_df_one_type,competitively_awarded_i==1), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 competitive_projects_table_ii=stargazer(baseline_reg,
@@ -7699,8 +8021,7 @@ baseline_reg=felm(wins_percentage_delay~treat_i+
                                   0| # no fixed effects
                                   0| # no IV
                                   contract_award_unique_key, # clustered at project level
-                                  data=subset(reg_df,competitively_awarded_i==0 &
-                                                recipient_duns%in%one_type_contractors),
+                                  data=subset(reg_df_one_type,competitively_awarded_i==0),
                                   exactDOF = TRUE,
                                   cmethod = "reghdfe")
 controls_and_no_fe=felm(wins_percentage_delay~treat_i+
@@ -7712,8 +8033,7 @@ controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                             0|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==0 &
-                                                recipient_duns%in%one_type_contractors), 
+                          data=subset(reg_df_one_type,competitively_awarded_i==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_time_fe=felm(wins_percentage_delay~treat_i+
@@ -7724,8 +8044,7 @@ controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==0 &
-                                                recipient_duns%in%one_type_contractors), 
+                          data=subset(reg_df_one_type,competitively_awarded_i==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_time_task_fe=felm(wins_percentage_delay~treat_i+
@@ -7737,8 +8056,7 @@ controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==0 &
-                                                recipient_duns%in%one_type_contractors), 
+                          data=subset(reg_df_one_type,competitively_awarded_i==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_all_fe=felm(wins_percentage_delay~treat_i+
@@ -7751,8 +8069,7 @@ controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df,competitively_awarded_i==0 &
-                                                recipient_duns%in%one_type_contractors), 
+                          data=subset(reg_df_one_type,competitively_awarded_i==0), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 non_competitive_projects_table_ii=stargazer(baseline_reg,
@@ -8014,7 +8331,7 @@ baseline_reg=felm(wins_percentage_delay~treat_i+
                                    0| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
-                                   data=subset(reg_df,recipient_duns%in%one_type_contractors),
+                                   data=reg_df_one_type,
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 controls_and_no_fe_no_age=felm(wins_percentage_delay~treat_i+
@@ -8037,7 +8354,7 @@ controls_and_no_fe_no_age=felm(wins_percentage_delay~treat_i+
                                    0| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
-                                   data=subset(reg_df,recipient_duns%in%one_type_contractors),
+                                   data=reg_df_one_type,
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 controls_and_no_fe=felm(wins_percentage_delay~treat_i+
@@ -8061,7 +8378,7 @@ controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                                    0| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
-                                   data=reg_df,
+                                   data=reg_df_one_type,
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 controls_and_time_fe=felm(wins_percentage_delay~treat_i+
@@ -8084,7 +8401,7 @@ controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                                    action_date_year_quarter| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
-                                   data=subset(reg_df,recipient_duns%in%one_type_contractors),
+                                   data=reg_df_one_type,
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 controls_time_task_fe=felm(wins_percentage_delay~treat_i+
@@ -8108,7 +8425,7 @@ controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                        product_or_service_code| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
-                                   data=subset(reg_df,recipient_duns%in%one_type_contractors),
+                                   data=reg_df_one_type,
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 controls_and_all_fe=felm(wins_percentage_delay~treat_i+
@@ -8132,7 +8449,7 @@ controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                        product_or_service_code+naics_code| # no fixed effects
                                    0| # no IV
                                    contract_award_unique_key, # clustered at project level
-                                   data=subset(reg_df,recipient_duns%in%one_type_contractors),
+                                   data=reg_df_one_type,
                                    exactDOF = TRUE,
                                    cmethod = "reghdfe")
 four_way_interaction_table=stargazer(baseline_reg,

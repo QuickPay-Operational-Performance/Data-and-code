@@ -33,13 +33,6 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
-\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
-\hypersetup{
-  pdftitle={Matched Regressions QuickPay (2009-2012)},
-  hidelinks,
-  pdfcreator={LaTeX via pandoc}}
-\urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
 \makeatletter
@@ -62,10 +55,17 @@
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Matched Regressions QuickPay (2009-2012)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
 
 \title{Matched Regressions QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Jan 16, 2022}
+\date{\vspace{-2.5em}Nov 22, 2022}
 
 \begin{document}
 \maketitle
@@ -192,6 +192,50 @@ Adjusted R$^{2}$ & 0.002 & 0.08 & 0.09 & 0.11 & 0.11 \\
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
  & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
  & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{one-type-contractor}{%
+\subsection{One type contractor}\label{one-type-contractor}}
+
+\begin{table}[H] \centering 
+  \caption{Quickpay 2009-2011} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$DelayRate_{it}$ (in percentage)} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$0.81$^{***}$ & $-$0.12 & $-$0.25 & $-$0.66$^{***}$ & $-$0.71$^{***}$ \\ 
+  & (0.19) & (0.20) & (0.20) & (0.21) & (0.21) \\ 
+  & & & & & \\ 
+ $Post_t$ & 0.13 &  &  &  &  \\ 
+  & (0.16) &  &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 1.00$^{***}$ & 0.71$^{***}$ & 0.81$^{***}$ & 0.90$^{***}$ & 0.90$^{***}$ \\ 
+  & (0.22) & (0.23) & (0.24) & (0.24) & (0.24) \\ 
+  & & & & & \\ 
+ Constant & 5.70$^{***}$ & 12.50$^{***}$ &  &  &  \\ 
+  & (0.14) & (0.70) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project Age Tercile & No & Yes & Yes & Yes & Yes \\ 
+Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
+Task Fixed Effects & No & No & No & Yes & Yes \\ 
+Industry Fixed Effects & No & No & No & No & Yes \\ 
+Observations & 113,307 & 98,933 & 98,933 & 98,933 & 98,933 \\ 
+R$^{2}$ & 0.0005 & 0.09 & 0.09 & 0.12 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.0005 & 0.09 & 0.09 & 0.12 & 0.12 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Sample restricted to contractors holding only one type of project.} \\ 
 \end{tabular} 
 \end{table}
 
