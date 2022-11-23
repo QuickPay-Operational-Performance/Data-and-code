@@ -174,9 +174,35 @@ reg_df[,project_quarter_stage:=ifelse(contract_award_unique_key==lag(contract_aw
 
 ```
 
+
+```{r contractor_one_type,include=FALSE}
+one_type_contractors=reg_df[,n_distinct(treat_i),by='recipient_duns']
+one_type_contractors=unique(subset(one_type_contractors,V1==1 &
+                                     !is.na(recipient_duns))$recipient_duns)
+
+reg_df_one_type=subset(reg_df,recipient_duns%in%one_type_contractors)
+
+reg_df_one_type[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+# time spent in the project so far/total time of the project
+# if project was active in previous quarter
+reg_df_one_type[,project_quarter_stage:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),as.numeric(lag(action_date_year_quarter,1)-initial_start_date)/as.numeric(lag(last_reported_end_date,1)-initial_start_date),NaN)]
+
+# (action_date_year_quarter-90) to get beginning of the quarter
+
+reg_df_one_type[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+# stage at end of quarter -- not using this!
+reg_df_one_type[,stage_aliter:=as.numeric(action_date_year_quarter-initial_start_date)/as.numeric(last_reported_end_date-initial_start_date)]
+```
+
 ```{r positive_delays,include=FALSE}
 
-reg_df_positive=subset(reg_df,percentage_delay>0 & !is.infinite(percentage_delay))
+reg_df_positive=subset(reg_df_one_type,percentage_delay>0 & !is.infinite(percentage_delay))
 reg_df_positive[,winsorized_delay:=Winsorize(delay,na.rm=T)]
 reg_df_positive[,wins_percentage_delay:=Winsorize(100*percentage_delay,na.rm=T)]
 reg_df_positive[,winsorized_initial_duration_in_days_i:=
@@ -194,7 +220,7 @@ reg_df_positive[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
 
 ```{r negative_delays,include=FALSE}
 
-reg_df_negative=subset(reg_df,percentage_delay<0 & !is.infinite(percentage_delay))
+reg_df_negative=subset(reg_df_one_type,percentage_delay<0 & !is.infinite(percentage_delay))
 reg_df_negative[,winsorized_delay:=Winsorize(delay,na.rm=T)]
 reg_df_negative[,wins_percentage_delay:=Winsorize(100*percentage_delay,na.rm=T)]
 reg_df_negative[,winsorized_initial_duration_in_days_i:=
@@ -212,7 +238,7 @@ reg_df_negative[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
 ```
 
 ```{r non_zero_delays,include=FALSE}
-reg_df_non_zero=subset(reg_df,percentage_delay!=0 & !is.infinite(percentage_delay))
+reg_df_non_zero=subset(reg_df_one_type,percentage_delay!=0 & !is.infinite(percentage_delay))
 reg_df_non_zero[,winsorized_delay:=Winsorize(delay,na.rm=T)]
 reg_df_non_zero[,wins_percentage_delay:=Winsorize(100*percentage_delay,na.rm=T)]
 reg_df_non_zero[,winsorized_initial_duration_in_days_i:=
@@ -227,7 +253,7 @@ reg_df_non_zero[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
                               probs=c(0.05,0.95),
                               na.rm=T)]
 ```
-# Percentage delays over time
+# Percentage delays over time -- One type
 
 * Sample restricted to projects for which start dates matches the one in API
    * This is done by using first reported "action_date" and "date_signed" 
@@ -268,7 +294,7 @@ ggplot(mean_delay, aes(x=year_quarter,
     legend.text = element_text(size=12))
 ```
 
-## Normalized delay rate (in percentage)
+## Normalized delay rate (in percentage) -- One type
 
 ```{r normalized_plot,echo=FALSE, results='asis'}
 large_baseline=subset(mean_delay,year_quarter=='2010-Mar' & business_type=="O")$V1
@@ -326,7 +352,7 @@ make_tex_pieces <- function(stargazer_output) {
 }
 ```
 
-# Baseline Regressions
+# Baseline Regressions -- One type
 
 $$ PercentDelay_{it} = \beta_0 + \beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_i \times Post_t) + e_{it}$$ 
 
@@ -442,17 +468,18 @@ base_table<-stargazer(baseline_reg,
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
-                  "SEs are robust and clustered at the project level."),
+                  "SEs are robust and clustered at the project level.",
+                  "Sample restricted to contractors holding only one type of project."),
           header=F)
 
 base_table_tex=make_tex_pieces(base_table)
 # Write to file
 write(base_table_tex,
-      paste0(tables_folder,"/base_table_non_zero.tex"))
+      paste0(tables_folder,"/base_table_non_zero_one_type.tex"))
 
 ```
 
-## Positive Delays
+## Positive Delays -- One type
 
 ```{r baseline_regressions_positive, echo=FALSE, results='asis'}
 # Baseline Regressions 
@@ -560,13 +587,14 @@ base_table<-stargazer(baseline_reg,
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
-                  "SEs are robust and clustered at the project level."),
+                  "SEs are robust and clustered at the project level.",
+                  "Sample restricted to contractors holding only one type of project"),
           header=F)
 
 base_table_tex=make_tex_pieces(base_table)
 # Write to file
 write(base_table_tex,
-      paste0(tables_folder,"/base_table_positive.tex"))
+      paste0(tables_folder,"/base_table_positive_one_type.tex"))
 
 ```
 
@@ -678,13 +706,14 @@ base_table<-stargazer(baseline_reg,
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
-                  "SEs are robust and clustered at the project level."),
+                  "SEs are robust and clustered at the project level.",
+                  "Sample restricted to contractors holding only one type of project."),
           header=F)
 
 base_table_tex=make_tex_pieces(base_table)
 # Write to file
 write(base_table_tex,
-      paste0(tables_folder,"/base_table_negative.tex"))
+      paste0(tables_folder,"/base_table_negative_one_type.tex"))
 
 ```
 

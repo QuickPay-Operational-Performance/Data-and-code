@@ -178,6 +178,24 @@ reg_df[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
 reg_df[,stage_aliter:=as.numeric(action_date_year_quarter-initial_start_date)/as.numeric(last_reported_end_date-initial_start_date)]
 ```
 
+```{r contractor_one_type,include=FALSE}
+one_type_contractors=reg_df[,n_distinct(treat_i),by='recipient_duns']
+one_type_contractors=unique(subset(one_type_contractors,V1==1 &
+                                     !is.na(recipient_duns))$recipient_duns)
+
+reg_df_one_type=subset(reg_df,recipient_duns%in%one_type_contractors)
+
+# time spent in the project so far/total time of the project
+# if project was active in previous quarter
+reg_df_one_type[,project_quarter_stage:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),as.numeric(lag(action_date_year_quarter,1)-initial_start_date)/as.numeric(lag(last_reported_end_date,1)-initial_start_date),NaN)]
+
+# (action_date_year_quarter-90) to get beginning of the quarter
+
+reg_df_one_type[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+```
+
 ```{r stargazer_format, include=FALSE}
 # Code to extract only the inner part (nested within tabular) of table from stargazer
 # We will use this along with threeparttable in latex later 
@@ -302,6 +320,110 @@ etable(baseline_reg,
        extralines=list("Controls"=c("", rep("Yes",4)),
                        "Controls $\\times Post_t$"=c("", rep("Yes",4))),
        file=paste0(tables_folder,"/base_positive_logistic.tex"))
+
+# write(base_table_tex,
+#       paste0(tables_folder,"/base_positive_logistic.tex"))
+
+```
+
+# Logistic Regressions (Positive Delay) -- One type
+
+```{r baseline_regressions_one_type, echo=FALSE, results='asis',warning=FALSE}
+# Baseline Regressions 
+
+baseline_reg=feglm(positive_delay~treat_i+
+                   post_t:treat_i+
+                   post_t,
+                 data=reg_df_one_type,
+                 family='binomial',
+                 cluster='contract_award_unique_key')
+
+controls_and_no_fe=feglm(positive_delay~treat_i+
+                           post_t:treat_i+
+                           post_t+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received,
+                          data=reg_df_one_type,
+                          family='binomial',
+                         cluster='contract_award_unique_key')
+
+# time fixed effects also included in the following specs
+controls_and_time_fe=feglm(positive_delay~treat_i+
+                             post_t:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter,
+                           family='binomial',
+                            cluster='contract_award_unique_key',
+                           data=reg_df_one_type)
+
+controls_time_task_fe=feglm(positive_delay~treat_i+
+                              post_t:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter,
+                           family='binomial',
+                            cluster='contract_award_unique_key',
+                           data=reg_df_one_type)
+
+controls_and_all_fe=feglm(positive_delay~treat_i+
+                            post_t:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+                           family='binomial',
+                            cluster='contract_award_unique_key',
+                           data=reg_df_one_type)
+
+setFixest_dict(c("treat_i"="$Treat_i$",
+                 "post_t"="$Post_t$",
+                 "number_of_offers_received"="Number of offers received", 
+                 "log(wins_project_quarter_stage)" = "Project stage",
+                 "log(1+winsorized_initial_duration_in_days_i)" = "Initial duration",
+                 "product_or_service_code"="Task code",
+                 "log(1+winsorized_initial_budget_i)"="Initial budget",
+                 "naics_code"="NAICS code",
+                 "action_date_year_quarter"="Time",
+                 "contract_award_unique_key"="Project ID",
+                 "positive_delay"="$I(Delay_{it}>0)$"))
+
+etable(baseline_reg,
+       controls_and_no_fe,
+       controls_and_time_fe,
+       controls_time_task_fe,
+       controls_and_all_fe,
+       cluster = "contract_award_unique_key",
+       title = "Logit model: Effect of QuickPay",
+       digits = "r2",
+       tex=TRUE,
+       drop=c('Initial budget',
+              'Number of offers received',
+              'Project stage',
+              'Initial duration'),
+       digits.stats = 2,
+       extralines=list("Controls"=c("", rep("Yes",4)),
+                       "Controls $\\times Post_t$"=c("", rep("Yes",4))),
+       file=paste0(tables_folder,"/base_positive_logistic_one_type.tex"))
 
 # write(base_table_tex,
 #       paste0(tables_folder,"/base_positive_logistic.tex"))
