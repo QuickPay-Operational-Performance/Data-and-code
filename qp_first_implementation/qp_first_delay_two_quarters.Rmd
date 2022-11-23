@@ -197,7 +197,29 @@ reg_df=reg_df[order(contract_award_unique_key,
 reg_df[,winsorized_two_quarter_delay:=Winsorize(two_quarter_delay,na.rm=T)]
 ```
 
+```{r contractor_one_type,include=FALSE}
+one_type_contractors=reg_df[,n_distinct(treat_i),by='recipient_duns']
+one_type_contractors=unique(subset(one_type_contractors,V1==1 &
+                                     !is.na(recipient_duns))$recipient_duns)
 
+reg_df_one_type=subset(reg_df,recipient_duns%in%one_type_contractors)
+
+reg_df_one_type[,winsorized_delay:=Winsorize(delay,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+reg_df_one_type[,winsorized_two_quarter_delay:=Winsorize(two_quarter_delay,na.rm=T)]
+
+# time spent in the project so far/total time of the project
+# if project was active in previous quarter
+reg_df_one_type[,project_quarter_stage:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),as.numeric(lag(action_date_year_quarter,1)-period_of_performance_start_date)/as.numeric(lag(last_reported_end_date,1)-period_of_performance_start_date),NaN)]
+
+# (action_date_year_quarter-90) to get beginning of the quarter
+
+reg_df_one_type[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+```
 # Delays over time
 
 * Sample restricted to projects for which start dates matches the one in API
@@ -309,7 +331,7 @@ $$ \begin{aligned} DelayRate_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + 
 \end{aligned}$$
 
 
-### One Quarter
+### One Quarter -- One type
 
 ```{r baseline_regressions, echo=FALSE, results='asis'}
 # Baseline Regressions 
@@ -319,70 +341,70 @@ baseline_reg=felm(winsorized_delay~treat_i+
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
-                  data=reg_df, 
+                  data=reg_df_one_type, 
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 # time fixed effects also included in the following specs
 controls_and_no_fe=felm(winsorized_delay~treat_i+
                            post_t:treat_i+
                            post_t+
-                       #    project_quarter_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                          # log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             0|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_one_type, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 # time fixed effects also included in the following specs
 controls_and_time_fe=felm(winsorized_delay~treat_i+
-                             post_t:treat_i+
-                       #    project_quarter_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                           post_t:treat_i+
+                        #   log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_one_type, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_time_task_fe=felm(winsorized_delay~treat_i+
-                              post_t:treat_i+
-                        #   project_quarter_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                           post_t:treat_i+
+                         #  log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_one_type, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_all_fe=felm(winsorized_delay~treat_i+
-                            post_t:treat_i+
-                        #   project_quarter_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                           post_t:treat_i+
+                         #  log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_one_type, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 base_table<-stargazer(baseline_reg,
@@ -416,7 +438,8 @@ base_table<-stargazer(baseline_reg,
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
-                  "SEs are robust and clustered at the project level."),
+                  "SEs are robust and clustered at the project level.",
+                  "Sample restricted to contractors holding one type of project."),
           header=F)
 
 base_table_tex=make_tex_pieces(base_table)
@@ -436,7 +459,7 @@ baseline_reg=felm(winsorized_two_quarter_delay~treat_i+
                     0| # no fixed effects
                     0| # no IV
                     contract_award_unique_key, # clustered at project level
-                  data=reg_df, 
+                  data=reg_df_one_type, 
                   exactDOF = TRUE, 
                   cmethod = "reghdfe")
 # time fixed effects also included in the following specs
@@ -444,62 +467,62 @@ controls_and_no_fe=felm(winsorized_two_quarter_delay~treat_i+
                            post_t:treat_i+
                            post_t+
                        #    project_quarter_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             0|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_one_type, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 # time fixed effects also included in the following specs
 controls_and_time_fe=felm(winsorized_two_quarter_delay~treat_i+
                              post_t:treat_i+
                        #    project_quarter_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_one_type, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_time_task_fe=felm(winsorized_two_quarter_delay~treat_i+
                               post_t:treat_i+
                         #   project_quarter_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_one_type, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 controls_and_all_fe=felm(winsorized_two_quarter_delay~treat_i+
                             post_t:treat_i+
                         #   project_quarter_tercile+
-                            winsorized_initial_duration_in_days_i+
-                            winsorized_initial_budget_i+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
-                            post_t:winsorized_initial_duration_in_days_i+
-                            post_t:winsorized_initial_budget_i+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received|
                             naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=reg_df, 
+                          data=reg_df_one_type, 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 base_table<-stargazer(baseline_reg,
@@ -533,13 +556,14 @@ base_table<-stargazer(baseline_reg,
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
-                  "SEs are robust and clustered at the project level."),
+                  "SEs are robust and clustered at the project level.",
+                  "Sample restricted to contractors holding one type of project."),
           header=F)
 
 base_table_tex=make_tex_pieces(base_table)
 # Write to file
 write(base_table_tex,
-      paste0(tables_folder,"/base_table_two_quarter_delay.tex"))
+      paste0(tables_folder,"/base_table_two_quarter_delay_one_type.tex"))
 
 ```
 

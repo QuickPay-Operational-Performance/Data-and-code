@@ -33,13 +33,6 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
-\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
-\hypersetup{
-  pdftitle={Delay Rate (Two Quarters): QuickPay (2009-2012)},
-  hidelinks,
-  pdfcreator={LaTeX via pandoc}}
-\urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
 \makeatletter
@@ -62,10 +55,17 @@
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Delay Rate (Two Quarters): QuickPay (2009-2012)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
 
 \title{Delay Rate (Two Quarters): QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Jan 16, 2022}
+\date{\vspace{-2.5em}Nov 22, 2022}
 
 \begin{document}
 \maketitle
@@ -104,8 +104,8 @@
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}\]
 
-\hypertarget{one-quarter}{%
-\subsubsection{One Quarter}\label{one-quarter}}
+\hypertarget{one-quarter-one-type}{%
+\subsubsection{One Quarter -- One type}\label{one-quarter-one-type}}
 
 \begin{table}[H] \centering 
   \caption{Effect of QuickPay on project delay rates} 
@@ -117,17 +117,17 @@
 \\[-1.8ex] & \multicolumn{5}{c}{$DelayRate_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$3.34$^{***}$ & $-$2.72$^{***}$ & $-$2.70$^{***}$ & $-$2.07$^{***}$ & $-$2.14$^{***}$ \\ 
-  & (0.15) & (0.15) & (0.15) & (0.15) & (0.15) \\ 
+ $Treat_i$ & $-$1.78$^{***}$ & $-$1.44$^{***}$ & $-$1.47$^{***}$ & $-$1.46$^{***}$ & $-$1.63$^{***}$ \\ 
+  & (0.20) & (0.21) & (0.21) & (0.22) & (0.22) \\ 
   & & & & & \\ 
- $Post_t$ & 1.02$^{***}$ & $-$1.01$^{***}$ &  &  &  \\ 
-  & (0.15) & (0.31) &  &  &  \\ 
+ $Post_t$ & 1.22$^{***}$ & $-$14.20$^{***}$ &  &  &  \\ 
+  & (0.20) & (1.24) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Post_t$ & 1.34$^{***}$ & 1.62$^{***}$ & 1.62$^{***}$ & 1.33$^{***}$ & 1.36$^{***}$ \\ 
-  & (0.19) & (0.20) & (0.20) & (0.19) & (0.19) \\ 
+ $Treat_i \times Post_t$ & 1.77$^{***}$ & 2.35$^{***}$ & 2.40$^{***}$ & 1.94$^{***}$ & 1.93$^{***}$ \\ 
+  & (0.26) & (0.27) & (0.27) & (0.27) & (0.27) \\ 
   & & & & & \\ 
- Constant & 8.35$^{***}$ & 16.93$^{***}$ &  &  &  \\ 
-  & (0.12) & (0.24) &  &  &  \\ 
+ Constant & 8.53$^{***}$ & 32.73$^{***}$ &  &  &  \\ 
+  & (0.16) & (1.00) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
@@ -135,14 +135,15 @@ $Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\
 Year-Quarter fixed effects & No & No & Yes & Yes & Yes \\ 
 Task fixed effects & No & No & No & Yes & Yes \\ 
 Industry fixed effects & No & No & No & No & Yes \\ 
-Observations & 287,530 & 263,488 & 263,488 & 263,488 & 263,488 \\ 
-R$^{2}$ & 0.004 & 0.05 & 0.06 & 0.09 & 0.10 \\ 
-Adjusted R$^{2}$ & 0.004 & 0.05 & 0.06 & 0.09 & 0.09 \\ 
+Observations & 193,028 & 176,032 & 176,032 & 176,032 & 176,032 \\ 
+R$^{2}$ & 0.002 & 0.04 & 0.04 & 0.08 & 0.08 \\ 
+Adjusted R$^{2}$ & 0.002 & 0.04 & 0.04 & 0.07 & 0.07 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
  & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
  & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Sample restricted to contractors holding one type of project.} \\ 
 \end{tabular} 
 \end{table}
 
@@ -159,17 +160,17 @@ Adjusted R$^{2}$ & 0.004 & 0.05 & 0.06 & 0.09 & 0.09 \\
 \\[-1.8ex] & \multicolumn{5}{c}{$DelayRate_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$7.99$^{***}$ & $-$6.23$^{***}$ & $-$6.24$^{***}$ & $-$4.40$^{***}$ & $-$4.37$^{***}$ \\ 
-  & (0.42) & (0.43) & (0.43) & (0.44) & (0.44) \\ 
+ $Treat_i$ & $-$4.65$^{***}$ & $-$3.28$^{***}$ & $-$3.49$^{***}$ & $-$3.19$^{***}$ & $-$3.39$^{***}$ \\ 
+  & (0.54) & (0.58) & (0.58) & (0.61) & (0.62) \\ 
   & & & & & \\ 
- $Post_t$ & 4.05$^{***}$ & $-$1.52 &  &  &  \\ 
-  & (0.45) & (0.93) &  &  &  \\ 
+ $Post_t$ & 4.26$^{***}$ & $-$27.19$^{***}$ &  &  &  \\ 
+  & (0.56) & (3.55) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Post_t$ & 2.57$^{***}$ & 3.36$^{***}$ & 3.37$^{***}$ & 2.64$^{***}$ & 2.72$^{***}$ \\ 
-  & (0.56) & (0.59) & (0.60) & (0.59) & (0.60) \\ 
+ $Treat_i \times Post_t$ & 4.50$^{***}$ & 5.76$^{***}$ & 6.00$^{***}$ & 5.17$^{***}$ & 5.09$^{***}$ \\ 
+  & (0.73) & (0.79) & (0.79) & (0.80) & (0.80) \\ 
   & & & & & \\ 
- Constant & 19.65$^{***}$ & 36.57$^{***}$ &  &  &  \\ 
-  & (0.34) & (0.67) &  &  &  \\ 
+ Constant & 19.78$^{***}$ & 58.50$^{***}$ &  &  &  \\ 
+  & (0.43) & (2.64) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
@@ -177,14 +178,15 @@ $Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\
 Year-Quarter fixed effects & No & No & Yes & Yes & Yes \\ 
 Task fixed effects & No & No & No & Yes & Yes \\ 
 Industry fixed effects & No & No & No & No & Yes \\ 
-Observations & 122,172 & 111,681 & 111,681 & 111,681 & 111,681 \\ 
-R$^{2}$ & 0.01 & 0.06 & 0.06 & 0.12 & 0.12 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.06 & 0.06 & 0.11 & 0.11 \\ 
+Observations & 82,002 & 74,580 & 74,580 & 74,580 & 74,580 \\ 
+R$^{2}$ & 0.004 & 0.05 & 0.05 & 0.10 & 0.10 \\ 
+Adjusted R$^{2}$ & 0.004 & 0.05 & 0.05 & 0.08 & 0.09 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
  & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
  & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Sample restricted to contractors holding one type of project.} \\ 
 \end{tabular} 
 \end{table}
 
@@ -195,8 +197,8 @@ Adjusted R$^{2}$ & 0.01 & 0.06 & 0.06 & 0.11 & 0.11 \\
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}\]
 
-\hypertarget{one-quarter-1}{%
-\subsubsection{One Quarter}\label{one-quarter-1}}
+\hypertarget{one-quarter}{%
+\subsubsection{One Quarter}\label{one-quarter}}
 
 \begin{table}[H] \centering 
   \caption{Effect of QuickPay on project delay rates} 
@@ -286,8 +288,8 @@ Adjusted R$^{2}$ & 0.01 & 0.04 & 0.05 & 0.09 & 0.09 \\
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}\]
 
-\hypertarget{one-quarter-2}{%
-\subsubsection{One Quarter}\label{one-quarter-2}}
+\hypertarget{one-quarter-1}{%
+\subsubsection{One Quarter}\label{one-quarter-1}}
 
 \begin{table}[H] \centering 
   \caption{Effect of QuickPay on project delay rates} 
@@ -374,8 +376,8 @@ Adjusted R$^{2}$ & 0.004 & 0.05 & 0.05 & 0.09 & 0.09 \\
 \section{Logistic Regression for Positive
 Delays}\label{logistic-regression-for-positive-delays}}
 
-\hypertarget{one-quarter-3}{%
-\subsection{One Quarter}\label{one-quarter-3}}
+\hypertarget{one-quarter-2}{%
+\subsection{One Quarter}\label{one-quarter-2}}
 
 \begin{table}[h]
 \begin{center}
@@ -477,8 +479,8 @@ sample}\label{winsorization-on-full-sample}}
   delay in the data.
 \end{itemize}
 
-\hypertarget{one-quarter-4}{%
-\subsubsection{One Quarter}\label{one-quarter-4}}
+\hypertarget{one-quarter-3}{%
+\subsubsection{One Quarter}\label{one-quarter-3}}
 
 \begin{table}[H] \centering 
   \caption{Effect of QuickPay on project delay rates} 
@@ -569,8 +571,8 @@ sample}\label{winsorization-on-non-zero-sample}}
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}\]
 
-\hypertarget{one-quarter-5}{%
-\subsubsection{One Quarter}\label{one-quarter-5}}
+\hypertarget{one-quarter-4}{%
+\subsubsection{One Quarter}\label{one-quarter-4}}
 
 \begin{table}[H] \centering 
   \caption{Effect of QuickPay on project delay rates} 
@@ -661,8 +663,8 @@ sample}\label{truncation-on-non-zero-sample}}
 &+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
 \end{aligned}\]
 
-\hypertarget{one-quarter-6}{%
-\subsubsection{One Quarter}\label{one-quarter-6}}
+\hypertarget{one-quarter-5}{%
+\subsubsection{One Quarter}\label{one-quarter-5}}
 
 \begin{table}[H] \centering 
   \caption{Effect of QuickPay on project delay rates} 
