@@ -1,0 +1,1037 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array} \usepackage{wrapfig,float} \floatplacement{figure}{H}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Percentage Delay Rate (with Clean Control): QuickPay (2009-2012)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Percentage Delay Rate (with Clean Control): QuickPay (2009-2012)}
+\author{}
+\date{\vspace{-2.5em}Jan 16, 2023}
+
+\begin{document}
+\maketitle
+
+\hypertarget{setup}{%
+\section{Setup}\label{setup}}
+
+\hypertarget{demeaned-delay-rate-in-percentage-clean-control}{%
+\section{Demeaned delay rate (in percentage) -- Clean
+Control}\label{demeaned-delay-rate-in-percentage-clean-control}}
+
+\begin{itemize}
+\tightlist
+\item
+  Subtract the average pre-quickpay delay rate from each observation
+\end{itemize}
+
+\begin{verbatim}
+## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+## i Please use `linewidth` instead.
+\end{verbatim}
+
+\includegraphics{qp_first_pc_delay_clean_control_files/figure-latex/demeaned_plot_one_type-1.pdf}
+
+\hypertarget{baseline-regressions}{%
+\section{Baseline Regressions}\label{baseline-regressions}}
+
+\[ PercentDelay_{it} = \beta_0 + \beta_1 Treat_i + \beta_2 Post_t + \beta_3 (Treat_i \times Post_t) + e_{it}\]
+
+\[ \begin{aligned} PercentDelay_{it} &=& \alpha+\beta_0 Treat_i + \beta_1 Post_t + \beta_2 (Treat_i \times Post_t)\\
+&+&  X_i + (Post_t \times X_i) + \mu_t + \theta_{firm} + \lambda_{task}+ \epsilon_{it}
+\end{aligned}\]
+
+\begin{table}[H] \centering 
+  \caption{Effect of QuickPay on project delay rates} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$1.42$^{***}$ & $-$1.18$^{***}$ & $-$1.22$^{***}$ & $-$0.87$^{***}$ & $-$0.88$^{***}$ \\ 
+  & (0.10) & (0.10) & (0.10) & (0.10) & (0.10) \\ 
+  & & & & & \\ 
+ $Post_t$ & $-$0.002 & $-$5.39$^{***}$ &  &  &  \\ 
+  & (0.10) & (0.76) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 0.89$^{***}$ & 0.94$^{***}$ & 0.97$^{***}$ & 0.90$^{***}$ & 0.92$^{***}$ \\ 
+  & (0.13) & (0.13) & (0.13) & (0.12) & (0.12) \\ 
+  & & & & & \\ 
+ Constant & 4.90$^{***}$ & 41.78$^{***}$ &  &  &  \\ 
+  & (0.09) & (0.58) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 237,093 & 212,627 & 212,627 & 212,627 & 212,627 \\ 
+R$^{2}$ & 0.001 & 0.17 & 0.17 & 0.21 & 0.21 \\ 
+Adjusted R$^{2}$ & 0.001 & 0.17 & 0.17 & 0.21 & 0.21 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{event-study}{%
+\section{Event study}\label{event-study}}
+
+\(PercentDelay_{it}=\beta_0 + \beta_1 Treat_i + \beta_2 Treat_i \times Quarter_t + \gamma_{task} + \theta_{naics}+\lambda_{quarter}+\nu_{sub-agency}+\epsilon_{it}\)
+
+\begin{verbatim}
+## NOTE: 222,512 observations removed because of NA values (LHS: 222,512, RHS: 9,862).
+\end{verbatim}
+
+\includegraphics{qp_first_pc_delay_clean_control_files/figure-latex/event_study-1.pdf}
+
+\hypertarget{parallel-trends-test}{%
+\section{Parallel Trends Test}\label{parallel-trends-test}}
+
+\begin{table}[H] \centering 
+  \caption{Linear Time Trend Before QuickPay} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$1.11$^{***}$ & $-$0.85$^{**}$ & $-$0.85$^{**}$ & $-$0.47 & $-$0.56 \\ 
+  & (0.37) & (0.36) & (0.36) & (0.37) & (0.37) \\ 
+  & & & & & \\ 
+ $QuarterNum$ & 0.40$^{***}$ & $-$1.06$^{**}$ &  &  &  \\ 
+  & (0.07) & (0.47) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times QuarterNum$ & $-$0.07 & $-$0.09 & $-$0.09 & $-$0.03 & $-$0.02 \\ 
+  & (0.08) & (0.08) & (0.08) & (0.08) & (0.08) \\ 
+  & & & & & \\ 
+ Constant & 3.08$^{***}$ & 46.85$^{***}$ &  &  &  \\ 
+  & (0.31) & (2.20) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 89,463 & 81,930 & 81,930 & 81,930 & 81,930 \\ 
+R$^{2}$ & 0.004 & 0.20 & 0.20 & 0.26 & 0.26 \\ 
+Adjusted R$^{2}$ & 0.003 & 0.20 & 0.20 & 0.25 & 0.25 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Observations are for quarters before quickpay.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{placebo-test}{%
+\section{Placebo Test}\label{placebo-test}}
+
+{[}1{]} 3
+
+\begin{table}[H] \centering 
+  \caption{Placebo test: Treatment Time 2010-06-30} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$3.04$^{***}$ & $-$3.99$^{***}$ & $-$4.00$^{***}$ & $-$2.22$^{***}$ & $-$2.31$^{***}$ \\ 
+  & (0.62) & (0.63) & (0.63) & (0.61) & (0.61) \\ 
+  & & & & & \\ 
+ $Post$ & 0.84 & $-$10.27$^{**}$ &  &  &  \\ 
+  & (0.54) & (4.42) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post$ & 0.48 & 1.43$^{**}$ & 1.40$^{**}$ & 0.96 & 1.01 \\ 
+  & (0.65) & (0.67) & (0.67) & (0.64) & (0.64) \\ 
+  & & & & & \\ 
+ Constant & 7.77$^{***}$ & 91.65$^{***}$ &  &  &  \\ 
+  & (0.53) & (4.18) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 89,463 & 81,930 & 81,930 & 81,930 & 81,930 \\ 
+R$^{2}$ & 0.002 & 0.20 & 0.20 & 0.26 & 0.26 \\ 
+Adjusted R$^{2}$ & 0.002 & 0.20 & 0.20 & 0.25 & 0.25 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Observations are for quarters before quickpay.} \\ 
+\end{tabular} 
+\end{table}
+
+{[}1{]} 4
+
+\begin{table}[H] \centering 
+  \caption{Placebo test: Treatment Time 2010-09-30} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$2.09$^{***}$ & $-$2.85$^{***}$ & $-$2.86$^{***}$ & $-$1.40$^{***}$ & $-$1.50$^{***}$ \\ 
+  & (0.38) & (0.37) & (0.37) & (0.38) & (0.38) \\ 
+  & & & & & \\ 
+ $Post$ & 1.89$^{***}$ & $-$8.89$^{***}$ &  &  &  \\ 
+  & (0.36) & (2.96) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post$ & $-$0.68 & 0.15 & 0.16 & 0.07 & 0.14 \\ 
+  & (0.43) & (0.44) & (0.44) & (0.43) & (0.43) \\ 
+  & & & & & \\ 
+ Constant & 7.10$^{***}$ & 89.44$^{***}$ &  &  &  \\ 
+  & (0.31) & (2.58) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 89,463 & 81,930 & 81,930 & 81,930 & 81,930 \\ 
+R$^{2}$ & 0.003 & 0.20 & 0.20 & 0.26 & 0.26 \\ 
+Adjusted R$^{2}$ & 0.003 & 0.20 & 0.20 & 0.25 & 0.25 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Observations are for quarters before quickpay.} \\ 
+\end{tabular} 
+\end{table}
+
+{[}1{]} 5
+
+\begin{table}[H] \centering 
+  \caption{Placebo test: Treatment Time 2010-12-31} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$2.31$^{***}$ & $-$2.14$^{***}$ & $-$2.18$^{***}$ & $-$0.85$^{***}$ & $-$0.93$^{***}$ \\ 
+  & (0.30) & (0.29) & (0.29) & (0.31) & (0.31) \\ 
+  & & & & & \\ 
+ $Post$ & 0.92$^{***}$ & $-$14.59$^{***}$ &  &  &  \\ 
+  & (0.33) & (2.54) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post$ & $-$0.52 & $-$1.08$^{***}$ & $-$1.00$^{**}$ & $-$0.82$^{**}$ & $-$0.77$^{*}$ \\ 
+  & (0.39) & (0.40) & (0.40) & (0.41) & (0.41) \\ 
+  & & & & & \\ 
+ Constant & 8.03$^{***}$ & 90.98$^{***}$ &  &  &  \\ 
+  & (0.25) & (1.96) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 89,463 & 81,930 & 81,930 & 81,930 & 81,930 \\ 
+R$^{2}$ & 0.002 & 0.20 & 0.21 & 0.26 & 0.26 \\ 
+Adjusted R$^{2}$ & 0.002 & 0.20 & 0.21 & 0.25 & 0.25 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Observations are for quarters before quickpay.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{summary-statistics}{%
+\section{Summary statistics}\label{summary-statistics}}
+
+\hypertarget{congestion-effect}{%
+\section{Congestion Effect}\label{congestion-effect}}
+
+\hypertarget{number-of-projects-per-contractor}{%
+\subsection{Number of projects per
+contractor}\label{number-of-projects-per-contractor}}
+
+\hypertarget{contractors-holding-only-small-or-only-large-projects}{%
+\subsubsection{Contractors holding only small or only large
+projects}\label{contractors-holding-only-small-or-only-large-projects}}
+
+\includegraphics{qp_first_pc_delay_clean_control_files/figure-latex/num_projects_0-1.pdf}
+
+\begin{table}[H] \centering 
+  \caption{Num Contractor Projects and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lcc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{2}{c}{Number of projects} \\ 
+\\[-1.8ex] & (1) & (2)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$2.03$^{***}$ & $-$2.03$^{***}$ \\ 
+  & (0.39) & (0.39) \\ 
+  & & \\ 
+ $Post_t$ & 0.94$^{**}$ &  \\ 
+  & (0.41) &  \\ 
+  & & \\ 
+ $Treat_i \times Post_t$ & $-$0.58 & $-$0.58 \\ 
+  & (0.41) & (0.41) \\ 
+  & & \\ 
+ Constant & 5.03$^{***}$ &  \\ 
+  & (0.38) &  \\ 
+  & & \\ 
+\hline \\[-1.8ex] 
+Time fixed effects & No & Yes \\ 
+Observations & 84,391 & 84,391 \\ 
+R$^{2}$ & 0.005 & 0.01 \\ 
+Adjusted R$^{2}$ & 0.005 & 0.01 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{2}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{2}{r}{Each observation is a contractor-quarter.} \\ 
+ & \multicolumn{2}{r}{SEs are robust and clustered at the contractor level.} \\ 
+ & \multicolumn{2}{r}{Sample restricted to contractors performing only one type of project.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{contractors-holding-at-least-one-small-project-are-treated}{%
+\subsubsection{Contractors holding at least one small project are
+``treated''}\label{contractors-holding-at-least-one-small-project-are-treated}}
+
+\hypertarget{total-budget}{%
+\subsection{Total budget}\label{total-budget}}
+
+\hypertarget{contractors-holding-only-small-or-only-large-projects-1}{%
+\subsubsection{Contractors holding only small or only large
+projects}\label{contractors-holding-only-small-or-only-large-projects-1}}
+
+\includegraphics{qp_first_pc_delay_clean_control_files/figure-latex/budget_0-1.pdf}
+
+\begin{table}[H] \centering 
+  \caption{Contractor Project Budget and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lcc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{2}{c}{Total budget} \\ 
+\\[-1.8ex] & (1) & (2)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$2,503,033.00$^{***}$ & $-$2,497,737.00$^{***}$ \\ 
+  & (454,885.70) & (456,972.80) \\ 
+  & & \\ 
+ $Post_t$ & 1,715,503.00$^{***}$ &  \\ 
+  & (229,333.50) &  \\ 
+  & & \\ 
+ $Treat_i \times Post_t$ & $-$953,041.30$^{***}$ & $-$955,237.70$^{***}$ \\ 
+  & (231,908.60) & (233,131.80) \\ 
+  & & \\ 
+ Constant & 3,666,740.00$^{***}$ &  \\ 
+  & (453,287.80) &  \\ 
+  & & \\ 
+\hline \\[-1.8ex] 
+Time fixed effects & No & Yes \\ 
+Observations & 84,391 & 84,391 \\ 
+R$^{2}$ & 0.01 & 0.02 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.01 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{2}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{2}{r}{Each observation is a contractor-quarter.} \\ 
+ & \multicolumn{2}{r}{SEs are robust and clustered at the contractor level.} \\ 
+ & \multicolumn{2}{r}{Sample restricted to contractors performing only one type of project.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{number-of-tasks}{%
+\subsection{Number of tasks}\label{number-of-tasks}}
+
+\hypertarget{contractors-holding-only-small-or-only-large-projects-2}{%
+\subsubsection{Contractors holding only small or only large
+projects}\label{contractors-holding-only-small-or-only-large-projects-2}}
+
+\includegraphics{qp_first_pc_delay_clean_control_files/figure-latex/tasks_0-1.pdf}
+
+\begin{table}[H] \centering 
+  \caption{Contractor Project Tasks and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lcc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{2}{c}{Number of tasks} \\ 
+\\[-1.8ex] & (1) & (2)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$0.23$^{***}$ & $-$0.23$^{***}$ \\ 
+  & (0.04) & (0.04) \\ 
+  & & \\ 
+ $Post_t$ & 0.17$^{***}$ &  \\ 
+  & (0.02) &  \\ 
+  & & \\ 
+ $Treat_i \times Post_t$ & $-$0.04 & $-$0.04 \\ 
+  & (0.03) & (0.03) \\ 
+  & & \\ 
+ Constant & 1.73$^{***}$ &  \\ 
+  & (0.04) &  \\ 
+  & & \\ 
+\hline \\[-1.8ex] 
+Time fixed effects & No & Yes \\ 
+Observations & 84,391 & 84,391 \\ 
+R$^{2}$ & 0.01 & 0.01 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.01 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{2}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{2}{r}{Each observation is a contractor-quarter.} \\ 
+ & \multicolumn{2}{r}{SEs are robust and clustered at the contractor level.} \\ 
+ & \multicolumn{2}{r}{Sample restricted to contractors performing only one type of project.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{project-portfolio-spillover-effect}{%
+\section{Project portfolio: Spillover
+effect}\label{project-portfolio-spillover-effect}}
+
+\hypertarget{regression-1-did-on-large-projects}{%
+\subsection{Regression 1: DID on large
+projects}\label{regression-1-did-on-large-projects}}
+
+\begin{itemize}
+\tightlist
+\item
+  Sample restricted to large projects only.
+\item
+  Treat is an indicator that equals one for LARGE projects that have at
+  least one parallel small project in the same quarter, and is zero
+  otherwise.
+\end{itemize}
+
+\begin{table}[H] \centering 
+  \caption{Project Portfolio and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-10pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & 4.41$^{***}$ & 0.70$^{***}$ & 0.64$^{***}$ & 1.15$^{***}$ & 1.16$^{***}$ \\ 
+  & (0.31) & (0.20) & (0.20) & (0.20) & (0.20) \\ 
+  & & & & & \\ 
+ $Post_t$ & $-$0.10 & $-$13.38$^{***}$ &  &  &  \\ 
+  & (0.12) & (1.17) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & $-$1.17$^{***}$ & 0.02 & 0.03 & $-$0.65$^{**}$ & $-$0.56$^{**}$ \\ 
+  & (0.36) & (0.26) & (0.26) & (0.26) & (0.26) \\ 
+  & & & & & \\ 
+ Constant & 5.59$^{***}$ & 63.76$^{***}$ &  &  &  \\ 
+  & (0.10) & (0.89) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 117,787 & 110,601 & 110,601 & 110,601 & 110,601 \\ 
+R$^{2}$ & 0.01 & 0.26 & 0.26 & 0.30 & 0.30 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.26 & 0.26 & 0.29 & 0.29 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Sample restricted to large projects only.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{regression-2-indicator-for-small-project-with-existing-large-project}{%
+\subsection{Regression 2: Indicator for small project with existing
+large
+project}\label{regression-2-indicator-for-small-project-with-existing-large-project}}
+
+\begin{itemize}
+\tightlist
+\item
+  \(Treat_{i,l}\) is an indicator that equals 1 for small projects with
+  co-existing large projects, and is zero otherwise.
+\item
+  \(Treat_{i,l}=1 \implies Treat_i = 1\). This means we have:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \(Treat_{i,l} \times Post_t = Treat_i \times Treat_{i,l} \times Post_t\)
+  \item
+    \(Treat_{i,l} \times Treat_i = Treat_{i,l}\)
+  \end{itemize}
+\item
+  Large projects with parallel small projects are removed to get a clean
+  control group.
+\end{itemize}
+
+\begin{table}[H] \centering 
+  \caption{Project Portfolio and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$3.18$^{***}$ & $-$2.22$^{***}$ & $-$2.28$^{***}$ & $-$1.16$^{***}$ & $-$1.14$^{***}$ \\ 
+  & (0.13) & (0.13) & (0.13) & (0.13) & (0.13) \\ 
+  & & & & & \\ 
+ $Treat_{i,l}$ & 2.14$^{***}$ & 1.26$^{***}$ & 1.29$^{***}$ & 0.37$^{***}$ & 0.32$^{***}$ \\ 
+  & (0.12) & (0.12) & (0.12) & (0.11) & (0.11) \\ 
+  & & & & & \\ 
+ $Post_t$ & $-$0.002 & $-$5.37$^{***}$ &  &  &  \\ 
+  & (0.10) & (0.76) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 0.41$^{**}$ & 0.46$^{***}$ & 0.50$^{***}$ & 0.39$^{**}$ & 0.46$^{***}$ \\ 
+  & (0.16) & (0.16) & (0.16) & (0.16) & (0.16) \\ 
+  & & & & & \\ 
+ $Treat_{i,l} \times Post_t$ & 0.63$^{***}$ & 0.62$^{***}$ & 0.61$^{***}$ & 0.64$^{***}$ & 0.58$^{***}$ \\ 
+  & (0.15) & (0.15) & (0.15) & (0.15) & (0.15) \\ 
+  & & & & & \\ 
+ Constant & 4.90$^{***}$ & 41.79$^{***}$ &  &  &  \\ 
+  & (0.09) & (0.58) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 237,093 & 212,627 & 212,627 & 212,627 & 212,627 \\ 
+R$^{2}$ & 0.004 & 0.17 & 0.18 & 0.21 & 0.21 \\ 
+Adjusted R$^{2}$ & 0.004 & 0.17 & 0.18 & 0.21 & 0.21 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Large projects with parallel small projects are removed.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{project-stage}{%
+\section{Project Stage}\label{project-stage}}
+
+\begin{itemize}
+\tightlist
+\item
+  \(t\) indicates the end of the quarter
+\item
+  We want to get stage of the project at the beginning of a given
+  quarter (before any delays materialize)
+\end{itemize}
+
+\(Stage_{it}=\frac{ActionDate_{t-1}-StartDate_i}{Duration_{i,t-1}}\)
+\(Stage_{it}=\frac{(t-1)-StartDate_i}{Duration_{i,t-1}}\)
+
+\hypertarget{stage-quintile}{%
+\subsection{Stage Quintile}\label{stage-quintile}}
+
+\hypertarget{logged-stage-regressions}{%
+\subsection{Logged Stage Regressions}\label{logged-stage-regressions}}
+
+\begin{table}[H] \centering 
+  \caption{Project Stage and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$2.25$^{***}$ & $-$1.41$^{***}$ & $-$1.47$^{***}$ & $-$1.15$^{***}$ & $-$1.19$^{***}$ \\ 
+  & (0.22) & (0.20) & (0.20) & (0.19) & (0.19) \\ 
+  & & & & & \\ 
+ Log(Stage) & 3.03$^{***}$ & 2.42$^{***}$ & 2.36$^{***}$ & 2.42$^{***}$ & 2.42$^{***}$ \\ 
+  & (0.07) & (0.07) & (0.07) & (0.07) & (0.07) \\ 
+  & & & & & \\ 
+ $Post_t$ & $-$1.09$^{***}$ & $-$4.82$^{***}$ &  &  &  \\ 
+  & (0.21) & (0.78) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 1.81$^{***}$ & 1.62$^{***}$ & 1.67$^{***}$ & 1.65$^{***}$ & 1.69$^{***}$ \\ 
+  & (0.26) & (0.24) & (0.24) & (0.24) & (0.24) \\ 
+  & & & & & \\ 
+ $Treat_i \times$ Log(Stage) & $-$0.59$^{***}$ & $-$0.13 & $-$0.15$^{*}$ & $-$0.17$^{**}$ & $-$0.19$^{**}$ \\ 
+  & (0.09) & (0.09) & (0.09) & (0.08) & (0.08) \\ 
+  & & & & & \\ 
+ $Post_t \times$ Log(Stage) & $-$0.001 & 0.52$^{***}$ & 0.53$^{***}$ & 0.28$^{***}$ & 0.28$^{***}$ \\ 
+  & (0.09) & (0.08) & (0.08) & (0.08) & (0.08) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t \times$ Log(Stage) & 0.53$^{***}$ & 0.48$^{***}$ & 0.50$^{***}$ & 0.54$^{***}$ & 0.55$^{***}$ \\ 
+  & (0.11) & (0.11) & (0.11) & (0.11) & (0.11) \\ 
+  & & & & & \\ 
+ Constant & 9.75$^{***}$ & 41.62$^{***}$ &  &  &  \\ 
+  & (0.18) & (0.60) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 234,963 & 212,627 & 212,627 & 212,627 & 212,627 \\ 
+R$^{2}$ & 0.05 & 0.17 & 0.18 & 0.21 & 0.21 \\ 
+Adjusted R$^{2}$ & 0.05 & 0.17 & 0.18 & 0.21 & 0.21 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{contract-financing-projects-active-onbefore-june-2010}{%
+\section{Contract Financing (Projects active on/before June
+2010)}\label{contract-financing-projects-active-onbefore-june-2010}}
+
+\begin{itemize}
+\tightlist
+\item
+  \(CF=1\) if project was receiving contract financing
+\item
+  Sample restricted to projects that started on or before June 2010
+\item
+  Jobs act was launched in Sept 2010
+\end{itemize}
+
+\begin{table}[H] \centering 
+  \caption{Contract Financing and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$1.80$^{***}$ & $-$1.15$^{***}$ & $-$1.26$^{***}$ & $-$0.68$^{***}$ & $-$0.72$^{***}$ \\ 
+  & (0.14) & (0.14) & (0.14) & (0.15) & (0.15) \\ 
+  & & & & & \\ 
+ $Post_t$ & 1.83$^{***}$ & $-$9.39$^{***}$ &  &  &  \\ 
+  & (0.26) & (2.50) &  &  &  \\ 
+  & & & & & \\ 
+ $CF_i$ & 1.37$^{***}$ & 1.46$^{***}$ & 1.25$^{***}$ & $-$0.73$^{**}$ & $-$0.81$^{**}$ \\ 
+  & (0.35) & (0.30) & (0.30) & (0.32) & (0.33) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & $-$0.41 & 2.29$^{***}$ & 2.39$^{***}$ & 2.22$^{***}$ & 2.25$^{***}$ \\ 
+  & (0.32) & (0.42) & (0.42) & (0.43) & (0.43) \\ 
+  & & & & & \\ 
+ $Post_t \times CF_i$ & 0.18 & $-$1.11$^{*}$ & $-$0.91 & 0.47 & 0.52 \\ 
+  & (0.64) & (0.64) & (0.64) & (0.66) & (0.67) \\ 
+  & & & & & \\ 
+ $Treat_i \times CF_i$ & 1.92$^{***}$ & 1.10$^{***}$ & 1.12$^{***}$ & 0.79$^{*}$ & 0.77$^{*}$ \\ 
+  & (0.46) & (0.39) & (0.39) & (0.41) & (0.41) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t \times CF_i$ & 0.61 & $-$1.62$^{*}$ & $-$1.63$^{*}$ & $-$1.01 & $-$1.07 \\ 
+  & (0.88) & (0.88) & (0.88) & (0.91) & (0.90) \\ 
+  & & & & & \\ 
+ Constant & 5.00$^{***}$ & 45.28$^{***}$ &  &  &  \\ 
+  & (0.12) & (0.82) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 68,694 & 58,056 & 58,056 & 58,056 & 58,056 \\ 
+R$^{2}$ & 0.01 & 0.17 & 0.18 & 0.22 & 0.23 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.17 & 0.18 & 0.21 & 0.22 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{receives-grantsfinancial-assistance-projects-active-onbefore-june-2010}{%
+\section{Receives Grants/Financial Assistance (Projects active on/before
+June
+2010)}\label{receives-grantsfinancial-assistance-projects-active-onbefore-june-2010}}
+
+\begin{itemize}
+\tightlist
+\item
+  \(CF=1\) if receives\_grants==`t'
+\item
+  The variable ``receives\_grants'' used to be called ``receives
+  financial assistance''
+\end{itemize}
+
+\begin{table}[H] \centering 
+  \caption{Receives grants and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$1.71$^{***}$ & $-$1.00$^{***}$ & $-$1.11$^{***}$ & $-$0.57$^{***}$ & $-$0.62$^{***}$ \\ 
+  & (0.14) & (0.13) & (0.13) & (0.14) & (0.14) \\ 
+  & & & & & \\ 
+ $Post_t$ & 1.99$^{***}$ & $-$8.68$^{***}$ &  &  &  \\ 
+  & (0.24) & (2.46) &  &  &  \\ 
+  & & & & & \\ 
+ $CF_i$ & 1.28$^{*}$ & 2.31$^{***}$ & 2.08$^{***}$ & 1.53$^{**}$ & 1.49$^{**}$ \\ 
+  & (0.74) & (0.67) & (0.66) & (0.64) & (0.64) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & $-$0.35 & 1.92$^{***}$ & 2.03$^{***}$ & 1.98$^{***}$ & 1.97$^{***}$ \\ 
+  & (0.30) & (0.37) & (0.37) & (0.39) & (0.39) \\ 
+  & & & & & \\ 
+ $Post_t \times CF_i$ & $-$1.33 & $-$2.20$^{*}$ & $-$1.93 & $-$0.99 & $-$1.00 \\ 
+  & (1.11) & (1.31) & (1.30) & (1.35) & (1.35) \\ 
+  & & & & & \\ 
+ $Treat_i \times CF_i$ & 1.87$^{**}$ & 1.00 & 1.11 & 0.13 & 0.13 \\ 
+  & (0.91) & (0.82) & (0.81) & (0.79) & (0.80) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t \times CF_i$ & 0.24 & 0.50 & 0.38 & 0.80 & 1.06 \\ 
+  & (1.41) & (1.73) & (1.72) & (1.77) & (1.76) \\ 
+  & & & & & \\ 
+ Constant & 5.13$^{***}$ & 44.52$^{***}$ &  &  &  \\ 
+  & (0.12) & (0.81) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 68,694 & 58,056 & 58,056 & 58,056 & 58,056 \\ 
+R$^{2}$ & 0.01 & 0.17 & 0.18 & 0.22 & 0.23 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.17 & 0.18 & 0.21 & 0.22 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{competition}{%
+\section{Competition}\label{competition}}
+
+\hypertarget{impact-on-bidding-metrics-one-type}{%
+\subsection{Impact on bidding metrics {[}One
+type{]}}\label{impact-on-bidding-metrics-one-type}}
+
+\begin{table}[H] \centering 
+  \caption{Effect of Competition After QuickPay: Quickpay 2009-2011} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{0pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & $NumberOfBids_{it}$ & $InitialDuration_{it}$ & $InitialBudget_{it}$ \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & 0.89$^{***}$ & $-$14.08$^{***}$ & $-$58,366.39$^{***}$ \\ 
+  & (0.15) & (1.12) & (4,530.81) \\ 
+  & & & \\ 
+ $Treat_i \times Post_t$ & 0.37$^{*}$ & 1.93 & $-$23,862.98$^{***}$ \\ 
+  & (0.19) & (1.38) & (5,996.59) \\ 
+  & & & \\ 
+\hline \\[-1.8ex] 
+Task fixed effects & Yes & Yes & Yes \\ 
+Time fixed effects & Yes & Yes & Yes \\ 
+Observations & 126,531 & 81,184 & 126,639 \\ 
+R$^{2}$ & 0.36 & 0.34 & 0.30 \\ 
+Adjusted R$^{2}$ & 0.35 & 0.33 & 0.29 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{3}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{3}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{3}{r}{Sample restricted to fully competed projects.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{impact-on-delays}{%
+\subsection{Impact on delays}\label{impact-on-delays}}
+
+\hypertarget{subsample-model-ii}{%
+\subsubsection{Subsample model II}\label{subsample-model-ii}}
+
+Define
+\[ SA_i = \begin{cases} 1, \text{ if project was signed after QuickPay}\\
+0, \text{ otherwise} \end{cases}\]
+
+\[ SB_i = \begin{cases} 1, \text{ if project was signed before QuickPay}\\
+0, \text{ otherwise} \end{cases}\]
+
+\begin{table}[H] \centering 
+  \caption{Effect of QuickPay on competitively awarded projects} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$1.82$^{***}$ & $-$1.62$^{***}$ & $-$1.63$^{***}$ & $-$0.41$^{***}$ & $-$0.42$^{***}$ \\ 
+  & (0.11) & (0.11) & (0.11) & (0.11) & (0.11) \\ 
+  & & & & & \\ 
+ $SA_i$ & $-$1.75$^{***}$ & 0.97$^{***}$ & 1.47$^{***}$ & 1.60$^{***}$ & 1.56$^{***}$ \\ 
+  & (0.15) & (0.15) & (0.16) & (0.16) & (0.16) \\ 
+  & & & & & \\ 
+ $Post_t$ & 1.26$^{***}$ & $-$1.11$^{***}$ &  &  &  \\ 
+  & (0.14) & (0.14) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 0.15 & 0.26 & 0.29$^{*}$ & 0.12 & 0.12 \\ 
+  & (0.17) & (0.17) & (0.17) & (0.16) & (0.16) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t \times SA_i $ & 0.83$^{***}$ & 0.47$^{***}$ & 0.44$^{**}$ & 0.59$^{***}$ & 0.59$^{***}$ \\ 
+  & (0.19) & (0.18) & (0.18) & (0.17) & (0.17) \\ 
+  & & & & & \\ 
+ Constant & 5.02$^{***}$ & 9.65$^{***}$ &  &  &  \\ 
+  & (0.10) & (0.12) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 195,162 & 193,607 & 193,607 & 193,607 & 193,607 \\ 
+R$^{2}$ & 0.005 & 0.06 & 0.06 & 0.12 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.005 & 0.06 & 0.06 & 0.11 & 0.12 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Sample restricted to fully competed projects.} \\ 
+\end{tabular} 
+\end{table}
+
+\begin{table}[H] \centering 
+  \caption{Effect of QuickPay on non-competitively awarded projects} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & 1.08$^{***}$ & 0.87$^{***}$ & 0.80$^{***}$ & $-$0.45$^{*}$ & $-$0.37 \\ 
+  & (0.27) & (0.26) & (0.26) & (0.27) & (0.27) \\ 
+  & & & & & \\ 
+ $SA_i$ & $-$0.74$^{***}$ & 1.81$^{***}$ & 3.04$^{***}$ & 2.61$^{***}$ & 2.54$^{***}$ \\ 
+  & (0.21) & (0.21) & (0.25) & (0.26) & (0.26) \\ 
+  & & & & & \\ 
+ $Post_t$ & $-$0.49$^{**}$ & $-$2.92$^{***}$ &  &  &  \\ 
+  & (0.23) & (0.23) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 2.38$^{***}$ & 2.23$^{***}$ & 2.15$^{***}$ & 1.84$^{***}$ & 1.74$^{***}$ \\ 
+  & (0.39) & (0.37) & (0.38) & (0.37) & (0.38) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t \times SA_i $ & $-$1.74$^{***}$ & $-$1.51$^{***}$ & $-$1.49$^{***}$ & $-$1.65$^{***}$ & $-$1.52$^{***}$ \\ 
+  & (0.39) & (0.36) & (0.37) & (0.36) & (0.36) \\ 
+  & & & & & \\ 
+ Constant & 4.44$^{***}$ & 9.73$^{***}$ &  &  &  \\ 
+  & (0.19) & (0.24) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 41,770 & 41,196 & 41,196 & 41,196 & 41,196 \\ 
+R$^{2}$ & 0.01 & 0.06 & 0.07 & 0.14 & 0.14 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.06 & 0.07 & 0.12 & 0.13 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Sample restricted to non-competed projects.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{four-way-interaction}{%
+\subsubsection{Four-way interaction}\label{four-way-interaction}}
+
+We run the following model:
+
+\[\begin{aligned} PercentDelay_{it} &=& \beta_0 +\beta_1 Treat_i+ \beta_2 StartedAfterQP_i+ \beta_3 Post_t+ \beta_4 Competitive_i\\ && +  \beta_5 (Treat_i \times Competitive_i) + \beta_6 (Post_t \times Competitive_i)\\ && +  \beta_7 (StartedAfterQP_i \times Competitive_i) +\beta_8 (Treat_i \times Post_t)\\ && + \beta_9 (Treat_i \times Post_t \times Competitive_i) \\ && + \beta_{10} (Treat_i \times Post_t \times StartedAfterQP_i )\\ && + \beta_{11} (Treat_i \times Post_t \times StartedAfterQP_i \times Competitive_i) + e_{it} \end{aligned}\]
+
+\textbf{Interpretation:}
+
+\begin{itemize}
+\tightlist
+\item
+  \(\beta_9\) is the difference between treatment effect for competitive
+  and non-competitive projects signed before quickpay.
+\item
+  \(\beta_9 + \beta_{11}\) is the difference between treatment effect
+  for competitive and non-competitive projects signed \emph{after}
+  quickpay.
+\item
+  \(\beta_{11}\) is our coefficient of interest because it tells us how
+  much of the difference is there due to ``aggressive bidding'' after
+  the policy.
+\end{itemize}
+
+\begin{table}[H] \centering 
+  \caption{Effect of Competition After QuickPay: Quickpay 2009-2011} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-3pt}}lcccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{6}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5) & (6)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & 1.08$^{***}$ & 1.08$^{***}$ & 0.88$^{***}$ & 0.83$^{***}$ & $-$0.40 & $-$0.39 \\ 
+  & (0.27) & (0.27) & (0.26) & (0.26) & (0.26) & (0.26) \\ 
+  & & & & & & \\ 
+ $SA_i$ & $-$0.74$^{***}$ & $-$0.74$^{***}$ & 1.62$^{***}$ & 2.27$^{***}$ & 2.14$^{***}$ & 2.09$^{***}$ \\ 
+  & (0.21) & (0.21) & (0.20) & (0.21) & (0.21) & (0.21) \\ 
+  & & & & & & \\ 
+ $Competitive_i$ & 0.58$^{***}$ & 0.58$^{***}$ & 0.40$^{**}$ & 0.39$^{*}$ & $-$0.96$^{***}$ & $-$0.88$^{***}$ \\ 
+  & (0.21) & (0.21) & (0.20) & (0.20) & (0.21) & (0.21) \\ 
+  & & & & & & \\ 
+ $Post_t$ & $-$0.49$^{**}$ & $-$0.49$^{**}$ & $-$2.75$^{***}$ &  &  &  \\ 
+  & (0.23) & (0.23) & (0.23) &  &  &  \\ 
+  & & & & & & \\ 
+ $Treat_i \times Competitive_i$ & $-$2.90$^{***}$ & $-$2.90$^{***}$ & $-$2.49$^{***}$ & $-$2.45$^{***}$ & $-$0.04 & $-$0.06 \\ 
+  & (0.29) & (0.29) & (0.28) & (0.28) & (0.28) & (0.28) \\ 
+  & & & & & & \\ 
+ $Post_t \times Competitive_i$ & 1.75$^{***}$ & 1.75$^{***}$ & 1.59$^{***}$ & 1.55$^{***}$ & 0.69$^{***}$ & 0.63$^{**}$ \\ 
+  & (0.27) & (0.27) & (0.26) & (0.26) & (0.26) & (0.26) \\ 
+  & & & & & & \\ 
+ $SA_i \times Competitive_i$ & $-$1.00$^{***}$ & $-$1.00$^{***}$ & $-$0.61$^{**}$ & $-$0.62$^{**}$ & $-$0.45$^{*}$ & $-$0.45$^{*}$ \\ 
+  & (0.26) & (0.26) & (0.25) & (0.25) & (0.24) & (0.24) \\ 
+  & & & & & & \\ 
+ $Treat_i \times Post_t$ & 2.38$^{***}$ & 2.38$^{***}$ & 2.25$^{***}$ & 2.24$^{***}$ & 1.57$^{***}$ & 1.53$^{***}$ \\ 
+  & (0.39) & (0.39) & (0.37) & (0.37) & (0.37) & (0.37) \\ 
+  & & & & & & \\ 
+ $Treat_i \times Post_t \times Competitive_i$ & $-$2.24$^{***}$ & $-$2.24$^{***}$ & $-$1.99$^{***}$ & $-$1.94$^{***}$ & $-$1.44$^{***}$ & $-$1.40$^{***}$ \\ 
+  & (0.42) & (0.42) & (0.41) & (0.41) & (0.40) & (0.40) \\ 
+  & & & & & & \\ 
+ $Treat_i \times Post_t \times SA_i$ & $-$1.74$^{***}$ & $-$1.74$^{***}$ & $-$1.54$^{***}$ & $-$1.54$^{***}$ & $-$1.34$^{***}$ & $-$1.36$^{***}$ \\ 
+  & (0.39) & (0.39) & (0.36) & (0.36) & (0.36) & (0.36) \\ 
+  & & & & & & \\ 
+ $Treat_i \times Post_t \times SA_i \times Competitive_i$ & 2.58$^{***}$ & 2.58$^{***}$ & 2.00$^{***}$ & 1.97$^{***}$ & 1.91$^{***}$ & 1.94$^{***}$ \\ 
+  & (0.43) & (0.43) & (0.40) & (0.41) & (0.40) & (0.40) \\ 
+  & & & & & & \\ 
+ Constant & 4.44$^{***}$ & 4.44$^{***}$ & 9.33$^{***}$ &  &  &  \\ 
+  & (0.19) & (0.19) & (0.19) &  &  &  \\ 
+  & & & & & & \\ 
+\hline \\[-1.8ex] 
+Project stage & No & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & No & Yes \\ 
+Observations & 236,932 & 236,932 & 234,803 & 234,803 & 234,803 & 234,803 \\ 
+R$^{2}$ & 0.01 & 0.01 & 0.06 & 0.06 & 0.12 & 0.12 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.01 & 0.06 & 0.06 & 0.11 & 0.11 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{6}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{6}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{6}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\end{document}
