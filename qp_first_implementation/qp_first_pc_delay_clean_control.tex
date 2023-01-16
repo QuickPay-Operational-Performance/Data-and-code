@@ -550,10 +550,10 @@ Adjusted R$^{2}$ & 0.01 & 0.26 & 0.26 & 0.29 & 0.29 \\
 \end{tabular} 
 \end{table}
 
-\hypertarget{regression-2-indicator-for-small-project-with-existing-large-project}{%
-\subsection{Regression 2: Indicator for small project with existing
-large
-project}\label{regression-2-indicator-for-small-project-with-existing-large-project}}
+\hypertarget{regression-2-incremental-effect-on-small-project-with-existing-large-project}{%
+\subsection{Regression 2: Incremental effect on small project with
+existing large
+project}\label{regression-2-incremental-effect-on-small-project-with-existing-large-project}}
 
 \begin{itemize}
 \tightlist
@@ -576,7 +576,7 @@ project}\label{regression-2-indicator-for-small-project-with-existing-large-proj
 \end{itemize}
 
 \begin{table}[H] \centering 
-  \caption{Project Portfolio and QuickPay reform} 
+  \caption{(Incremental effect) Project Portfolio and QuickPay reform} 
   \label{} 
 \small 
 \begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
@@ -585,20 +585,85 @@ project}\label{regression-2-indicator-for-small-project-with-existing-large-proj
 \\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$3.18$^{***}$ & $-$2.22$^{***}$ & $-$2.28$^{***}$ & $-$1.16$^{***}$ & $-$1.14$^{***}$ \\ 
-  & (0.13) & (0.13) & (0.13) & (0.13) & (0.13) \\ 
+ $Treat_i$ & $-$1.04$^{***}$ & $-$0.96$^{***}$ & $-$1.00$^{***}$ & $-$0.80$^{***}$ & $-$0.82$^{***}$ \\ 
+  & (0.11) & (0.10) & (0.10) & (0.10) & (0.10) \\ 
   & & & & & \\ 
- $Treat_{i,l}$ & 2.14$^{***}$ & 1.26$^{***}$ & 1.29$^{***}$ & 0.37$^{***}$ & 0.32$^{***}$ \\ 
+ $Treat_{i,l}$ & $-$2.14$^{***}$ & $-$1.26$^{***}$ & $-$1.29$^{***}$ & $-$0.37$^{***}$ & $-$0.32$^{***}$ \\ 
   & (0.12) & (0.12) & (0.12) & (0.11) & (0.11) \\ 
   & & & & & \\ 
  $Post_t$ & $-$0.002 & $-$5.37$^{***}$ &  &  &  \\ 
   & (0.10) & (0.76) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Post_t$ & 0.41$^{**}$ & 0.46$^{***}$ & 0.50$^{***}$ & 0.39$^{**}$ & 0.46$^{***}$ \\ 
-  & (0.16) & (0.16) & (0.16) & (0.16) & (0.16) \\ 
+ $Treat_i \times Post_t$ & 1.04$^{***}$ & 1.08$^{***}$ & 1.11$^{***}$ & 1.03$^{***}$ & 1.04$^{***}$ \\ 
+  & (0.13) & (0.13) & (0.13) & (0.13) & (0.13) \\ 
   & & & & & \\ 
- $Treat_{i,l} \times Post_t$ & 0.63$^{***}$ & 0.62$^{***}$ & 0.61$^{***}$ & 0.64$^{***}$ & 0.58$^{***}$ \\ 
+ $Treat_{i,l} \times Post_t$ & $-$0.63$^{***}$ & $-$0.62$^{***}$ & $-$0.61$^{***}$ & $-$0.64$^{***}$ & $-$0.58$^{***}$ \\ 
   & (0.15) & (0.15) & (0.15) & (0.15) & (0.15) \\ 
+  & & & & & \\ 
+ Constant & 4.90$^{***}$ & 41.79$^{***}$ &  &  &  \\ 
+  & (0.09) & (0.58) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 237,093 & 212,627 & 212,627 & 212,627 & 212,627 \\ 
+R$^{2}$ & 0.004 & 0.17 & 0.18 & 0.21 & 0.21 \\ 
+Adjusted R$^{2}$ & 0.004 & 0.17 & 0.18 & 0.21 & 0.21 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Large projects with parallel small projects are removed.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{regression-3-total-effect-on-small-project-with-existing-large-project}{%
+\subsection{Regression 3: Total effect on small project with existing
+large
+project}\label{regression-3-total-effect-on-small-project-with-existing-large-project}}
+
+\begin{itemize}
+\tightlist
+\item
+  \(Treat_{i,l}\) is an indicator that equals 1 for small projects with
+  co-existing large projects, and is zero otherwise.
+\item
+  \(Treat_{i,s}\) is an indicator that equals 1 for small projects
+  without co-existing large projects, and is zero otherwise.
+\item
+  Large projects with parallel small projects are removed to get a clean
+  control group.
+\end{itemize}
+
+\begin{table}[H] \centering 
+  \caption{(Total effect) Project Portfolio and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_{i,s}$ & $-$1.04$^{***}$ & $-$0.96$^{***}$ & $-$1.00$^{***}$ & $-$0.80$^{***}$ & $-$0.82$^{***}$ \\ 
+  & (0.11) & (0.10) & (0.10) & (0.10) & (0.10) \\ 
+  & & & & & \\ 
+ $Treat_{i,l}$ & $-$3.18$^{***}$ & $-$2.22$^{***}$ & $-$2.28$^{***}$ & $-$1.16$^{***}$ & $-$1.14$^{***}$ \\ 
+  & (0.13) & (0.13) & (0.13) & (0.13) & (0.13) \\ 
+  & & & & & \\ 
+ $Post_t$ & $-$0.002 & $-$5.37$^{***}$ &  &  &  \\ 
+  & (0.10) & (0.76) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_{i,s} \times Post_t$ & 1.04$^{***}$ & 1.08$^{***}$ & 1.11$^{***}$ & 1.03$^{***}$ & 1.04$^{***}$ \\ 
+  & (0.13) & (0.13) & (0.13) & (0.13) & (0.13) \\ 
+  & & & & & \\ 
+ $Treat_{i,l} \times Post_t$ & 0.41$^{**}$ & 0.46$^{***}$ & 0.50$^{***}$ & 0.39$^{**}$ & 0.46$^{***}$ \\ 
+  & (0.16) & (0.16) & (0.16) & (0.16) & (0.16) \\ 
   & & & & & \\ 
  Constant & 4.90$^{***}$ & 41.79$^{***}$ &  &  &  \\ 
   & (0.09) & (0.58) &  &  &  \\ 
