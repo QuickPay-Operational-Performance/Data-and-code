@@ -2827,13 +2827,27 @@ reg_df[,treat_new:=case_when(treat_i==1 ~ 1,
                              treat_i==0 &contractor_quarter%in%contractors_holding_only_large_projects~0,
                              treat_i==0 & contractor_quarter%in%contractors_holding_both_large_and_small_projects~NaN)]
 
-reg_df[,treat_small_with_large_new:=case_when(treat_i==1 & contractor_quarter%in%contractors_holding_only_small_projects~1,
-                                              treat_i==1 & contractor_quarter%in%contractors_holding_both_large_and_small_projects~0,
+reg_df[,treat_small_with_large_new:=case_when(treat_i==1 & contractor_quarter%in%contractors_holding_only_small_projects~0,
+                                              treat_i==1 & contractor_quarter%in%contractors_holding_both_large_and_small_projects~1,
                                               treat_i==0 & contractor_quarter%in%contractors_holding_only_large_projects~0,
                                               treat_i==0 & contractor_quarter%in%contractors_holding_both_large_and_small_projects~NaN)]
 
 # already adjusted above, but to be super cautius!
 reg_df_subset=subset(reg_df,!(treat_i==0 & contractor_quarter%in%contractors_holding_both_large_and_small_projects))
+
+reg_df_subset[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+# time spent in the project so far/total time of the project
+# if project was active in previous quarter
+reg_df_subset[,project_quarter_stage:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),as.numeric(lag(action_date_year_quarter,1)-initial_start_date)/as.numeric(lag(last_reported_end_date,1)-initial_start_date),NaN)]
+
+# (action_date_year_quarter-90) to get beginning of the quarter
+
+reg_df_subset[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
 
 # treat_small_with_large_new = 1 ==> treat_new = 1
 
