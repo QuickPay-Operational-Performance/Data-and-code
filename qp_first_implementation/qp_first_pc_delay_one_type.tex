@@ -208,7 +208,7 @@ Adjusted R$^{2}$ & 0.002 & 0.14 & 0.14 & 0.17 & 0.17 \\
 \(PercentDelay_{it}=\beta_0 + \beta_1 Treat_i + \beta_2 Treat_i \times Quarter_t + \gamma_{task} + \theta_{naics}+\lambda_{quarter}+\nu_{sub-agency}+\epsilon_{it}\)
 
 \begin{verbatim}
-## NOTE: 154,345 observations removed because of NA values (LHS: 154,345, RHS: 6,132).
+## NOTE: 171,376 observations removed because of NA values (LHS: 154,345, RHS: 171,267).
 \end{verbatim}
 
 \includegraphics{qp_first_pc_delay_one_type_files/figure-latex/event_study-1.pdf}
@@ -938,9 +938,19 @@ Adjusted R$^{2}$ & 0.002 & 0.18 & 0.19 & 0.22 & 0.22 \\
 \hypertarget{competition}{%
 \section{Competition}\label{competition}}
 
-\hypertarget{impact-on-bidding-metrics-one-type}{%
-\subsection{Impact on bidding metrics {[}One
-type{]}}\label{impact-on-bidding-metrics-one-type}}
+\hypertarget{impact-on-bidding-metrics}{%
+\subsection{Impact on bidding metrics}\label{impact-on-bidding-metrics}}
+
+\begin{itemize}
+\tightlist
+\item
+  This is for all projects, because no spillover issue with
+  project-level competition metrics (unlike delays).
+\item
+  That is, contractors would make aggressive bids on their small
+  projects (to receive faster payment) regardless of other projects in
+  their portfolio.
+\end{itemize}
 
 \begin{table}[H] \centering 
   \caption{Effect of Competition After QuickPay: Quickpay 2009-2011} 
@@ -949,21 +959,21 @@ type{]}}\label{impact-on-bidding-metrics-one-type}}
 \begin{tabular}{@{\extracolsep{0pt}}lccc} 
 \\[-1.8ex]\hline 
 \hline \\[-1.8ex] 
-\\[-1.8ex] & $NumberOfBids_{it}$ & $InitialDuration_{it}$ & $InitialBudget_{it}$ \\ 
+\\[-1.8ex] & $NumberOfBids_{it}$ & $InitialDuration_{it}$ & $InitialBudget_{it}$ (in 000s) \\ 
 \\[-1.8ex] & (1) & (2) & (3)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & 0.89$^{***}$ & $-$14.08$^{***}$ & $-$58,366.39$^{***}$ \\ 
-  & (0.15) & (1.12) & (4,530.81) \\ 
+ $Treat_i$ & 0.88$^{***}$ & $-$7.27$^{***}$ & $-$15.06$^{***}$ \\ 
+  & (0.09) & (0.72) & (1.59) \\ 
   & & & \\ 
- $Treat_i \times Post_t$ & 0.37$^{*}$ & 1.93 & $-$23,862.98$^{***}$ \\ 
-  & (0.19) & (1.38) & (5,996.59) \\ 
+ $Treat_i \times Post_t$ & 0.27$^{**}$ & $-$3.38$^{***}$ & $-$29.49$^{***}$ \\ 
+  & (0.12) & (1.00) & (2.30) \\ 
   & & & \\ 
 \hline \\[-1.8ex] 
 Task fixed effects & Yes & Yes & Yes \\ 
 Time fixed effects & Yes & Yes & Yes \\ 
-Observations & 126,531 & 81,184 & 126,639 \\ 
-R$^{2}$ & 0.36 & 0.34 & 0.30 \\ 
-Adjusted R$^{2}$ & 0.35 & 0.33 & 0.29 \\ 
+Observations & 227,609 & 220,550 & 227,732 \\ 
+R$^{2}$ & 0.25 & 0.20 & 0.24 \\ 
+Adjusted R$^{2}$ & 0.24 & 0.19 & 0.24 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
