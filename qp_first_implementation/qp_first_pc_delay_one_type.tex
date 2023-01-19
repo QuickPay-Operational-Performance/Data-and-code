@@ -66,7 +66,7 @@
 \title{Percentage Delay Rate (with one type of contractor): QuickPay
 (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Jan 16, 2023}
+\date{\vspace{-2.5em}Jan 19, 2023}
 
 \begin{document}
 \maketitle
@@ -151,6 +151,49 @@ Industry fixed effects & No & No & No & No & Yes \\
 Observations & 174,197 & 157,166 & 157,166 & 157,166 & 157,166 \\ 
 R$^{2}$ & 0.0005 & 0.18 & 0.19 & 0.22 & 0.22 \\ 
 Adjusted R$^{2}$ & 0.0005 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{delay-days}{%
+\subsection{Delay days}\label{delay-days}}
+
+\begin{table}[H] \centering 
+  \caption{Effect of QuickPay on days of delay rates} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$DelayDays_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$2.17$^{***}$ & $-$1.33$^{***}$ & $-$1.50$^{***}$ & $-$1.88$^{***}$ & $-$1.94$^{***}$ \\ 
+  & (0.23) & (0.22) & (0.22) & (0.22) & (0.23) \\ 
+  & & & & & \\ 
+ $Post_t$ & 1.47$^{***}$ & $-$5.08$^{***}$ &  &  &  \\ 
+  & (0.23) & (1.55) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 2.38$^{***}$ & 2.45$^{***}$ & 2.63$^{***}$ & 2.63$^{***}$ & 2.65$^{***}$ \\ 
+  & (0.30) & (0.30) & (0.30) & (0.29) & (0.30) \\ 
+  & & & & & \\ 
+ Constant & 9.74$^{***}$ & 62.82$^{***}$ &  &  &  \\ 
+  & (0.18) & (1.15) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 174,306 & 157,275 & 157,275 & 157,275 & 157,275 \\ 
+R$^{2}$ & 0.002 & 0.14 & 0.14 & 0.17 & 0.17 \\ 
+Adjusted R$^{2}$ & 0.002 & 0.14 & 0.14 & 0.17 & 0.17 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
