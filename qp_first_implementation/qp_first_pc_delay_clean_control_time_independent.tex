@@ -66,7 +66,7 @@
 \title{Percentage Delay Rate (with Time Independent Clean Control):
 QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Jan 19, 2023}
+\date{\vspace{-2.5em}Jan 21, 2023}
 
 \begin{document}
 \maketitle
@@ -876,6 +876,68 @@ Adjusted R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.22 & 0.22 \\
 \end{tabular} 
 \end{table}
 
+\hypertarget{contract-financing-all-projects}{%
+\section{Contract Financing (All
+Projects)}\label{contract-financing-all-projects}}
+
+\begin{itemize}
+\tightlist
+\item
+  \(CF=1\) if project was receiving contract financing
+\end{itemize}
+
+\begin{table}[H] \centering 
+  \caption{Contract Financing (All Projects) and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$1.99$^{***}$ & $-$1.63$^{***}$ & $-$1.67$^{***}$ & $-$1.07$^{***}$ & $-$1.06$^{***}$ \\ 
+  & (0.12) & (0.11) & (0.11) & (0.11) & (0.11) \\ 
+  & & & & & \\ 
+ $Post_t$ & $-$0.55$^{***}$ & $-$5.71$^{***}$ &  &  &  \\ 
+  & (0.12) & (0.79) &  &  &  \\ 
+  & & & & & \\ 
+ $CF_i$ & 1.35$^{***}$ & 1.32$^{***}$ & 1.19$^{***}$ & $-$0.70$^{***}$ & $-$0.69$^{***}$ \\ 
+  & (0.27) & (0.23) & (0.23) & (0.24) & (0.24) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 1.39$^{***}$ & 1.21$^{***}$ & 1.24$^{***}$ & 1.07$^{***}$ & 1.10$^{***}$ \\ 
+  & (0.15) & (0.14) & (0.14) & (0.14) & (0.14) \\ 
+  & & & & & \\ 
+ $Post_t \times CF_i$ & 1.85$^{***}$ & 0.31 & 0.41 & 0.42 & 0.44 \\ 
+  & (0.33) & (0.30) & (0.30) & (0.30) & (0.30) \\ 
+  & & & & & \\ 
+ $Treat_i \times CF_i$ & 2.30$^{***}$ & 1.47$^{***}$ & 1.49$^{***}$ & 0.90$^{***}$ & 0.80$^{***}$ \\ 
+  & (0.35) & (0.29) & (0.29) & (0.29) & (0.30) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t \times CF_i$ & $-$1.19$^{***}$ & $-$0.69$^{*}$ & $-$0.67$^{*}$ & $-$0.31 & $-$0.36 \\ 
+  & (0.44) & (0.39) & (0.39) & (0.38) & (0.38) \\ 
+  & & & & & \\ 
+ Constant & 5.05$^{***}$ & 43.54$^{***}$ &  &  &  \\ 
+  & (0.11) & (0.61) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 223,244 & 201,738 & 201,738 & 201,738 & 201,738 \\ 
+R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
 \hypertarget{receives-grantsfinancial-assistance-projects-active-onbefore-june-2010}{%
 \section{Receives Grants/Financial Assistance (Projects active on/before
 June
@@ -934,6 +996,71 @@ Industry fixed effects & No & No & No & No & Yes \\
 Observations & 65,191 & 55,291 & 55,291 & 55,291 & 55,291 \\ 
 R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.23 & 0.23 \\ 
 Adjusted R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.22 & 0.22 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{receives-grantsfinancial-assistance-all-projects}{%
+\section{Receives Grants/Financial Assistance (All
+projects)}\label{receives-grantsfinancial-assistance-all-projects}}
+
+\begin{itemize}
+\tightlist
+\item
+  \(CF=1\) if receives\_grants==`t'
+\item
+  The variable ``receives\_grants'' used to be called ``receives
+  financial assistance''
+\end{itemize}
+
+\begin{table}[H] \centering 
+  \caption{Receives grants (All Projects) and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$1.84$^{***}$ & $-$1.42$^{***}$ & $-$1.46$^{***}$ & $-$0.94$^{***}$ & $-$0.95$^{***}$ \\ 
+  & (0.11) & (0.11) & (0.11) & (0.11) & (0.11) \\ 
+  & & & & & \\ 
+ $Post_t$ & $-$0.21$^{*}$ & $-$5.58$^{***}$ &  &  &  \\ 
+  & (0.12) & (0.78) &  &  &  \\ 
+  & & & & & \\ 
+ $CF_i$ & 0.69 & 1.64$^{***}$ & 1.55$^{***}$ & 1.38$^{***}$ & 1.33$^{***}$ \\ 
+  & (0.56) & (0.49) & (0.49) & (0.48) & (0.48) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 1.09$^{***}$ & 1.04$^{***}$ & 1.08$^{***}$ & 1.04$^{***}$ & 1.07$^{***}$ \\ 
+  & (0.14) & (0.14) & (0.14) & (0.13) & (0.13) \\ 
+  & & & & & \\ 
+ $Post_t \times CF_i$ & $-$0.28 & $-$0.73 & $-$0.68 & $-$0.04 & $-$0.05 \\ 
+  & (0.60) & (0.58) & (0.58) & (0.58) & (0.58) \\ 
+  & & & & & \\ 
+ $Treat_i \times CF_i$ & 2.18$^{***}$ & 1.29$^{**}$ & 1.31$^{**}$ & 0.46 & 0.53 \\ 
+  & (0.68) & (0.60) & (0.60) & (0.60) & (0.60) \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t \times CF_i$ & 0.01 & 0.12 & 0.13 & $-$0.25 & $-$0.26 \\ 
+  & (0.76) & (0.73) & (0.73) & (0.73) & (0.73) \\ 
+  & & & & & \\ 
+ Constant & 5.24$^{***}$ & 42.73$^{***}$ &  &  &  \\ 
+  & (0.10) & (0.61) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 223,244 & 201,738 & 201,738 & 201,738 & 201,738 \\ 
+R$^{2}$ & 0.003 & 0.18 & 0.18 & 0.21 & 0.22 \\ 
+Adjusted R$^{2}$ & 0.003 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
