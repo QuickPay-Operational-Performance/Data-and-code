@@ -199,6 +199,82 @@ reg_df_one_type[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
 reg_df_one_type[,stage_aliter:=as.numeric(action_date_year_quarter-initial_start_date)/as.numeric(last_reported_end_date-initial_start_date)]
 ```
 
+```{r clean_control,include=FALSE}
+
+##
+
+small_contractors=unique(subset(reg_df,treat_i==1)$recipient_duns)
+large_contractors=unique(subset(reg_df,treat_i==0)$recipient_duns)
+
+## Contractor-Quarter definitions
+
+# contractors holding large projects in a given quarter
+contractors_holding_large_projects=subset(reg_df,treat_i==0)[,unique(recipient_duns),
+                                                             by='action_date_year_quarter']
+contractors_holding_large_projects[,contractor_quarter_large_projects:=paste(V1,action_date_year_quarter,sep='_')]
+contractors_holding_large_projects=unique(contractors_holding_large_projects$contractor_quarter_large_projects)
+
+# contractors holding small projects in a given quarter
+contractors_holding_small_projects=subset(reg_df,treat_i==1)[,unique(recipient_duns),by='action_date_year_quarter']
+contractors_holding_small_projects[,contractor_quarter_small_projects:=paste(V1,action_date_year_quarter,sep='_')]
+contractors_holding_small_projects=unique(contractors_holding_small_projects$contractor_quarter_small_projects)
+
+# contractors holding "only" large projects in a given quarter
+contractors_holding_only_large_projects=setdiff(contractors_holding_large_projects,
+                                                contractors_holding_small_projects)
+
+# contractors holding "only" small projects in a given quarter
+contractors_holding_only_small_projects=setdiff(contractors_holding_small_projects,
+                                                contractors_holding_large_projects)
+
+# contractors holding "both" large & small projects in a given quarter
+contractors_holding_both_large_and_small_projects=intersect(contractors_holding_large_projects,
+                                                contractors_holding_small_projects)
+
+
+# large projects held by contractor holding at least one small project
+reg_df[,contractor_quarter:=paste(recipient_duns,
+                                  action_date_year_quarter,
+                                  sep='_')]
+
+reg_df[,treat_new:=case_when(treat_i==1 ~ 1,
+                             treat_i==0 & !(recipient_duns%in%small_contractors)~0,
+                             treat_i==0 & recipient_duns%in%small_contractors~NaN)]
+
+
+reg_df[,treat_only_small:=case_when(treat_i==1 & contractor_quarter%in%contractors_holding_only_small_projects~1,
+                                              treat_i==1 & contractor_quarter%in%contractors_holding_both_large_and_small_projects~0,
+                                              treat_i==0 & contractor_quarter%in%contractors_holding_only_large_projects~0,
+                                              treat_i==0 & contractor_quarter%in%contractors_holding_both_large_and_small_projects~NaN)]
+
+
+reg_df[,treat_small_with_large_new:=case_when(treat_i==1 & contractor_quarter%in%contractors_holding_only_small_projects~0,
+                                              treat_i==1 & contractor_quarter%in%contractors_holding_both_large_and_small_projects~1,
+                                              treat_i==0 & contractor_quarter%in%contractors_holding_only_large_projects~0,
+                                              treat_i==0 & contractor_quarter%in%contractors_holding_both_large_and_small_projects~NaN)]
+
+# already adjusted above, but to be super cautius!
+reg_df_subset=subset(reg_df,!(treat_i==0 & recipient_duns%in%small_contractors))
+
+# reg_df_subset[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
+#                               probs=c(0.05,0.95),
+#                               na.rm=T)]
+
+reg_df[,winsorized_delay:=Winsorize(delay,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+# time spent in the project so far/total time of the project
+# if project was active in previous quarter
+reg_df_subset[,project_quarter_stage:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),as.numeric(lag(action_date_year_quarter,1)-initial_start_date)/as.numeric(lag(last_reported_end_date,1)-initial_start_date),NaN)]
+
+# (action_date_year_quarter-90) to get beginning of the quarter
+
+reg_df_subset[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+```
+
 ```{r stargazer_format, include=FALSE}
 # Code to extract only the inner part (nested within tabular) of table from stargazer
 # We will use this along with threeparttable in latex later 
@@ -319,17 +395,13 @@ etable(baseline_reg,
               'Number of offers received',
               'Project stage',
               'Initial duration'),
-       digits.stats = 2,
-       file=paste0(tables_folder,"/base_negative_logistic.tex"))
-
-# write(base_table_tex,
-#       paste0(tables_folder,"/base_negative_logistic.tex"))
-
+       digits.stats = 2)#,
+     #  file=paste0(tables_folder,"/base_negative_logistic.tex"))
 ```
 
 # Logistic Regressions (Negative Delay) --- One Type
 
-```{r baseline_regressions, echo=FALSE, results='asis',warning=FALSE}
+```{r baseline_regressions_2, echo=FALSE, results='asis',warning=FALSE}
 # Baseline Regressions 
 
 baseline_reg=feglm(negative_delay~treat_i+
@@ -421,57 +493,41 @@ etable(baseline_reg,
               'Number of offers received',
               'Project stage',
               'Initial duration'),
-       digits.stats = 2,
-       file=paste0(tables_folder,"/base_negative_logistic_one_type.tex"))
-
-# write(base_table_tex,
-#       paste0(tables_folder,"/base_negative_logistic.tex"))
+       digits.stats = 2)#,
+#       file=paste0(tables_folder,"/base_negative_logistic_one_type.tex"))
 
 ```
 
-# Contract Financing
+# Logistic Regression (Negative delay) -- Clean Time Independent Control
 
-$$ CF_i = \begin{cases} 1, \text{ if project } i \text{ receives contract financing}\\
-0, \text{ otherwise} \end{cases}$$
-
-```{r contract_financing, echo=FALSE, results='asis',warning=FALSE}
+```{r baseline_regressions_3, echo=FALSE, results='asis',warning=FALSE}
 # Baseline Regressions 
-baseline_reg=feglm(negative_delay~treat_i+
-                    post_t:treat_i+
-                     post_t+
-                     treat_i:contract_financing_i+
-                    contract_financing_i+
-                    post_t:contract_financing_i+
-                    post_t:treat_i:contract_financing_i,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=reg_df)
 
-controls_and_no_fe=feglm(negative_delay~treat_i+
-                            post_t+
-                            post_t:treat_i+
-                           treat_i:contract_financing_i+
-                            contract_financing_i+
-                            post_t:contract_financing_i+
-                            post_t:treat_i:contract_financing_i+
-                            log(wins_project_quarter_stage)+
+baseline_reg=feglm(negative_delay~treat_new+
+                   post_t:treat_new+
+                   post_t,
+                 data=reg_df,
+                 family='binomial',
+                 cluster='contract_award_unique_key')
+
+controls_and_no_fe=feglm(negative_delay~treat_new+
+                           post_t:treat_new+
+                           post_t+
+                           log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
                             post_t:log(1+winsorized_initial_duration_in_days_i)+
                             post_t:log(1+winsorized_initial_budget_i)+
                             post_t:number_of_offers_received,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=reg_df)
+                          data=reg_df,
+                          family='binomial',
+                         cluster='contract_award_unique_key')
 
-controls_and_time_fe=feglm(negative_delay~treat_i+
-                            post_t:treat_i+
-                           treat_i:contract_financing_i+
-                            contract_financing_i+
-                            post_t:contract_financing_i+
-                            post_t:treat_i:contract_financing_i+
-                             log(wins_project_quarter_stage)+
+# time fixed effects also included in the following specs
+controls_and_time_fe=feglm(negative_delay~treat_new+
+                             post_t:treat_new+
+                           log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -482,14 +538,10 @@ controls_and_time_fe=feglm(negative_delay~treat_i+
                            family='binomial',
                             cluster='contract_award_unique_key',
                            data=reg_df)
-# time fixed effects also included in the following specs
-controls_time_task_fe=feglm(negative_delay~treat_i+
-                            post_t:treat_i+
-                           treat_i:contract_financing_i+
-                            contract_financing_i+
-                            post_t:contract_financing_i+
-                            post_t:treat_i:contract_financing_i+
-                             log(wins_project_quarter_stage)+
+
+controls_time_task_fe=feglm(negative_delay~treat_new+
+                              post_t:treat_new+
+                           log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -501,13 +553,9 @@ controls_time_task_fe=feglm(negative_delay~treat_i+
                             cluster='contract_award_unique_key',
                            data=reg_df)
 
-controls_and_all_fe=feglm(negative_delay~treat_i+
-                            post_t:treat_i+
-                           treat_i:contract_financing_i+
-                            contract_financing_i+
-                            post_t:contract_financing_i+
-                            post_t:treat_i:contract_financing_i+
-                             log(wins_project_quarter_stage)+
+controls_and_all_fe=feglm(negative_delay~treat_new+
+                            post_t:treat_new+
+                           log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -519,9 +567,8 @@ controls_and_all_fe=feglm(negative_delay~treat_i+
                             cluster='contract_award_unique_key',
                            data=reg_df)
 
-setFixest_dict(c("treat_i"="$Treat_i$",
+setFixest_dict(c("treat_new"="$Treat_i$",
                  "post_t"="$Post_t$",
-                 "contract_financing_i"="$CF_i$",
                  "number_of_offers_received"="Number of offers received", 
                  "log(wins_project_quarter_stage)" = "Project stage",
                  "log(1+winsorized_initial_duration_in_days_i)" = "Initial duration",
@@ -530,7 +577,7 @@ setFixest_dict(c("treat_i"="$Treat_i$",
                  "naics_code"="NAICS code",
                  "action_date_year_quarter"="Time",
                  "contract_award_unique_key"="Project ID",
-                 "negative_delay"="$I(Delay<0)$"))
+                 "positive_delay"="$I(Delay_{it}>0)$"))
 
 etable(baseline_reg,
        controls_and_no_fe,
@@ -545,387 +592,8 @@ etable(baseline_reg,
               'Number of offers received',
               'Project stage',
               'Initial duration'),
+       digits.stats = 2,
        extralines=list("Controls"=c("", rep("Yes",4)),
-                       "Controls $\\times Post_t$"=c("", rep("Yes",4))),
-       digits.stats = 2)
-
-```
-
-
-# Competition
-
-## Impact on delays
-
-Define
-$$ SA_i = \begin{cases} 1, \text{ if project was signed after QuickPay}\\
-0, \text{ otherwise} \end{cases}$$
-
-$$ SB_i = \begin{cases} 1, \text{ if project was signed before QuickPay}\\
-0, \text{ otherwise} \end{cases}$$
-
-### Subsample model
-
-```{r competition_delays_subsample, echo=FALSE, results='asis',warning=FALSE}
-new_projects_after_quickpay=unique(subset(df_first_reported,action_date>as.Date('2011-04-27'))$contract_award_unique_key)
-reg_df[,project_signed_after_quickpay:=ifelse(contract_award_unique_key%in%new_projects_after_quickpay,1,0)]
-reg_df[,project_signed_before_quickpay:=ifelse(!contract_award_unique_key%in%new_projects_after_quickpay,1,0)]
-baseline_reg=feglm(negative_delay~treat_i+
-                                  project_signed_after_quickpay+
-                                  treat_i:post_t:project_signed_before_quickpay+
-                                  treat_i:post_t:project_signed_after_quickpay+
-                                  post_t,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=subset(reg_df,competitively_awarded_i==1))
-                                  
-
-controls_and_no_fe=feglm(negative_delay~treat_i+
-                                  project_signed_after_quickpay+
-                                  treat_i:post_t:project_signed_before_quickpay+
-                                  treat_i:post_t:project_signed_after_quickpay+
-                                  post_t+
-                             log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            number_of_offers_received+
-                            post_t:number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i),
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=subset(reg_df,competitively_awarded_i==1))
-
-controls_and_time_fe=feglm(negative_delay~treat_i+
-                                  project_signed_after_quickpay+
-                                  treat_i:post_t:project_signed_before_quickpay+
-                                  treat_i:post_t:project_signed_after_quickpay+
-                             log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            number_of_offers_received+
-                            post_t:number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)|
-                            action_date_year_quarter,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=subset(reg_df,competitively_awarded_i==1))
-
-controls_time_task_fe=feglm(negative_delay~treat_i+
-                                  project_signed_after_quickpay+
-                                  treat_i:post_t:project_signed_before_quickpay+
-                                  treat_i:post_t:project_signed_after_quickpay+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                             log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_budget_i)+
-                            number_of_offers_received+
-                            post_t:number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)|
-                            product_or_service_code+
-                            action_date_year_quarter,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=subset(reg_df,competitively_awarded_i==1))
-
-controls_and_all_fe=feglm(negative_delay~treat_i+
-                                  project_signed_after_quickpay+
-                                  treat_i:post_t:project_signed_before_quickpay+
-                                  treat_i:post_t:project_signed_after_quickpay+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                             log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_budget_i)+
-                            number_of_offers_received+
-                            post_t:number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)|
-                            naics_code+
-                            product_or_service_code+
-                            action_date_year_quarter,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=subset(reg_df,competitively_awarded_i==1))
-
-
-setFixest_dict(c("treat_i"="$Treat_i$",
-                 "post_t"="$Post_t$",
-                 "contract_financing_i"="$CF_i$",
-                 "project_signed_before_quickpay"="$SB_i$",
-                 "project_signed_after_quickpay"="$SA_i$",
-                 "number_of_offers_received"="Number of offers received", 
-                 "log(wins_project_quarter_stage)" = "Project stage",
-                 "log(1+winsorized_initial_duration_in_days_i)" = "Initial duration",
-                 "product_or_service_code"="Task code",
-                 "log(1+winsorized_initial_budget_i)"="Initial budget",
-                 "naics_code"="NAICS code",
-                 "action_date_year_quarter"="Time",
-                 "contract_award_unique_key"="Project ID",
-                 "negative_delay"="$I(Delay<0)$"))
-
-etable(baseline_reg,
-       controls_and_no_fe,
-       controls_and_time_fe,
-       controls_time_task_fe,
-       controls_and_all_fe,
-       cluster = "contract_award_unique_key",
-       title = "Logit model: Effect of QuickPay on Competitive Projects",
-       digits = "r2",
-       tex=TRUE,
-       drop=c('Initial budget',
-              'Number of offers received',
-              'Project stage',
-              'Initial duration'),
-       digits.stats = 2)
-```
-
-```{r non_competitive_delays_subsample, echo=FALSE, results='asis',warning=FALSE}
-baseline_reg=feglm(negative_delay~treat_i+
-                                  project_signed_after_quickpay+
-                                  treat_i:post_t:project_signed_before_quickpay+
-                                  treat_i:post_t:project_signed_after_quickpay+
-                                  post_t,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=subset(reg_df,competitively_awarded_i==0))
-                                  
-
-controls_and_no_fe=feglm(negative_delay~treat_i+
-                                  project_signed_after_quickpay+
-                                  treat_i:post_t:project_signed_before_quickpay+
-                                  treat_i:post_t:project_signed_after_quickpay+
-                                  post_t+
-                             log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            number_of_offers_received+
-                            post_t:number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i),
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=subset(reg_df,competitively_awarded_i==0))
-
-controls_and_time_fe=feglm(negative_delay~treat_i+
-                                  project_signed_after_quickpay+
-                                  treat_i:post_t:project_signed_before_quickpay+
-                                  treat_i:post_t:project_signed_after_quickpay+
-                             log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            number_of_offers_received+
-                            post_t:number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)|
-                            action_date_year_quarter,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=subset(reg_df,competitively_awarded_i==0))
-
-controls_time_task_fe=feglm(negative_delay~treat_i+
-                                  project_signed_after_quickpay+
-                                  treat_i:post_t:project_signed_before_quickpay+
-                                  treat_i:post_t:project_signed_after_quickpay+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                             log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_budget_i)+
-                            number_of_offers_received+
-                            post_t:number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)|
-                            product_or_service_code+
-                            action_date_year_quarter,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=subset(reg_df,competitively_awarded_i==0))
-
-controls_and_all_fe=feglm(negative_delay~treat_i+
-                                  project_signed_after_quickpay+
-                                  treat_i:post_t:project_signed_before_quickpay+
-                                  treat_i:post_t:project_signed_after_quickpay+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                             log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_budget_i)+
-                            number_of_offers_received+
-                            post_t:number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)|
-                            naics_code+
-                            product_or_service_code+
-                            action_date_year_quarter,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=subset(reg_df,competitively_awarded_i==0))
-
-
-setFixest_dict(c("treat_i"="$Treat_i$",
-                 "post_t"="$Post_t$",
-                 "contract_financing_i"="$CF_i$",
-                 "project_signed_before_quickpay"="$SB_i$",
-                 "project_signed_after_quickpay"="$SA_i$",
-                 "number_of_offers_received"="Number of offers received", 
-                 "log(wins_project_quarter_stage)" = "Project stage",
-                 "log(1+winsorized_initial_duration_in_days_i)" = "Initial duration",
-                 "product_or_service_code"="Task code",
-                 "log(1+winsorized_initial_budget_i)"="Initial budget",
-                 "naics_code"="NAICS code",
-                 "action_date_year_quarter"="Time",
-                 "contract_award_unique_key"="Project ID",
-                 "negative_delay"="$I(Delay<0)$"))
-
-etable(baseline_reg,
-       controls_and_no_fe,
-       controls_and_time_fe,
-       controls_time_task_fe,
-       controls_and_all_fe,
-       cluster = "contract_award_unique_key",
-       title = "Logit model: Effect of QuickPay on Non-Competitive Projects",
-       digits = "r2",
-       tex=TRUE,
-       drop=c('Initial budget',
-              'Number of offers received',
-              'Project stage',
-              'Initial duration'),
-       digits.stats = 2)
-
-```
-
-### Four-way interaction
-
-```{r competition_delays_combined, echo= FALSE, results ='asis',warning=FALSE}
-baseline_reg=feglm(negative_delay~treat_i+
-                                   project_signed_after_quickpay+
-                                   competitively_awarded_i+
-                     treat_i:competitively_awarded_i+
-                     post_t:competitively_awarded_i+
-                             log(wins_project_quarter_stage)+
-                     project_signed_after_quickpay:competitively_awarded_i+
-                     treat_i:post_t+
-                     treat_i:post_t:competitively_awarded_i+
-                     treat_i:post_t:project_signed_after_quickpay+
-                     treat_i:post_t:project_signed_after_quickpay:competitively_awarded_i+
-                     post_t,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=reg_df)
-
-controls_and_no_fe=feglm(negative_delay~treat_i+
-                                   project_signed_after_quickpay+
-                                   competitively_awarded_i+
-                     treat_i:competitively_awarded_i+
-                             log(wins_project_quarter_stage)+
-                     post_t:competitively_awarded_i+
-                     project_signed_after_quickpay:competitively_awarded_i+
-                     treat_i:post_t+
-                     treat_i:post_t:competitively_awarded_i+
-                     treat_i:post_t:project_signed_after_quickpay+
-                     treat_i:post_t:project_signed_after_quickpay:competitively_awarded_i+
-                     post_t+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            number_of_offers_received+
-                            post_t:number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i),
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=reg_df)
-
-controls_and_time_fe=feglm(negative_delay~treat_i+
-                                   project_signed_after_quickpay+
-                                   competitively_awarded_i+
-                             log(wins_project_quarter_stage)+
-                     treat_i:competitively_awarded_i+
-                     post_t:competitively_awarded_i+
-                     project_signed_after_quickpay:competitively_awarded_i+
-                     treat_i:post_t+
-                     treat_i:post_t:competitively_awarded_i+
-                     treat_i:post_t:project_signed_after_quickpay+
-                     treat_i:post_t:project_signed_after_quickpay:competitively_awarded_i+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            number_of_offers_received+
-                            post_t:number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)|
-                                   action_date_year_quarter,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=reg_df)
-
-controls_time_task_fe=feglm(negative_delay~treat_i+
-                                   project_signed_after_quickpay+
-                                   competitively_awarded_i+
-                     treat_i:competitively_awarded_i+
-                     post_t:competitively_awarded_i+
-                     project_signed_after_quickpay:competitively_awarded_i+
-                             log(wins_project_quarter_stage)+
-                     treat_i:post_t+
-                     treat_i:post_t:competitively_awarded_i+
-                     treat_i:post_t:project_signed_after_quickpay+
-                     treat_i:post_t:project_signed_after_quickpay:competitively_awarded_i+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            number_of_offers_received+
-                            post_t:number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)|
-                                   action_date_year_quarter+
-                       product_or_service_code,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=reg_df)
-
-controls_and_all_fe=feglm(negative_delay~treat_i+
-                                   project_signed_after_quickpay+
-                                   competitively_awarded_i+
-                             log(wins_project_quarter_stage)+
-                     treat_i:competitively_awarded_i+
-                     post_t:competitively_awarded_i+
-                     project_signed_after_quickpay:competitively_awarded_i+
-                     treat_i:post_t+
-                     treat_i:post_t:competitively_awarded_i+
-                     treat_i:post_t:project_signed_after_quickpay+
-                     treat_i:post_t:project_signed_after_quickpay:competitively_awarded_i+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            number_of_offers_received+
-                            post_t:number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)|
-                                   action_date_year_quarter+
-                       product_or_service_code+naics_code,
-                           family='binomial',
-                            cluster='contract_award_unique_key',
-                           data=reg_df)
-
-setFixest_dict(c("treat_i"="$Treat_i$",
-                 "post_t"="$Post_t$",
-                 "contract_financing_i"="$CF_i$",
-                 "project_signed_before_quickpay"="$SB_i$",
-                 "project_signed_after_quickpay"="$SA_i$",
-                 "number_of_offers_received"="Number of offers received", 
-                 "log(wins_project_quarter_stage)" = "Project stage",
-                 "log(1+winsorized_initial_duration_in_days_i)" = "Initial duration",
-                 "product_or_service_code"="Task code",
-                 "log(1+winsorized_initial_budget_i)"="Initial budget",
-                 "naics_code"="NAICS code",
-                 "action_date_year_quarter"="Time",
-                 "contract_award_unique_key"="Project ID",
-                 "negative_delay"="$I(Delay<0)$",
-                 "competitively_awarded_i"="$Competitive_i$"))
-
-etable(baseline_reg,
-       controls_and_no_fe,
-       controls_and_time_fe,
-       controls_time_task_fe,
-       controls_and_all_fe,
-       cluster = "contract_award_unique_key",
-       title = "Logit model: Effect of QuickPay on Non-Competitive Projects",
-       digits = "r2",
-       tex=TRUE,
-       drop=c('Initial budget',
-              'Number of offers received',
-              'Project stage',
-              'Initial duration'),
-       digits.stats = 2)
+                       "Controls $\\times Post_t$"=c("", rep("Yes",4))))#,
+       #file=paste0(tables_folder,"/base_negative_logistic_clean_time_independent_control.tex"))
 ```

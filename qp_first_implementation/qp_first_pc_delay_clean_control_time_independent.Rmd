@@ -266,7 +266,7 @@ reg_df_subset[,wins_percentage_delay:=Winsorize(100*percentage_delay,
                               probs=c(0.05,0.95),
                               na.rm=T)]
 
-reg_df[,winsorized_delay:=Winsorize(delay,                    
+reg_df_subset[,winsorized_delay:=Winsorize(delay,                    
                               probs=c(0.05,0.95),
                               na.rm=T)]
 

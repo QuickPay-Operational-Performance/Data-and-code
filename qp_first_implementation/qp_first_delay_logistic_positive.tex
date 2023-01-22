@@ -33,13 +33,6 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
-\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
-\hypersetup{
-  pdftitle={Logistic regression: Positive Delay Rate -- QuickPay (2009-2012)},
-  hidelinks,
-  pdfcreator={LaTeX via pandoc}}
-\urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
 \makeatletter
@@ -62,10 +55,17 @@
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Logistic regression: Positive Delay Rate -- QuickPay (2009-2012)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
 
 \title{Logistic regression: Positive Delay Rate -- QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Apr 15, 2022}
+\date{\vspace{-2.5em}Jan 22, 2023}
 
 \begin{document}
 \maketitle
@@ -93,255 +93,156 @@ Delay)}\label{logistic-regressions-positive-delay}}
 ##        11/442/0 fixed-effects (2,377 observations) removed because of only 0 (or only 1) outcomes.
 \end{verbatim}
 
-\hypertarget{contract-financing}{%
-\section{Contract Financing}\label{contract-financing}}
-
-\[ CF_i = \begin{cases} 1, \text{ if project } i \text{ receives contract financing}\\
-0, \text{ otherwise} \end{cases}\]
-
-\begin{verbatim}
-## NOTE: 242,688 observations removed because of NA values (LHS: 242,688).
-\end{verbatim}
-
-\begin{verbatim}
-## NOTE: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
-## NOTE: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
-\end{verbatim}
-
-\begin{verbatim}
-## NOTES: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
-##        442/0 fixed-effects (2,333 observations) removed because of only 0 (or only 1) outcomes.
-\end{verbatim}
-
-\begin{verbatim}
-## NOTES: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
-##        11/442/0 fixed-effects (2,377 observations) removed because of only 0 (or only 1) outcomes.
-\end{verbatim}
-
 \begin{table}[htbp]
-   \centering
    \caption{Logit model: Effect of QuickPay}
+   \centering
    \begin{tabular}{lccccc}
-      \tabularnewline\midrule\midrule
-      Dependent Variable: & \multicolumn{5}{c}{$I(Delay>0)$}\\
-      Model:                                        & (1)           & (2)           & (3)           & (4)           & (5)\\
-      \midrule \emph{Variables} &   &   &   &   &  \\
-      (Intercept)                                   & -2.04$^{***}$ & 2.97$^{***}$  &               &               &   \\
-                                                    & (0.02)        & (0.12)        &               &               &   \\
-      $Treat_i$                                     & -0.60$^{***}$ & -0.21$^{***}$ & -0.22$^{***}$ & -0.22$^{***}$ & -0.23$^{***}$\\
-                                                    & (0.03)        & (0.03)        & (0.03)        & (0.03)        & (0.03)\\
-      $Post_t$                                      & 0.02          & -1.41$^{***}$ &               &               &   \\
-                                                    & (0.02)        & (0.13)        &               &               &   \\
-      $CF_i$                                        & 0.45$^{***}$  & 0.61$^{***}$  & 0.59$^{***}$  & 0.07          & 0.06\\
-                                                    & (0.04)        & (0.05)        & (0.05)        & (0.05)        & (0.05)\\
-      $Treat_i$ $\times$ $Post_t$                  & 0.31$^{***}$  & 0.28$^{***}$  & 0.29$^{***}$  & 0.28$^{***}$  & 0.29$^{***}$\\
-                                                    & (0.03)        & (0.04)        & (0.04)        & (0.04)        & (0.04)\\
-      $Treat_i$ $\times$ $CF_i$                    & 0.69$^{***}$  & 0.22$^{***}$  & 0.22$^{***}$  & 0.15$^{**}$   & 0.14$^{**}$\\
-                                                    & (0.06)        & (0.07)        & (0.07)        & (0.07)        & (0.07)\\
-      $Post_t$ $\times$ $CF_i$                     & 0.36$^{***}$  & 0.04          & 0.05          & 0.10$^{*}$    & 0.11$^{**}$\\
-                                                    & (0.05)        & (0.06)        & (0.06)        & (0.06)        & (0.06)\\
-      $Treat_i$ $\times$ $Post_t$ $\times$ $CF_i$ & -0.39$^{***}$ & -0.34$^{***}$ & -0.33$^{***}$ & -0.25$^{***}$ & -0.27$^{***}$\\
-                                                    & (0.07)        & (0.08)        & (0.08)        & (0.08)        & (0.08)\\
-      \midrule \emph{Fixed-effects} &   &   &   &   &  \\
-      Time                                          &               &               & Yes           & Yes           & Yes\\
-      Task code                                     &               &               &               & Yes           & Yes\\
-      NAICS code                                    &               &               &               &               & Yes\\
-      \midrule \emph{Fit statistics} &   &   &   &   &  \\
-      Observations                                  & 260,211       & 236,115       & 236,115       & 233,782       & 233,738\\
-      Squared Correlation                           & 0.02          & 0.27          & 0.27          & 0.31          & 0.31\\
-      Pseudo R$^2$                                  & 0.02          & 0.27          & 0.27          & 0.32          & 0.32\\
-      BIC                                           & 177,520.7     & 128,498.6     & 128,442.2     & 130,820.3     & 130,991.5\\
-      \midrule\midrule\multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \tabularnewline \midrule \midrule
+      Dependent Variable: & \multicolumn{5}{c}{$I(Delay_{it}>0)$}\\
+      Model:                       & (1)           & (2)           & (3)           & (4)           & (5)\\  
+      \midrule
+      \emph{Variables}\\
+      Constant                     & -1.97$^{***}$ & 2.74$^{***}$  &               &               &   \\   
+                                   & (0.02)        & (0.12)        &               &               &   \\   
+      $Treat_i$                    & -0.46$^{***}$ & -0.12$^{***}$ & -0.14$^{***}$ & -0.18$^{***}$ & -0.20$^{***}$\\   
+                                   & (0.02)        & (0.03)        & (0.03)        & (0.03)        & (0.03)\\   
+      $Post_t$                     & 0.09$^{***}$  & -1.38$^{***}$ &               &               &   \\   
+                                   & (0.02)        & (0.13)        &               &               &   \\   
+      $Treat_i$ $\times$ $Post_t$  & 0.21$^{***}$  & 0.18$^{***}$  & 0.19$^{***}$  & 0.21$^{***}$  & 0.22$^{***}$\\   
+                                   & (0.03)        & (0.03)        & (0.03)        & (0.03)        & (0.03)\\   
+      Controls                     &               & Yes           & Yes           & Yes           & Yes\\  
+      Controls $\times Post_t$     &               & Yes           & Yes           & Yes           & Yes\\  
+      \midrule
+      \emph{Fixed-effects}\\
+      Time                         &               &               & Yes           & Yes           & Yes\\  
+      Task code                    &               &               &               & Yes           & Yes\\  
+      NAICS code                   &               &               &               &               & Yes\\  
+      \midrule
+      \emph{Fit statistics}\\
+      Observations                 & 260,211       & 236,115       & 236,115       & 233,782       & 233,738\\  
+      Squared Correlation          & 0.004         & 0.27          & 0.27          & 0.31          & 0.31\\  
+      Pseudo R$^2$                 & 0.005         & 0.26          & 0.26          & 0.32          & 0.32\\  
+      BIC                          & 180,911.3     & 129,642.5     & 129,558.3     & 130,818.1     & 130,983.6\\  
+      \midrule \midrule
+      \multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
       \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
    \end{tabular}
 \end{table}
 
-\hypertarget{competition}{%
-\section{Competition}\label{competition}}
-
-\hypertarget{impact-on-delays}{%
-\subsection{Impact on delays}\label{impact-on-delays}}
-
-Define
-\[ SA_i = \begin{cases} 1, \text{ if project was signed after QuickPay}\\
-0, \text{ otherwise} \end{cases}\]
-
-\[ SB_i = \begin{cases} 1, \text{ if project was signed before QuickPay}\\
-0, \text{ otherwise} \end{cases}\]
-
-\hypertarget{subsample-model}{%
-\subsubsection{Subsample model}\label{subsample-model}}
+\hypertarget{logistic-regressions-positive-delay-one-type}{%
+\section{Logistic Regressions (Positive Delay) -- One
+type}\label{logistic-regressions-positive-delay-one-type}}
 
 \begin{verbatim}
-## NOTE: 202,813 observations removed because of NA values (LHS: 202,813).
+## NOTE: 154,236 observations removed because of NA values (LHS: 154,236).
 \end{verbatim}
 
 \begin{verbatim}
-## NOTE: 224,438 observations removed because of NA values (LHS: 202,813, RHS: 224,438).
-## NOTE: 224,438 observations removed because of NA values (LHS: 202,813, RHS: 224,438).
+## NOTE: 171,267 observations removed because of NA values (LHS: 154,236, RHS: 171,267).
+## NOTE: 171,267 observations removed because of NA values (LHS: 154,236, RHS: 171,267).
 \end{verbatim}
 
 \begin{verbatim}
-## NOTES: 224,438 observations removed because of NA values (LHS: 202,813, RHS: 224,438).
-##        417/0 fixed-effects (2,096 observations) removed because of only 0 (or only 1) outcomes.
+## NOTES: 171,267 observations removed because of NA values (LHS: 154,236, RHS: 171,267).
+##        427/0 fixed-effects (2,008 observations) removed because of only 0 (or only 1) outcomes.
 \end{verbatim}
 
 \begin{verbatim}
-## NOTES: 224,438 observations removed because of NA values (LHS: 202,813, RHS: 224,438).
-##        11/417/0 fixed-effects (2,133 observations) removed because of only 0 (or only 1) outcomes.
+## NOTES: 171,267 observations removed because of NA values (LHS: 154,236, RHS: 171,267).
+##        10/427/0 fixed-effects (2,032 observations) removed because of only 0 (or only 1) outcomes.
 \end{verbatim}
 
 \begin{table}[htbp]
+   \caption{Logit model: Effect of QuickPay}
    \centering
-   \caption{Logit model: Effect of QuickPay on Competitive Projects}
    \begin{tabular}{lccccc}
-      \tabularnewline\midrule\midrule
-      Dependent Variable: & \multicolumn{5}{c}{$I(Delay>0)$}\\
-      Model:                                        & (1)           & (2)           & (3)           & (4)           & (5)\\
-      \midrule \emph{Variables} &   &   &   &   &  \\
-      (Intercept)                                   & -1.90$^{***}$ & 2.73$^{***}$  &               &               &   \\
-                                                    & (0.02)        & (0.13)        &               &               &   \\
-      $Treat_i$                                     & -0.60$^{***}$ & -0.16$^{***}$ & -0.18$^{***}$ & -0.16$^{***}$ & -0.18$^{***}$\\
-                                                    & (0.03)        & (0.03)        & (0.03)        & (0.03)        & (0.03)\\
-      $SA_i$                                        & -0.53$^{***}$ & 0.00          & -0.10$^{***}$ & -0.13$^{***}$ & -0.12$^{***}$\\
-                                                    & (0.03)        & (0.03)        & (0.04)        & (0.04)        & (0.04)\\
-      $Post_t$                                      & 0.41$^{***}$  & -1.50$^{***}$ &               &               &   \\
-                                                    & (0.02)        & (0.15)        &               &               &   \\
-      $Treat_i$ $\times$ $Post_t$ $\times$ $SB_i$ & 0.07$^{*}$    & 0.16$^{***}$  & 0.18$^{***}$  & 0.22$^{***}$  & 0.23$^{***}$\\
-                                                    & (0.03)        & (0.04)        & (0.04)        & (0.04)        & (0.04)\\
-      $Treat_i$ $\times$ $SA_i$ $\times$ $Post_t$ & 0.30$^{***}$  & 0.16$^{***}$  & 0.17$^{***}$  & 0.26$^{***}$  & 0.25$^{***}$\\
-                                                    & (0.04)        & (0.04)        & (0.04)        & (0.04)        & (0.04)\\
-      \midrule \emph{Fixed-effects} &   &   &   &   &  \\
-      Time                                          &               &               & Yes           & Yes           & Yes\\
-      Task code                                     &               &               &               & Yes           & Yes\\
-      NAICS code                                    &               &               &               &               & Yes\\
-      \midrule \emph{Fit statistics} &   &   &   &   &  \\
-      Observations                                  & 214,460       & 192,835       & 192,835       & 190,739       & 190,702\\
-      Squared Correlation                           & 0.01          & 0.27          & 0.27          & 0.32          & 0.32\\
-      Pseudo R$^2$                                  & 0.01          & 0.27          & 0.27          & 0.32          & 0.33\\
-      BIC                                           & 148,987.7     & 106,925.0     & 106,818.7     & 107,652.4     & 107,950.7\\
-      \midrule\midrule\multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \tabularnewline \midrule \midrule
+      Dependent Variable: & \multicolumn{5}{c}{$I(Delay_{it}>0)$}\\
+      Model:                       & (1)           & (2)           & (3)          & (4)           & (5)\\  
+      \midrule
+      \emph{Variables}\\
+      Constant                     & -1.99$^{***}$ & 3.23$^{***}$  &              &               &   \\   
+                                   & (0.02)        & (0.13)        &              &               &   \\   
+      $Treat_i$                    & -0.17$^{***}$ & -0.01         & -0.04        & -0.13$^{***}$ & -0.14$^{***}$\\   
+                                   & (0.03)        & (0.03)        & (0.03)       & (0.03)        & (0.03)\\   
+      $Post_t$                     & 0.10$^{***}$  & -1.33$^{***}$ &              &               &   \\   
+                                   & (0.02)        & (0.15)        &              &               &   \\   
+      $Treat_i$ $\times$ $Post_t$  & 0.20$^{***}$  & 0.18$^{***}$  & 0.20$^{***}$ & 0.21$^{***}$  & 0.21$^{***}$\\   
+                                   & (0.03)        & (0.04)        & (0.04)       & (0.04)        & (0.04)\\   
+      Controls                     &               & Yes           & Yes          & Yes           & Yes\\  
+      Controls $\times Post_t$     &               & Yes           & Yes          & Yes           & Yes\\  
+      \midrule
+      \emph{Fixed-effects}\\
+      Time                         &               &               & Yes          & Yes           & Yes\\  
+      Task code                    &               &               &              & Yes           & Yes\\  
+      NAICS code                   &               &               &              &               & Yes\\  
+      \midrule
+      \emph{Fit statistics}\\
+      Observations                 & 174,306       & 157,275       & 157,275      & 155,267       & 155,243\\  
+      Squared Correlation          & 0.001         & 0.24          & 0.24         & 0.28          & 0.28\\  
+      Pseudo R$^2$                 & 0.002         & 0.22          & 0.23         & 0.28          & 0.28\\  
+      BIC                          & 131,157.5     & 98,119.7      & 98,054.8     & 100,636.0     & 100,926.5\\  
+      \midrule \midrule
+      \multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
       \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
    \end{tabular}
 \end{table}
 
+\hypertarget{logistic-regression-positive-delay-clean-time-independent-control}{%
+\section{Logistic Regression (Positive delay) -- Clean Time Independent
+Control}\label{logistic-regression-positive-delay-clean-time-independent-control}}
+
 \begin{verbatim}
-## NOTE: 39,875 observations removed because of NA values (LHS: 39,875).
+## NOTE: 279,526 observations removed because of NA values (LHS: 242,688, RHS: 70,154).
 \end{verbatim}
 
 \begin{verbatim}
-## NOTE: 42,346 observations removed because of NA values (LHS: 39,875, RHS: 42,346).
-## NOTE: 42,346 observations removed because of NA values (LHS: 39,875, RHS: 42,346).
+## NOTE: 301,032 observations removed because of NA values (LHS: 242,688, RHS: 301,032).
+## NOTE: 301,032 observations removed because of NA values (LHS: 242,688, RHS: 301,032).
 \end{verbatim}
 
 \begin{verbatim}
-## NOTES: 42,346 observations removed because of NA values (LHS: 39,875, RHS: 42,346).
-##        361/0 fixed-effects (1,668 observations) removed because of only 0 (or only 1) outcomes.
+## NOTES: 301,032 observations removed because of NA values (LHS: 242,688, RHS: 301,032).
+##        440/0 fixed-effects (2,359 observations) removed because of only 0 (or only 1) outcomes.
 \end{verbatim}
 
 \begin{verbatim}
-## NOTES: 42,346 observations removed because of NA values (LHS: 39,875, RHS: 42,346).
-##        9/361/0 fixed-effects (1,680 observations) removed because of only 0 (or only 1) outcomes.
-\end{verbatim}
-
-\begin{table}[htbp]
-   \centering
-   \caption{Logit model: Effect of QuickPay on Non-Competitive Projects}
-   \begin{tabular}{lccccc}
-      \tabularnewline\midrule\midrule
-      Dependent Variable: & \multicolumn{5}{c}{$I(Delay>0)$}\\
-      Model:                                        & (1)           & (2)          & (3)          & (4)          & (5)\\
-      \midrule \emph{Variables} &   &   &   &   &  \\
-      (Intercept)                                   & -2.29$^{***}$ & 3.17$^{***}$ &              &              &   \\
-                                                    & (0.04)        & (0.31)       &              &              &   \\
-      $Treat_i$                                     & 0.28$^{***}$  & 0.13$^{**}$  & 0.12$^{**}$  & -0.14$^{**}$ & -0.14$^{**}$\\
-                                                    & (0.06)        & (0.06)       & (0.06)       & (0.07)       & (0.07)\\
-      $SA_i$                                        & -0.25$^{***}$ & 0.05         & -0.02        & -0.09        & -0.06\\
-                                                    & (0.06)        & (0.06)       & (0.08)       & (0.08)       & (0.08)\\
-      $Post_t$                                      & 0.02          & -0.54        &              &              &   \\
-                                                    & (0.05)        & (0.37)       &              &              &   \\
-      $Treat_i$ $\times$ $Post_t$ $\times$ $SB_i$ & 0.42$^{***}$  & 0.28$^{***}$ & 0.30$^{***}$ & 0.31$^{***}$ & 0.31$^{***}$\\
-                                                    & (0.08)        & (0.08)       & (0.08)       & (0.09)       & (0.09)\\
-      $Treat_i$ $\times$ $SA_i$ $\times$ $Post_t$ & 0.14$^{*}$    & 0.05         & 0.06         & 0.02         & -0.01\\
-                                                    & (0.08)        & (0.09)       & (0.09)       & (0.09)       & (0.09)\\
-      \midrule \emph{Fixed-effects} &   &   &   &   &  \\
-      Time                                          &               &              & Yes          & Yes          & Yes\\
-      Task code                                     &               &              &              & Yes          & Yes\\
-      NAICS code                                    &               &              &              &              & Yes\\
-      \midrule \emph{Fit statistics} &   &   &   &   &  \\
-      Observations                                  & 45,751        & 43,280       & 43,280       & 41,612       & 41,600\\
-      Squared Correlation                           & 0.009         & 0.25         & 0.25         & 0.29         & 0.29\\
-      Pseudo R$^2$                                  & 0.01          & 0.25         & 0.25         & 0.30         & 0.30\\
-      BIC                                           & 30,320.7      & 22,645.7     & 22,706.9     & 25,805.5     & 26,177.3\\
-      \midrule\midrule\multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
-      \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
-   \end{tabular}
-\end{table}
-
-\hypertarget{four-way-interaction}{%
-\subsubsection{Four-way interaction}\label{four-way-interaction}}
-
-\begin{verbatim}
-## NOTE: 242,744 observations removed because of NA values (LHS: 242,688, RHS: 242,744).
-\end{verbatim}
-
-\begin{verbatim}
-## NOTE: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
-## NOTE: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
-\end{verbatim}
-
-\begin{verbatim}
-## NOTES: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
-##        0/442 fixed-effects (2,333 observations) removed because of only 0 (or only 1) outcomes.
-\end{verbatim}
-
-\begin{verbatim}
-## NOTES: 266,784 observations removed because of NA values (LHS: 242,688, RHS: 266,784).
-##        0/442/11 fixed-effects (2,377 observations) removed because of only 0 (or only 1) outcomes.
+## NOTES: 301,032 observations removed because of NA values (LHS: 242,688, RHS: 301,032).
+##        12/440/0 fixed-effects (2,397 observations) removed because of only 0 (or only 1) outcomes.
 \end{verbatim}
 
 \begin{table}[htbp]
+   \caption{Logit model: Effect of QuickPay}
    \centering
-   \caption{Logit model: Effect of QuickPay on Non-Competitive Projects}
    \begin{tabular}{lccccc}
-      \tabularnewline\midrule\midrule
-      Dependent Variable: & \multicolumn{5}{c}{$I(Delay>0)$}\\
-      Model:                                                                  & (1)           & (2)           & (3)           & (4)           & (5)\\
-      \midrule \emph{Variables} &   &   &   &   &  \\
-      (Intercept)                                                             & -0.54$^{***}$ & 2.73$^{***}$  &               &               &   \\
-                                                                              & (0.04)        & (0.12)        &               &               &   \\
-      $Treat_i$                                                               & 0.23$^{***}$  & 0.11$^{*}$    & 0.10          & -0.23$^{***}$ & -0.24$^{***}$\\
-                                                                              & (0.06)        & (0.06)        & (0.06)        & (0.07)        & (0.07)\\
-      $SA_i$                                                                  & 0.49$^{***}$  & 0.11$^{**}$   & 0.01          & -0.01         & 0.00\\
-                                                                              & (0.05)        & (0.06)        & (0.06)        & (0.06)        & (0.06)\\
-      $Competitive_i$                                                         & 0.32$^{***}$  & 0.03          & 0.04          & -0.20$^{***}$ & -0.16$^{***}$\\
-                                                                              & (0.04)        & (0.05)        & (0.05)        & (0.05)        & (0.05)\\
-      $Post_t$                                                                & -0.61$^{***}$ & -1.58$^{***}$ &               &               &   \\
-                                                                              & (0.05)        & (0.15)        &               &               &   \\
-      $Treat_i$ $\times$ $Competitive_i$                                     & -0.68$^{***}$ & -0.28$^{***}$ & -0.29$^{***}$ & 0.06          & 0.06\\
-                                                                              & (0.06)        & (0.07)        & (0.07)        & (0.07)        & (0.07)\\
-      $Competitive_i$ $\times$ $Post_t$                                      & 0.31$^{***}$  & 0.27$^{***}$  & 0.26$^{***}$  & 0.13$^{*}$    & 0.12$^{*}$\\
-                                                                              & (0.06)        & (0.07)        & (0.07)        & (0.07)        & (0.07)\\
-      $SA_i$ $\times$ $Competitive_i$                                        & -0.18$^{***}$ & -0.13$^{**}$  & -0.12$^{*}$   & -0.13$^{*}$   & -0.13$^{**}$\\
-                                                                              & (0.06)        & (0.06)        & (0.06)        & (0.07)        & (0.07)\\
-      $Treat_i$ $\times$ $Post_t$                                            & 0.32$^{***}$  & 0.30$^{***}$  & 0.32$^{***}$  & 0.28$^{***}$  & 0.29$^{***}$\\
-                                                                              & (0.08)        & (0.08)        & (0.08)        & (0.09)        & (0.09)\\
-      $Treat_i$ $\times$ $Competitive_i$ $\times$ $Post_t$                  & -0.27$^{***}$ & -0.13         & -0.13         & -0.06         & -0.06\\
-                                                                              & (0.08)        & (0.09)        & (0.09)        & (0.10)        & (0.10)\\
-      $Treat_i$ $\times$ $SA_i$ $\times$ $Post_t$                           & -0.21$^{***}$ & -0.23$^{***}$ & -0.23$^{***}$ & -0.28$^{***}$ & -0.31$^{***}$\\
-                                                                              & (0.08)        & (0.08)        & (0.08)        & (0.09)        & (0.09)\\
-      $Treat_i$ $\times$ $SA_i$ $\times$ $Competitive_i$ $\times$ $Post_t$ & 0.37$^{***}$  & 0.22$^{**}$   & 0.21$^{**}$   & 0.31$^{***}$  & 0.32$^{***}$\\
-                                                                              & (0.09)        & (0.09)        & (0.09)        & (0.10)        & (0.10)\\
-      \midrule \emph{Fixed-effects} &   &   &   &   &  \\
-      Time                                                                    &               &               & Yes           & Yes           & Yes\\
-      Task code                                                               &               &               &               & Yes           & Yes\\
-      NAICS code                                                              &               &               &               &               & Yes\\
-      \midrule \emph{Fit statistics} &   &   &   &   &  \\
-      Observations                                                            & 260,155       & 236,115       & 236,115       & 233,782       & 233,738\\
-      Squared Correlation                                                     & 0.21          & 0.27          & 0.27          & 0.31          & 0.31\\
-      Pseudo R$^2$                                                            & 0.16          & 0.26          & 0.26          & 0.32          & 0.32\\
-      BIC                                                                     & 152,425.5     & 129,642.1     & 129,534.9     & 130,853.8     & 131,028.1\\
-      \midrule\midrule\multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \tabularnewline \midrule \midrule
+      Dependent Variable: & \multicolumn{5}{c}{$I(Delay_{it}>0)$}\\
+      Model:                       & (1)           & (2)           & (3)           & (4)           & (5)\\  
+      \midrule
+      \emph{Variables}\\
+      Constant                     & -1.99$^{***}$ & 3.07$^{***}$  &               &               &   \\   
+                                   & (0.02)        & (0.13)        &               &               &   \\   
+      $Treat_i$                    & -0.44$^{***}$ & -0.21$^{***}$ & -0.23$^{***}$ & -0.21$^{***}$ & -0.22$^{***}$\\   
+                                   & (0.03)        & (0.03)        & (0.03)        & (0.03)        & (0.03)\\   
+      $Post_t$                     & 0.10$^{***}$  & -1.41$^{***}$ &               &               &   \\   
+                                   & (0.02)        & (0.15)        &               &               &   \\   
+      $Treat_i$ $\times$ $Post_t$  & 0.21$^{***}$  & 0.22$^{***}$  & 0.24$^{***}$  & 0.24$^{***}$  & 0.24$^{***}$\\   
+                                   & (0.03)        & (0.04)        & (0.04)        & (0.04)        & (0.04)\\   
+      Controls                     &               & Yes           & Yes           & Yes           & Yes\\  
+      Controls $\times Post_t$     &               & Yes           & Yes           & Yes           & Yes\\  
+      \midrule
+      \emph{Fixed-effects}\\
+      Time                         &               &               & Yes           & Yes           & Yes\\  
+      Task code                    &               &               &               & Yes           & Yes\\  
+      NAICS code                   &               &               &               &               & Yes\\  
+      \midrule
+      \emph{Fit statistics}\\
+      Observations                 & 223,373       & 201,867       & 201,867       & 199,508       & 199,470\\  
+      Squared Correlation          & 0.003         & 0.24          & 0.24          & 0.28          & 0.29\\  
+      Pseudo R$^2$                 & 0.005         & 0.24          & 0.24          & 0.30          & 0.30\\  
+      BIC                          & 152,027.7     & 112,248.2     & 112,168.8     & 113,622.3     & 113,836.6\\  
+      \midrule \midrule
+      \multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
       \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
    \end{tabular}
 \end{table}
