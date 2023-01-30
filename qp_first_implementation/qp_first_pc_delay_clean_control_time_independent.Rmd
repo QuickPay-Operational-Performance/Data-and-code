@@ -214,51 +214,55 @@ large_contractors=unique(subset(reg_df,treat_i==0)$recipient_duns)
 
 ## Contractor-Quarter definitions
 
-# contractors holding large projects in a given quarter
-contractors_holding_large_projects=subset(reg_df,treat_i==0)[,unique(recipient_duns),
-                                                             by='action_date_year_quarter']
-contractors_holding_large_projects[,contractor_quarter_large_projects:=paste(V1,action_date_year_quarter,sep='_')]
-contractors_holding_large_projects=unique(contractors_holding_large_projects$contractor_quarter_large_projects)
-
-# contractors holding small projects in a given quarter
-contractors_holding_small_projects=subset(reg_df,treat_i==1)[,unique(recipient_duns),by='action_date_year_quarter']
-contractors_holding_small_projects[,contractor_quarter_small_projects:=paste(V1,action_date_year_quarter,sep='_')]
-contractors_holding_small_projects=unique(contractors_holding_small_projects$contractor_quarter_small_projects)
-
-# contractors holding "only" large projects in a given quarter
-contractors_holding_only_large_projects=setdiff(contractors_holding_large_projects,
-                                                contractors_holding_small_projects)
-
-# contractors holding "only" small projects in a given quarter
-contractors_holding_only_small_projects=setdiff(contractors_holding_small_projects,
-                                                contractors_holding_large_projects)
-
-# contractors holding "both" large & small projects in a given quarter
-contractors_holding_both_large_and_small_projects=intersect(contractors_holding_large_projects,
-                                                contractors_holding_small_projects)
-
-
-# large projects held by contractor holding at least one small project
-reg_df[,contractor_quarter:=paste(recipient_duns,
-                                  action_date_year_quarter,
-                                  sep='_')]
+# # contractors holding large projects in a given quarter
+# contractors_holding_large_projects=subset(reg_df,treat_i==0)[,unique(recipient_duns),
+#                                                              by='action_date_year_quarter']
+# contractors_holding_large_projects[,contractor_quarter_large_projects:=paste(V1,action_date_year_quarter,sep='_')]
+# contractors_holding_large_projects=unique(contractors_holding_large_projects$contractor_quarter_large_projects)
+# 
+# # contractors holding small projects in a given quarter
+# contractors_holding_small_projects=subset(reg_df,treat_i==1)[,unique(recipient_duns),by='action_date_year_quarter']
+# contractors_holding_small_projects[,contractor_quarter_small_projects:=paste(V1,action_date_year_quarter,sep='_')]
+# contractors_holding_small_projects=unique(contractors_holding_small_projects$contractor_quarter_small_projects)
+# 
+# # contractors holding "only" large projects in a given quarter
+# contractors_holding_only_large_projects=setdiff(contractors_holding_large_projects,
+#                                                 contractors_holding_small_projects)
+# 
+# # contractors holding "only" small projects in a given quarter
+# contractors_holding_only_small_projects=setdiff(contractors_holding_small_projects,
+#                                                 contractors_holding_large_projects)
+# 
+# # contractors holding "both" large & small projects in a given quarter
+# contractors_holding_both_large_and_small_projects=intersect(contractors_holding_large_projects,
+#                                                 contractors_holding_small_projects)
+# 
+# 
+# # large projects held by contractor holding at least one small project
+# reg_df[,contractor_quarter:=paste(recipient_duns,
+#                                   action_date_year_quarter,
+#                                   sep='_')]
 
 reg_df[,treat_new:=case_when(treat_i==1 ~ 1,
                              treat_i==0 & !(recipient_duns%in%small_contractors)~0,
                              treat_i==0 & recipient_duns%in%small_contractors~NaN)]
 
+# Small project & contractor does not hold any large project at any point == 1
+# Small project & contractor holds a large project at any point == 0
+# Large project & contractor does not hold any small project at any point == 0 [Clean control]
+# Large project & contractor holds a small project at any point == NaN
 
-reg_df[,treat_only_small:=case_when(treat_i==1 & contractor_quarter%in%contractors_holding_only_small_projects~1,
-                                              treat_i==1 & contractor_quarter%in%contractors_holding_both_large_and_small_projects~0,
-                                              treat_i==0 & contractor_quarter%in%contractors_holding_only_large_projects~0,
-                                              treat_i==0 & contractor_quarter%in%contractors_holding_both_large_and_small_projects~NaN)]
+reg_df[,treat_only_small:=case_when(treat_i==1 & !(recipient_duns%in%large_contractors)~1,
+                                    treat_i==1 & recipient_duns%in%large_contractors~0,
+                                    treat_i==0 & !(recipient_duns%in%small_contractors)~0,
+                                    treat_i==0 & recipient_duns%in%small_contractors~NaN)]
 
-
-reg_df[,treat_small_with_large_new:=case_when(treat_i==1 & contractor_quarter%in%contractors_holding_only_small_projects~0,
-                                              treat_i==1 & contractor_quarter%in%contractors_holding_both_large_and_small_projects~1,
-                                              treat_i==0 & contractor_quarter%in%contractors_holding_only_large_projects~0,
-                                              treat_i==0 & contractor_quarter%in%contractors_holding_both_large_and_small_projects~NaN)]
-
+# Small project & contractor holds large project at any point == 1
+reg_df[,treat_small_with_large_new:=case_when(treat_i==1 & !(recipient_duns%in%large_contractors)~0,
+                                    treat_i==1 & recipient_duns%in%large_contractors~1,
+                                    treat_i==0 & !(recipient_duns%in%small_contractors)~0,
+                                    treat_i==0 & recipient_duns%in%small_contractors~NaN)]
+       
 # already adjusted above, but to be super cautius!
 reg_df_subset=subset(reg_df,!(treat_i==0 & recipient_duns%in%small_contractors))
 
@@ -1830,14 +1834,14 @@ congestion_tasks_table_tex=make_tex_pieces(congestion_tasks_table)
 ## Regression 1: DID on large projects
 
 * Sample restricted to large projects only.
-* Treat is an indicator that equals one for LARGE projects that have at least one parallel small project in the same quarter, and is zero otherwise.
+* Treat is an indicator that equals one for LARGE projects whose contractor has at least one small project at any point, and is zero otherwise
           
 ```{r project_portfolio_spillover,warning=FALSE, echo=FALSE, results='asis'}
 
 reg_df[,treat_large_with_small:=case_when(
-  treat_i==0&contractor_quarter%in%contractors_holding_both_large_and_small_projects~1,
-  treat_i==0&contractor_quarter%in%contractors_holding_only_large_projects~0,
-                                          treat_i==1~NaN)]
+                        treat_i==0 & recipient_duns%in%small_contractors~1,
+                        treat_i==0 & !(recipient_duns%in%small_contractors)~0,
+                        treat_i==1~NaN)]
                                          
 
 m1=felm(wins_percentage_delay~treat_large_with_small+
@@ -1960,12 +1964,8 @@ portfolio_large_projs_did=stargazer(m1,m2,m3,m4,m5,
 
 ## Regression 2: Incremental effect on small project with existing large project
 
-* $Treat_{i,l}$ is an indicator that equals 1 for small projects with co-existing large projects in a given quarter, and is zero otherwise.
-    * This depends on time, though we are not defining it explicitly.
-* $Treat_{i,l}=1 \implies Treat_i = 1$. This means we have:
-    * $Treat_{i,l} \times Post_t = Treat_i \times Treat_{i,l} \times Post_t$
-    * $Treat_{i,l} \times Treat_i = Treat_{i,l}$
-* Large projects with parallel small projects are removed to get a clean control group.
+* $Treat_{i,l}$ is an indicator that equals 1 for small projects whose contractor holds a large project at any point in time, and is zero otherwise.
+* Large projects whose contractor holds small projects are removed to get a clean control group.
 
 ```{r project_portfolio_spillover_2, warning=FALSE, echo=FALSE, results='asis'}
 # treat_small_with_large_new = 1 ==> treat_new = 1
@@ -2089,147 +2089,7 @@ portfolio_did=stargazer(m1,m2,m3,m4,m5,
           style="default",
           notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level.",
-                  "Large projects with parallel small projects are removed."),
-          header=F)
-
-
-# portfolio_did_tex=make_tex_pieces(portfolio_did)
-# # Write to file
-# write(portfolio_did_tex,
-#       paste0(tables_folder,
-#              "/portfolio_did_tex.tex"))
-```
-
-
-## Regression 3: Total effect on small project with existing large project
-
-* $Treat_{i,l}$ is an indicator that equals 1 for small projects with co-existing large projects, and is zero otherwise.
-* $Treat_{i,s}$ is an indicator that equals 1 for small projects without co-existing large projects, and is zero otherwise.
-* Large projects with parallel small projects are removed to get a clean control group.
-
-```{r project_portfolio_spillover_3, warning=FALSE, echo=FALSE, results='asis'}
-# treat_small_with_large_new = 1 ==> treat_new = 1
-
-m1=felm(wins_percentage_delay~treat_only_small+
-          treat_small_with_large_new+
-          treat_only_small:post_t+
-          post_t:treat_small_with_large_new+
-          post_t|
-          0|
-          0|
-          contract_award_unique_key,
-          data=reg_df_subset,
-        exactDOF = TRUE,
-        cmethod = "reghdfe")
-
-m2=felm(wins_percentage_delay~treat_only_small+
-          treat_small_with_large_new+
-          treat_only_small:post_t+
-          post_t:treat_small_with_large_new+
-          log(wins_project_quarter_stage)+
-          log(1+winsorized_initial_duration_in_days_i)+
-          log(1+winsorized_initial_budget_i)+
-          number_of_offers_received+
-          post_t:log(1+winsorized_initial_duration_in_days_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
-          post_t:number_of_offers_received+
-          post_t|
-          0|
-          0|
-          contract_award_unique_key,
-          data=reg_df_subset,
-        exactDOF = TRUE,
-        cmethod = "reghdfe")
-
-m3=felm(wins_percentage_delay~treat_only_small+
-          treat_small_with_large_new+
-          treat_only_small:post_t+
-          post_t:treat_small_with_large_new+
-          log(wins_project_quarter_stage)+
-          log(1+winsorized_initial_duration_in_days_i)+
-          log(1+winsorized_initial_budget_i)+
-          number_of_offers_received+
-          post_t:log(1+winsorized_initial_duration_in_days_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
-          post_t:number_of_offers_received|
-          action_date_year_quarter|
-          0|
-          contract_award_unique_key,
-          data=reg_df_subset,
-        exactDOF = TRUE,
-        cmethod = "reghdfe")
-
-m4=felm(wins_percentage_delay~treat_only_small+
-          treat_small_with_large_new+
-          treat_only_small:post_t+
-          post_t:treat_small_with_large_new+
-          log(wins_project_quarter_stage)+
-          log(1+winsorized_initial_duration_in_days_i)+
-          log(1+winsorized_initial_budget_i)+
-          number_of_offers_received+
-          post_t:log(1+winsorized_initial_duration_in_days_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
-          post_t:number_of_offers_received|
-          product_or_service_code+action_date_year_quarter|
-          0|
-          contract_award_unique_key,
-          data=reg_df_subset,
-        exactDOF = TRUE,
-        cmethod = "reghdfe")
-
-m5=felm(wins_percentage_delay~treat_only_small+
-          treat_small_with_large_new+
-          treat_only_small:post_t+
-          post_t:treat_small_with_large_new+
-          log(wins_project_quarter_stage)+
-          log(1+winsorized_initial_duration_in_days_i)+
-          log(1+winsorized_initial_budget_i)+
-          number_of_offers_received+
-          post_t:log(1+winsorized_initial_duration_in_days_i)+
-          post_t:log(1+winsorized_initial_budget_i)+
-          post_t:number_of_offers_received|
-          naics_code+product_or_service_code+action_date_year_quarter|
-          0|
-          contract_award_unique_key,
-          data=reg_df_subset,
-        exactDOF = TRUE,
-        cmethod = "reghdfe")
-
-portfolio_did=stargazer(m1,m2,m3,m4,m5,
-          digits=2,
-          digits.extra=2,
-          title = "(Total effect) Project Portfolio and QuickPay reform",
-          dep.var.labels="$PercentDelay_{it}$  ",
-          dep.var.caption = "",
-          covariate.labels =c("$Treat_{i,s}$",
-                               "$Treat_{i,l}$",
-                               "$Post_t$",
-                               "$Treat_{i,s} \\times Post_t$",
-                               "$Treat_{i,l} \\times Post_t$",
-                               "Constant"),
-          object.names=FALSE, 
-          model.numbers=TRUE,
-          font.size = "small",
-          omit.stat=c("f", "ser"),
-          column.sep.width = "-2pt",
-          add.lines = list(
-                           c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
-                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project stage",rep("No",1),rep("Yes",4)),
-                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
-                           c("Task fixed effects",rep("No",3),rep("Yes",2)),
-                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
-          omit=c('winsorized_initial_duration_in_days_i',
-                  'winsorized_initial_budget_i',
-                   'number_of_offers_received',
-                   'post_t:winsorized_initial_duration_in_days_i',
-                   'post_t:winsorized_initial_budget_i',
-                   'post_t:number_of_offers_received',
-                 'wins_project_quarter_stage'),
-          table.placement = "H",
-          style="default",
-          notes=c("Each observation is a project-quarter.",
-                  "SEs are robust and clustered at the project level.",
-                  "Large projects with parallel small projects are removed."),
+                  "Large projects whose contractor holds small projects are removed."),
           header=F)
 
 
