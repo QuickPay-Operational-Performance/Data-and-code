@@ -175,7 +175,7 @@ reg_df[,winsorized_initial_budget_i:=
 
 reg_df[,number_of_offers_received_original:=number_of_offers_received]
 
-reg_df[,number_of_offers_received:=Winsorize(number_of_offers_received,
+reg_df[,number_of_offers_received:=Winsorize(number_of_offers_received_original,
                                              probs=c(0.05,0.95),
                                              na.rm=T)]
 
@@ -305,7 +305,7 @@ reg_df_subset[,winsorized_initial_budget_i:=
                               na.rm=T)]
 
 reg_df_subset[,number_of_offers_received:=
-                    Winsorize(number_of_offers_received,                    
+                    Winsorize(number_of_offers_received_original,                    
                               probs=c(0.05,0.95),
                               na.rm=T)]
 ```
@@ -939,7 +939,7 @@ reg_df_placebo[,winsorized_initial_budget_i:=
 
 
 reg_df_placebo[,number_of_offers_received:=
-                    Winsorize(number_of_offers_received,                    
+                    Winsorize(number_of_offers_received_original,                    
                               probs=c(0.05,0.95),
                               na.rm=T)]
 for(i in 4){
@@ -3155,7 +3155,8 @@ reg_df_first_reported[,winsorized_initial_budget_i:=
                     probs=c(0.05,0.95),
                     na.rm=T)]
 
-reg_df_first_reported[,number_of_offers_received:=Winsorize(number_of_offers_received,
+reg_df_first_reported[,number_of_offers_received_original:=number_of_offers_received]
+reg_df_first_reported[,number_of_offers_received:=Winsorize(number_of_offers_received_original,
                     probs=c(0.05,0.95),
                     na.rm=T)]
 
