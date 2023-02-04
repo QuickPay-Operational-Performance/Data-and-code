@@ -22,6 +22,8 @@ knitr::opts_chunk$set(echo = TRUE)
    
 * When we analyze congestion effect, we restrict to only one type of contractor. That is, contractors that hold only small project or only large project in the sample horizon.
 
+* Number of offers received is also winsorized.
+
 # Setup
 
 ```{r packages,warning=FALSE,message=FALSE,include=FALSE}
@@ -171,6 +173,12 @@ reg_df[,winsorized_initial_budget_i:=
                               probs=c(0.05,0.95),
                               na.rm=T)]
 
+reg_df[,number_of_offers_received_original:=number_of_offers_received]
+
+reg_df[,number_of_offers_received:=Winsorize(number_of_offers_received,
+                                             probs=c(0.05,0.95),
+                                             na.rm=T)]
+
 # sort by contract id and date (just to be doubly sure)
 reg_df=reg_df[order(contract_award_unique_key,
             action_date_year_quarter)]
@@ -293,6 +301,11 @@ reg_df_subset[,winsorized_initial_duration_in_days_i:=
 
 reg_df_subset[,winsorized_initial_budget_i:=
                     Winsorize(base_and_all_options_value,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+reg_df_subset[,number_of_offers_received:=
+                    Winsorize(number_of_offers_received,                    
                               probs=c(0.05,0.95),
                               na.rm=T)]
 ```
@@ -896,13 +909,16 @@ pt=stargazer(m1,m2,m3,m4,m5,
 
 ```
 
-# Placebo Test
+# Temporal Placebo Test
+
+* Restrict to pre-QuickPay observations
+* Assign "treatment date" as 2010-09-30
 
 ```{r placebo_tables, echo=FALSE, results='asis'}
 reg_df_placebo=subset(reg_df_subset,post_t==0)
 
 reg_df_placebo[,wins_percentage_delay:=Winsorize(100*percentage_delay,
-                               probs=c(0.025,0.975),
+                               probs=c(0.05,0.95),
                                na.rm=T)]
 
 reg_df_placebo[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
@@ -911,16 +927,22 @@ reg_df_placebo[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
 
 reg_df_placebo[,winsorized_initial_duration_in_days_i:=
                     Winsorize(initial_duration_in_days_i,
-                    probs=c(0.025,0.975),
+                    probs=c(0.05,0.95),
                     na.rm=T)]
 
 # InitialBudget_i
 
 reg_df_placebo[,winsorized_initial_budget_i:=
                     Winsorize(base_and_all_options_value,                    
-                              probs=c(0.025,0.975),
+                              probs=c(0.05,0.95),
                               na.rm=T)]
-for(i in 3:5){
+
+
+reg_df_placebo[,number_of_offers_received:=
+                    Winsorize(number_of_offers_received,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+for(i in 4){
   print(i)
   reg_df_placebo[,placebo_post_t:=ifelse(quarter_number>=i,1,0)]  
   a1=felm(wins_percentage_delay~treat_new+
@@ -1045,78 +1067,224 @@ placebo_table=stargazer(a1,a2,a3,a4,a5,
 
 ```
 
-# Summary statistics [Full sample]
+# Cross-sectional placebo
 
-```{r summary_stats, eval=FALSE, include=FALSE}
+* Projects are randomly assigned into treatment or control
+
+```{r cross_sectional_placebo, echo=FALSE, results='asis'}
+reg_df_subset[,placebo_treat:=sample(0:1, size = nrow(reg_df_subset), replace = TRUE)]
+
+baseline_reg=felm(wins_percentage_delay~placebo_treat+
+                     post_t:placebo_treat+
+                     post_t|
+                    0| # no fixed effects
+                    0| # no IV
+                    contract_award_unique_key, # clustered at project level
+                  data=reg_df_subset, 
+                  exactDOF = TRUE, 
+                  cmethod = "reghdfe")
+# time fixed effects also included in the following specs
+controls_and_no_fe=felm(wins_percentage_delay~placebo_treat+
+                           post_t:placebo_treat+
+                           post_t+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            0|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df_subset, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+# time fixed effects also included in the following specs
+controls_and_time_fe=felm(wins_percentage_delay~placebo_treat+
+                             post_t:placebo_treat+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df_subset, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+controls_time_task_fe=felm(wins_percentage_delay~placebo_treat+
+                              post_t:placebo_treat+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df_subset, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+controls_and_all_fe=felm(wins_percentage_delay~placebo_treat+
+                            post_t:placebo_treat+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=reg_df_subset, 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+base_table<-stargazer(baseline_reg,
+          controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
+          title = "Effect of QuickPay on project delay rates",
+          dep.var.labels="$PercentDelay_{it}$",
+          dep.var.caption = "",
+          covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          digits=2,
+          digits.extra=2,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
+                           c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
+                           c("Project stage","No",rep("Yes",4)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Task fixed effects",rep("No",3),rep("Yes",2)),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
+          omit=c('winsorized_initial_duration_in_days_i',
+                  'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'post_t:winsorized_initial_duration_in_days_i',
+                   'post_t:winsorized_initial_budget_i',
+                   'post_t:number_of_offers_received',
+                   'wins_project_quarter_stage'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level."),
+          header=F)
+```
+
+# Summary statistics
+
+```{r summary_stats_before_qp, eval=FALSE, include=FALSE}
 
 treated_projs_preqp=subset(reg_df,treat_i==1 & post_t==0)
 control_projs_preqp=subset(reg_df,treat_i==0 & post_t==0)
 
-# Percentage delay
-mean(treated_projs_preqp$wins_percentage_delay,na.rm=T)
-sd(treated_projs_preqp$wins_percentage_delay,na.rm=T)
-nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay)))
-min(treated_projs_preqp$wins_percentage_delay,na.rm=T)
-max(treated_projs_preqp$wins_percentage_delay,na.rm=T)
+treated_projs_preqp[,percentage_delay:=100*percentage_delay]
+control_projs_preqp[,percentage_delay:=100*percentage_delay]
 
-mean(control_projs_preqp$wins_percentage_delay,na.rm=T)
-sd(control_projs_preqp$wins_percentage_delay,na.rm=T)
-nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay)))
-min(control_projs_preqp$wins_percentage_delay,na.rm=T) 
-# because we have winsorized, min/max #s are same
-# even if we cut off the tails, min/max #s will be same 
-max(control_projs_preqp$wins_percentage_delay,na.rm=T)
+#### Percentage delay #### 
+## Treated projects
+mean(subset(treated_projs_preqp,is.finite(percentage_delay)
+            & percentage_delay<700)$percentage_delay,na.rm=T)
 
-# Initial duration
+sd(subset(treated_projs_preqp,is.finite(percentage_delay)
+            & percentage_delay<700)$percentage_delay,na.rm=T)
+
+nrow(subset(treated_projs_preqp,!is.na(percentage_delay)))
+
+quantile(treated_projs_preqp$percentage_delay,0.05,na.rm=T)
+quantile(treated_projs_preqp$percentage_delay,0.95,na.rm=T)
+
+## Control projects
+mean(subset(control_projs_preqp,is.finite(percentage_delay)
+            & percentage_delay<700)$percentage_delay,na.rm=T)
+
+sd(subset(control_projs_preqp,is.finite(percentage_delay)
+            & percentage_delay<700)$percentage_delay,na.rm=T)
+
+nrow(subset(control_projs_preqp,!is.na(percentage_delay)))
+
+quantile(control_projs_preqp$percentage_delay,0.05,na.rm=T)
+quantile(control_projs_preqp$percentage_delay,0.95,na.rm=T)
+
+#### Initial duration #### 
+## Treated projects
 mean(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
+            !is.na(percentage_delay) & initial_duration_in_days_i>0 &
+              initial_duration_in_days_i<=600 )$initial_duration_in_days_i,na.rm=T)
+
 sd(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
-nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(winsorized_initial_duration_in_days_i)))
-min(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
-max(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
+            !is.na(percentage_delay) & initial_duration_in_days_i>0 &
+              initial_duration_in_days_i<=600)$initial_duration_in_days_i,na.rm=T)
+
+quantile(subset(treated_projs_preqp,initial_duration_in_days_i>0)$initial_duration_in_days_i,
+         0.95,na.rm=T)
+quantile(subset(treated_projs_preqp,initial_duration_in_days_i>0)$initial_duration_in_days_i,
+         0.05,na.rm=T)
+
+## Control projects
 
 mean(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
-sd(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
-nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(winsorized_initial_duration_in_days_i)))
-min(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
-max(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
+            !is.na(percentage_delay) & initial_duration_in_days_i>0 &
+              initial_duration_in_days_i<=600 )$initial_duration_in_days_i,na.rm=T)
 
-# Initial budget
+sd(subset(control_projs_preqp,
+            !is.na(percentage_delay) & initial_duration_in_days_i>0 &
+              initial_duration_in_days_i<=600)$initial_duration_in_days_i,na.rm=T)
+
+quantile(subset(control_projs_preqp,initial_duration_in_days_i>0)$initial_duration_in_days_i,
+         0.95,na.rm=T)
+quantile(subset(control_projs_preqp,initial_duration_in_days_i>0)$initial_duration_in_days_i,
+         0.05,na.rm=T)
+
+#### Initial budget ####
+
+## Treated projects
+
 mean(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
+            !is.na(percentage_delay) & base_and_all_options_value>0 &
+              base_and_all_options_value<=7e+07 )$base_and_all_options_value,na.rm=T)
+
 sd(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
-nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(winsorized_initial_budget_i)))
-min(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
-max(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
+            !is.na(percentage_delay) & base_and_all_options_value>0 &
+              base_and_all_options_value<=7e+07 )$base_and_all_options_value,na.rm=T)
 
+quantile(subset(treated_projs_preqp,base_and_all_options_value>0)$base_and_all_options_value,
+         0.95,na.rm=T)
+quantile(subset(treated_projs_preqp,base_and_all_options_value>0)$base_and_all_options_value,
+         0.05,na.rm=T)
+
+## Control projects
 mean(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
-sd(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
-nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(winsorized_initial_budget_i)))
-min(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
-max(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
+            !is.na(percentage_delay) & base_and_all_options_value>0 &
+              base_and_all_options_value<=7e+07 )$base_and_all_options_value,na.rm=T)
 
-# Number of offers
+sd(subset(control_projs_preqp,
+            !is.na(percentage_delay) & base_and_all_options_value>0 &
+              base_and_all_options_value<=7e+07 )$base_and_all_options_value,na.rm=T)
+
+quantile(subset(control_projs_preqp,base_and_all_options_value>0)$base_and_all_options_value,
+         0.95,na.rm=T)
+quantile(subset(control_projs_preqp,base_and_all_options_value>0)$base_and_all_options_value,
+         0.05,na.rm=T)
+
+####  Number of offers #### 
+
+# [TBC]
 
 mean(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
+            !is.na(percentage_delay))$number_of_offers_received_original,na.rm=T)
+
 sd(subset(treated_projs_preqp,
             !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
 nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
@@ -1137,7 +1305,7 @@ min(subset(control_projs_preqp,
 max(subset(control_projs_preqp,
             !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
 
-# Project stage
+####  Project stage #### 
 
 mean(subset(treated_projs_preqp,
             !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
@@ -1162,7 +1330,7 @@ max(subset(control_projs_preqp,
             !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
 
 
-# Positive delay rate
+####  Positive delay rate #### 
 
 treated_projs_preqp[,positive_delay:=ifelse(delay>0,1,0)]
 control_projs_preqp[,positive_delay:=ifelse(delay>0,1,0)]
@@ -2984,6 +3152,10 @@ reg_df_first_reported[,winsorized_initial_duration_in_days_i:=
 
 reg_df_first_reported[,winsorized_initial_budget_i:=
           Winsorize(base_and_all_options_value,
+                    probs=c(0.05,0.95),
+                    na.rm=T)]
+
+reg_df_first_reported[,number_of_offers_received:=Winsorize(number_of_offers_received,
                     probs=c(0.05,0.95),
                     na.rm=T)]
 
