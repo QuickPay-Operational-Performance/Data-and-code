@@ -66,7 +66,7 @@
 \title{Percentage Delay Rate (with Time Independent Clean Control):
 QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Feb 03, 2023}
+\date{\vspace{-2.5em}Feb 06, 2023}
 
 \begin{document}
 \maketitle
@@ -203,14 +203,176 @@ Adjusted R$^{2}$ & 0.004 & 0.14 & 0.14 & 0.17 & 0.17 \\
 \end{tabular} 
 \end{table}
 
+\hypertarget{positive-delays-logit}{%
+\section{Positive delays: Logit}\label{positive-delays-logit}}
+
+\begin{table}[htbp]
+   \caption{Logit model: Effect of QuickPay}
+   \centering
+   \begin{tabular}{lccccc}
+      \tabularnewline \midrule \midrule
+      Dependent Variable: & \multicolumn{5}{c}{$I(Delay_{it}>0)$}\\
+      Model:                       & (1)           & (2)           & (3)           & (4)           & (5)\\  
+      \midrule
+      \emph{Variables}\\
+      Constant                     & -1.99$^{***}$ & 3.22$^{***}$  &               &               &   \\   
+                                   & (0.02)        & (0.13)        &               &               &   \\   
+      $Treat_i$                    & -0.44$^{***}$ & -0.22$^{***}$ & -0.24$^{***}$ & -0.21$^{***}$ & -0.23$^{***}$\\   
+                                   & (0.03)        & (0.03)        & (0.03)        & (0.03)        & (0.03)\\   
+      $Post_t$                     & 0.10$^{***}$  & -1.42$^{***}$ &               &               &   \\   
+                                   & (0.02)        & (0.15)        &               &               &   \\   
+      $Treat_i$ $\times$ $Post_t$  & 0.21$^{***}$  & 0.21$^{***}$  & 0.23$^{***}$  & 0.23$^{***}$  & 0.23$^{***}$\\   
+                                   & (0.03)        & (0.04)        & (0.04)        & (0.04)        & (0.04)\\   
+      Controls                     &               & Yes           & Yes           & Yes           & Yes\\  
+      Controls $\times Post_t$     &               & Yes           & Yes           & Yes           & Yes\\  
+      \midrule
+      \emph{Fixed-effects}\\
+      Time                         &               &               & Yes           & Yes           & Yes\\  
+      Task code                    &               &               &               & Yes           & Yes\\  
+      NAICS code                   &               &               &               &               & Yes\\  
+      \midrule
+      \emph{Fit statistics}\\
+      Observations                 & 223,373       & 201,867       & 201,867       & 199,508       & 199,470\\  
+      Squared Correlation          & 0.003         & 0.24          & 0.24          & 0.28          & 0.28\\  
+      Pseudo R$^2$                 & 0.005         & 0.24          & 0.24          & 0.30          & 0.30\\  
+      BIC                          & 152,027.7     & 112,255.0     & 112,164.9     & 113,713.7     & 113,928.5\\  
+      \midrule \midrule
+      \multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+\end{table}
+
+\hypertarget{positive-delays-conditional-te}{%
+\section{Positive delays: Conditional
+TE}\label{positive-delays-conditional-te}}
+
+\begin{table}[H] \centering 
+  \caption{Conditional TE: Positive delay} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it} (conditional on positive)$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$5.87 & $-$22.68$^{***}$ & $-$22.85$^{***}$ & $-$25.17$^{***}$ & $-$25.24$^{***}$ \\ 
+  & (5.42) & (4.28) & (4.28) & (4.59) & (4.64) \\ 
+  & & & & & \\ 
+ $Post_t$ & $-$51.73$^{***}$ & $-$36.01$^{*}$ &  &  &  \\ 
+  & (4.68) & (19.74) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 15.61$^{**}$ & 22.58$^{***}$ & 22.77$^{***}$ & 26.76$^{***}$ & 28.25$^{***}$ \\ 
+  & (6.20) & (4.98) & (4.99) & (5.03) & (5.03) \\ 
+  & & & & & \\ 
+ Constant & 160.76$^{***}$ & 694.17$^{***}$ &  &  &  \\ 
+  & (4.08) & (15.55) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 24,084 & 24,045 & 24,045 & 24,045 & 24,045 \\ 
+R$^{2}$ & 0.01 & 0.39 & 0.39 & 0.46 & 0.47 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.39 & 0.39 & 0.44 & 0.45 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{negative-delays-logit}{%
+\section{Negative delays: Logit}\label{negative-delays-logit}}
+
+\begin{table}[htbp]
+   \caption{Logit model: Effect of QuickPay}
+   \centering
+   \begin{tabular}{lccccc}
+      \tabularnewline \midrule \midrule
+      Dependent Variable: & \multicolumn{5}{c}{$I(Delay_{it}<0)$}\\
+      Model:                       & (1)           & (2)            & (3)           & (4)           & (5)\\  
+      \midrule
+      \emph{Variables}\\
+      Constant                     & -4.61$^{***}$ & -10.07$^{***}$ &               &               &   \\   
+                                   & (0.06)        & (0.44)         &               &               &   \\   
+      $Treat_i$                    & -0.29$^{***}$ & 0.13           & 0.14$^{*}$    & 0.02          & 0.02\\   
+                                   & (0.08)        & (0.09)         & (0.09)        & (0.09)        & (0.09)\\   
+      $Post_t$                     & 0.07          & 1.50$^{***}$   &               &               &   \\   
+                                   & (0.07)        & (0.56)         &               &               &   \\   
+      $Treat_i$ $\times$ $Post_t$  & -0.24$^{**}$  & -0.31$^{***}$  & -0.32$^{***}$ & -0.29$^{***}$ & -0.29$^{***}$\\   
+                                   & (0.10)        & (0.11)         & (0.11)        & (0.10)        & (0.10)\\   
+      Controls                     &               & Yes            & Yes           & Yes           & Yes\\  
+      Controls $\times Post_t$     &               & Yes            & Yes           & Yes           & Yes\\  
+      \midrule
+      \emph{Fixed-effects}\\
+      Time                         &               &                & Yes           & Yes           & Yes\\  
+      Task code                    &               &                &               & Yes           & Yes\\  
+      NAICS code                   &               &                &               &               & Yes\\  
+      \midrule
+      \emph{Fit statistics}\\
+      Observations                 & 223,373       & 201,867        & 201,867       & 177,464       & 176,917\\  
+      Squared Correlation          & 0.0004        & 0.007          & 0.008         & 0.02          & 0.03\\  
+      Pseudo R$^2$                 & 0.004         & 0.05           & 0.06          & 0.12          & 0.12\\  
+      BIC                          & 20,766.4      & 19,492.5       & 19,549.3      & 21,853.5      & 22,368.3\\  
+      \midrule \midrule
+      \multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+\end{table}
+
+\hypertarget{negative-delays-conditional-te}{%
+\section{Negative delays: Conditional
+TE}\label{negative-delays-conditional-te}}
+
+\begin{table}[H] \centering 
+  \caption{Conditional TE: Negative delay (conditional on negative)} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & 3.72$^{*}$ & 2.28 & 2.27 & 0.74 & 1.06 \\ 
+  & (2.15) & (1.98) & (2.00) & (2.43) & (2.47) \\ 
+  & & & & & \\ 
+ $Post_t$ & 8.13$^{***}$ & $-$2.26 &  &  &  \\ 
+  & (2.01) & (9.66) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & $-$8.74$^{***}$ & $-$5.62$^{**}$ & $-$5.44$^{**}$ & $-$2.87 & $-$3.55 \\ 
+  & (2.72) & (2.47) & (2.48) & (3.00) & (3.03) \\ 
+  & & & & & \\ 
+ Constant & $-$35.47$^{***}$ & 7.39 &  &  &  \\ 
+  & (1.66) & (8.06) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 1,786 & 1,786 & 1,786 & 1,786 & 1,786 \\ 
+R$^{2}$ & 0.01 & 0.22 & 0.23 & 0.39 & 0.43 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.22 & 0.22 & 0.24 & 0.27 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
 \hypertarget{event-study}{%
 \section{Event study}\label{event-study}}
 
 \(PercentDelay_{it}=\beta_0 + \beta_1 Treat_i + \beta_2 Treat_i \times Quarter_t + Controls + \gamma_{task} + \theta_{naics}+\lambda_{quarter}+\epsilon_{it}\)
-
-\begin{verbatim}
-## NOTE: 231,007 observations removed because of NA values (LHS: 209,501, RHS: 230,878).
-\end{verbatim}
 
 \includegraphics{qp_first_pc_delay_clean_control_time_independent_files/figure-latex/event_study-1.pdf}
 
@@ -331,16 +493,16 @@ Adjusted R$^{2}$ & 0.004 & 0.20 & 0.20 & 0.25 & 0.26 \\
 \\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & 0.002 & $-$0.03 & $-$0.03 & 0.02 & 0.01 \\ 
+ $Treat_i$ & $-$0.04 & $-$0.10 & $-$0.10 & $-$0.07 & $-$0.07 \\ 
   & (0.10) & (0.09) & (0.09) & (0.09) & (0.09) \\ 
   & & & & & \\ 
  $Post_t$ & 0.52$^{***}$ & $-$4.41$^{***}$ &  &  &  \\ 
   & (0.09) & (0.75) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Post_t$ & 0.02 & 0.01 & 0.02 & $-$0.02 & $-$0.01 \\ 
-  & (0.13) & (0.12) & (0.12) & (0.12) & (0.12) \\ 
+ $Treat_i \times Post_t$ & 0.02 & 0.02 & 0.02 & 0.03 & 0.03 \\ 
+  & (0.13) & (0.12) & (0.12) & (0.11) & (0.11) \\ 
   & & & & & \\ 
- Constant & 4.12$^{***}$ & 41.64$^{***}$ &  &  &  \\ 
+ Constant & 4.14$^{***}$ & 41.68$^{***}$ &  &  &  \\ 
   & (0.07) & (0.58) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
@@ -759,199 +921,6 @@ Industry fixed effects & No & No & No & No & Yes \\
 Observations & 65,191 & 55,291 & 55,291 & 55,291 & 55,291 \\ 
 R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.23 & 0.23 \\ 
 Adjusted R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.22 & 0.22 \\ 
-\hline 
-\hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
-\end{tabular} 
-\end{table}
-
-\hypertarget{contract-financing-all-projects}{%
-\section{Contract Financing (All
-Projects)}\label{contract-financing-all-projects}}
-
-\begin{itemize}
-\tightlist
-\item
-  \(CF=1\) if project was receiving contract financing
-\end{itemize}
-
-\begin{table}[H] \centering 
-  \caption{Contract Financing (All Projects) and QuickPay reform} 
-  \label{} 
-\small 
-\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
-\\[-1.8ex]\hline 
-\hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
-\hline \\[-1.8ex] 
- $Treat_i$ & $-$1.99$^{***}$ & $-$1.56$^{***}$ & $-$1.61$^{***}$ & $-$1.05$^{***}$ & $-$1.04$^{***}$ \\ 
-  & (0.12) & (0.11) & (0.11) & (0.11) & (0.11) \\ 
-  & & & & & \\ 
- $Post_t$ & $-$0.55$^{***}$ & $-$5.69$^{***}$ &  &  &  \\ 
-  & (0.12) & (0.79) &  &  &  \\ 
-  & & & & & \\ 
- $CF_i$ & 1.35$^{***}$ & 1.37$^{***}$ & 1.24$^{***}$ & $-$0.68$^{***}$ & $-$0.67$^{***}$ \\ 
-  & (0.27) & (0.23) & (0.23) & (0.24) & (0.24) \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t$ & 1.39$^{***}$ & 1.14$^{***}$ & 1.17$^{***}$ & 1.03$^{***}$ & 1.06$^{***}$ \\ 
-  & (0.15) & (0.14) & (0.14) & (0.14) & (0.14) \\ 
-  & & & & & \\ 
- $Post_t \times CF_i$ & 1.85$^{***}$ & 0.28 & 0.38 & 0.39 & 0.42 \\ 
-  & (0.33) & (0.30) & (0.30) & (0.30) & (0.30) \\ 
-  & & & & & \\ 
- $Treat_i \times CF_i$ & 2.30$^{***}$ & 1.45$^{***}$ & 1.47$^{***}$ & 0.87$^{***}$ & 0.77$^{***}$ \\ 
-  & (0.35) & (0.29) & (0.29) & (0.29) & (0.30) \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t \times CF_i$ & $-$1.19$^{***}$ & $-$0.66$^{*}$ & $-$0.64$^{*}$ & $-$0.29 & $-$0.33 \\ 
-  & (0.44) & (0.39) & (0.39) & (0.38) & (0.38) \\ 
-  & & & & & \\ 
- Constant & 5.05$^{***}$ & 44.04$^{***}$ &  &  &  \\ 
-  & (0.11) & (0.61) &  &  &  \\ 
-  & & & & & \\ 
-\hline \\[-1.8ex] 
-Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
-$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
-Project stage & No & Yes & Yes & Yes & Yes \\ 
-Time fixed effects & No & No & Yes & Yes & Yes \\ 
-Task fixed effects & No & No & No & Yes & Yes \\ 
-Industry fixed effects & No & No & No & No & Yes \\ 
-Observations & 223,244 & 201,738 & 201,738 & 201,738 & 201,738 \\ 
-R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
-\hline 
-\hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
-\end{tabular} 
-\end{table}
-
-\hypertarget{receives-grantsfinancial-assistance-projects-active-onbefore-june-2010}{%
-\section{Receives Grants/Financial Assistance (Projects active on/before
-June
-2010)}\label{receives-grantsfinancial-assistance-projects-active-onbefore-june-2010}}
-
-\begin{itemize}
-\tightlist
-\item
-  \(CF=1\) if receives\_grants==`t'
-\item
-  The variable ``receives\_grants'' used to be called ``receives
-  financial assistance''
-\end{itemize}
-
-\begin{table}[H] \centering 
-  \caption{Receives grants and QuickPay reform} 
-  \label{} 
-\small 
-\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
-\\[-1.8ex]\hline 
-\hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
-\hline \\[-1.8ex] 
- $Treat_i$ & $-$2.05$^{***}$ & $-$1.07$^{***}$ & $-$1.19$^{***}$ & $-$0.58$^{***}$ & $-$0.63$^{***}$ \\ 
-  & (0.15) & (0.14) & (0.14) & (0.16) & (0.16) \\ 
-  & & & & & \\ 
- $Post_t$ & 1.56$^{***}$ & $-$8.02$^{***}$ &  &  &  \\ 
-  & (0.26) & (2.61) &  &  &  \\ 
-  & & & & & \\ 
- $CF_i$ & 0.55 & 1.88$^{***}$ & 1.65$^{**}$ & 1.22$^{*}$ & 1.21$^{*}$ \\ 
-  & (0.76) & (0.70) & (0.69) & (0.67) & (0.66) \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t$ & 0.08 & 2.06$^{***}$ & 2.17$^{***}$ & 2.21$^{***}$ & 2.21$^{***}$ \\ 
-  & (0.32) & (0.39) & (0.39) & (0.40) & (0.40) \\ 
-  & & & & & \\ 
- $Post_t \times CF_i$ & $-$0.80 & $-$1.57 & $-$1.32 & $-$0.38 & $-$0.32 \\ 
-  & (1.14) & (1.34) & (1.34) & (1.38) & (1.38) \\ 
-  & & & & & \\ 
- $Treat_i \times CF_i$ & 2.63$^{***}$ & 1.37 & 1.48$^{*}$ & 0.46 & 0.42 \\ 
-  & (0.93) & (0.85) & (0.84) & (0.81) & (0.82) \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t \times CF_i$ & $-$0.32 & $-$0.10 & $-$0.20 & 0.18 & 0.38 \\ 
-  & (1.44) & (1.76) & (1.75) & (1.80) & (1.79) \\ 
-  & & & & & \\ 
- Constant & 5.49$^{***}$ & 46.01$^{***}$ &  &  &  \\ 
-  & (0.13) & (0.83) &  &  &  \\ 
-  & & & & & \\ 
-\hline \\[-1.8ex] 
-Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
-$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
-Project stage & No & Yes & Yes & Yes & Yes \\ 
-Time fixed effects & No & No & Yes & Yes & Yes \\ 
-Task fixed effects & No & No & No & Yes & Yes \\ 
-Industry fixed effects & No & No & No & No & Yes \\ 
-Observations & 65,191 & 55,291 & 55,291 & 55,291 & 55,291 \\ 
-R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.23 & 0.23 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.22 & 0.22 \\ 
-\hline 
-\hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
-\end{tabular} 
-\end{table}
-
-\hypertarget{receives-grantsfinancial-assistance-all-projects}{%
-\section{Receives Grants/Financial Assistance (All
-projects)}\label{receives-grantsfinancial-assistance-all-projects}}
-
-\begin{itemize}
-\tightlist
-\item
-  \(CF=1\) if receives\_grants==`t'
-\item
-  The variable ``receives\_grants'' used to be called ``receives
-  financial assistance''
-\end{itemize}
-
-\begin{table}[H] \centering 
-  \caption{Receives grants (All Projects) and QuickPay reform} 
-  \label{} 
-\small 
-\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
-\\[-1.8ex]\hline 
-\hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
-\hline \\[-1.8ex] 
- $Treat_i$ & $-$1.84$^{***}$ & $-$1.36$^{***}$ & $-$1.41$^{***}$ & $-$0.92$^{***}$ & $-$0.93$^{***}$ \\ 
-  & (0.11) & (0.11) & (0.11) & (0.11) & (0.11) \\ 
-  & & & & & \\ 
- $Post_t$ & $-$0.21$^{*}$ & $-$5.57$^{***}$ &  &  &  \\ 
-  & (0.12) & (0.78) &  &  &  \\ 
-  & & & & & \\ 
- $CF_i$ & 0.69 & 1.60$^{***}$ & 1.51$^{***}$ & 1.38$^{***}$ & 1.33$^{***}$ \\ 
-  & (0.56) & (0.49) & (0.49) & (0.48) & (0.48) \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t$ & 1.09$^{***}$ & 0.96$^{***}$ & 1.00$^{***}$ & 1.00$^{***}$ & 1.02$^{***}$ \\ 
-  & (0.14) & (0.14) & (0.14) & (0.14) & (0.14) \\ 
-  & & & & & \\ 
- $Post_t \times CF_i$ & $-$0.28 & $-$0.67 & $-$0.63 & $-$0.01 & $-$0.02 \\ 
-  & (0.60) & (0.58) & (0.58) & (0.58) & (0.58) \\ 
-  & & & & & \\ 
- $Treat_i \times CF_i$ & 2.18$^{***}$ & 1.24$^{**}$ & 1.26$^{**}$ & 0.42 & 0.49 \\ 
-  & (0.68) & (0.60) & (0.60) & (0.60) & (0.60) \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t \times CF_i$ & 0.01 & 0.18 & 0.18 & $-$0.22 & $-$0.23 \\ 
-  & (0.76) & (0.73) & (0.73) & (0.73) & (0.73) \\ 
-  & & & & & \\ 
- Constant & 5.24$^{***}$ & 43.22$^{***}$ &  &  &  \\ 
-  & (0.10) & (0.61) &  &  &  \\ 
-  & & & & & \\ 
-\hline \\[-1.8ex] 
-Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
-$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
-Project stage & No & Yes & Yes & Yes & Yes \\ 
-Time fixed effects & No & No & Yes & Yes & Yes \\ 
-Task fixed effects & No & No & No & Yes & Yes \\ 
-Industry fixed effects & No & No & No & No & Yes \\ 
-Observations & 223,244 & 201,738 & 201,738 & 201,738 & 201,738 \\ 
-R$^{2}$ & 0.003 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
-Adjusted R$^{2}$ & 0.003 & 0.17 & 0.18 & 0.21 & 0.21 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
