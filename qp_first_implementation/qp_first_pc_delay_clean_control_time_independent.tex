@@ -160,8 +160,8 @@ Adjusted R$^{2}$ & 0.002 & 0.17 & 0.18 & 0.21 & 0.21 \\
 \end{tabular} 
 \end{table}
 
-\hypertarget{days-of-delay}{%
-\subsection{Days of delay}\label{days-of-delay}}
+\hypertarget{days-of-delay-one-quarter}{%
+\section{Days of delay (One Quarter)}\label{days-of-delay-one-quarter}}
 
 \begin{table}[H] \centering 
   \caption{Effect of QuickPay on project delay rates} 
@@ -199,6 +199,49 @@ Adjusted R$^{2}$ & 0.004 & 0.14 & 0.14 & 0.17 & 0.17 \\
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
  & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{days-of-delay-two-quarters}{%
+\section{Days of delay (Two
+Quarters)}\label{days-of-delay-two-quarters}}
+
+\begin{table}[H] \centering 
+  \caption{Effect of QuickPay on project delay rates} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$DelayRate_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$8.52$^{***}$ & $-$5.20$^{***}$ & $-$5.37$^{***}$ & $-$3.93$^{***}$ & $-$3.77$^{***}$ \\ 
+  & (0.52) & (0.53) & (0.53) & (0.55) & (0.55) \\ 
+  & & & & & \\ 
+ $Post_t$ & 4.43$^{***}$ & $-$18.77$^{***}$ &  &  &  \\ 
+  & (0.59) & (3.66) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 3.17$^{***}$ & 3.58$^{***}$ & 3.75$^{***}$ & 3.89$^{***}$ & 3.87$^{***}$ \\ 
+  & (0.70) & (0.73) & (0.73) & (0.74) & (0.74) \\ 
+  & & & & & \\ 
+ Constant & 21.06$^{***}$ & 116.48$^{***}$ &  &  &  \\ 
+  & (0.45) & (2.67) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Year-Quarter fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 94,123 & 84,737 & 84,737 & 84,737 & 84,737 \\ 
+R$^{2}$ & 0.01 & 0.17 & 0.17 & 0.22 & 0.22 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.17 & 0.17 & 0.20 & 0.21 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
  & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
 \end{tabular} 
 \end{table}
