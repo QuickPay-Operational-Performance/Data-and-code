@@ -1802,463 +1802,90 @@ base_table<-stargazer(baseline_reg,
 
 # Summary statistics
 
-```{r summary_stats_before_qp, eval=FALSE, include=FALSE}
-
-treated_projs_preqp=subset(reg_df,treat_i==1 & post_t==0)
-control_projs_preqp=subset(reg_df,treat_i==0 & post_t==0)
-
-treated_projs_preqp[,percentage_delay:=100*percentage_delay]
-control_projs_preqp[,percentage_delay:=100*percentage_delay]
-
-#### Percentage delay #### 
-## Treated projects
-mean(subset(treated_projs_preqp,is.finite(percentage_delay)
-            & percentage_delay<700)$percentage_delay,na.rm=T)
-
-sd(subset(treated_projs_preqp,is.finite(percentage_delay)
-            & percentage_delay<700)$percentage_delay,na.rm=T)
-
-nrow(subset(treated_projs_preqp,!is.na(percentage_delay)))
-
-quantile(treated_projs_preqp$percentage_delay,0.05,na.rm=T)
-quantile(treated_projs_preqp$percentage_delay,0.95,na.rm=T)
-
-## Control projects
-mean(subset(control_projs_preqp,is.finite(percentage_delay)
-            & percentage_delay<700)$percentage_delay,na.rm=T)
-
-sd(subset(control_projs_preqp,is.finite(percentage_delay)
-            & percentage_delay<700)$percentage_delay,na.rm=T)
-
-nrow(subset(control_projs_preqp,!is.na(percentage_delay)))
-
-quantile(control_projs_preqp$percentage_delay,0.05,na.rm=T)
-quantile(control_projs_preqp$percentage_delay,0.95,na.rm=T)
-
-#### Initial duration #### 
-## Treated projects
-mean(subset(treated_projs_preqp,
-            !is.na(percentage_delay) & initial_duration_in_days_i>0 &
-              initial_duration_in_days_i<=600 )$initial_duration_in_days_i,na.rm=T)
-
-sd(subset(treated_projs_preqp,
-            !is.na(percentage_delay) & initial_duration_in_days_i>0 &
-              initial_duration_in_days_i<=600)$initial_duration_in_days_i,na.rm=T)
-
-quantile(subset(treated_projs_preqp,initial_duration_in_days_i>0)$initial_duration_in_days_i,
-         0.95,na.rm=T)
-quantile(subset(treated_projs_preqp,initial_duration_in_days_i>0)$initial_duration_in_days_i,
-         0.05,na.rm=T)
-
-## Control projects
-
-mean(subset(control_projs_preqp,
-            !is.na(percentage_delay) & initial_duration_in_days_i>0 &
-              initial_duration_in_days_i<=600 )$initial_duration_in_days_i,na.rm=T)
-
-sd(subset(control_projs_preqp,
-            !is.na(percentage_delay) & initial_duration_in_days_i>0 &
-              initial_duration_in_days_i<=600)$initial_duration_in_days_i,na.rm=T)
-
-quantile(subset(control_projs_preqp,initial_duration_in_days_i>0)$initial_duration_in_days_i,
-         0.95,na.rm=T)
-quantile(subset(control_projs_preqp,initial_duration_in_days_i>0)$initial_duration_in_days_i,
-         0.05,na.rm=T)
-
-#### Initial budget ####
-
-## Treated projects
-
-mean(subset(treated_projs_preqp,
-            !is.na(percentage_delay) & base_and_all_options_value>0 &
-              base_and_all_options_value<=7e+07 )$base_and_all_options_value,na.rm=T)
-
-sd(subset(treated_projs_preqp,
-            !is.na(percentage_delay) & base_and_all_options_value>0 &
-              base_and_all_options_value<=7e+07 )$base_and_all_options_value,na.rm=T)
-
-quantile(subset(treated_projs_preqp,base_and_all_options_value>0)$base_and_all_options_value,
-         0.95,na.rm=T)
-quantile(subset(treated_projs_preqp,base_and_all_options_value>0)$base_and_all_options_value,
-         0.05,na.rm=T)
-
-## Control projects
-mean(subset(control_projs_preqp,
-            !is.na(percentage_delay) & base_and_all_options_value>0 &
-              base_and_all_options_value<=7e+07 )$base_and_all_options_value,na.rm=T)
-
-sd(subset(control_projs_preqp,
-            !is.na(percentage_delay) & base_and_all_options_value>0 &
-              base_and_all_options_value<=7e+07 )$base_and_all_options_value,na.rm=T)
-
-quantile(subset(control_projs_preqp,base_and_all_options_value>0)$base_and_all_options_value,
-         0.95,na.rm=T)
-quantile(subset(control_projs_preqp,base_and_all_options_value>0)$base_and_all_options_value,
-         0.05,na.rm=T)
-
-####  Number of offers #### 
-
-# [TBC]
-
-mean(subset(treated_projs_preqp,
-            !is.na(percentage_delay))$number_of_offers_received_original,na.rm=T)
-
-sd(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(number_of_offers_received)))
-min(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-max(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-
-mean(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-sd(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(number_of_offers_received)))
-min(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-max(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-
-####  Project stage #### 
-
-mean(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-sd(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(wins_project_quarter_stage)))
-min(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-max(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-
-mean(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-sd(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(wins_project_quarter_stage)))
-min(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-max(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-
-
-####  Positive delay rate #### 
-
-treated_projs_preqp[,positive_delay:=ifelse(delay>0,1,0)]
-control_projs_preqp[,positive_delay:=ifelse(delay>0,1,0)]
-
-mean(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$positive_delay,na.rm=T)
-sd(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$positive_delay,na.rm=T)
-nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(positive_delay)))
-
-mean(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$positive_delay,na.rm=T)
-sd(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$positive_delay,na.rm=T)
-nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(positive_delay)))
-
-# Negative delay rate
-
-treated_projs_preqp[,negative_delay:=ifelse(delay<0,1,0)]
-control_projs_preqp[,negative_delay:=ifelse(delay<0,1,0)]
-
-mean(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$negative_delay,na.rm=T)
-sd(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$negative_delay,na.rm=T)
-nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(negative_delay)))
-
-mean(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$negative_delay,na.rm=T)
-sd(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$negative_delay,na.rm=T)
-nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(negative_delay)))
-
-# Financial assistance
-
-mean(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$receives_financial_assistance,na.rm=T)
-sd(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$receives_financial_assistance,na.rm=T)
-nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(receives_financial_assistance)))
-
-mean(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$receives_financial_assistance,na.rm=T)
-sd(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$receives_financial_assistance,na.rm=T)
-nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(receives_financial_assistance)))
-
-# Competition
-
-mean(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$competitively_awarded_i,na.rm=T)
-sd(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$competitively_awarded_i,na.rm=T)
-nrow(subset(treated_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(competitively_awarded_i)))
-
-mean(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$competitively_awarded_i,na.rm=T)
-sd(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$competitively_awarded_i,na.rm=T)
-nrow(subset(control_projs_preqp,!is.na(wins_percentage_delay) &
-                                !is.na(competitively_awarded_i)))
-
-# Bid Metrics for Competitive Projects
-
-mean(subset(treated_projs_preqp,competitively_awarded_i==1 &
-!is.na(number_of_offers_received))$number_of_offers_received,na.rm=T)
-
-mean(subset(treated_projs_preqp,competitively_awarded_i==1 &
-!is.na(winsorized_initial_duration_in_days_i))$winsorized_initial_duration_in_days_i,na.rm=T)
-
-mean(subset(treated_projs_preqp,competitively_awarded_i==1 &
-!is.na(winsorized_initial_budget_i))$winsorized_initial_budget_i,na.rm=T)
-
-# Number of tasks
-
-n_distinct(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$product_or_service_code)
-
-n_distinct(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$product_or_service_code)
-
-# Number of industries
-
-n_distinct(subset(treated_projs_preqp,
-            !is.na(wins_percentage_delay))$naics_code)
-
-n_distinct(subset(control_projs_preqp,
-            !is.na(wins_percentage_delay))$naics_code)
-
-```
-
-```{r summary_stats_afterqp, eval=FALSE, include=FALSE}
-
-treated_projs_postqp=subset(reg_df,treat_i==1 & post_t==1)
-control_projs_postqp=subset(reg_df,treat_i==0 & post_t==1)
-
-# Percentage delay
-mean(treated_projs_postqp$wins_percentage_delay,na.rm=T)
-sd(treated_projs_postqp$wins_percentage_delay,na.rm=T)
-nrow(subset(treated_projs_postqp,!is.na(wins_percentage_delay)))
-min(treated_projs_postqp$wins_percentage_delay,na.rm=T)
-max(treated_projs_postqp$wins_percentage_delay,na.rm=T)
-
-mean(control_projs_postqp$wins_percentage_delay,na.rm=T)
-sd(control_projs_postqp$wins_percentage_delay,na.rm=T)
-nrow(subset(control_projs_postqp,!is.na(wins_percentage_delay)))
-min(control_projs_postqp$wins_percentage_delay,na.rm=T) 
-# because we have winsorized, min/max #s are same
-# even if we cut off the tails, min/max #s will be same 
-max(control_projs_postqp$wins_percentage_delay,na.rm=T)
-
-# Initial duration
-mean(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
-sd(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
-nrow(subset(treated_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(winsorized_initial_duration_in_days_i)))
-min(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
-max(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
-
-mean(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
-sd(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
-nrow(subset(control_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(winsorized_initial_duration_in_days_i)))
-min(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
-max(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_duration_in_days_i,na.rm=T)
-
-# Initial budget
-mean(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
-sd(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
-nrow(subset(treated_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(winsorized_initial_budget_i)))
-min(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
-max(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
-
-mean(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
-sd(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
-nrow(subset(control_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(winsorized_initial_budget_i)))
-min(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
-max(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$winsorized_initial_budget_i,na.rm=T)
-
-# Number of offers
-
-mean(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-sd(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-nrow(subset(treated_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(number_of_offers_received)))
-min(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-max(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-
-mean(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-sd(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-nrow(subset(control_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(number_of_offers_received)))
-min(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-max(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$number_of_offers_received,na.rm=T)
-
-# Project stage
-
-mean(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-sd(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-nrow(subset(treated_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(wins_project_quarter_stage)))
-min(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-max(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-
-mean(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-sd(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-nrow(subset(control_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(wins_project_quarter_stage)))
-min(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-max(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$wins_project_quarter_stage,na.rm=T)
-
-
-# Positive delay rate
-
-treated_projs_postqp[,positive_delay:=ifelse(delay>0,1,0)]
-control_projs_postqp[,positive_delay:=ifelse(delay>0,1,0)]
-
-mean(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$positive_delay,na.rm=T)
-sd(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$positive_delay,na.rm=T)
-nrow(subset(treated_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(positive_delay)))
-
-mean(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$positive_delay,na.rm=T)
-sd(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$positive_delay,na.rm=T)
-nrow(subset(control_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(positive_delay)))
-
-# Negative delay rate
-
-treated_projs_postqp[,negative_delay:=ifelse(delay<0,1,0)]
-control_projs_postqp[,negative_delay:=ifelse(delay<0,1,0)]
-
-mean(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$negative_delay,na.rm=T)
-sd(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$negative_delay,na.rm=T)
-nrow(subset(treated_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(negative_delay)))
-
-mean(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$negative_delay,na.rm=T)
-sd(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$negative_delay,na.rm=T)
-nrow(subset(control_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(negative_delay)))
-
-# Financial assistance
-
-mean(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$receives_financial_assistance,na.rm=T)
-sd(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$receives_financial_assistance,na.rm=T)
-nrow(subset(treated_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(receives_financial_assistance)))
-
-mean(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$receives_financial_assistance,na.rm=T)
-sd(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$receives_financial_assistance,na.rm=T)
-nrow(subset(control_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(receives_financial_assistance)))
-
-# Competition
-
-mean(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$competitively_awarded_i,na.rm=T)
-sd(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$competitively_awarded_i,na.rm=T)
-nrow(subset(treated_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(competitively_awarded_i)))
-
-mean(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$competitively_awarded_i,na.rm=T)
-sd(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$competitively_awarded_i,na.rm=T)
-nrow(subset(control_projs_postqp,!is.na(wins_percentage_delay) &
-                                !is.na(competitively_awarded_i)))
-
-# Bid Metrics for Competitive Projects
-
-mean(subset(treated_projs_postqp,competitively_awarded_i==1 &
-!is.na(number_of_offers_received))$number_of_offers_received,na.rm=T)
-
-mean(subset(treated_projs_postqp,competitively_awarded_i==1 &
-!is.na(winsorized_initial_duration_in_days_i))$winsorized_initial_duration_in_days_i,na.rm=T)
-
-mean(subset(treated_projs_postqp,competitively_awarded_i==1 &
-!is.na(winsorized_initial_budget_i))$winsorized_initial_budget_i,na.rm=T)
-
-# Number of tasks
-
-n_distinct(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$product_or_service_code)
-
-n_distinct(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$product_or_service_code)
-
-# Number of industries
-
-n_distinct(subset(treated_projs_postqp,
-            !is.na(wins_percentage_delay))$naics_code)
-
-n_distinct(subset(control_projs_postqp,
-            !is.na(wins_percentage_delay))$naics_code)
-
+```{r summary_stats, eval=FALSE, include=FALSE}
+
+# remove extreme outliers
+reg_df_summ=subset(reg_df,
+                   is.finite(percentage_delay) & percentage_delay<7 &
+                   initial_duration_in_days_i>0 & initial_duration_in_days_i<=1095 & 
+                   base_and_all_options_value>0 & base_and_all_options_value<=7e+07 &
+                   number_of_offers_received_original<999 &
+                   project_quarter_stage>0 & is.finite(project_quarter_stage) &
+                   project_quarter_stage<1)
+
+reg_df_summ[,percentage_delay:=100*percentage_delay]
+reg_df_summ[,positive_delay:=ifelse(delay>0,1,0)]
+reg_df_summ[,negative_delay:=ifelse(delay<0,1,0)]
+reg_df_summ[,"initial_budget_(000s)":=base_and_all_options_value/1000]
+
+reg_df_summ=reg_df_summ[,!'number_of_offers_received']
+reg_df_summ[,number_of_offers_received:=number_of_offers_received_original]
+
+
+reg_df_summ_select=reg_df_summ[,c('percentage_delay',
+            'initial_duration_in_days_i',
+            'initial_budget_(000s)',
+            'number_of_offers_received',
+            'project_quarter_stage',
+            'positive_delay',
+            'negative_delay',
+            'treat_i',
+            'post_t',
+            'competitively_awarded_i',
+            'contract_financing_i')]
+
+summary_stats=reg_df_summ_select %>%
+  group_by(treat_i,post_t) %>%
+  summarise_all(list(mean = mean, 
+                      sd = sd,
+                      quantile_05 = ~quantile(., 0.05), 
+                      quantile_95 = ~quantile(., 0.95))
+                )
+
+nobs=reg_df_summ %>%
+  group_by(treat_i,post_t)%>%
+  summarise(number_of_observations=n(),
+            number_of_tasks=n_distinct(product_or_service_code),
+            number_of_industries=n_distinct(naics_code))
+
+summary_stats=merge(summary_stats,
+                    nobs,
+                    by=c('treat_i','post_t'))
+
+#### Small business before QuickPay #### 
+sb_before_qp=subset(summary_stats,treat_i==1 & post_t==0)
+
+sb_before_qp=pivot_longer(sb_before_qp,
+             cols=colnames(sb_before_qp),
+             names_to="name",
+             values_to = "value")
+
+####  Large business before QuickPay #### 
+
+lb_before_qp=subset(summary_stats,treat_i==0 & post_t==0)
+
+lb_before_qp=pivot_longer(lb_before_qp,
+             cols=colnames(lb_before_qp),
+             names_to="name",
+             values_to = "value")
+
+#### Small business after QuickPay #### 
+
+sb_after_qp=subset(summary_stats,treat_i==1 & post_t==1)
+
+sb_after_qp=pivot_longer(sb_after_qp,
+             cols=colnames(sb_after_qp),
+             names_to="name",
+             values_to = "value")
+
+#### Large business after QuickPay #### 
+
+lb_after_qp=subset(summary_stats,treat_i==0 & post_t==1)
+
+lb_after_qp=pivot_longer(lb_after_qp,
+             cols=colnames(lb_after_qp),
+             names_to="name",
+             values_to = "value")
 
 ```
 
