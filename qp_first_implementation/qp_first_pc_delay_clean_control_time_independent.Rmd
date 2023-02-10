@@ -44,6 +44,7 @@ library(MatchIt)
 library(pBrackets)
 library(grid)
 library(fixest)
+library(xtable)
 ```
 
 ```{r set_path_for_exporting, include=FALSE}
@@ -467,6 +468,181 @@ make_tex_pieces <- function(stargazer_output) {
   # list(header = tex_header, inner = tex_inner, footer = tex_footer)
   c(tex_header,tex_inner,tex_footer)
 }
+```
+
+# Summary statistics
+
+```{r summary_stats, results='asis', echo=FALSE, warning=FALSE,message=FALSE}
+
+# remove extreme outliers
+reg_df_summ=subset(reg_df,
+                   is.finite(percentage_delay) & percentage_delay<7 &
+                   initial_duration_in_days_i>0 & initial_duration_in_days_i<1300 & 
+                   base_and_all_options_value>0 & base_and_all_options_value<=7e+07 &
+                   number_of_offers_received_original<999 &
+                   project_quarter_stage>0 & is.finite(project_quarter_stage) &
+                   project_quarter_stage<1)
+
+reg_df_summ[,percentage_delay:=100*percentage_delay]
+reg_df_summ[,positive_delay:=ifelse(delay>0,1,0)]
+reg_df_summ[,negative_delay:=ifelse(delay<0,1,0)]
+reg_df_summ[,"initial_budget_(000s)":=base_and_all_options_value/1000]
+
+reg_df_summ=reg_df_summ[,!'number_of_offers_received']
+reg_df_summ[,number_of_offers_received:=number_of_offers_received_original]
+
+
+reg_df_summ_select=reg_df_summ[,c('percentage_delay',
+            'initial_duration_in_days_i',
+            'initial_budget_(000s)',
+            'number_of_offers_received',
+            'project_quarter_stage',
+            'positive_delay',
+            'negative_delay',
+            'treat_i',
+            'post_t',
+            'competitively_awarded_i',
+            'contract_financing_i')]
+
+summary_stats=reg_df_summ_select %>%
+  group_by(treat_i,post_t) %>%
+  summarise_all(list(mean = mean, 
+                      sd = sd,
+                      quantile_05 = ~quantile(., 0.05), 
+                      quantile_95 = ~quantile(., 0.95))
+                )
+
+nobs=reg_df_summ %>%
+  group_by(treat_i,post_t)%>%
+  summarise(number_of_observations=n(),
+            number_of_tasks=n_distinct(product_or_service_code),
+            number_of_industries=n_distinct(naics_code))
+
+summary_stats=merge(summary_stats,
+                    nobs,
+                    by=c('treat_i','post_t'))
+
+#### Small business before QuickPay #### 
+sb_before_qp=subset(summary_stats,treat_i==1 & post_t==0)
+sb_before_qp=pivot_longer(sb_before_qp,
+             cols=colnames(sb_before_qp),
+             names_to="name",
+             values_to = "value")
+
+####  Large business before QuickPay #### 
+
+lb_before_qp=subset(summary_stats,treat_i==0 & post_t==0)
+lb_before_qp=pivot_longer(lb_before_qp,
+             cols=colnames(lb_before_qp),
+             names_to="name",
+             values_to = "value")
+
+#### Small business after QuickPay #### 
+
+sb_after_qp=subset(summary_stats,treat_i==1 & post_t==1)
+sb_after_qp=pivot_longer(sb_after_qp,
+             cols=colnames(sb_after_qp),
+             names_to="name",
+             values_to = "value")
+
+#### Large business after QuickPay #### 
+
+lb_after_qp=subset(summary_stats,treat_i==0 & post_t==1)
+lb_after_qp=pivot_longer(lb_after_qp,
+             cols=colnames(lb_after_qp),
+             names_to="name",
+             values_to = "value")
+
+#### Summary statistics -- Before QuickPay ####
+
+Variable=c('Percentage delay',
+            'Initial duration (in days)',
+            'Initial budget (000s)',
+            'Number of offers',
+            'Project stage',
+            'Positive delay (indicator)',
+            'Negative delay (indicator)',
+            'Competitively awarded (indicator)',
+            'Contract financing (indicator)')
+
+sb_mean_before_qp=setnames(round(sb_before_qp[3:11,'value'],2),'value','SB.Mean')
+sb_sd_before_qp=setnames(round(sb_before_qp[12:20,'value'],2),'value','SB.Std Dev')
+sb_bottom_before_qp=setnames(round(sb_before_qp[21:29,'value'],2),'value','SB.5%')
+sb_top_before_qp=setnames(round(sb_before_qp[30:38,'value'],2),'value','SB.95%')
+sb_obs_before_qp=as.data.frame(lapply(
+                  setnames(sb_before_qp[39,'value'],'value','SB.Obs'),
+                  rep,9))
+
+lb_mean_before_qp=setnames(round(lb_before_qp[3:11,'value'],2),'value','LB.Mean')
+lb_sd_before_qp=setnames(round(lb_before_qp[12:20,'value'],2),'value','LB.Std Dev')
+lb_bottom_before_qp=setnames(round(lb_before_qp[21:29,'value'],2),'value','LB.5%')
+lb_top_before_qp=setnames(round(lb_before_qp[30:38,'value'],2),'value','LB.95%')
+lb_obs_before_qp=as.data.frame(lapply(
+                  setnames(lb_before_qp[39,'value'],'value','LB.Obs'),
+                  rep,9))
+
+summary_df_before <- setDT(data.frame(Variable,
+                               sb_mean_before_qp,
+                               sb_sd_before_qp,
+                               sb_bottom_before_qp,
+                               sb_top_before_qp,
+                               sb_obs_before_qp,
+                               lb_mean_before_qp,
+                               lb_sd_before_qp,
+                               lb_bottom_before_qp,
+                               lb_top_before_qp,
+                               lb_obs_before_qp,
+                               check.names=FALSE))
+
+print(xtable(summary_df_before,
+             caption="Before QuickPay",
+             digits=c(0,0,2,2,2,2,0,2,2,2,2,0)),
+      include.rownames=FALSE,
+      floating = FALSE,
+      comment=FALSE,
+      scalebox='0.75',
+      booktabs=T)
+
+
+#### Summary statistics -- After QuickPay ####
+
+sb_mean_after_qp=setnames(round(sb_after_qp[3:11,'value'],2),'value','SB.Mean')
+sb_sd_after_qp=setnames(round(sb_after_qp[12:20,'value'],2),'value','SB.Std Dev')
+sb_bottom_after_qp=setnames(round(sb_after_qp[21:29,'value'],2),'value','SB.5%')
+sb_top_after_qp=setnames(round(sb_after_qp[30:38,'value'],2),'value','SB.95%')
+sb_obs_after_qp=as.data.frame(lapply(
+                  setnames(sb_after_qp[39,'value'],'value','SB.Obs'),
+                  rep,9))
+
+lb_mean_after_qp=setnames(round(lb_after_qp[3:11,'value'],2),'value','LB.Mean')
+lb_sd_after_qp=setnames(round(lb_after_qp[12:20,'value'],2),'value','LB.Std Dev')
+lb_bottom_after_qp=setnames(round(lb_after_qp[21:29,'value'],2),'value','LB.5%')
+lb_top_after_qp=setnames(round(lb_after_qp[30:38,'value'],2),'value','LB.95%')
+lb_obs_after_qp=as.data.frame(lapply(
+                  setnames(lb_after_qp[39,'value'],'value','LB.Obs'),
+                  rep,9))
+
+summary_df_after <- setDT(data.frame(Variable,
+                               sb_mean_after_qp,
+                               sb_sd_after_qp,
+                               sb_bottom_after_qp,
+                               sb_top_after_qp,
+                               sb_obs_after_qp,
+                               lb_mean_after_qp,
+                               lb_sd_after_qp,
+                               lb_bottom_after_qp,
+                               lb_top_after_qp,
+                               lb_obs_after_qp,
+                               check.names=FALSE))
+
+print(xtable(summary_df_after,
+             caption="After QuickPay",
+             digits=c(0,0,2,2,2,2,0,2,2,2,2,0)),
+      include.rownames=FALSE,
+      floating = FALSE,
+      comment=FALSE,
+      scalebox='0.75',
+      booktabs=T)
 ```
 
 # Baseline Regressions
@@ -1798,95 +1974,6 @@ base_table<-stargazer(baseline_reg,
           notes=c("Each observation is a project-quarter.",
                   "SEs are robust and clustered at the project level."),
           header=F)
-```
-
-# Summary statistics
-
-```{r summary_stats, eval=FALSE, include=FALSE}
-
-# remove extreme outliers
-reg_df_summ=subset(reg_df,
-                   is.finite(percentage_delay) & percentage_delay<7 &
-                   initial_duration_in_days_i>0 & initial_duration_in_days_i<=1095 & 
-                   base_and_all_options_value>0 & base_and_all_options_value<=7e+07 &
-                   number_of_offers_received_original<999 &
-                   project_quarter_stage>0 & is.finite(project_quarter_stage) &
-                   project_quarter_stage<1)
-
-reg_df_summ[,percentage_delay:=100*percentage_delay]
-reg_df_summ[,positive_delay:=ifelse(delay>0,1,0)]
-reg_df_summ[,negative_delay:=ifelse(delay<0,1,0)]
-reg_df_summ[,"initial_budget_(000s)":=base_and_all_options_value/1000]
-
-reg_df_summ=reg_df_summ[,!'number_of_offers_received']
-reg_df_summ[,number_of_offers_received:=number_of_offers_received_original]
-
-
-reg_df_summ_select=reg_df_summ[,c('percentage_delay',
-            'initial_duration_in_days_i',
-            'initial_budget_(000s)',
-            'number_of_offers_received',
-            'project_quarter_stage',
-            'positive_delay',
-            'negative_delay',
-            'treat_i',
-            'post_t',
-            'competitively_awarded_i',
-            'contract_financing_i')]
-
-summary_stats=reg_df_summ_select %>%
-  group_by(treat_i,post_t) %>%
-  summarise_all(list(mean = mean, 
-                      sd = sd,
-                      quantile_05 = ~quantile(., 0.05), 
-                      quantile_95 = ~quantile(., 0.95))
-                )
-
-nobs=reg_df_summ %>%
-  group_by(treat_i,post_t)%>%
-  summarise(number_of_observations=n(),
-            number_of_tasks=n_distinct(product_or_service_code),
-            number_of_industries=n_distinct(naics_code))
-
-summary_stats=merge(summary_stats,
-                    nobs,
-                    by=c('treat_i','post_t'))
-
-#### Small business before QuickPay #### 
-sb_before_qp=subset(summary_stats,treat_i==1 & post_t==0)
-
-sb_before_qp=pivot_longer(sb_before_qp,
-             cols=colnames(sb_before_qp),
-             names_to="name",
-             values_to = "value")
-
-####  Large business before QuickPay #### 
-
-lb_before_qp=subset(summary_stats,treat_i==0 & post_t==0)
-
-lb_before_qp=pivot_longer(lb_before_qp,
-             cols=colnames(lb_before_qp),
-             names_to="name",
-             values_to = "value")
-
-#### Small business after QuickPay #### 
-
-sb_after_qp=subset(summary_stats,treat_i==1 & post_t==1)
-
-sb_after_qp=pivot_longer(sb_after_qp,
-             cols=colnames(sb_after_qp),
-             names_to="name",
-             values_to = "value")
-
-#### Large business after QuickPay #### 
-
-lb_after_qp=subset(summary_stats,treat_i==0 & post_t==1)
-
-lb_after_qp=pivot_longer(lb_after_qp,
-             cols=colnames(lb_after_qp),
-             names_to="name",
-             values_to = "value")
-
 ```
 
 # Congestion Effect
