@@ -650,7 +650,7 @@ var_name=c('Number of tasks',
 sb_before_number=setnames(sb_before_qp[40:41,'value'],'value','SB.before')
 lb_before_number=setnames(lb_before_qp[40:41,'value'],'value','LB.before')
 sb_after_number=setnames(sb_after_qp[40:41,'value'],'value','SB.after')
-lb_after_number=setnames(sb_after_qp[40:41,'value'],'value','LB.after')
+lb_after_number=setnames(lb_after_qp[40:41,'value'],'value','LB.after')
 
 df_count=setDT(data.frame(var_name,
                           sb_before_number,
