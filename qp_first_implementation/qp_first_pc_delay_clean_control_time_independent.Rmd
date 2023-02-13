@@ -3040,7 +3040,12 @@ contract_financing_table=stargazer(baseline_reg,
 * CF = 1 if contractor receives financing on any of its projects.
 
 ```{r cf_contractor_level, results='asis',echo=FALSE}
-contract_financing_contractor=reg_df_subset[,sum(contract_financing_i),
+
+reg_df3=unique(reg_df_subset[,c('contract_award_unique_key',
+                                'recipient_duns',
+                                'contract_financing_i')])
+
+contract_financing_contractor=reg_df3[,sum(contract_financing_i),
                                             by='recipient_duns']
 
 
@@ -3333,12 +3338,20 @@ contract_financing_table=stargazer(baseline_reg,
 ## Intensity: Above Median
 
 * CF = 1 if contractor is the upper half of those receiving financing on projects.
-* That is, number of projects on which contractor receives financing is greater than the median of those receiving financing on projects.
+* That is, fraction of projects on which contractor receives financing is greater than the median of those receiving financing on projects.
 
 ```{r cf_contractor_level_median, results='asis',echo=FALSE}
 
-contract_financing_contractor[,above_median_cf:=ifelse(num_projects_receiving_financing>
-                                                      median(subset(contract_financing_contractor,num_projects_receiving_financing>0)$num_projects_receiving_financing),1,0)]
+num_projects_contractor=reg_df_subset[,n_distinct(contract_award_unique_key),by='recipient_duns']
+
+setnames(num_projects_contractor,'V1','num_projects_contractor')
+contract_financing_contractor=merge(contract_financing_contractor,
+                                    num_projects_contractor,by='recipient_duns')                     
+
+contract_financing_contractor[,pc_projects_receiving_cf:=num_projects_receiving_financing/num_projects_contractor]
+
+contract_financing_contractor[,above_median_cf:=ifelse(pc_projects_receiving_cf>median(subset(contract_financing_contractor,pc_projects_receiving_cf>0)$pc_projects_receiving_cf),1,0)]
+
 
 reg_df_subset=merge(reg_df_subset,
                     contract_financing_contractor[,c('recipient_duns','above_median_cf')],
