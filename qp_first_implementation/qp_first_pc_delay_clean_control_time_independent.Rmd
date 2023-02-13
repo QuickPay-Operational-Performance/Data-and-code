@@ -2241,7 +2241,7 @@ ggplot(projects_plot,
         legend.position="bottom",
         legend.key.width=unit(2.5,"cm"))
 
-m1=felm(total_budget_across_projects~treat_i+
+m1=felm(I(total_budget_across_projects/1000000)~treat_i+
           post_t:treat_i+post_t|
           0| # no fixed effects
           0| # no IV
@@ -2250,7 +2250,7 @@ m1=felm(total_budget_across_projects~treat_i+
         exactDOF = TRUE, 
         cmethod = "reghdfe")
 
-m2=felm(total_budget_across_projects~treat_i+
+m2=felm(I(total_budget_across_projects/1000000)~treat_i+
           post_t:treat_i|
           action_date_year_quarter| # no fixed effects
           0| # no IV
@@ -2263,7 +2263,7 @@ congestion_budget_table=stargazer(m1,m2,
           digits=2,
           digits.extra=2,
           title = "Contractor Project Budget and QuickPay reform",
-          dep.var.labels="Total budget",
+          dep.var.labels="Total budget (000,000s)",
           dep.var.caption = "",
           covariate.labels =c("$Treat_i$",
                                "$Post_t$",
