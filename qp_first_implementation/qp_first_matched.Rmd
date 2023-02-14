@@ -104,9 +104,12 @@ df_first_reported[,receives_contracts_and_financial_aid_i:=ifelse(receives_contr
                                                          receives_grants=='t'|
                                                          c8a_program_participant=='t',1,0)]
 
-df_first_reported[,winsorized_initial_duration_in_days_i:=Winsorize(as.numeric(
+df_first_reported[,initial_duration_in_days_i:=as.numeric(
                                as.Date(period_of_performance_current_end_date)-
-                               as.Date(period_of_performance_start_date)),na.rm=T)]
+                               as.Date(period_of_performance_start_date))]
+
+df_first_reported[,winsorized_initial_duration_in_days_i:=Winsorize(initial_duration_in_days_i,
+                  na.rm=T)]
 
 df_first_reported[,winsorized_initial_budget_i:=Winsorize(base_and_all_options_value,na.rm=T)]
 
@@ -120,10 +123,11 @@ select_cols=c("contract_award_unique_key",
               "receives_contracts_and_financial_aid_i",
               "winsorized_initial_duration_in_days_i",
               "winsorized_initial_budget_i",
-              "period_of_performance_start_date")
+              "period_of_performance_start_date",
+              "initial_duration_in_days_i")
 
 df_first_reported_cols=df_first_reported[,..select_cols]
-df_first_reported[,initial_start_date:=period_of_performance_start_date]
+df_first_reported_cols[,initial_start_date:=period_of_performance_start_date]
 # not necessary but speed efficient to set keys
 setkey(df_first_reported_cols,contract_award_unique_key)
 setkey(df,contract_award_unique_key)
@@ -216,16 +220,12 @@ reg_df_subset[,winsorized_initial_budget_i:=
                               na.rm=T)]
 
 reg_df_subset[,number_of_offers_received:=
-                    Winsorize(number_of_offers_received_original,                    
+                    Winsorize(number_of_offers_received,                    
                               probs=c(0.05,0.95),
                               na.rm=T)]
-
-reg_df_subset[,winsorized_two_quarter_delay:=Winsorize(two_quarter_delay,na.rm=T)]
-
-
 ```
 
-```{r contractor_one_type,include=FALSE}
+```{r contractor_one_type, include=FALSE}
 one_type_contractors=reg_df[,n_distinct(treat_i),by='recipient_duns']
 one_type_contractors=unique(subset(one_type_contractors,V1==1 &
                                      !is.na(recipient_duns))$recipient_duns)
@@ -275,7 +275,7 @@ make_tex_pieces <- function(stargazer_output) {
 
 # Delays over Time
 
-```{r plot, echo=FALSE, results='asis'}
+```{r plot, echo=FALSE, eval=FALSE}
 mean_delay=reg_df[!is.na(wins_percentage_delay) & action_date_year_quarter<=as.Date('2012-06-30'), 
               mean(wins_percentage_delay),  
               by = c('action_date_year_quarter','business_type')]
@@ -307,7 +307,7 @@ ggplot(mean_delay, aes(x=year_quarter,
     legend.text = element_text(size=12))
 ```
 
-```{r normalized_plot,echo=FALSE,results='asis'}
+```{r normalized_plot,eval=FALSE, include=FALSE}
 small_baseline=subset(mean_delay,business_type=="S" & year_quarter=="2010-Jun")$V1
 large_baseline=subset(mean_delay,business_type=="O" & year_quarter=="2010-Jun")$V1
 
@@ -356,7 +356,7 @@ Let $Time$ denote $q$-th quarter since the beginning of time horizon. For $Post_
 $$ DelayRate_{it} = \alpha+\beta_0 Treat_i + \beta_1 (Treat_i \times Time) + \beta_2 X_i + \mu_t + \theta_{firm} + \lambda_{task} +\epsilon_{it}$$
 The coefficient of interest is $\beta_1$. If this is significant, we would find evidence of a linear time trend before quickpay implementation -- violating the parallel trends assumption.
 
-```{r parallel_trends_test, echo=FALSE, results='asis'}
+```{r parallel_trends_test, echo=FALSE, eval=FALSE}
 df_qn<-unique(reg_df,by='action_date_year_quarter')[,"action_date_year_quarter"]
 df_qn=df_qn[order(action_date_year_quarter)][,quarter_number:=seq.int(nrow(df_qn))]
 reg_df=merge(reg_df,df_qn,by='action_date_year_quarter')
@@ -547,7 +547,7 @@ baseline_reg=felm(wins_percentage_delay~treat_i+
 # time fixed effects also included in the following specs
 controls_and_no_fe=felm(wins_percentage_delay~treat_i+
                             post_t:treat_i+
-                            log(wins_project_quarter_stage)+
+                          #  log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -564,7 +564,7 @@ controls_and_no_fe=felm(wins_percentage_delay~treat_i+
 # time fixed effects also included in the following specs
 controls_and_time_fe=felm(wins_percentage_delay~treat_i+
                             post_t:treat_i+
-                            log(wins_project_quarter_stage)+
+                         #   log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -580,7 +580,7 @@ controls_and_time_fe=felm(wins_percentage_delay~treat_i+
 
 controls_time_task_fe=felm(wins_percentage_delay~treat_i+
                             post_t:treat_i+
-                            log(wins_project_quarter_stage)+
+                          #  log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -596,7 +596,7 @@ controls_time_task_fe=felm(wins_percentage_delay~treat_i+
 
 controls_and_all_fe=felm(wins_percentage_delay~treat_i+
                             post_t:treat_i+
-                            log(wins_project_quarter_stage)+
+                          #  log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -616,7 +616,7 @@ base_table=stargazer(baseline_reg,
           controls_time_task_fe,
           controls_and_all_fe,
           title = "Quickpay 2009-2011",
-          dep.var.labels="$DelayRate_{it}$ (in percentage)",
+          dep.var.labels="$PercentDelay_{it}$ (clean control)",
           dep.var.caption = "",
           covariate.labels = c("$Treat_i$","$Post_t$","$Treat_i \\times Post_t$","Constant"),
           object.names=FALSE, 
@@ -628,7 +628,7 @@ base_table=stargazer(baseline_reg,
           column.sep.width = "-2pt",
           add.lines = list(c("Duration, Budget, Bids","No",rep("Yes",4)),
                            c("$Post_t \\times$  (Duration, Budget, Bids)","No",rep("Yes",4)),
-                           c("Project Age Tercile","No",rep("Yes",4)),
+                         #  c("Project Stage","No",rep("Yes",4)),
                            c("Year-Quarter Fixed Effects",rep("No",2),rep("Yes",3)),
                            c("Task Fixed Effects",rep("No",3),rep("Yes",2)),
                            c("Industry Fixed Effects",rep("No",4),rep("Yes",1))),
@@ -637,13 +637,11 @@ base_table=stargazer(baseline_reg,
                    'number_of_offers_received',
                    'post_t:winsorized_initial_duration_in_days_i',
                    'post_t:winsorized_initial_budget_i',
-                   'post_t:number_of_offers_received',
-                   'wins_project_quarter_stage'),
+                   'post_t:number_of_offers_received'),
           table.placement = "H",
           style="default",
           notes=c("Each observation is a project-quarter.",
-                  "SEs are robust and clustered at the project level.",
-                  "Sample restricted to contractors holding only one type of project."),
+                  "SEs are robust and clustered at the project level."),
           header=F)
 
 ```

@@ -65,7 +65,7 @@
 
 \title{Matched Regressions QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Nov 22, 2022}
+\date{\vspace{-2.5em}Feb 14, 2023}
 
 \begin{document}
 \maketitle
@@ -78,10 +78,6 @@ Product or Service Code - Subagency - Type of pricing
 
 \hypertarget{delays-over-time}{%
 \section{Delays over Time}\label{delays-over-time}}
-
-\includegraphics{qp_first_matched_files/figure-latex/plot-1.pdf}
-
-\includegraphics{qp_first_matched_files/figure-latex/normalized_plot-1.pdf}
 
 \hypertarget{notation}{%
 \section{Notation}\label{notation}}
@@ -113,38 +109,6 @@ horizon. For \(Post_t =0\), we run the following regression:
 The coefficient of interest is \(\beta_1\). If this is significant, we
 would find evidence of a linear time trend before quickpay
 implementation -- violating the parallel trends assumption.
-
-\begin{table}[H] \centering 
-  \caption{Linear Time Trend Before QuickPay} 
-  \label{} 
-\small 
-\begin{tabular}{@{\extracolsep{5pt}}lc} 
-\\[-1.8ex]\hline 
-\hline \\[-1.8ex] 
- & \multicolumn{1}{c}{\textit{Dependent variable:}} \\ 
-\cline{2-2} 
-\\[-1.8ex] & $DelayRate_{it}$ (in percentage) \\ 
-\hline \\[-1.8ex] 
- $Treat_i$ & $-$2.70$^{***}$ \\ 
-  & (0.71) \\ 
-  & \\ 
- $Treat_i \times Time$ & 0.34$^{*}$ \\ 
-  & (0.17) \\ 
-  & \\ 
-\hline \\[-1.8ex] 
-Fixed effects & Firm, Task, and Year-Quarter \\ 
-Controls & Budget, Duration, Bids, Project Age \\ 
-Observations & 39,422 \\ 
-R$^{2}$ & 0.15 \\ 
-Adjusted R$^{2}$ & 0.14 \\ 
-\hline 
-\hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{1}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{1}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{1}{r}{SEs are robust and clustered at the project level.} \\ 
- & \multicolumn{1}{r}{Observations are for quarters before quickpay.} \\ 
-\end{tabular} 
-\end{table}
 
 \hypertarget{baseline-regressions}{%
 \section{Baseline Regressions}\label{baseline-regressions}}
@@ -187,6 +151,55 @@ Industry Fixed Effects & No & No & No & No & Yes \\
 Observations & 150,686 & 132,495 & 132,495 & 132,495 & 132,495 \\ 
 R$^{2}$ & 0.002 & 0.08 & 0.09 & 0.11 & 0.11 \\ 
 Adjusted R$^{2}$ & 0.002 & 0.08 & 0.09 & 0.11 & 0.11 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{clean-control-group}{%
+\subsection{Clean Control Group}\label{clean-control-group}}
+
+\begin{itemize}
+\tightlist
+\item
+  Large projects of contractors holding both small \& large projects are
+  removed.
+\end{itemize}
+
+\begin{table}[H] \centering 
+  \caption{Quickpay 2009-2011} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$ (clean control)} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$1.31$^{***}$ & $-$0.24 & $-$0.46$^{***}$ & $-$0.70$^{***}$ & $-$0.74$^{***}$ \\ 
+  & (0.16) & (0.17) & (0.18) & (0.18) & (0.18) \\ 
+  & & & & & \\ 
+ $Post_t$ & 0.17 &  &  &  &  \\ 
+  & (0.15) &  &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 0.88$^{***}$ & 0.55$^{***}$ & 0.81$^{***}$ & 0.94$^{***}$ & 0.95$^{***}$ \\ 
+  & (0.19) & (0.20) & (0.21) & (0.21) & (0.21) \\ 
+  & & & & & \\ 
+ Constant & 5.37$^{***}$ & 28.48$^{***}$ &  &  &  \\ 
+  & (0.13) & (0.57) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Year-Quarter Fixed Effects & No & No & Yes & Yes & Yes \\ 
+Task Fixed Effects & No & No & No & Yes & Yes \\ 
+Industry Fixed Effects & No & No & No & No & Yes \\ 
+Observations & 132,189 & 115,567 & 115,567 & 115,567 & 115,567 \\ 
+R$^{2}$ & 0.001 & 0.06 & 0.06 & 0.09 & 0.09 \\ 
+Adjusted R$^{2}$ & 0.001 & 0.06 & 0.06 & 0.08 & 0.08 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
