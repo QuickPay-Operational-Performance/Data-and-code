@@ -66,7 +66,7 @@
 \title{Percentage Delay Rate (with Time Independent Clean Control):
 QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Feb 14, 2023}
+\date{\vspace{-2.5em}Feb 16, 2023}
 
 \begin{document}
 \maketitle
@@ -638,16 +638,16 @@ Adjusted R$^{2}$ & 0.004 & 0.20 & 0.20 & 0.25 & 0.26 \\
 \\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$0.04 & $-$0.10 & $-$0.10 & $-$0.07 & $-$0.07 \\ 
+ $Treat_i$ & 0.03 & $-$0.02 & $-$0.01 & 0.01 & 0.004 \\ 
   & (0.10) & (0.09) & (0.09) & (0.09) & (0.09) \\ 
   & & & & & \\ 
- $Post_t$ & 0.52$^{***}$ & $-$4.41$^{***}$ &  &  &  \\ 
+ $Post_t$ & 0.59$^{***}$ & $-$4.34$^{***}$ &  &  &  \\ 
   & (0.09) & (0.75) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Post_t$ & 0.02 & 0.02 & 0.02 & 0.03 & 0.03 \\ 
+ $Treat_i \times Post_t$ & $-$0.13 & $-$0.12 & $-$0.13 & $-$0.12 & $-$0.11 \\ 
   & (0.13) & (0.12) & (0.12) & (0.11) & (0.11) \\ 
   & & & & & \\ 
- Constant & 4.14$^{***}$ & 41.68$^{***}$ &  &  &  \\ 
+ Constant & 4.10$^{***}$ & 41.64$^{***}$ &  &  &  \\ 
   & (0.07) & (0.58) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
@@ -861,6 +861,94 @@ Industry fixed effects & No & No & No & No & Yes \\
 Observations & 117,787 & 110,601 & 110,601 & 110,601 & 110,601 \\ 
 R$^{2}$ & 0.002 & 0.26 & 0.26 & 0.30 & 0.30 \\ 
 Adjusted R$^{2}$ & 0.002 & 0.26 & 0.26 & 0.29 & 0.29 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Sample restricted to large projects only.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{treatment-intensity-1}{%
+\subsection{Treatment intensity 1}\label{treatment-intensity-1}}
+
+\begin{table}[H] \centering 
+  \caption{Project Portfolio and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-10pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ Percentage of small projects & $-$0.03$^{***}$ & $-$0.02$^{***}$ & $-$0.02$^{***}$ & $-$0.01 & $-$0.01 \\ 
+  & (0.01) & (0.01) & (0.01) & (0.01) & (0.01) \\ 
+  & & & & & \\ 
+ $Post_t$ & $-$0.37$^{***}$ & $-$13.29$^{***}$ &  &  &  \\ 
+  & (0.12) & (1.16) &  &  &  \\ 
+  & & & & & \\ 
+ Percentage of small projects $\times Post_t$ & 0.01$^{*}$ & 0.01 & 0.01$^{*}$ & 0.01 & 0.01 \\ 
+  & (0.01) & (0.01) & (0.01) & (0.01) & (0.01) \\ 
+  & & & & & \\ 
+ Constant & 6.55$^{***}$ & 64.25$^{***}$ &  &  &  \\ 
+  & (0.10) & (0.87) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 117,787 & 110,601 & 110,601 & 110,601 & 110,601 \\ 
+R$^{2}$ & 0.0004 & 0.26 & 0.26 & 0.30 & 0.30 \\ 
+Adjusted R$^{2}$ & 0.0003 & 0.26 & 0.26 & 0.29 & 0.29 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Sample restricted to large projects only.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{treatment-intensity-2}{%
+\subsection{Treatment intensity 2}\label{treatment-intensity-2}}
+
+\begin{table}[H] \centering 
+  \caption{Project Portfolio and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-10pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ Num of small projects (logged) & 1.79$^{***}$ & 0.22$^{***}$ & 0.19$^{***}$ & 0.43$^{***}$ & 0.44$^{***}$ \\ 
+  & (0.11) & (0.06) & (0.06) & (0.06) & (0.06) \\ 
+  & & & & & \\ 
+ $Post_t$ & 0.10 & $-$13.10$^{***}$ &  &  &  \\ 
+  & (0.12) & (1.19) &  &  &  \\ 
+  & & & & & \\ 
+ Num of small projects (logged) $\times Post_t$ & $-$0.68$^{***}$ & $-$0.05 & $-$0.02 & $-$0.21$^{***}$ & $-$0.17$^{**}$ \\ 
+  & (0.12) & (0.08) & (0.08) & (0.08) & (0.08) \\ 
+  & & & & & \\ 
+ Constant & 5.21$^{***}$ & 63.41$^{***}$ &  &  &  \\ 
+  & (0.10) & (0.92) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 117,787 & 110,601 & 110,601 & 110,601 & 110,601 \\ 
+R$^{2}$ & 0.01 & 0.26 & 0.26 & 0.30 & 0.30 \\ 
+Adjusted R$^{2}$ & 0.01 & 0.26 & 0.26 & 0.29 & 0.29 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 

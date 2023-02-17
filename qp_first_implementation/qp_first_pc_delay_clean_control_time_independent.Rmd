@@ -251,6 +251,27 @@ reg_df[,relative_delay:=ifelse(initial_duration_in_days_i>0,
 reg_df[,wins_relative_delay:=100*Winsorize(relative_delay,na.rm=T)]
 ```
 
+```{r get_num_project_types, include=FALSE}
+num_small_projects=subset(reg_df,treat_i==1)[,n_distinct(contract_award_unique_key),
+                                             by='recipient_duns']
+setnames(num_small_projects,'V1','num_small_projects')
+
+num_large_projects=subset(reg_df,treat_i==0)[,n_distinct(contract_award_unique_key),
+                                             by='recipient_duns']
+setnames(num_large_projects,'V1','num_large_projects')
+
+num_small_large_projects=merge(num_large_projects,
+                               num_small_projects,
+                               by='recipient_duns',
+                               all=TRUE)
+num_small_large_projects[is.na(num_small_large_projects)]=0
+
+reg_df=merge(reg_df,
+             num_small_large_projects,
+             by='recipient_duns',
+             all.x=TRUE)
+```
+
 ```{r clean_control,include=FALSE}
 
 ##
@@ -2650,6 +2671,241 @@ portfolio_large_projs_did=stargazer(m1,m2,m3,m4,m5,
 # write(portfolio_large_projs_did_tex,
 #       paste0(tables_folder,
 #              "/portfolio_large_projs_did.tex"))
+```
+
+## Treatment intensity 1
+
+```{r treatment_intensity_1, warning=FALSE, echo=FALSE, results='asis'}
+
+reg_df[,pc_small_projects:=100*num_small_projects/(num_small_projects+num_large_projects)]
+                                         
+
+m1=felm(wins_percentage_delay~pc_small_projects+
+                            post_t:pc_small_projects+
+                            post_t|
+                            0|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, treat_i==0),
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+m2=felm(wins_percentage_delay~pc_small_projects+
+                           log(wins_project_quarter_stage)+
+                            post_t:pc_small_projects+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received+
+                            post_t|
+                            0|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, treat_i==0), 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+m3=felm(wins_percentage_delay~pc_small_projects+
+                           log(wins_project_quarter_stage)+
+                            post_t:pc_small_projects+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, treat_i==0), 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+m4=felm(wins_percentage_delay~pc_small_projects+
+                           log(wins_project_quarter_stage)+
+                            post_t:pc_small_projects+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, treat_i==0), 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+m5=felm(wins_percentage_delay~pc_small_projects+
+                           log(wins_project_quarter_stage)+
+                            post_t:pc_small_projects+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, treat_i==0), 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+portfolio_large_projs_did=stargazer(m1,m2,m3,m4,m5,
+          digits=2,
+          digits.extra=2,
+          title = "Project Portfolio and QuickPay reform",
+          dep.var.labels="$PercentDelay_{it}$",
+          dep.var.caption = "",
+          covariate.labels =c("Percentage of small projects",
+                               "$Post_t$",
+                               "Percentage of small projects $\\times Post_t$",
+                               "Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-10pt",
+          add.lines = list(
+                           c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project stage",rep("No",1),rep("Yes",4)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Task fixed effects",rep("No",3),rep("Yes",2)),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
+          omit=c('winsorized_initial_duration_in_days_i',
+                  'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'post_t:winsorized_initial_duration_in_days_i',
+                   'post_t:winsorized_initial_budget_i',
+                   'post_t:number_of_offers_received',
+                 'wins_project_quarter_stage'),
+          table.placement = "H",
+          style="default",
+           notes=c("Each observation is a project-quarter.",
+                   "SEs are robust and clustered at the project level.",
+                   "Sample restricted to large projects only."),
+          #         "Treat is an indicator that equals one for LARGE projects that have at least one parallel small project in the same quarter, and is zero otherwise."),
+          header=F)
+```
+
+## Treatment intensity 2 
+
+```{r treatment_intensity_2, warning=FALSE, echo=FALSE, results='asis'}
+
+m1=felm(wins_percentage_delay~log(1+num_small_projects)+
+                            post_t:log(1+num_small_projects)+
+                            post_t|
+                            0|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, treat_i==0),
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+m2=felm(wins_percentage_delay~log(1+num_small_projects)+
+                           log(wins_project_quarter_stage)+
+                            post_t:log(1+num_small_projects)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received+
+                            post_t|
+                            0|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, treat_i==0), 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+m3=felm(wins_percentage_delay~log(1+num_small_projects)+
+                           log(wins_project_quarter_stage)+
+                            post_t:log(1+num_small_projects)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, treat_i==0),
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+m4=felm(wins_percentage_delay~log(1+num_small_projects)+
+                           log(wins_project_quarter_stage)+
+                            post_t:log(1+num_small_projects)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, treat_i==0),
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+m5=felm(wins_percentage_delay~log(1+num_small_projects)+
+                           log(wins_project_quarter_stage)+
+                            post_t:log(1+num_small_projects)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter|
+                            0|
+                            contract_award_unique_key,
+                          data=subset(reg_df, treat_i==0), 
+                          exactDOF = TRUE, 
+                          cmethod = "reghdfe")
+
+portfolio_large_projs_did=stargazer(m1,m2,m3,m4,m5,
+          digits=2,
+          digits.extra=2,
+          title = "Project Portfolio and QuickPay reform",
+          dep.var.labels="$PercentDelay_{it}$",
+          dep.var.caption = "",
+          covariate.labels =c("Num of small projects (logged)",
+                               "$Post_t$",
+                               "Num of small projects (logged) $\\times Post_t$",
+                               "Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-10pt",
+          add.lines = list(
+                           c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project stage",rep("No",1),rep("Yes",4)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Task fixed effects",rep("No",3),rep("Yes",2)),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
+          omit=c('winsorized_initial_duration_in_days_i',
+                  'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'post_t:winsorized_initial_duration_in_days_i',
+                   'post_t:winsorized_initial_budget_i',
+                   'post_t:number_of_offers_received',
+                 'wins_project_quarter_stage'),
+          table.placement = "H",
+          style="default",
+           notes=c("Each observation is a project-quarter.",
+                   "SEs are robust and clustered at the project level.",
+                   "Sample restricted to large projects only."),
+          #         "Treat is an indicator that equals one for LARGE projects that have at least one parallel small project in the same quarter, and is zero otherwise."),
+          header=F)
 ```
 
 ## Regression 2: Incremental effect on small project with existing large project
