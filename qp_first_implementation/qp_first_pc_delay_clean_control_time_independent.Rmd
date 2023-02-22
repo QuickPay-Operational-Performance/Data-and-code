@@ -3051,7 +3051,7 @@ Consider three groups based on contractor's portfolio:
 - Group 2: Only small projects
 - Group 3: Only large projects
 
-## Treatment intensity 1
+### Treatment intensity 1
 
 * TreatIntensity_i = log(1+ number of large projects held by contractor of small project i). [Group 1]
 * TreatIntensity_i = 0 if project i is a small project but with no large project. [Group 2]
@@ -3178,11 +3178,12 @@ portfolio_did=stargazer(m1,m2,m3,m4,m5,
           header=F)
 ```
 
-## Treatment intensity 2
+### Treatment intensity 2
 
-* Remove projects in Group 2.
-* Treat_i = 1 for all small projects.
+* Remove projects in Group 2 [only small projects].
+* Treat_i = 1 for remaining small projects.
 * Treat_Intensity_Small_i = log(1 + number of small projects) for treated project i
+   * Equivalently, Treat_Intensity_Small_i = Treat_i x log(1 + number of small projects)
 * Treat_Intensity_Small_i = 0 for large project i
 * Treat_Intensity_Large_i = log(1 + number of large projects) for treated project i
 * Treat_Intensity_Large_i = 0 for large project i
@@ -3335,7 +3336,7 @@ portfolio_did=stargazer(m1,m2,m3,m4,m5,
           header=F)
 ```
 
-## Treatment Intensity 3
+### Treatment Intensity 3
 
 * Treatment is continuous here.
 * Num of small projects $\geq 1 \iff Treat_i = 1$

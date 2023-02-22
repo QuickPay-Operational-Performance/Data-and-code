@@ -66,7 +66,7 @@
 \title{Percentage Delay Rate (with Time Independent Clean Control):
 QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Feb 21, 2023}
+\date{\vspace{-2.5em}Feb 22, 2023}
 
 \begin{document}
 \maketitle
@@ -990,7 +990,7 @@ Consider three groups based on contractor's portfolio:
 \end{itemize}
 
 \hypertarget{treatment-intensity-1}{%
-\subsection{Treatment intensity 1}\label{treatment-intensity-1}}
+\subsubsection{Treatment intensity 1}\label{treatment-intensity-1}}
 
 \begin{itemize}
 \tightlist
@@ -1052,17 +1052,24 @@ Adjusted R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.21 & 0.21 \\
 \end{table}
 
 \hypertarget{treatment-intensity-2}{%
-\subsection{Treatment intensity 2}\label{treatment-intensity-2}}
+\subsubsection{Treatment intensity 2}\label{treatment-intensity-2}}
 
 \begin{itemize}
 \tightlist
 \item
-  Remove projects in Group 2.
+  Remove projects in Group 2 {[}only small projects{]}.
 \item
-  Treat\_i = 1 for all small projects.
+  Treat\_i = 1 for remaining small projects.
 \item
   Treat\_Intensity\_Small\_i = log(1 + number of small projects) for
   treated project i
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Equivalently, Treat\_Intensity\_Small\_i = Treat\_i x log(1 + number
+    of small projects)
+  \end{itemize}
 \item
   Treat\_Intensity\_Small\_i = 0 for large project i
 \item
@@ -1126,7 +1133,7 @@ Adjusted R$^{2}$ & 0.01 & 0.17 & 0.17 & 0.21 & 0.21 \\
 \end{table}
 
 \hypertarget{treatment-intensity-3}{%
-\subsection{Treatment Intensity 3}\label{treatment-intensity-3}}
+\subsubsection{Treatment Intensity 3}\label{treatment-intensity-3}}
 
 \begin{itemize}
 \tightlist
