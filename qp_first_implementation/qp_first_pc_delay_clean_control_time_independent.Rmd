@@ -2795,13 +2795,7 @@ portfolio_large_projs_did=stargazer(m1,m2,m3,m4,m5,
 
 ```{r treatment_intensity_2, warning=FALSE, echo=FALSE, results='asis'}
 
-reg_df[,indirect_treat:=case_when(treat_i==0 & num_small_projects>0 ~ 1,
-                                  treat_i==0 & num_small_projects==0 ~ 0,
-                                  treat_i==1 ~ NaN)]
-
-m1=felm(wins_percentage_delay~indirect_treat+
-                            post_t:indirect_treat+
-                            log(1+num_small_projects)+
+m1=felm(wins_percentage_delay~log(1+num_small_projects)+
                             post_t:log(1+num_small_projects)+
                             post_t|
                             0|
@@ -2811,9 +2805,7 @@ m1=felm(wins_percentage_delay~indirect_treat+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m2=felm(wins_percentage_delay~indirect_treat+
-                            post_t:indirect_treat+
-                            log(1+num_small_projects)+
+m2=felm(wins_percentage_delay~log(1+num_small_projects)+
                            log(wins_project_quarter_stage)+
                             post_t:log(1+num_small_projects)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -2830,9 +2822,7 @@ m2=felm(wins_percentage_delay~indirect_treat+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m3=felm(wins_percentage_delay~indirect_treat+
-                            post_t:indirect_treat+
-                            log(1+num_small_projects)+
+m3=felm(wins_percentage_delay~log(1+num_small_projects)+
                            log(wins_project_quarter_stage)+
                             post_t:log(1+num_small_projects)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -2848,9 +2838,7 @@ m3=felm(wins_percentage_delay~indirect_treat+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m4=felm(wins_percentage_delay~indirect_treat+
-                            post_t:indirect_treat+
-                            log(1+num_small_projects)+
+m4=felm(wins_percentage_delay~log(1+num_small_projects)+
                            log(wins_project_quarter_stage)+
                             post_t:log(1+num_small_projects)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -2866,9 +2854,7 @@ m4=felm(wins_percentage_delay~indirect_treat+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m5=felm(wins_percentage_delay~indirect_treat+
-                            post_t:indirect_treat+
-                            log(1+num_small_projects)+
+m5=felm(wins_percentage_delay~log(1+num_small_projects)+
                            log(wins_project_quarter_stage)+
                             post_t:log(1+num_small_projects)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -2890,10 +2876,8 @@ portfolio_large_projs_did=stargazer(m1,m2,m3,m4,m5,
           title = "Project Portfolio and QuickPay reform",
           dep.var.labels="$PercentDelay_{it}$",
           dep.var.caption = "",
-          covariate.labels =c("Indirect Treat",
-                              "Num of small projects (logged)",
+          covariate.labels =c("Num of small projects (logged)",
                                "$Post_t$",
-                               "Indirect Treat $\\times Post_t$",
                                "Num of small projects (logged) $\\times Post_t$",
                                "Constant"),
           object.names=FALSE, 
@@ -3354,6 +3338,7 @@ portfolio_did=stargazer(m1,m2,m3,m4,m5,
 
 ### Treatment Intensity 3
 
+* Treatment is continuous here.
 * Num of small projects $\geq 1 \iff Treat_i = 1$
 * Num of small projects $=0 \iff Treat_i = 0$
 * Restricted to only projects in Groups 2 and 3, i.e., only small and only large.
@@ -3364,9 +3349,7 @@ portfolio_did=stargazer(m1,m2,m3,m4,m5,
 both_small_and_large_contractors=intersect(large_contractors,
                                            small_contractors)
 
-m1=felm(wins_percentage_delay~treat_new+
-                            treat_new:post_t+
-                            log(1+num_small_projects)+
+m1=felm(wins_percentage_delay~log(1+num_small_projects)+
                             post_t:log(1+num_small_projects)+
                             post_t|
                             0|
@@ -3376,9 +3359,7 @@ m1=felm(wins_percentage_delay~treat_new+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m2=felm(wins_percentage_delay~treat_new+
-                            treat_new:post_t+
-                            log(1+num_small_projects)+
+m2=felm(wins_percentage_delay~log(1+num_small_projects)+
                            log(wins_project_quarter_stage)+
                             post_t:log(1+num_small_projects)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -3395,9 +3376,7 @@ m2=felm(wins_percentage_delay~treat_new+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m3=felm(wins_percentage_delay~treat_new+
-                            treat_new:post_t+
-                            log(1+num_small_projects)+
+m3=felm(wins_percentage_delay~log(1+num_small_projects)+
                            log(wins_project_quarter_stage)+
                             post_t:log(1+num_small_projects)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -3413,9 +3392,7 @@ m3=felm(wins_percentage_delay~treat_new+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m4=felm(wins_percentage_delay~treat_new+
-                            treat_new:post_t+
-                            log(1+num_small_projects)+
+m4=felm(wins_percentage_delay~log(1+num_small_projects)+
                            log(wins_project_quarter_stage)+
                             post_t:log(1+num_small_projects)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -3431,9 +3408,7 @@ m4=felm(wins_percentage_delay~treat_new+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m5=felm(wins_percentage_delay~treat_new+
-                            treat_new:post_t+
-                            log(1+num_small_projects)+
+m5=felm(wins_percentage_delay~log(1+num_small_projects)+
                            log(wins_project_quarter_stage)+
                             post_t:log(1+num_small_projects)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -3455,10 +3430,8 @@ portfolio_large_projs_did=stargazer(m1,m2,m3,m4,m5,
           title = "Project Portfolio and QuickPay reform",
           dep.var.labels="$PercentDelay_{it}$",
           dep.var.caption = "",
-          covariate.labels =c("$Treat_i$",
-                              "Num of small projects (logged)",
+          covariate.labels =c("Num of small projects (logged)",
                                "$Post_t$",
-                              "$Treat_i \\times Post_t$",
                                "Num of small projects (logged) $\\times Post_t$",
                                "Constant"),
           object.names=FALSE, 
