@@ -873,6 +873,16 @@ Adjusted R$^{2}$ & 0.002 & 0.26 & 0.26 & 0.29 & 0.29 \\
 \hypertarget{treatment-intensity}{%
 \subsection{Treatment intensity}\label{treatment-intensity}}
 
+\begin{itemize}
+\tightlist
+\item
+  Indirect\_treat\_intensity = Indirect Treat x log(1+number of small
+  projects)
+\item
+  Indirect Treat = 1 if Treat\_i = 0 and number of small projects
+  \textgreater{} 0
+\end{itemize}
+
 \begin{table}[H] \centering 
   \caption{Project Portfolio and QuickPay reform} 
   \label{} 
@@ -883,13 +893,13 @@ Adjusted R$^{2}$ & 0.002 & 0.26 & 0.26 & 0.29 & 0.29 \\
 \\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- Num of small projects (logged) & 1.79$^{***}$ & 0.22$^{***}$ & 0.19$^{***}$ & 0.43$^{***}$ & 0.44$^{***}$ \\ 
+ Indirect Treat Intensity & 1.79$^{***}$ & 0.22$^{***}$ & 0.19$^{***}$ & 0.43$^{***}$ & 0.44$^{***}$ \\ 
   & (0.11) & (0.06) & (0.06) & (0.06) & (0.06) \\ 
   & & & & & \\ 
  $Post_t$ & 0.10 & $-$13.10$^{***}$ &  &  &  \\ 
   & (0.12) & (1.19) &  &  &  \\ 
   & & & & & \\ 
- Num of small projects (logged) $\times Post_t$ & $-$0.68$^{***}$ & $-$0.05 & $-$0.02 & $-$0.21$^{***}$ & $-$0.17$^{**}$ \\ 
+ Indirect Treat Intensity $\times Post_t$ & $-$0.68$^{***}$ & $-$0.05 & $-$0.02 & $-$0.21$^{***}$ & $-$0.17$^{**}$ \\ 
   & (0.12) & (0.08) & (0.08) & (0.08) & (0.08) \\ 
   & & & & & \\ 
  Constant & 5.21$^{***}$ & 63.41$^{***}$ &  &  &  \\ 
@@ -995,13 +1005,7 @@ Consider three groups based on contractor's portfolio:
 \begin{itemize}
 \tightlist
 \item
-  TreatIntensity\_i = log(1+ number of large projects held by contractor
-  of small project i). {[}Group 1{]}
-\item
-  TreatIntensity\_i = 0 if project i is a small project but with no
-  large project. {[}Group 2{]}
-\item
-  TreatIntensity\_i = 0 if project i is a large project. {[}Group 3{]}
+  TreatIntensity\_i = Treat x log(1+ number of large projects)
 \end{itemize}
 
 \begin{table}[H] \centering 
@@ -1014,23 +1018,17 @@ Consider three groups based on contractor's portfolio:
 \\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$1.25$^{***}$ & $-$0.93$^{***}$ & $-$0.98$^{***}$ & $-$0.78$^{***}$ & $-$0.80$^{***}$ \\ 
-  & (0.12) & (0.11) & (0.11) & (0.11) & (0.11) \\ 
+ $TreatIntensity_i$ & $-$0.92$^{***}$ & $-$0.68$^{***}$ & $-$0.67$^{***}$ & $-$0.28$^{***}$ & $-$0.27$^{***}$ \\ 
+  & (0.04) & (0.04) & (0.04) & (0.03) & (0.03) \\ 
   & & & & & \\ 
- $TreatIntensity_i$ & $-$0.75$^{***}$ & $-$0.56$^{***}$ & $-$0.55$^{***}$ & $-$0.19$^{***}$ & $-$0.17$^{***}$ \\ 
-  & (0.04) & (0.04) & (0.04) & (0.04) & (0.04) \\ 
+ $Post_t$ & 0.51$^{***}$ & $-$4.40$^{***}$ &  &  &  \\ 
+  & (0.07) & (0.75) &  &  &  \\ 
   & & & & & \\ 
- $Post_t$ & $-$0.21$^{*}$ & $-$5.54$^{***}$ &  &  &  \\ 
-  & (0.12) & (0.78) &  &  &  \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t$ & 1.22$^{***}$ & 1.06$^{***}$ & 1.11$^{***}$ & 1.11$^{***}$ & 1.13$^{***}$ \\ 
-  & (0.15) & (0.14) & (0.14) & (0.14) & (0.14) \\ 
-  & & & & & \\ 
- $TreatIntensity_i \times Post_t$ & $-$0.30$^{***}$ & $-$0.20$^{***}$ & $-$0.22$^{***}$ & $-$0.24$^{***}$ & $-$0.22$^{***}$ \\ 
+ $TreatIntensity_i \times Post_t$ & $-$0.13$^{***}$ & $-$0.06 & $-$0.07 & $-$0.09$^{*}$ & $-$0.07 \\ 
   & (0.05) & (0.05) & (0.05) & (0.05) & (0.05) \\ 
   & & & & & \\ 
- Constant & 5.27$^{***}$ & 43.34$^{***}$ &  &  &  \\ 
-  & (0.10) & (0.60) &  &  &  \\ 
+ Constant & 4.53$^{***}$ & 42.35$^{***}$ &  &  &  \\ 
+  & (0.06) & (0.58) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
@@ -1040,8 +1038,8 @@ Time fixed effects & No & No & Yes & Yes & Yes \\
 Task fixed effects & No & No & No & Yes & Yes \\ 
 Industry fixed effects & No & No & No & No & Yes \\ 
 Observations & 223,244 & 201,738 & 201,738 & 201,738 & 201,738 \\ 
-R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
+R$^{2}$ & 0.005 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
+Adjusted R$^{2}$ & 0.005 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
@@ -1057,26 +1055,13 @@ Adjusted R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.21 & 0.21 \\
 \begin{itemize}
 \tightlist
 \item
-  Remove projects in Group 2 {[}only small projects{]}.
+  Remove projects in Group 2 (with only small projects).
 \item
-  Treat\_i = 1 for remaining small projects.
+  Treat\_Intensity\_Small\_i = Treat\_i x log(1 + number of small
+  projects)
 \item
-  Treat\_Intensity\_Small\_i = log(1 + number of small projects) for
-  treated project i
-
-  \begin{itemize}
-  \tightlist
-  \item
-    Equivalently, Treat\_Intensity\_Small\_i = Treat\_i x log(1 + number
-    of small projects)
-  \end{itemize}
-\item
-  Treat\_Intensity\_Small\_i = 0 for large project i
-\item
-  Treat\_Intensity\_Large\_i = log(1 + number of large projects) for
-  treated project i
-\item
-  Treat\_Intensity\_Large\_i = 0 for large project i
+  Treat\_Intensity\_Large\_i = Treat\_i x log(1 + number of large
+  projects)
 \end{itemize}
 
 \begin{table}[H] \centering 
@@ -1089,29 +1074,23 @@ Adjusted R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.21 & 0.21 \\
 \\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- $Treat_i$ & $-$0.61$^{**}$ & $-$1.10$^{***}$ & $-$1.08$^{***}$ & $-$0.91$^{***}$ & $-$0.85$^{***}$ \\ 
-  & (0.30) & (0.29) & (0.29) & (0.29) & (0.29) \\ 
+ $TreatIntensity_i$ (Small) & $-$0.75$^{***}$ & $-$0.79$^{***}$ & $-$0.79$^{***}$ & $-$0.31$^{***}$ & $-$0.30$^{***}$ \\ 
+  & (0.02) & (0.03) & (0.03) & (0.03) & (0.03) \\ 
   & & & & & \\ 
- $TreatIntensity_i$ (Small) & $-$0.66$^{***}$ & $-$0.63$^{***}$ & $-$0.63$^{***}$ & $-$0.18$^{***}$ & $-$0.17$^{***}$ \\ 
-  & (0.05) & (0.05) & (0.05) & (0.05) & (0.05) \\ 
-  & & & & & \\ 
- $TreatIntensity_i$ (Large) & 0.26$^{***}$ & 0.47$^{***}$ & 0.48$^{***}$ & 0.08 & 0.07 \\ 
+ $TreatIntensity_i$ (Large) & 0.24$^{***}$ & 0.43$^{***}$ & 0.44$^{***}$ & 0.05 & 0.04 \\ 
   & (0.06) & (0.05) & (0.05) & (0.05) & (0.05) \\ 
   & & & & & \\ 
- $Post_t$ & $-$0.21$^{*}$ & $-$7.62$^{***}$ &  &  &  \\ 
-  & (0.12) & (1.07) &  &  &  \\ 
+ $Post_t$ & $-$0.12 & $-$7.39$^{***}$ &  &  &  \\ 
+  & (0.11) & (1.06) &  &  &  \\ 
   & & & & & \\ 
- $Treat_i \times Post_t$ & 1.77$^{***}$ & 1.80$^{***}$ & 1.78$^{***}$ & 1.71$^{***}$ & 1.67$^{***}$ \\ 
-  & (0.40) & (0.40) & (0.40) & (0.40) & (0.40) \\ 
+ $TreatIntensity_i$ (Small) $\times Post_t$ & 0.09$^{***}$ & 0.13$^{***}$ & 0.13$^{***}$ & 0.14$^{***}$ & 0.16$^{***}$ \\ 
+  & (0.03) & (0.04) & (0.04) & (0.04) & (0.04) \\ 
   & & & & & \\ 
- $TreatIntensity_i$ (Small) $\times Post_t$ & $-$0.19$^{***}$ & $-$0.14$^{**}$ & $-$0.14$^{**}$ & $-$0.12$^{*}$ & $-$0.10 \\ 
+ $TreatIntensity_i$ (Large) $\times Post_t$ & 0.08 & 0.06 & 0.05 & $-$0.13$^{*}$ & $-$0.12$^{*}$ \\ 
   & (0.07) & (0.07) & (0.07) & (0.07) & (0.07) \\ 
   & & & & & \\ 
- $TreatIntensity_i$ (Large) $\times Post_t$ & 0.04 & 0.02 & 0.01 & $-$0.17$^{**}$ & $-$0.16$^{**}$ \\ 
-  & (0.07) & (0.07) & (0.07) & (0.07) & (0.07) \\ 
-  & & & & & \\ 
- Constant & 5.27$^{***}$ & 45.49$^{***}$ &  &  &  \\ 
-  & (0.10) & (0.83) &  &  &  \\ 
+ Constant & 5.23$^{***}$ & 45.33$^{***}$ &  &  &  \\ 
+  & (0.09) & (0.83) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
@@ -1138,11 +1117,7 @@ Adjusted R$^{2}$ & 0.01 & 0.17 & 0.17 & 0.21 & 0.21 \\
 \begin{itemize}
 \tightlist
 \item
-  Treatment is continuous here.
-\item
-  Num of small projects \(\geq 1 \iff Treat_i = 1\)
-\item
-  Num of small projects \(=0 \iff Treat_i = 0\)
+  Treat\_Intensity\_Small = Treat\_i x log(1 + number of small projects)
 \item
   Restricted to only projects in Groups 2 and 3, i.e., only small and
   only large.
@@ -1160,17 +1135,17 @@ Adjusted R$^{2}$ & 0.01 & 0.17 & 0.17 & 0.21 & 0.21 \\
 \\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
 \\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
 \hline \\[-1.8ex] 
- Num of small projects (logged) & $-$0.26$^{***}$ & $-$0.37$^{***}$ & $-$0.39$^{***}$ & $-$0.28$^{***}$ & $-$0.29$^{***}$ \\ 
-  & (0.04) & (0.03) & (0.03) & (0.03) & (0.03) \\ 
+ Treat Intensity (Small) & $-$0.22$^{***}$ & $-$0.32$^{***}$ & $-$0.33$^{***}$ & $-$0.24$^{***}$ & $-$0.25$^{***}$ \\ 
+  & (0.03) & (0.03) & (0.03) & (0.03) & (0.03) \\ 
   & & & & & \\ 
- $Post_t$ & $-$0.09 & $-$7.00$^{***}$ &  &  &  \\ 
-  & (0.12) & (1.04) &  &  &  \\ 
+ $Post_t$ & 0.01 & $-$5.95$^{***}$ &  &  &  \\ 
+  & (0.10) & (0.89) &  &  &  \\ 
   & & & & & \\ 
- Num of small projects (logged) $\times Post_t$ & 0.30$^{***}$ & 0.32$^{***}$ & 0.34$^{***}$ & 0.32$^{***}$ & 0.33$^{***}$ \\ 
-  & (0.05) & (0.04) & (0.04) & (0.04) & (0.04) \\ 
+ Treat Intensity (Small) $\times Post_t$ & 0.26$^{***}$ & 0.28$^{***}$ & 0.29$^{***}$ & 0.28$^{***}$ & 0.28$^{***}$ \\ 
+  & (0.04) & (0.04) & (0.04) & (0.04) & (0.04) \\ 
   & & & & & \\ 
- Constant & 5.90$^{***}$ & 55.05$^{***}$ &  &  &  \\ 
-  & (0.10) & (0.80) &  &  &  \\ 
+ Constant & 5.22$^{***}$ & 47.90$^{***}$ &  &  &  \\ 
+  & (0.09) & (0.68) &  &  &  \\ 
   & & & & & \\ 
 \hline \\[-1.8ex] 
 Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
@@ -1180,8 +1155,8 @@ Time fixed effects & No & No & Yes & Yes & Yes \\
 Task fixed effects & No & No & No & Yes & Yes \\ 
 Industry fixed effects & No & No & No & No & Yes \\ 
 Observations & 174,197 & 157,166 & 157,166 & 157,166 & 157,166 \\ 
-R$^{2}$ & 0.0005 & 0.18 & 0.19 & 0.22 & 0.22 \\ 
-Adjusted R$^{2}$ & 0.0004 & 0.18 & 0.19 & 0.21 & 0.21 \\ 
+R$^{2}$ & 0.001 & 0.18 & 0.18 & 0.22 & 0.22 \\ 
+Adjusted R$^{2}$ & 0.0005 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
 \hline 
 \hline \\[-1.8ex] 
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 

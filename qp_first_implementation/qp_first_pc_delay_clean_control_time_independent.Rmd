@@ -2793,10 +2793,19 @@ portfolio_large_projs_did=stargazer(m1,m2,m3,m4,m5,
 
 ## Treatment intensity
 
+* Indirect_treat_intensity = Indirect Treat x log(1+number of small projects)
+* Indirect Treat = 1 if Treat_i = 0 and number of small projects > 0
+
 ```{r treatment_intensity_2, warning=FALSE, echo=FALSE, results='asis'}
 
-m1=felm(wins_percentage_delay~log(1+num_small_projects)+
-                            post_t:log(1+num_small_projects)+
+reg_df[,indirect_treat_i:=case_when(treat_i==0 & num_small_projects>0 ~ 1,
+                                    treat_i==0 & num_small_projects==0 ~ 0,
+                                    treat_i==1 ~ NaN)]
+
+reg_df[,indirect_treat_intensity:=indirect_treat_i*log(1+num_small_projects)]
+
+m1=felm(wins_percentage_delay~indirect_treat_intensity+
+                            post_t:indirect_treat_intensity+
                             post_t|
                             0|
                             0|
@@ -2805,9 +2814,9 @@ m1=felm(wins_percentage_delay~log(1+num_small_projects)+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m2=felm(wins_percentage_delay~log(1+num_small_projects)+
+m2=felm(wins_percentage_delay~indirect_treat_intensity+
                            log(wins_project_quarter_stage)+
-                            post_t:log(1+num_small_projects)+
+                            post_t:indirect_treat_intensity+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -2822,9 +2831,9 @@ m2=felm(wins_percentage_delay~log(1+num_small_projects)+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m3=felm(wins_percentage_delay~log(1+num_small_projects)+
+m3=felm(wins_percentage_delay~indirect_treat_intensity+
                            log(wins_project_quarter_stage)+
-                            post_t:log(1+num_small_projects)+
+                            post_t:indirect_treat_intensity+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -2838,9 +2847,9 @@ m3=felm(wins_percentage_delay~log(1+num_small_projects)+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m4=felm(wins_percentage_delay~log(1+num_small_projects)+
+m4=felm(wins_percentage_delay~indirect_treat_intensity+
                            log(wins_project_quarter_stage)+
-                            post_t:log(1+num_small_projects)+
+                            post_t:indirect_treat_intensity+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -2854,9 +2863,9 @@ m4=felm(wins_percentage_delay~log(1+num_small_projects)+
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m5=felm(wins_percentage_delay~log(1+num_small_projects)+
+m5=felm(wins_percentage_delay~indirect_treat_intensity+
                            log(wins_project_quarter_stage)+
-                            post_t:log(1+num_small_projects)+
+                            post_t:indirect_treat_intensity+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -2876,9 +2885,9 @@ portfolio_large_projs_did=stargazer(m1,m2,m3,m4,m5,
           title = "Project Portfolio and QuickPay reform",
           dep.var.labels="$PercentDelay_{it}$",
           dep.var.caption = "",
-          covariate.labels =c("Num of small projects (logged)",
+          covariate.labels =c("Indirect Treat Intensity",
                                "$Post_t$",
-                               "Num of small projects (logged) $\\times Post_t$",
+                               "Indirect Treat Intensity $\\times Post_t$",
                                "Constant"),
           object.names=FALSE, 
           model.numbers=TRUE,
@@ -3053,17 +3062,14 @@ Consider three groups based on contractor's portfolio:
 
 ### Treatment intensity 1
 
-* TreatIntensity_i = log(1+ number of large projects held by contractor of small project i). [Group 1]
-* TreatIntensity_i = 0 if project i is a small project but with no large project. [Group 2]
-* TreatIntensity_i = 0 if project i is a large project. [Group 3]
+* TreatIntensity_i = Treat x log(1+ number of large projects)
 
 ```{r ti_1, warning=FALSE, echo=FALSE, results='asis'}
 # treat_small_with_large_new = 1 ==> treat_new = 1
-reg_df_subset[,treat_small_with_large_intensity:=treat_small_with_large_new*log(1+num_large_projects)]
-m1=felm(wins_percentage_delay~treat_new+
-          treat_small_with_large_intensity+
-          treat_new:post_t+
-          post_t:treat_small_with_large_intensity+
+reg_df_subset[,treat_intensity:=treat_new*log(1+num_large_projects)]
+
+m1=felm(wins_percentage_delay~treat_intensity+
+          treat_intensity:post_t+
           post_t|
           0|
           0|
@@ -3071,10 +3077,8 @@ m1=felm(wins_percentage_delay~treat_new+
           data=reg_df_subset,
         exactDOF = TRUE,
         cmethod = "reghdfe")
-m2=felm(wins_percentage_delay~treat_new+
-          treat_small_with_large_intensity+
-          treat_new:post_t+
-          post_t:treat_small_with_large_intensity+
+m2=felm(wins_percentage_delay~treat_intensity+
+          treat_intensity:post_t+
           log(wins_project_quarter_stage)+
           log(1+winsorized_initial_duration_in_days_i)+
           log(1+winsorized_initial_budget_i)+
@@ -3089,10 +3093,8 @@ m2=felm(wins_percentage_delay~treat_new+
           data=reg_df_subset,
         exactDOF = TRUE,
         cmethod = "reghdfe")
-m3=felm(wins_percentage_delay~treat_new+
-          treat_small_with_large_intensity+
-          treat_new:post_t+
-          post_t:treat_small_with_large_intensity+
+m3=felm(wins_percentage_delay~treat_intensity+
+          treat_intensity:post_t+
           log(wins_project_quarter_stage)+
           log(1+winsorized_initial_duration_in_days_i)+
           log(1+winsorized_initial_budget_i)+
@@ -3106,10 +3108,8 @@ m3=felm(wins_percentage_delay~treat_new+
           data=reg_df_subset,
         exactDOF = TRUE,
         cmethod = "reghdfe")
-m4=felm(wins_percentage_delay~treat_new+
-          treat_small_with_large_intensity+
-          treat_new:post_t+
-          post_t:treat_small_with_large_intensity+
+m4=felm(wins_percentage_delay~treat_intensity+
+          treat_intensity:post_t+
           log(wins_project_quarter_stage)+
           log(1+winsorized_initial_duration_in_days_i)+
           log(1+winsorized_initial_budget_i)+
@@ -3123,10 +3123,8 @@ m4=felm(wins_percentage_delay~treat_new+
           data=reg_df_subset,
         exactDOF = TRUE,
         cmethod = "reghdfe")
-m5=felm(wins_percentage_delay~treat_new+
-          treat_small_with_large_intensity+
-          treat_new:post_t+
-          post_t:treat_small_with_large_intensity+
+m5=felm(wins_percentage_delay~treat_intensity+
+          treat_intensity:post_t+
           log(wins_project_quarter_stage)+
           log(1+winsorized_initial_duration_in_days_i)+
           log(1+winsorized_initial_budget_i)+
@@ -3146,10 +3144,8 @@ portfolio_did=stargazer(m1,m2,m3,m4,m5,
           title = "Project Portfolio and QuickPay reform",
           dep.var.labels="$PercentDelay_{it}$  ",
           dep.var.caption = "",
-          covariate.labels =c("$Treat_i$",
-                               "$TreatIntensity_i$",
+          covariate.labels =c("$TreatIntensity_i$",
                                "$Post_t$",
-                               "$Treat_i \\times Post_t$",
                                "$TreatIntensity_i \\times Post_t$",
                                "Constant"),
           object.names=FALSE, 
@@ -3180,13 +3176,9 @@ portfolio_did=stargazer(m1,m2,m3,m4,m5,
 
 ### Treatment intensity 2
 
-* Remove projects in Group 2 [only small projects].
-* Treat_i = 1 for remaining small projects.
-* Treat_Intensity_Small_i = log(1 + number of small projects) for treated project i
-   * Equivalently, Treat_Intensity_Small_i = Treat_i x log(1 + number of small projects)
-* Treat_Intensity_Small_i = 0 for large project i
-* Treat_Intensity_Large_i = log(1 + number of large projects) for treated project i
-* Treat_Intensity_Large_i = 0 for large project i
+* Remove projects in Group 2 (with only small projects).
+* Treat_Intensity_Small_i = Treat_i x log(1 + number of small projects)
+* Treat_Intensity_Large_i = Treat_i x log(1 + number of large projects)
 
 ```{r ti_2, warning=FALSE, echo=FALSE, results='asis'}
 
@@ -3196,11 +3188,8 @@ portfolio_did=stargazer(m1,m2,m3,m4,m5,
 reg_df_subset[,treat_intensity_small:=treat_new*log(1+num_small_projects)]
 reg_df_subset[,treat_intensity_large:=treat_new*log(1+num_large_projects)]
 
-m1=felm(wins_percentage_delay~treat_new+
-          treat_intensity_small+
+m1=felm(wins_percentage_delay~treat_intensity_small+
           treat_intensity_large+
-          treat_new:post_t+
-          post_t:treat_new+
           post_t:treat_intensity_small+
           post_t:treat_intensity_large+
           post_t|
@@ -3211,11 +3200,8 @@ m1=felm(wins_percentage_delay~treat_new+
         exactDOF = TRUE,
         cmethod = "reghdfe")
 
-m2=felm(wins_percentage_delay~treat_new+
-          treat_intensity_small+
+m2=felm(wins_percentage_delay~treat_intensity_small+
           treat_intensity_large+
-          treat_new:post_t+
-          post_t:treat_new+
           post_t:treat_intensity_small+
           post_t:treat_intensity_large+
           log(wins_project_quarter_stage)+
@@ -3233,11 +3219,8 @@ m2=felm(wins_percentage_delay~treat_new+
         exactDOF = TRUE,
         cmethod = "reghdfe")
 
-m3=felm(wins_percentage_delay~treat_new+
-          treat_intensity_small+
+m3=felm(wins_percentage_delay~treat_intensity_small+
           treat_intensity_large+
-          treat_new:post_t+
-          post_t:treat_new+
           post_t:treat_intensity_small+
           post_t:treat_intensity_large+
           log(wins_project_quarter_stage)+
@@ -3254,11 +3237,8 @@ m3=felm(wins_percentage_delay~treat_new+
         exactDOF = TRUE,
         cmethod = "reghdfe")
 
-m4=felm(wins_percentage_delay~treat_new+
-          treat_intensity_small+
+m4=felm(wins_percentage_delay~treat_intensity_small+
           treat_intensity_large+
-          treat_new:post_t+
-          post_t:treat_new+
           post_t:treat_intensity_small+
           post_t:treat_intensity_large+
           log(wins_project_quarter_stage)+
@@ -3275,11 +3255,8 @@ m4=felm(wins_percentage_delay~treat_new+
         exactDOF = TRUE,
         cmethod = "reghdfe")
 
-m5=felm(wins_percentage_delay~treat_new+
-          treat_intensity_small+
+m5=felm(wins_percentage_delay~treat_intensity_small+
           treat_intensity_large+
-          treat_new:post_t+
-          post_t:treat_new+
           post_t:treat_intensity_small+
           post_t:treat_intensity_large+
           log(wins_project_quarter_stage)+
@@ -3302,22 +3279,19 @@ portfolio_did=stargazer(m1,m2,m3,m4,m5,
           title = "Project Portfolio and QuickPay reform",
           dep.var.labels="$PercentDelay_{it}$  ",
           dep.var.caption = "",
-          covariate.labels =c("$Treat_i$",
-                                "$TreatIntensity_i$ (Small)",
-                                "$TreatIntensity_i$ (Large)",
-                                "$Post_t$",
-                                "$Treat_i \\times Post_t$",
-                                "$TreatIntensity_i$ (Small) $\\times Post_t$",
-                                "$TreatIntensity_i$ (Large) $\\times Post_t$",
-                                "Constant"),
+          covariate.labels =c("$TreatIntensity_i$ (Small)",
+                              "$TreatIntensity_i$ (Large)",
+                              "$Post_t$",
+                              "$TreatIntensity_i$ (Small) $\\times Post_t$",
+                              "$TreatIntensity_i$ (Large) $\\times Post_t$",
+                              "Constant"),
           object.names=FALSE, 
           model.numbers=TRUE,
           font.size = "small",
           omit.stat=c("f", "ser"),
           column.sep.width = "-2pt",
-          add.lines = list(
-                           c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
-                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                           c("Project stage",rep("No",1),rep("Yes",4)),
+          add.lines = list(c("Duration, Budget, Bids",rep("No",1),rep("Yes",4)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                            c("Project stage",rep("No",1),rep("Yes",4)),
                            c("Time fixed effects",rep("No",2),rep("Yes",3)),
                            c("Task fixed effects",rep("No",3),rep("Yes",2)),
                            c("Industry fixed effects",rep("No",4),rep("Yes",1))),
@@ -3338,30 +3312,25 @@ portfolio_did=stargazer(m1,m2,m3,m4,m5,
 
 ### Treatment Intensity 3
 
-* Treatment is continuous here.
-* Num of small projects $\geq 1 \iff Treat_i = 1$
-* Num of small projects $=0 \iff Treat_i = 0$
+* Treat_Intensity_Small = Treat_i x log(1 + number of small projects)
 * Restricted to only projects in Groups 2 and 3, i.e., only small and only large.
 * Group 1 small projects are excluded.
 
 ```{r ti_3, warning=FALSE, echo=FALSE, results='asis'}
 
-both_small_and_large_contractors=intersect(large_contractors,
-                                           small_contractors)
-
-m1=felm(wins_percentage_delay~log(1+num_small_projects)+
-                            post_t:log(1+num_small_projects)+
+m1=felm(wins_percentage_delay~treat_intensity_small+
+                            post_t:treat_intensity_small+
                             post_t|
                             0|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df, !(recipient_duns%in%both_small_and_large_contractors)),
+                          data=subset(reg_df_subset,!(treat_i==1 & num_large_projects>0)),
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m2=felm(wins_percentage_delay~log(1+num_small_projects)+
+m2=felm(wins_percentage_delay~treat_intensity_small+
                            log(wins_project_quarter_stage)+
-                            post_t:log(1+num_small_projects)+
+                            post_t:treat_intensity_small+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -3372,13 +3341,13 @@ m2=felm(wins_percentage_delay~log(1+num_small_projects)+
                             0|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df, !(recipient_duns%in%both_small_and_large_contractors)), 
+                          data=subset(reg_df_subset,!(treat_i==1 & num_large_projects>0)), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m3=felm(wins_percentage_delay~log(1+num_small_projects)+
+m3=felm(wins_percentage_delay~treat_intensity_small+
                            log(wins_project_quarter_stage)+
-                            post_t:log(1+num_small_projects)+
+                            post_t:treat_intensity_small+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -3388,13 +3357,13 @@ m3=felm(wins_percentage_delay~log(1+num_small_projects)+
                             action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df, !(recipient_duns%in%both_small_and_large_contractors)),
+                          data=subset(reg_df_subset,!(treat_i==1 & num_large_projects>0)),
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m4=felm(wins_percentage_delay~log(1+num_small_projects)+
+m4=felm(wins_percentage_delay~treat_intensity_small+
                            log(wins_project_quarter_stage)+
-                            post_t:log(1+num_small_projects)+
+                            post_t:treat_intensity_small+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -3404,13 +3373,13 @@ m4=felm(wins_percentage_delay~log(1+num_small_projects)+
                             product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df, !(recipient_duns%in%both_small_and_large_contractors)),
+                          data=subset(reg_df_subset,!(treat_i==1 & num_large_projects>0)),
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
-m5=felm(wins_percentage_delay~log(1+num_small_projects)+
+m5=felm(wins_percentage_delay~treat_intensity_small+
                            log(wins_project_quarter_stage)+
-                            post_t:log(1+num_small_projects)+
+                            post_t:treat_intensity_small+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             number_of_offers_received+
@@ -3420,7 +3389,7 @@ m5=felm(wins_percentage_delay~log(1+num_small_projects)+
                             naics_code+product_or_service_code+action_date_year_quarter|
                             0|
                             contract_award_unique_key,
-                          data=subset(reg_df, !(recipient_duns%in%both_small_and_large_contractors)), 
+                          data=subset(reg_df_subset,!(treat_i==1 & num_large_projects>0)), 
                           exactDOF = TRUE, 
                           cmethod = "reghdfe")
 
@@ -3430,9 +3399,9 @@ portfolio_large_projs_did=stargazer(m1,m2,m3,m4,m5,
           title = "Project Portfolio and QuickPay reform",
           dep.var.labels="$PercentDelay_{it}$",
           dep.var.caption = "",
-          covariate.labels =c("Num of small projects (logged)",
+          covariate.labels =c("Treat Intensity (Small)",
                                "$Post_t$",
-                               "Num of small projects (logged) $\\times Post_t$",
+                               "Treat Intensity (Small) $\\times Post_t$",
                                "Constant"),
           object.names=FALSE, 
           model.numbers=TRUE,
