@@ -66,7 +66,7 @@
 \title{Percentage Delay Rate (with Time Independent Clean Control):
 QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Feb 22, 2023}
+\date{\vspace{-2.5em}Feb 23, 2023}
 
 \begin{document}
 \maketitle
@@ -815,72 +815,19 @@ Adjusted R$^{2}$ & 0.01 & 0.01 \\
 \section{Project portfolio: Spillover
 effect}\label{project-portfolio-spillover-effect}}
 
-\hypertarget{regression-1-did-on-large-projects}{%
-\subsection{Regression 1: DID on large
-projects}\label{regression-1-did-on-large-projects}}
+\hypertarget{did-on-large-projects}{%
+\subsection{DID on large projects}\label{did-on-large-projects}}
 
 \begin{itemize}
 \tightlist
 \item
-  Sample restricted to large projects only.
-\item
-  Treat is an indicator that equals one for LARGE projects whose
-  contractor has at least one small project at any point, and is zero
-  otherwise
-\end{itemize}
-
-\begin{table}[H] \centering 
-  \caption{Project Portfolio and QuickPay reform} 
-  \label{} 
-\small 
-\begin{tabular}{@{\extracolsep{-10pt}}lccccc} 
-\\[-1.8ex]\hline 
-\hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
-\hline \\[-1.8ex] 
- $Treat_i$ & 1.53$^{***}$ & $-$0.55$^{***}$ & $-$0.64$^{***}$ & 0.43$^{**}$ & 0.46$^{***}$ \\ 
-  & (0.23) & (0.17) & (0.17) & (0.17) & (0.17) \\ 
-  & & & & & \\ 
- $Post_t$ & $-$0.35$^{***}$ & $-$13.73$^{***}$ &  &  &  \\ 
-  & (0.13) & (1.19) &  &  &  \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t$ & 0.08 & 0.52$^{**}$ & 0.60$^{***}$ & 0.23 & 0.33 \\ 
-  & (0.27) & (0.22) & (0.22) & (0.22) & (0.22) \\ 
-  & & & & & \\ 
- Constant & 5.96$^{***}$ & 64.62$^{***}$ &  &  &  \\ 
-  & (0.11) & (0.91) &  &  &  \\ 
-  & & & & & \\ 
-\hline \\[-1.8ex] 
-Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
-$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
-Project stage & No & Yes & Yes & Yes & Yes \\ 
-Time fixed effects & No & No & Yes & Yes & Yes \\ 
-Task fixed effects & No & No & No & Yes & Yes \\ 
-Industry fixed effects & No & No & No & No & Yes \\ 
-Observations & 117,787 & 110,601 & 110,601 & 110,601 & 110,601 \\ 
-R$^{2}$ & 0.002 & 0.26 & 0.26 & 0.30 & 0.30 \\ 
-Adjusted R$^{2}$ & 0.002 & 0.26 & 0.26 & 0.29 & 0.29 \\ 
-\hline 
-\hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
- & \multicolumn{5}{r}{Sample restricted to large projects only.} \\ 
-\end{tabular} 
-\end{table}
-
-\hypertarget{treatment-intensity}{%
-\subsection{Treatment intensity}\label{treatment-intensity}}
-
-\begin{itemize}
-\tightlist
+  Indirect Treat = 1 if Treat\_i = 0 and number of small projects
+  \textgreater{} 0
 \item
   Indirect\_treat\_intensity = Indirect Treat x log(1+number of small
   projects)
 \item
-  Indirect Treat = 1 if Treat\_i = 0 and number of small projects
-  \textgreater{} 0
+  Subset of large projects only
 \end{itemize}
 
 \begin{table}[H] \centering 
@@ -924,68 +871,8 @@ Adjusted R$^{2}$ & 0.01 & 0.26 & 0.26 & 0.29 & 0.29 \\
 \end{tabular} 
 \end{table}
 
-\hypertarget{regression-2-incremental-effect-on-small-project-with-existing-large-project}{%
-\subsection{Regression 2: Incremental effect on small project with
-existing large
-project}\label{regression-2-incremental-effect-on-small-project-with-existing-large-project}}
-
-\begin{itemize}
-\tightlist
-\item
-  \(Treat_{i,l}\) is an indicator that equals 1 for small projects whose
-  contractor holds a large project at any point in time, and is zero
-  otherwise.
-\item
-  Large projects whose contractor holds small projects are removed to
-  get a clean control group.
-\end{itemize}
-
-\begin{table}[H] \centering 
-  \caption{(Incremental effect) Project Portfolio and QuickPay reform} 
-  \label{} 
-\small 
-\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
-\\[-1.8ex]\hline 
-\hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
-\hline \\[-1.8ex] 
- $Treat_i$ & $-$0.79$^{***}$ & $-$0.48$^{***}$ & $-$0.54$^{***}$ & $-$0.68$^{***}$ & $-$0.71$^{***}$ \\ 
-  & (0.13) & (0.11) & (0.11) & (0.12) & (0.12) \\ 
-  & & & & & \\ 
- $Treat_{i,l}$ & $-$2.74$^{***}$ & $-$2.46$^{***}$ & $-$2.41$^{***}$ & $-$0.72$^{***}$ & $-$0.64$^{***}$ \\ 
-  & (0.11) & (0.10) & (0.10) & (0.10) & (0.10) \\ 
-  & & & & & \\ 
- $Post_t$ & $-$0.21$^{*}$ & $-$5.41$^{***}$ &  &  &  \\ 
-  & (0.12) & (0.79) &  &  &  \\ 
-  & & & & & \\ 
- $Treat_i \times Post_t$ & 1.22$^{***}$ & 1.04$^{***}$ & 1.09$^{***}$ & 1.11$^{***}$ & 1.13$^{***}$ \\ 
-  & (0.15) & (0.15) & (0.15) & (0.15) & (0.15) \\ 
-  & & & & & \\ 
- $Treat_{i,l} \times Post_t$ & $-$0.48$^{***}$ & $-$0.28$^{**}$ & $-$0.33$^{**}$ & $-$0.38$^{***}$ & $-$0.38$^{***}$ \\ 
-  & (0.14) & (0.14) & (0.14) & (0.14) & (0.14) \\ 
-  & & & & & \\ 
- Constant & 5.27$^{***}$ & 43.79$^{***}$ &  &  &  \\ 
-  & (0.10) & (0.61) &  &  &  \\ 
-  & & & & & \\ 
-\hline \\[-1.8ex] 
-Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
-$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
-Project stage & No & Yes & Yes & Yes & Yes \\ 
-Time fixed effects & No & No & Yes & Yes & Yes \\ 
-Task fixed effects & No & No & No & Yes & Yes \\ 
-Industry fixed effects & No & No & No & No & Yes \\ 
-Observations & 223,244 & 201,738 & 201,738 & 201,738 & 201,738 \\ 
-R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
-Adjusted R$^{2}$ & 0.01 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
-\hline 
-\hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
- & \multicolumn{5}{r}{Large projects whose contractor holds small projects are removed.} \\ 
-\end{tabular} 
-\end{table}
+\hypertarget{did-on-small-projects}{%
+\subsection{DID on small projects}\label{did-on-small-projects}}
 
 Consider three groups based on contractor's portfolio:
 
@@ -1001,56 +888,6 @@ Consider three groups based on contractor's portfolio:
 
 \hypertarget{treatment-intensity-1}{%
 \subsubsection{Treatment intensity 1}\label{treatment-intensity-1}}
-
-\begin{itemize}
-\tightlist
-\item
-  TreatIntensity\_i = Treat x log(1+ number of large projects)
-\end{itemize}
-
-\begin{table}[H] \centering 
-  \caption{Project Portfolio and QuickPay reform} 
-  \label{} 
-\small 
-\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
-\\[-1.8ex]\hline 
-\hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
-\hline \\[-1.8ex] 
- $TreatIntensity_i$ & $-$0.92$^{***}$ & $-$0.68$^{***}$ & $-$0.67$^{***}$ & $-$0.28$^{***}$ & $-$0.27$^{***}$ \\ 
-  & (0.04) & (0.04) & (0.04) & (0.03) & (0.03) \\ 
-  & & & & & \\ 
- $Post_t$ & 0.51$^{***}$ & $-$4.40$^{***}$ &  &  &  \\ 
-  & (0.07) & (0.75) &  &  &  \\ 
-  & & & & & \\ 
- $TreatIntensity_i \times Post_t$ & $-$0.13$^{***}$ & $-$0.06 & $-$0.07 & $-$0.09$^{*}$ & $-$0.07 \\ 
-  & (0.05) & (0.05) & (0.05) & (0.05) & (0.05) \\ 
-  & & & & & \\ 
- Constant & 4.53$^{***}$ & 42.35$^{***}$ &  &  &  \\ 
-  & (0.06) & (0.58) &  &  &  \\ 
-  & & & & & \\ 
-\hline \\[-1.8ex] 
-Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
-$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
-Project stage & No & Yes & Yes & Yes & Yes \\ 
-Time fixed effects & No & No & Yes & Yes & Yes \\ 
-Task fixed effects & No & No & No & Yes & Yes \\ 
-Industry fixed effects & No & No & No & No & Yes \\ 
-Observations & 223,244 & 201,738 & 201,738 & 201,738 & 201,738 \\ 
-R$^{2}$ & 0.005 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
-Adjusted R$^{2}$ & 0.005 & 0.18 & 0.18 & 0.21 & 0.21 \\ 
-\hline 
-\hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
- & \multicolumn{5}{r}{Large projects whose contractor holds small projects are removed.} \\ 
-\end{tabular} 
-\end{table}
-
-\hypertarget{treatment-intensity-2}{%
-\subsubsection{Treatment intensity 2}\label{treatment-intensity-2}}
 
 \begin{itemize}
 \tightlist
@@ -1111,8 +948,8 @@ Adjusted R$^{2}$ & 0.01 & 0.17 & 0.17 & 0.21 & 0.21 \\
 \end{tabular} 
 \end{table}
 
-\hypertarget{treatment-intensity-3}{%
-\subsubsection{Treatment Intensity 3}\label{treatment-intensity-3}}
+\hypertarget{treatment-intensity-2}{%
+\subsubsection{Treatment Intensity 2}\label{treatment-intensity-2}}
 
 \begin{itemize}
 \tightlist
