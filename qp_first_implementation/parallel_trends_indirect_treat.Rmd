@@ -469,7 +469,7 @@ ggplot(mean_delay, aes(x=year_quarter,
         legend.key.width=unit(2.5,"cm"))
 ```
 
-## Percentage delay rate (demeaned)
+## De-meaned percentage delay rate
 
 ```{r demeaned_delay_plot, echo=FALSE, results='asis',warning=FALSE}
 ggplot(mean_delay, aes(x=year_quarter,
@@ -509,7 +509,7 @@ ggplot(mean_delay, aes(x=year_quarter,
 reg_df[,treat_category:=case_when(treat_i==0 & num_small_projects>0 ~ "Not defined",
                                   treat_i==0 & num_small_projects==0 ~ "Only large",
                                   treat_i==1 & num_large_projects==0 ~ "Only small",
-                                  treat_i==1 & num_large_projects>0 ~ "Small with large")]
+                                  treat_i==1 & num_large_projects>0 ~ "Small (with large)")]
 
 mean_delay_2=subset(reg_df,treat_category!="Not defined")[!is.na(wins_percentage_delay) 
                          & action_date_year_quarter<=as.Date('2012-06-30'), 
@@ -524,18 +524,20 @@ pre_qp_mean_only_small=mean(subset(mean_delay_2,
 
 pre_qp_mean_small_with_large=mean(subset(mean_delay_2,
                                 action_date_year_quarter<=as.Date('2011-04-27') &
-                                treat_category=="Small with large")$V1,na.rm=T)
+                                treat_category=="Small (with large)")$V1,na.rm=T)
 
 pre_qp_mean_control=mean(subset(mean_delay_2,
                                 action_date_year_quarter<=as.Date('2011-04-27') &
                                 treat_category=="Only large")$V1,na.rm=T)
 
 mean_delay_2[,demeaned_delay:=case_when(treat_category=="Only small"~V1-pre_qp_mean_only_small,
-                                        treat_category=="Small with large"~V1-pre_qp_mean_small_with_large,
+                                        treat_category=="Small (with large)"~V1-pre_qp_mean_small_with_large,
                                         treat_category=="Only large"~V1-pre_qp_mean_control)]
 
 setnames(mean_delay_2,'V1','mean_percentage_delay')
 ```
+
+## Perentage delay rate
 
 ```{r delay_plot_treat_groups, echo=FALSE, results='asis',warning=FALSE}
 ggplot(mean_delay_2, aes(x=year_quarter,
