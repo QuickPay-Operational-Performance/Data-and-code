@@ -94,11 +94,62 @@ Projects}\label{indirectly-treated-projects}}
 
 \includegraphics{parallel_trends_indirect_treat_files/figure-latex/raw_percentage_delay_plot-1.pdf}
 
-\hypertarget{de-meaned-percentage-delay-rate}{%
-\subsection{De-meaned percentage delay
-rate}\label{de-meaned-percentage-delay-rate}}
+\hypertarget{percentage-delay-rate-demeaned}{%
+\subsection{Percentage delay rate
+(demeaned)}\label{percentage-delay-rate-demeaned}}
 
 \includegraphics{parallel_trends_indirect_treat_files/figure-latex/demeaned_delay_plot-1.pdf}
+
+\hypertarget{parallel-trends-test}{%
+\subsection{Parallel Trends Test}\label{parallel-trends-test}}
+
+\begin{table}[H] \centering 
+  \caption{Linear Time Trend Before QuickPay} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $IndirectTreat_i$ & 1.61 & $-$0.31 & $-$0.33 & 1.44$^{*}$ & 1.20 \\ 
+  & (1.02) & (0.81) & (0.81) & (0.81) & (0.81) \\ 
+  & & & & & \\ 
+ $QuarterNum$ & 0.53$^{***}$ & $-$3.94$^{***}$ &  &  &  \\ 
+  & (0.11) & (0.89) &  &  &  \\ 
+  & & & & & \\ 
+ $IndirectTreat_i \times QuarterNum$ & 0.17 & $-$0.14 & $-$0.14 & $-$0.07 & $-$0.03 \\ 
+  & (0.21) & (0.17) & (0.17) & (0.18) & (0.18) \\ 
+  & & & & & \\ 
+ Constant & 5.04$^{***}$ & 97.77$^{***}$ &  &  &  \\ 
+  & (0.53) & (4.23) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 42,623 & 40,650 & 40,650 & 40,650 & 40,650 \\ 
+R$^{2}$ & 0.003 & 0.34 & 0.34 & 0.39 & 0.40 \\ 
+Adjusted R$^{2}$ & 0.003 & 0.34 & 0.34 & 0.38 & 0.38 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Observations are for quarters before quickpay.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{event-study}{%
+\subsection{Event study}\label{event-study}}
+
+\(PercentDelay_{it}=\beta_0 + \beta_1 Indirect Treat_i + \beta_2 Indirect Treat_i \times Quarter_t + Controls + \gamma_{task} + \theta_{naics}+\lambda_{quarter}+\epsilon_{it}\)
+
+\includegraphics{parallel_trends_indirect_treat_files/figure-latex/event_study-1.pdf}
 
 \hypertarget{treatment-categories}{%
 \section{Treatment Categories}\label{treatment-categories}}
@@ -114,9 +165,6 @@ rate}\label{de-meaned-percentage-delay-rate}}
   Treat Category = ``Both small + large projects'' if Treat\_i = 1 \&
   Num Large Projects \textgreater{} 0
 \end{itemize}
-
-\hypertarget{perentage-delay-rate}{%
-\subsection{Perentage delay rate}\label{perentage-delay-rate}}
 
 \includegraphics{parallel_trends_indirect_treat_files/figure-latex/delay_plot_treat_groups-1.pdf}
 
