@@ -270,6 +270,20 @@ reg_df=merge(reg_df,
              num_small_large_projects,
              by='recipient_duns',
              all.x=TRUE)
+
+# Summary statistics
+# num_small_large_projects[,contractor_type:=case_when(num_large_projects==0 ~ "Only small",
+#                                                      num_small_projects==0 ~ "Only large",
+#                                                      num_large_projects>0 & num_small_projects>0 ~ "Both small and large")]
+# 
+# summary(subset(num_small_large_projects,contractor_type=='Only small')$num_small_projects)
+# 
+# summary(subset(num_small_large_projects,contractor_type=='Only large')$num_large_projects)
+# 
+# summary(subset(num_small_large_projects,contractor_type=='Both small and large')$num_small_projects)
+# 
+# summary(subset(num_small_large_projects,contractor_type=='Both small and large')$num_large_projects)
+
 ```
 
 ```{r clean_control,include=FALSE}
