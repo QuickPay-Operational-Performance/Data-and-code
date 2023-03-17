@@ -2577,13 +2577,13 @@ congestion_tasks_table_tex=make_tex_pieces(congestion_tasks_table)
 
 # Treatment Intensity
 
-* For contractor k, define Treat_Intensity_k = (Budget of all small projects before QP)/(Budget of all projects before QP)
+* For contractor k, define Treat_Intensity_k = Treat x (Budget of all small projects before QP)/(Budget of all projects before QP)
 * This measures how much a contractor is affected by QuickPay
 * The interaction term roughly tells us the additional delay on a given project for every dollar that the contractor earns from small projects.
 
 ```{r treat_intensity_budget, results='asis', echo=FALSE, warning=FALSE}
 reg_df_subset[,treat_intensity_i:=num_small_projects/(num_small_projects+num_large_projects)]
-reg_df_subset[,treat_intensity_budget_i:=budget_small_projects/(budget_small_projects+budget_large_projects)]
+reg_df_subset[,treat_intensity_budget_i:=treat_new*budget_small_projects/(budget_small_projects+budget_large_projects)]
 
 m1=felm(wins_percentage_delay~treat_intensity_budget_i+
           treat_intensity_budget_i:post_t+
