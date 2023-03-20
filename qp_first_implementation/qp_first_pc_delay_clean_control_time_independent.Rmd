@@ -862,6 +862,130 @@ base_table<-stargazer(baseline_reg,
 
 ```
 
+# Treatment Intensity
+
+* Treat_Intensity_i = Treat_i x log(Budget of project i)
+* This measures how much a contractor is affected by QuickPay
+* The interaction term roughly tells us the additional delay on a given project for every dollar that the contractor earns the small project.
+* Sample restricted to projects that started before QP
+
+```{r treat_intensity_budget, results='asis', echo=FALSE, warning=FALSE}
+#reg_df_subset[,treat_intensity_i:=num_small_projects/(num_small_projects+num_large_projects)]
+reg_df_subset[,treat_intensity_budget_i:=treat_new*log(winsorized_initial_budget_i)]
+
+started_before_qp=unique(subset(reg_df_subset,post_t==0)$contract_award_unique_key)
+
+m1=felm(wins_percentage_delay~treat_intensity_budget_i+
+          treat_intensity_budget_i:post_t+
+          post_t|
+          0|
+          0|
+          contract_award_unique_key,
+          data=subset(reg_df_subset,contract_award_unique_key%in%started_before_qp),
+        exactDOF = TRUE,
+        cmethod = "reghdfe")
+
+m2=felm(wins_percentage_delay~treat_intensity_budget_i+
+          treat_intensity_budget_i:post_t+
+          log(wins_project_quarter_stage)+
+          log(1+winsorized_initial_duration_in_days_i)+
+        #  log(1+winsorized_initial_budget_i)+
+          number_of_offers_received+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+         # post_t:log(1+winsorized_initial_budget_i)+
+          post_t:number_of_offers_received+
+          post_t|
+          0|
+          0|
+          contract_award_unique_key,
+          data=subset(reg_df_subset,contract_award_unique_key%in%started_before_qp),
+        exactDOF = TRUE,
+        cmethod = "reghdfe")
+
+m3=felm(wins_percentage_delay~treat_intensity_budget_i+
+          treat_intensity_budget_i:post_t+
+          log(wins_project_quarter_stage)+
+          log(1+winsorized_initial_duration_in_days_i)+
+        #  log(1+winsorized_initial_budget_i)+
+          number_of_offers_received+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+        #  post_t:log(1+winsorized_initial_budget_i)+
+          post_t:number_of_offers_received|
+          action_date_year_quarter|
+          0|
+          contract_award_unique_key,
+          data=subset(reg_df_subset,contract_award_unique_key%in%started_before_qp),
+        exactDOF = TRUE,
+        cmethod = "reghdfe")
+
+m4=felm(wins_percentage_delay~treat_intensity_budget_i+
+          treat_intensity_budget_i:post_t+
+          log(wins_project_quarter_stage)+
+          log(1+winsorized_initial_duration_in_days_i)+
+      #    log(1+winsorized_initial_budget_i)+
+          number_of_offers_received+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+      #    post_t:log(1+winsorized_initial_budget_i)+
+          post_t:number_of_offers_received|
+          product_or_service_code+action_date_year_quarter|
+          0|
+          contract_award_unique_key,
+          data=subset(reg_df_subset,contract_award_unique_key%in%started_before_qp),
+        exactDOF = TRUE,
+        cmethod = "reghdfe")
+
+m5=felm(wins_percentage_delay~treat_intensity_budget_i+
+          treat_intensity_budget_i:post_t+
+          log(wins_project_quarter_stage)+
+          log(1+winsorized_initial_duration_in_days_i)+
+        #  log(1+winsorized_initial_budget_i)+
+          number_of_offers_received+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+         # post_t:log(1+winsorized_initial_budget_i)+
+          post_t:number_of_offers_received|
+          naics_code+product_or_service_code+action_date_year_quarter|
+          0|
+          contract_award_unique_key,
+          data=subset(reg_df_subset,contract_award_unique_key%in%started_before_qp),
+        exactDOF = TRUE,
+        cmethod = "reghdfe")
+
+portfolio_did=stargazer(m1,m2,m3,m4,m5,
+          digits=2,
+          digits.extra=2,
+          title = "Project Portfolio and QuickPay reform",
+          dep.var.labels="$PercentDelay_{it}$  ",
+          dep.var.caption = "",
+          covariate.labels =c("$TreatIntensity_i$ (Budget)",
+                               "$Post_t$",
+                               "$TreatIntensity_i$ (Budget) $\\times Post_t$",
+                               "Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(c("Duration, Bids",rep("No",1),rep("Yes",4)),
+                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                            c("Project stage",rep("No",1),rep("Yes",4)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Task fixed effects",rep("No",3),rep("Yes",2)),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
+          omit=c('winsorized_initial_duration_in_days_i',
+            #      'winsorized_initial_budget_i',
+                   'number_of_offers_received',
+                   'post_t:winsorized_initial_duration_in_days_i',
+             #      'post_t:winsorized_initial_budget_i',
+                   'post_t:number_of_offers_received',
+                 'wins_project_quarter_stage'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level.",
+                  "Large projects whose contractor holds small projects are removed.",
+                  "Sample restricted to projects that started before QP."),
+          header=F)
+```
+
 # Relative delay
 
 ```{r relative_delay_regs, echo=FALSE, results='asis'}
@@ -2573,130 +2697,6 @@ congestion_tasks_table_tex=make_tex_pieces(congestion_tasks_table)
 # write(congestion_tasks_table_tex,
 #       paste0(tables_folder,
 #              "/congestion_tasks_table.tex"))
-```
-
-# Treatment Intensity
-
-* Treat_Intensity_i = Treat_i x log(Budget of project i)
-* This measures how much a contractor is affected by QuickPay
-* The interaction term roughly tells us the additional delay on a given project for every dollar that the contractor earns the small project.
-* Sample restricted to projects that started before QP
-
-```{r treat_intensity_budget, results='asis', echo=FALSE, warning=FALSE}
-#reg_df_subset[,treat_intensity_i:=num_small_projects/(num_small_projects+num_large_projects)]
-reg_df_subset[,treat_intensity_budget_i:=treat_new*log(winsorized_initial_budget_i)]
-
-started_before_qp=unique(subset(reg_df_subset,post_t==0)$contract_award_unique_key)
-
-m1=felm(wins_percentage_delay~treat_intensity_budget_i+
-          treat_intensity_budget_i:post_t+
-          post_t|
-          0|
-          0|
-          contract_award_unique_key,
-          data=subset(reg_df_subset,contract_award_unique_key%in%started_before_qp),
-        exactDOF = TRUE,
-        cmethod = "reghdfe")
-
-m2=felm(wins_percentage_delay~treat_intensity_budget_i+
-          treat_intensity_budget_i:post_t+
-          log(wins_project_quarter_stage)+
-          log(1+winsorized_initial_duration_in_days_i)+
-        #  log(1+winsorized_initial_budget_i)+
-          number_of_offers_received+
-          post_t:log(1+winsorized_initial_duration_in_days_i)+
-         # post_t:log(1+winsorized_initial_budget_i)+
-          post_t:number_of_offers_received+
-          post_t|
-          0|
-          0|
-          contract_award_unique_key,
-          data=subset(reg_df_subset,contract_award_unique_key%in%started_before_qp),
-        exactDOF = TRUE,
-        cmethod = "reghdfe")
-
-m3=felm(wins_percentage_delay~treat_intensity_budget_i+
-          treat_intensity_budget_i:post_t+
-          log(wins_project_quarter_stage)+
-          log(1+winsorized_initial_duration_in_days_i)+
-        #  log(1+winsorized_initial_budget_i)+
-          number_of_offers_received+
-          post_t:log(1+winsorized_initial_duration_in_days_i)+
-        #  post_t:log(1+winsorized_initial_budget_i)+
-          post_t:number_of_offers_received|
-          action_date_year_quarter|
-          0|
-          contract_award_unique_key,
-          data=subset(reg_df_subset,contract_award_unique_key%in%started_before_qp),
-        exactDOF = TRUE,
-        cmethod = "reghdfe")
-
-m4=felm(wins_percentage_delay~treat_intensity_budget_i+
-          treat_intensity_budget_i:post_t+
-          log(wins_project_quarter_stage)+
-          log(1+winsorized_initial_duration_in_days_i)+
-      #    log(1+winsorized_initial_budget_i)+
-          number_of_offers_received+
-          post_t:log(1+winsorized_initial_duration_in_days_i)+
-      #    post_t:log(1+winsorized_initial_budget_i)+
-          post_t:number_of_offers_received|
-          product_or_service_code+action_date_year_quarter|
-          0|
-          contract_award_unique_key,
-          data=subset(reg_df_subset,contract_award_unique_key%in%started_before_qp),
-        exactDOF = TRUE,
-        cmethod = "reghdfe")
-
-m5=felm(wins_percentage_delay~treat_intensity_budget_i+
-          treat_intensity_budget_i:post_t+
-          log(wins_project_quarter_stage)+
-          log(1+winsorized_initial_duration_in_days_i)+
-        #  log(1+winsorized_initial_budget_i)+
-          number_of_offers_received+
-          post_t:log(1+winsorized_initial_duration_in_days_i)+
-         # post_t:log(1+winsorized_initial_budget_i)+
-          post_t:number_of_offers_received|
-          naics_code+product_or_service_code+action_date_year_quarter|
-          0|
-          contract_award_unique_key,
-          data=subset(reg_df_subset,contract_award_unique_key%in%started_before_qp),
-        exactDOF = TRUE,
-        cmethod = "reghdfe")
-
-portfolio_did=stargazer(m1,m2,m3,m4,m5,
-          digits=2,
-          digits.extra=2,
-          title = "Project Portfolio and QuickPay reform",
-          dep.var.labels="$PercentDelay_{it}$  ",
-          dep.var.caption = "",
-          covariate.labels =c("$TreatIntensity_i$ (Budget)",
-                               "$Post_t$",
-                               "$TreatIntensity_i$ (Budget) $\\times Post_t$",
-                               "Constant"),
-          object.names=FALSE, 
-          model.numbers=TRUE,
-          font.size = "small",
-          omit.stat=c("f", "ser"),
-          column.sep.width = "-2pt",
-          add.lines = list(c("Duration, Bids",rep("No",1),rep("Yes",4)),
-                           c("$Post_t \\times $  (Duration, Budget, Bids)",rep("No",1),rep("Yes",4)),                            c("Project stage",rep("No",1),rep("Yes",4)),
-                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
-                           c("Task fixed effects",rep("No",3),rep("Yes",2)),
-                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
-          omit=c('winsorized_initial_duration_in_days_i',
-            #      'winsorized_initial_budget_i',
-                   'number_of_offers_received',
-                   'post_t:winsorized_initial_duration_in_days_i',
-             #      'post_t:winsorized_initial_budget_i',
-                   'post_t:number_of_offers_received',
-                 'wins_project_quarter_stage'),
-          table.placement = "H",
-          style="default",
-          notes=c("Each observation is a project-quarter.",
-                  "SEs are robust and clustered at the project level.",
-                  "Large projects whose contractor holds small projects are removed.",
-                  "Sample restricted to projects that started before QP."),
-          header=F)
 ```
 
 # Project portfolio: Spillover effect

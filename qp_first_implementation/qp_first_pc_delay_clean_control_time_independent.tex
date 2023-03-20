@@ -66,7 +66,7 @@
 \title{Percentage Delay Rate (with Time Independent Clean Control):
 QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Mar 18, 2023}
+\date{\vspace{-2.5em}Mar 19, 2023}
 
 \begin{document}
 \maketitle
@@ -211,6 +211,64 @@ Adjusted R$^{2}$ & 0.002 & 0.17 & 0.18 & 0.21 & 0.21 \\
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
  & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
  & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{treatment-intensity}{%
+\section{Treatment Intensity}\label{treatment-intensity}}
+
+\begin{itemize}
+\tightlist
+\item
+  Treat\_Intensity\_i = Treat\_i x log(Budget of project i)
+\item
+  This measures how much a contractor is affected by QuickPay
+\item
+  The interaction term roughly tells us the additional delay on a given
+  project for every dollar that the contractor earns the small project.
+\item
+  Sample restricted to projects that started before QP
+\end{itemize}
+
+\begin{table}[H] \centering 
+  \caption{Project Portfolio and QuickPay reform} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $TreatIntensity_i$ (Budget) & $-$0.11$^{***}$ & $-$0.07$^{***}$ & $-$0.08$^{***}$ & $-$0.04$^{***}$ & $-$0.05$^{***}$ \\ 
+  & (0.01) & (0.01) & (0.01) & (0.01) & (0.01) \\ 
+  & & & & & \\ 
+ $Post_t$ & 0.64$^{***}$ & $-$5.24$^{***}$ &  &  &  \\ 
+  & (0.13) & (1.06) &  &  &  \\ 
+  & & & & & \\ 
+ $TreatIntensity_i$ (Budget) $\times Post_t$ & 0.09$^{***}$ & 0.13$^{***}$ & 0.15$^{***}$ & 0.12$^{***}$ & 0.12$^{***}$ \\ 
+  & (0.01) & (0.01) & (0.01) & (0.01) & (0.01) \\ 
+  & & & & & \\ 
+ Constant & 4.88$^{***}$ & 48.64$^{***}$ &  &  &  \\ 
+  & (0.09) & (0.61) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 147,983 & 130,615 & 130,615 & 130,615 & 130,615 \\ 
+R$^{2}$ & 0.003 & 0.15 & 0.16 & 0.21 & 0.21 \\ 
+Adjusted R$^{2}$ & 0.003 & 0.15 & 0.16 & 0.20 & 0.21 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Large projects whose contractor holds small projects are removed.} \\ 
+ & \multicolumn{5}{r}{Sample restricted to projects that started before QP.} \\ 
 \end{tabular} 
 \end{table}
 
@@ -808,64 +866,6 @@ Adjusted R$^{2}$ & 0.01 & 0.01 \\
  & \multicolumn{2}{r}{Each observation is a contractor-quarter.} \\ 
  & \multicolumn{2}{r}{SEs are robust and clustered at the contractor level.} \\ 
  & \multicolumn{2}{r}{Sample restricted to contractors performing only one type of project.} \\ 
-\end{tabular} 
-\end{table}
-
-\hypertarget{treatment-intensity}{%
-\section{Treatment Intensity}\label{treatment-intensity}}
-
-\begin{itemize}
-\tightlist
-\item
-  Treat\_Intensity\_i = Treat\_i x log(Budget of project i)
-\item
-  This measures how much a contractor is affected by QuickPay
-\item
-  The interaction term roughly tells us the additional delay on a given
-  project for every dollar that the contractor earns the small project.
-\item
-  Sample restricted to projects that started before QP
-\end{itemize}
-
-\begin{table}[H] \centering 
-  \caption{Project Portfolio and QuickPay reform} 
-  \label{} 
-\small 
-\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
-\\[-1.8ex]\hline 
-\hline \\[-1.8ex] 
-\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$  } \\ 
-\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
-\hline \\[-1.8ex] 
- $TreatIntensity_i$ (Budget) & $-$0.11$^{***}$ & $-$0.07$^{***}$ & $-$0.08$^{***}$ & $-$0.04$^{***}$ & $-$0.05$^{***}$ \\ 
-  & (0.01) & (0.01) & (0.01) & (0.01) & (0.01) \\ 
-  & & & & & \\ 
- $Post_t$ & 0.64$^{***}$ & $-$5.24$^{***}$ &  &  &  \\ 
-  & (0.13) & (1.06) &  &  &  \\ 
-  & & & & & \\ 
- $TreatIntensity_i$ (Budget) $\times Post_t$ & 0.09$^{***}$ & 0.13$^{***}$ & 0.15$^{***}$ & 0.12$^{***}$ & 0.12$^{***}$ \\ 
-  & (0.01) & (0.01) & (0.01) & (0.01) & (0.01) \\ 
-  & & & & & \\ 
- Constant & 4.88$^{***}$ & 48.64$^{***}$ &  &  &  \\ 
-  & (0.09) & (0.61) &  &  &  \\ 
-  & & & & & \\ 
-\hline \\[-1.8ex] 
-Duration, Bids & No & Yes & Yes & Yes & Yes \\ 
-$Post_t \times $  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
-Project stage & No & Yes & Yes & Yes & Yes \\ 
-Time fixed effects & No & No & Yes & Yes & Yes \\ 
-Task fixed effects & No & No & No & Yes & Yes \\ 
-Industry fixed effects & No & No & No & No & Yes \\ 
-Observations & 147,983 & 130,615 & 130,615 & 130,615 & 130,615 \\ 
-R$^{2}$ & 0.003 & 0.15 & 0.16 & 0.21 & 0.21 \\ 
-Adjusted R$^{2}$ & 0.003 & 0.15 & 0.16 & 0.20 & 0.21 \\ 
-\hline 
-\hline \\[-1.8ex] 
-\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
- & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
- & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
- & \multicolumn{5}{r}{Large projects whose contractor holds small projects are removed.} \\ 
- & \multicolumn{5}{r}{Sample restricted to projects that started before QP.} \\ 
 \end{tabular} 
 \end{table}
 
