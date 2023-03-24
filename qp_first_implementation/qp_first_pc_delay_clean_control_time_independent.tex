@@ -66,7 +66,7 @@
 \title{Percentage Delay Rate (with Time Independent Clean Control):
 QuickPay (2009-2012)}
 \author{}
-\date{\vspace{-2.5em}Mar 19, 2023}
+\date{\vspace{-2.5em}Mar 23, 2023}
 
 \begin{document}
 \maketitle
@@ -211,6 +211,51 @@ Adjusted R$^{2}$ & 0.002 & 0.17 & 0.18 & 0.21 & 0.21 \\
 \textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
  & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
  & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+\end{tabular} 
+\end{table}
+
+\hypertarget{sample-restricted-to-projects-active-before-qp}{%
+\subsection{Sample restricted to projects active before
+QP}\label{sample-restricted-to-projects-active-before-qp}}
+
+\begin{table}[H] \centering 
+  \caption{Effect of QuickPay on project delay rates} 
+  \label{} 
+\small 
+\begin{tabular}{@{\extracolsep{-2pt}}lccccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+\\[-1.8ex] & \multicolumn{5}{c}{$PercentDelay_{it}$} \\ 
+\\[-1.8ex] & (1) & (2) & (3) & (4) & (5)\\ 
+\hline \\[-1.8ex] 
+ $Treat_i$ & $-$1.76$^{***}$ & $-$1.29$^{***}$ & $-$1.35$^{***}$ & $-$0.79$^{***}$ & $-$0.82$^{***}$ \\ 
+  & (0.11) & (0.11) & (0.11) & (0.11) & (0.11) \\ 
+  & & & & & \\ 
+ $Post_t$ & 0.63$^{***}$ & $-$6.17$^{***}$ &  &  &  \\ 
+  & (0.14) & (1.07) &  &  &  \\ 
+  & & & & & \\ 
+ $Treat_i \times Post_t$ & 0.90$^{***}$ & 1.51$^{***}$ & 1.64$^{***}$ & 1.39$^{***}$ & 1.38$^{***}$ \\ 
+  & (0.17) & (0.17) & (0.17) & (0.17) & (0.17) \\ 
+  & & & & & \\ 
+ Constant & 5.27$^{***}$ & 43.25$^{***}$ &  &  &  \\ 
+  & (0.10) & (0.61) &  &  &  \\ 
+  & & & & & \\ 
+\hline \\[-1.8ex] 
+Duration, Budget, Bids & No & Yes & Yes & Yes & Yes \\ 
+$Post_t \times$  (Duration, Budget, Bids) & No & Yes & Yes & Yes & Yes \\ 
+Project stage & No & Yes & Yes & Yes & Yes \\ 
+Time fixed effects & No & No & Yes & Yes & Yes \\ 
+Task fixed effects & No & No & No & Yes & Yes \\ 
+Industry fixed effects & No & No & No & No & Yes \\ 
+Observations & 147,983 & 130,615 & 130,615 & 130,615 & 130,615 \\ 
+R$^{2}$ & 0.004 & 0.17 & 0.17 & 0.21 & 0.21 \\ 
+Adjusted R$^{2}$ & 0.004 & 0.17 & 0.17 & 0.21 & 0.21 \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{5}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+ & \multicolumn{5}{r}{Each observation is a project-quarter.} \\ 
+ & \multicolumn{5}{r}{SEs are robust and clustered at the project level.} \\ 
+ & \multicolumn{5}{r}{Sample restricted to projects that started before QP.} \\ 
 \end{tabular} 
 \end{table}
 
