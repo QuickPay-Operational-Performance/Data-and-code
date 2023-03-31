@@ -110,6 +110,19 @@ df[,post_t:=ifelse(action_date_year_quarter>as.Date("2011-04-27"),1,0)]
 df[,treat_i:=ifelse(business_type=="S",1,0)]
 # quickpay was implemented for small business contracts
 
+# determine quarter-to-quarter overrun
+df[,overrun:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1), 
+                  last_reported_budget-lag(last_reported_budget,1),NaN)]
+
+# winsorize quarter-to-quarter overrun
+df[,winsorized_overrun:=Winsorize(overrun,
+                                probs=c(0.05,0.95),
+                                na.rm=TRUE)]
+
+df[,percentage_overrun:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1) &
+                                     lag(last_reported_budget,1)>0,
+         overrun/lag(last_reported_budget,1),
+         NaN)]
 ```
 
 ```{r delay_over_two_quarters, include=FALSE}
@@ -376,6 +389,7 @@ reg_df_subset[,number_of_offers_received:=
 
 reg_df_subset[,winsorized_two_quarter_delay:=Winsorize(two_quarter_delay,na.rm=T)]
 
+reg_df_subset[,wins_percentage_overrun:=100*Winsorize(percentage_overrun,na.rm=T)]
 
 ```
 
