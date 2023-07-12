@@ -1,0 +1,107 @@
+---
+title: "Event Study"
+output: pdf_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(openxlsx)
+library(tidyverse)
+library(dplyr)
+library(pryr)
+library(lfe) # linear fixed effects 
+library(DescTools) 
+library(zoo) # for year quarter
+library(stargazer)
+library(broom)
+library(fixest)
+library(data.table)
+library(scales)
+library(coefplot)
+library(MatchIt)
+library(pBrackets)
+library(grid)
+library(fixest)
+library(xtable)
+```
+
+```{r read_data,include=FALSE}
+output_path='~/Dropbox/data_quickpay/qp_replication/output/'
+working_path='~/Dropbox/data_quickpay/qp_replication/working/'
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+```
+
+# Event study
+
+$PercentDelay_{it}=\beta_0 + \beta_1 Treat_i + \beta_2 Treat_i \times Quarter_t + Controls + \gamma_{task} + \theta_{recipient}+\lambda_{quarter}+\epsilon_{it}$
+
+```{r event_study, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+
+reg_df_subset[,relative_quarter:=case_when(action_date_year_quarter=="2010-03-31"~-5,
+                  action_date_year_quarter=="2010-06-30"~-4,
+                  action_date_year_quarter=="2010-09-30"~-3,
+                  action_date_year_quarter=="2010-12-31"~-2,
+                  action_date_year_quarter=="2011-03-31"~-1,
+                  action_date_year_quarter=="2011-06-30"~0,
+                  action_date_year_quarter=="2011-09-30"~1,
+                  action_date_year_quarter=="2011-12-31"~2,
+                  action_date_year_quarter=="2012-03-31"~3,
+                  action_date_year_quarter=="2012-06-30"~4)]
+
+reg_df_subset[, time_to_treat := ifelse(treat_new==1, relative_quarter, 0)]
+
+mod_twfe = fixest::feols(wins_percentage_delay ~ i(time_to_treat, treat_new, ref = -1) +
+                    	   	  treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|   
+		  recipient_duns+product_or_service_code+action_date_year_quarter,        
+		 cluster = ~contract_award_unique_key,
+		 data = reg_df_subset)
+
+data_event_study=fixest::iplot(mod_twfe,only.params=T,
+      x=c(-5:4))$prms
+setDT(data_event_study)[,`Quarter relative to QuickPay`:=as.factor(x)]
+
+ggplot(data_event_study,aes(x=`Quarter relative to QuickPay`,
+                            y=y,
+                            group=1))+
+  geom_point(size=1.5,alpha=0.7)+
+  geom_errorbar(aes(ymin = ci_low, 
+                    ymax = ci_high),
+                width=0.01,
+                size=0.25,
+                alpha=0.7)+
+#  geom_line(alpha=0.7,size=0.25)+
+  geom_hline(yintercept =0,alpha=0.6,size=0.15)+
+  geom_vline(xintercept =5.5,alpha=0.8,size=0.15,linetype="dashed")+
+  theme_minimal()+ 
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(size=11),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+    legend.text = element_text(size=11))+
+  theme(legend.position="bottom")+
+  ylab("Point estimate \n (Percent delay)")+ 
+  #ylim(-1.05, 2.5)+
+  scale_y_continuous(breaks = seq(-3, 5, 0.5))+
+  coord_fixed(ratio=1)
+# 
+# ggsave(path=figures_folder,
+#         width = 8,
+#         height = 5,
+#         bg="white",
+#         filename = "event_study_plot_independent_control.png")
+```

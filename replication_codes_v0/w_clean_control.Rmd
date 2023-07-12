@@ -1,0 +1,109 @@
+---
+title: "Clean Control"
+output: pdf_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Setup
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(openxlsx)
+library(tidyverse)
+library(dplyr)
+library(pryr)
+library(lfe) # linear fixed effects 
+library(DescTools) 
+library(zoo) # for year quarter
+library(stargazer)
+library(broom)
+library(fixest)
+library(data.table)
+library(scales)
+library(coefplot)
+library(MatchIt)
+library(pBrackets)
+library(grid)
+library(fixest)
+library(xtable)
+```
+
+```{r read_data,include=FALSE}
+path='~/Dropbox/data_quickpay/qp_replication/input'
+reg_df=fread(paste0(path,
+                 '/quickpay_delays.csv'))
+```
+
+```{r clean_control,include=FALSE}
+small_contractors=unique(subset(reg_df,treat_i==1)$recipient_duns)
+large_contractors=unique(subset(reg_df,treat_i==0)$recipient_duns)
+
+reg_df[,treat_new:=case_when(treat_i==1 ~ 1,
+                             treat_i==0 & !(recipient_duns%in%small_contractors)~0,
+                             treat_i==0 & recipient_duns%in%small_contractors~NaN)]
+
+# Small project & contractor does not hold any large project at any point == 1
+# Small project & contractor holds a large project at any point == 0
+# Large project & contractor does not hold any small project at any point == 0 [Clean control]
+# Large project & contractor holds a small project at any point == NaN
+
+reg_df[,treat_only_small:=case_when(treat_i==1 & !(recipient_duns%in%large_contractors)~1,
+                                    treat_i==1 & recipient_duns%in%large_contractors~0,
+                                    treat_i==0 & !(recipient_duns%in%small_contractors)~0,
+                                    treat_i==0 & recipient_duns%in%small_contractors~NaN)]
+
+# Small project & contractor holds large project at any point == 1
+reg_df[,treat_small_with_large_new:=case_when(treat_i==1 & !(recipient_duns%in%large_contractors)~0,
+                                    treat_i==1 & recipient_duns%in%large_contractors~1,
+                                    treat_i==0 & !(recipient_duns%in%small_contractors)~0,
+                                    treat_i==0 & recipient_duns%in%small_contractors~NaN)]
+       
+# already adjusted above, but to be super cautius!
+reg_df_subset=subset(reg_df,!(treat_i==0 & recipient_duns%in%small_contractors))
+
+reg_df_subset[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+reg_df_subset[,winsorized_delay:=Winsorize(delay,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+reg_df_subset[,wins_relative_delay:=100*Winsorize(relative_delay,na.rm=T)]
+
+# (action_date_year_quarter-90) to get beginning of the quarter
+reg_df_subset[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+reg_df_subset[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(initial_duration_in_days_i,
+                    probs=c(0.05,0.95),
+                    na.rm=T)]
+
+# InitialBudget_i
+reg_df_subset[,winsorized_initial_budget_i:=
+                    Winsorize(base_and_all_options_value,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+reg_df_subset[,wins_number_of_offers_received:=
+                    Winsorize(number_of_offers_received,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+reg_df_subset[,winsorized_two_quarter_delay:=Winsorize(two_quarter_delay,na.rm=T)]
+reg_df_subset[,wins_percentage_overrun:=100*Winsorize(percentage_overrun,na.rm=T)]
+
+```
+
+```{r export_csv,include=FALSE}
+working_path='~/Dropbox/data_quickpay/qp_replication/working/'
+write.csv(reg_df_subset,
+          paste0(working_path,
+                 'w_clean_control.csv'),
+                 row.names=FALSE)
+```
