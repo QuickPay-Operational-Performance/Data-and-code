@@ -23,6 +23,7 @@ library(data.table)
 library(dplyr)
 library(MatchIt)
 library(zoo)
+library(ggplot2)
 ```
 
 ```{r read_data,include=FALSE}
@@ -111,6 +112,43 @@ full_df_tr[,post_t:=ifelse(initial_end_date>as.Date('2011-04-27'),
 full_df_tr[,relative_delay:=delay/initial_duration]
 ```
 
+```{r proportion_plots, echo=FALSE,results='asis'}
+a=full_df_tr[initial_start_date>=as.Date('2009-12-31'),
+           .(num_projects=n_distinct(contract_award_unique_key),
+             num_contractors=n_distinct(recipient_duns)),
+           by=c('start_yr_qtr',
+                'contracting_officers_determination_of_business_size_code')]
+a[,start_yr_qtr_dt:=as.Date(start_yr_qtr)]
+setnames(a,'contracting_officers_determination_of_business_size_code','size')
+
+ggplot(a[start_yr_qtr_dt>as.Date('2009-12-31')],aes(x=start_yr_qtr_dt,
+                                                     y=num_projects,
+                                                     group=size,
+                                                     linetype=size))+  
+                                                      geom_line()+
+                                                    theme_minimal()
+
+ggplot(a[start_yr_qtr_dt>as.Date('2009-12-31')],aes(x=start_yr_qtr_dt,
+                                                    y=num_contractors,
+                                                    group=size,
+                                                    linetype=size))+
+                                                    geom_line()+
+                                                    theme_minimal()
+
+
+b=full_df_tr[initial_start_date>=as.Date('2009-12-31'),
+             .(num_projects=n_distinct(contract_award_unique_key),
+               num_contractors=n_distinct(recipient_duns)),
+             by=c('start_yr_qtr')]
+b[,start_yr_qtr_dt:=as.Date(start_yr_qtr)]
+
+
+ggplot(b[start_yr_qtr_dt>as.Date('2009-12-31')],aes(x=start_yr_qtr_dt,
+                                                    y=num_contractors))+
+  geom_line()+
+                                                    theme_minimal()
+```
+
 ```{r clean_control, include=FALSE}
 small_contractors=unique(subset(full_df_tr,treat_i==1)$recipient_duns)
 large_contractors=unique(subset(full_df_tr,treat_i==0)$recipient_duns)
@@ -125,12 +163,17 @@ full_df_tr[,treat_new:=case_when(treat_i==1 ~ 1, # all small projects are 1
 full_df_tr_2=subset(full_df_tr,
                     contract_award_unique_key%in%projects_to_keep$contract_award_unique_key)
 
-full_df_tr_2[,wins_delay:=Winsorize(delay,na.rm=T)]
-full_df_tr_2[,wins_relative_delay:=Winsorize(relative_delay,na.rm=T)]
-full_df_tr_2[,wins_initial_duration:=Winsorize(initial_duration,na.rm=T)]
-full_df_tr_2[,wins_initial_budget:=Winsorize(initial_budget,na.rm=T)]
-full_df_tr_2[,wins_offers:=Winsorize(number_of_offers_received,na.rm=T)]
+full_df_tr_2=full_df_tr_2[order(contract_award_unique_key,
+                                action_date)]
+# one observation per project...
+full_df_tr_2=unique(full_df_tr_2,by='contract_award_unique_key')
 
+full_df_tr_2[,wins_delay:=Winsorize(delay,probs=c(0.01,0.99),na.rm=T)]
+full_df_tr_2[,wins_relative_delay:=Winsorize(relative_delay,probs=c(0.01,0.99),na.rm=T)]
+# To fix zero duration and zero budget
+full_df_tr_2[,wins_initial_duration:=Winsorize(initial_duration,probs=c(0.05,0.99),na.rm=T)]
+full_df_tr_2[,wins_initial_budget:=Winsorize(initial_budget,probs=c(0.05,0.99),na.rm=T)]
+full_df_tr_2[,wins_offers:=Winsorize(number_of_offers_received,probs=c(0.01,0.99),na.rm=T)]
 ```
 
 ```{r regs, include=FALSE}
@@ -143,7 +186,7 @@ m1=feols(wins_delay~treat_i+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-                    cluster=~contract_award_unique_key, # clustered at project level
+        #            cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2)
 
 m2=feols(wins_relative_delay~treat_i+
@@ -155,7 +198,7 @@ m2=feols(wins_relative_delay~treat_i+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-         cluster=~contract_award_unique_key, # clustered at project level
+        # cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2)
 
 m3=feglm(positive_delay~treat_i+
@@ -167,7 +210,7 @@ m3=feglm(positive_delay~treat_i+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-                    cluster=~contract_award_unique_key, # clustered at project level
+             #       cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2, 
                   family = 'binomial')
 
@@ -180,7 +223,7 @@ m4=feglm(negative_delay~treat_i+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-         cluster=~contract_award_unique_key, # clustered at project level
+       #  cluster=~contract_award_unique_key, # clustered at project level
          data=full_df_tr_2, 
          family = 'binomial')
 
@@ -198,7 +241,7 @@ m1=feols(wins_delay~treat_new+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-                    cluster=~contract_award_unique_key, # clustered at project level
+                  #  cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2)
 
 m2=feols(wins_relative_delay~treat_new+
@@ -210,7 +253,7 @@ m2=feols(wins_relative_delay~treat_new+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-         cluster=~contract_award_unique_key, # clustered at project level
+         #cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2)
 
 m3=feglm(positive_delay~treat_new+
@@ -222,7 +265,7 @@ m3=feglm(positive_delay~treat_new+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-                    cluster=~contract_award_unique_key, # clustered at project level
+              #      cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2, 
                   family = 'binomial')
 
@@ -235,7 +278,7 @@ m4=feglm(negative_delay~treat_new+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-         cluster=~contract_award_unique_key, # clustered at project level
+     #    cluster=~contract_award_unique_key, # clustered at project level
          data=full_df_tr_2, 
          family = 'binomial')
 
@@ -248,7 +291,7 @@ setFixest_dict(c("wins_delay"="Delay days",
                  "wins_relative_delay"="Delay/Initial duration",
                  "treat_i"="Treat",
                  "treat_new"="Treat", # Clean control group
-                 "post_t"="Post_t",
+                 "post_t"="Post",
               "wins_initial_duration"="Initial duration",
               "wins_offers"="Number of offers",
               "positive_delay"="I(Delay>0)",
@@ -289,7 +332,7 @@ m1=feols(wins_delay~treat_i+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-                    cluster=~contract_award_unique_key, # clustered at project level
+              #      cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2[delay>0])
 
 m2=feols(wins_delay~treat_new+
@@ -301,7 +344,7 @@ m2=feols(wins_delay~treat_new+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-                    cluster=~contract_award_unique_key, # clustered at project level
+             #       cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2[delay>0])
 
 positive_delay_only=list(m1,m2)
@@ -319,7 +362,7 @@ m1=feols(wins_delay~treat_i+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-                    cluster=~contract_award_unique_key, # clustered at project level
+                 #   cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2[!(contract_award_unique_key%in%action_type_projs)])
 
 m2=feols(wins_delay~treat_new+
@@ -331,7 +374,7 @@ m2=feols(wins_delay~treat_new+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-                    cluster=~contract_award_unique_key, # clustered at project level
+                #    cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2[!(contract_award_unique_key%in%action_type_projs)])
 
 action_type_only_m=list(m1,m2)
@@ -347,7 +390,7 @@ m1=feols(wins_delay~treat_i+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-                    cluster=~contract_award_unique_key, # clustered at project level
+              #      cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2[type_of_set_aside_code%in%c("","NONE")])
 
 m2=feols(wins_delay~treat_new+
@@ -359,7 +402,7 @@ m2=feols(wins_delay~treat_new+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-                    cluster=~contract_award_unique_key, # clustered at project level
+                 #   cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2[type_of_set_aside_code%in%c("","NONE")])
 
 no_set_aside=list(m1,m2)
@@ -375,7 +418,7 @@ m1=feols(wins_delay~treat_i+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-                    cluster=~contract_award_unique_key, # clustered at project level
+               #     cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2[initial_start_date<as.Date('2011-04-27')])
 
 m2=feols(wins_delay~treat_new+
@@ -387,7 +430,7 @@ m2=feols(wins_delay~treat_new+
                     product_or_service_code+
                     naics_code+
                     awarding_sub_agency_code,
-                    cluster=~contract_award_unique_key, # clustered at project level
+              #      cluster=~contract_award_unique_key, # clustered at project level
                   data=full_df_tr_2[initial_start_date<as.Date('2011-04-27')])
 
 
@@ -465,7 +508,7 @@ m1_cem=feols(wins_delay~treat_i+
                     naics_code+
                     awarding_sub_agency_code,
          weights=~weights,
-                    cluster=~contract_award_unique_key, # clustered at project level
+               #     cluster=~contract_award_unique_key, # clustered at project level
                   data=matched_cem)
 ```
 
@@ -494,7 +537,7 @@ m1_caliper=feols(wins_delay~treat_i+
                     naics_code+
                     awarding_sub_agency_code,
          weights=~weights,
-                    cluster=~contract_award_unique_key, # clustered at project level
+              #      cluster=~contract_award_unique_key, # clustered at project level
                   data=matched_caliper)
 ```
 
