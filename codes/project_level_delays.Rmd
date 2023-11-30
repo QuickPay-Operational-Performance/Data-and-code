@@ -147,6 +147,47 @@ ggplot(b[start_yr_qtr_dt>as.Date('2009-12-31')],aes(x=start_yr_qtr_dt,
                                                     y=num_contractors))+
   geom_line()+
                                                     theme_minimal()
+
+###########################################################################
+
+small=full_df_tr[contracting_officers_determination_of_business_size_code=='S' &
+                   initial_start_date>=as.Date('2009-12-31'),
+           .(num_small_projects=n_distinct(contract_award_unique_key),
+             num_small_contractors=n_distinct(recipient_duns)),
+           by=c('start_yr_qtr')]
+small[is.na(small)]=0
+  
+large=full_df_tr[contracting_officers_determination_of_business_size_code=='O' &
+                   initial_start_date>=as.Date('2009-12-31'),
+           .(num_large_projects=n_distinct(contract_award_unique_key),
+             num_large_contractors=n_distinct(recipient_duns)),
+           by=c('start_yr_qtr')]
+large[is.na(large)]=0
+
+both=merge(small, large, by='start_yr_qtr',all=T)
+both[,start_yr_qtr_dt:=as.Date(start_yr_qtr)]
+both[,pc_small_projects:=100*num_small_projects/(num_small_projects+num_large_projects)]
+
+ggplot(both[start_yr_qtr_dt>as.Date('2009-12-31')],aes(x=as.factor(start_yr_qtr_dt),
+                                                       y=pc_small_projects,
+                                                       group=1))+  
+    geom_line()+
+    theme_minimal()+
+    ylim(55,70)+
+    theme(axis.title = element_text(size=12))+
+    xlab("Starting year-quarter")+
+  ylab("Percentage of small projects")
+
+both[,pc_small_contractors:=100*num_small_contractors/(num_small_contractors+num_large_contractors)]
+ggplot(both[start_yr_qtr_dt>as.Date('2009-12-31')],aes(x=as.factor(start_yr_qtr_dt),
+                                                       y=pc_small_contractors,
+                                                       group=1))+  
+    geom_line()+
+    theme_minimal()+
+    ylim(60,75)+
+  theme(axis.title = element_text(size=12))+
+    xlab("Starting year-quarter")+
+  ylab("Percentage of small project contractors")
 ```
 
 ```{r clean_control, include=FALSE}
