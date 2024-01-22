@@ -1,0 +1,252 @@
+---
+title: "Alternative matching methodology"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(lfe)
+library(stargazer)
+library(fixest)
+library(MatchIt)
+library(tidyverse)
+library(DescTools) 
+```
+
+```{r read_data,include=FALSE}
+working_path='~/Dropbox/data_quickpay/qp_replication/working/'
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+```
+
+```{r matching, include=FALSE}
+reg_df_subset[, two_digit_psc:=substr(product_or_service_code,1,2)]
+reg_df_subset[, two_digit_naics:=substr(naics_code,1,2)]
+
+input=na.omit(reg_df_subset,
+                            cols=c('product_or_service_code',
+                                'awarding_sub_agency_code',
+                                'naics_code',
+                                'wins_project_quarter_stage',
+                                'wins_number_of_offers_received',
+                                'winsorized_initial_duration_in_days_i',
+                                'winsorized_initial_budget_i'))
+
+matched_df_0=match.data(matchit(treat_new~as.factor(product_or_service_code)+
+                                as.factor(awarding_sub_agency_code)+
+                                as.factor(naics_code)+
+                                as.factor(action_date_year_quarter),
+                      data=input,
+                      method='exact'))
+
+matched_df_1=match.data(matchit(treat_new~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter)+
+                                  winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      cutpoints= list(winsorized_initial_duration_in_days_i = 3,
+                                      winsorized_initial_budget_i = 3,
+                                      wins_number_of_offers_received=3),
+                      method='cem'))
+
+matched_df_2=match.data(matchit(treat_new~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter)+
+                                  winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      method='quick'))
+
+matched_df_3=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      method='nearest',
+                      ratio=1))
+
+matched_df_4=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      method='nearest',
+                      ratio=2))
+
+matched_df_5=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      method='nearest',
+                      ratio=3))
+
+matched_df_6=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      method='nearest',
+                      ratio=4))
+
+matched_df_7=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      distance='mahalanobis'))
+
+matched_df_8=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      distance='lasso'))
+
+matched_df_9=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      distance='rpart'))
+
+matched_df_10=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      caliper=0.3))
+
+matched_df_11=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      caliper=0.4))
+
+matched_df_12=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      caliper=0.5))
+```
+
+```{r regs, include=FALSE}
+df_list=list(matched_df_0,
+             matched_df_1,
+             matched_df_2,
+             matched_df_3,
+             matched_df_4,
+             matched_df_5,
+             matched_df_6,
+             matched_df_7,
+             matched_df_8,
+             matched_df_9,
+             matched_df_10,
+             matched_df_11,
+             matched_df_12)
+
+reg_list=list()
+i=1
+for(df in df_list){
+  print(i)
+  df[,wins_percentage_delay:=Winsorize(percentage_delay,probs=c(0.025,0.975),na.rm=T)]
+  df[,winsorized_delay:=Winsorize(delay,probs=c(0.025,0.975),na.rm=T)]
+  m=feols(winsorized_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+                          data=df, 
+                          weights=~weights,
+                          cluster=~contract_award_unique_key)
+  reg_list[[i]]=m
+  i=i+1
+}
+```
+
+```{r export, echo=FALSE, results='asis'}
+setFixest_dict(dict=c("treat_new" = "Treat",
+               "post_t"="Post",
+               "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
+               "log(1+winsorized_initial_budget_i)"="Initial budget",
+               "wins_number_of_offers_received"="Number of offers received",
+               "log(wins_project_quarter_stage)"="Project stage",
+               "naics_code"="NAICS code",
+               "product_or_service_code"="Task code",
+               "action_date_year_quarter"="Time",
+               "contract_award_unique_key"="Project ID"))
+
+etable(reg_list[1:7],
+       tex=TRUE,
+       fontsize = "tiny",
+       drop=c("Initial duration",
+              "Initial budget",
+              "Number of offers received",
+              "Project stage")
+)
+
+etable(reg_list[8:13],
+       tex=TRUE,
+       fontsize = "tiny",
+       drop=c("Initial duration",
+              "Initial budget",
+              "Number of offers received",
+              "Project stage")
+)
+```

@@ -1,0 +1,111 @@
+---
+title: "Model-free evidence"
+output: pdf_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Setup
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(openxlsx)
+library(tidyverse)
+library(dplyr)
+library(pryr)
+library(lfe) # linear fixed effects 
+library(DescTools) 
+library(zoo) # for year quarter
+library(stargazer)
+library(broom)
+library(fixest)
+library(data.table)
+library(scales)
+library(coefplot)
+library(MatchIt)
+library(pBrackets)
+library(grid)
+library(fixest)
+library(xtable)
+```
+
+```{r read_data,include=FALSE}
+output_path='~/Dropbox/data_quickpay/qp_replication/output/'
+working_path='~/Dropbox/data_quickpay/qp_replication/working/'
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+```
+# Demeaned delay rate (in percentage)
+
+* Subtract the average pre-quickpay delay rate from each observation
+
+```{r demeaned_plot_one_type,echo=FALSE,results='asis'}
+
+mean_delay=reg_df_subset[!is.na(wins_percentage_delay) 
+                  & action_date_year_quarter<=as.Date('2012-06-30'), 
+              .(avg_delay=mean(wins_percentage_delay),
+                se_delay=sd(wins_percentage_delay,na.rm=T)/sqrt(.N)
+                ),  
+              by = c('action_date_year_quarter','treat_new')]
+mean_delay[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
+mean_delay=mean_delay[order(action_date_year_quarter,treat_new)]
+
+pre_qp_mean_small=mean(subset(mean_delay,
+                         action_date_year_quarter<=as.Date('2011-04-27') &
+                           treat_new==1)$avg_delay,na.rm=T)
+pre_qp_mean_large=mean(subset(mean_delay,
+                              action_date_year_quarter<=as.Date('2011-04-27') &
+                                treat_new==0)$avg_delay,na.rm=T)
+
+mean_delay[,demeaned_delay:=ifelse(treat_new==1,
+                                   avg_delay-pre_qp_mean_small,
+                                   avg_delay-pre_qp_mean_large)]
+
+mean_delay[,business_type:=ifelse(treat_new==1,"S","O")]
+
+ggplot(mean_delay, aes(x=year_quarter,
+                       y=demeaned_delay, 
+                       group = business_type))+
+  geom_point(aes(shape=business_type),size=1.5)+
+  geom_errorbar(aes(ymin=demeaned_delay-1.96*se_delay, 
+                    ymax=demeaned_delay+1.96*se_delay), 
+                colour="black", 
+                width=.1) +
+  geom_line(aes(linetype=business_type, color=business_type),alpha=0.7) +    
+  scale_x_discrete(limits=mean_delay$year_quarter)+
+  geom_vline(xintercept =10.2,alpha=0.8,linewidth=0.15,linetype="solid")+
+  theme_minimal()+
+  labs(x="Time", 
+       y = "Average percentage delay rate")+
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", "O"),
+                        labels=c("Treated","Control"),
+                        values=c("solid","dashed"))+
+  scale_color_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c('black','black'))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c(16,17))+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))+
+  coord_fixed(ratio=2)
+
+
+ggsave(path=output_path,
+       bg="white",
+       width = 8,
+       height = 5,
+       filename = "o_fig_model_free_error_bars.png")
+```
