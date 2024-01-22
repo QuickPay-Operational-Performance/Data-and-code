@@ -361,7 +361,7 @@ reg_df[,treat_new:=case_when(treat_i==1 ~ 1,
 
 ```
 
-```{r}
+```{r fp_contracts, include=FALSE,warning=FALSE,message=FALSE}
 m1=feols(wins_percentage_delay~treat_new+
         post_t:treat_new+
           post_t,
@@ -438,7 +438,7 @@ m6=feols(wins_percentage_delay~treat_new+
 clean_control=list(m1,m2,m3,m4,m5,m6)
 ```
 
-```{r}
+```{r cost_contracts, include=FALSE,warning=FALSE,message=FALSE}
 m1=feols(wins_percentage_delay~treat_new+
         post_t:treat_new+
           post_t,
@@ -515,7 +515,7 @@ m6=feols(wins_percentage_delay~treat_new+
 clean_control_cost=list(m1,m2,m3,m4,m5,m6)
 ```
 
-```{r}
+```{r jobs_act, include=FALSE,warning=FALSE,message=FALSE}
 reg_df[,jobs_act:=ifelse(action_date_year_quarter>as.Date('2010-09-30'),1,0)]
 
 m1=feols(wins_percentage_delay~treat_new+
@@ -584,6 +584,7 @@ m5=feols(wins_percentage_delay~treat_new+
 
 jobs_act_regs=list(m1,m2,m3,m4,m5)
 ```
+
 ```{r no_set_aside, include=FALSE,warning=FALSE,message=FALSE}
 m1=feols(wins_percentage_delay~treat_new+
                      post_t:treat_new+
@@ -718,7 +719,7 @@ m5=feols(wins_percentage_delay~treat_new+
 no_c8a_participant=list(m1,m2,m3,m4,m5)
 ```
 
-```{r plot}
+```{r model_free_plot, include=FALSE}
 reg_df[,four_digit_naics:=substr(naics_code,1,4)]
 mean_delay=reg_df[!is.na(wins_percentage_delay) &
                     !is.na(treat_new) 
@@ -780,4 +781,67 @@ ggplot(mean_delay, aes(x=year_quarter,
         legend.text = element_text(size=11),
         legend.position="bottom",
         legend.key.width=unit(2.5,"cm"))
+```
+
+```{r event_study, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+reg_df[,four_digit_naics:=substr(naics_code,1,4)]
+reg_df[,relative_quarter:=case_when(action_date_year_quarter=="2010-03-31"~-5,
+                  action_date_year_quarter=="2010-06-30"~-4,
+                  action_date_year_quarter=="2010-09-30"~-3,
+                  action_date_year_quarter=="2010-12-31"~-2,
+                  action_date_year_quarter=="2011-03-31"~-1,
+                  action_date_year_quarter=="2011-06-30"~0,
+                  action_date_year_quarter=="2011-09-30"~1,
+                  action_date_year_quarter=="2011-12-31"~2,
+                  action_date_year_quarter=="2012-03-31"~3,
+                  action_date_year_quarter=="2012-06-30"~4)]
+
+reg_df[, time_to_treat := ifelse(treat_new==1, relative_quarter, 0)]
+
+mod_twfe = fixest::feols(wins_percentage_delay ~ i(time_to_treat, treat_new, ref = -1) +
+                    	   	  treat_new+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage|   
+		  recipient_duns+product_or_service_code+action_date_year_quarter,        
+		 cluster = ~contract_award_unique_key,
+		 data = reg_df[price_structure=="Fixed" & 
+		                action_date_year_quarter<=as.Date('2012-06-30') &
+                    four_digit_naics%in%nanda_naics])
+
+data_event_study=fixest::iplot(mod_twfe,only.params=T,
+      x=c(-5:4))$prms
+setDT(data_event_study)[,`Quarter relative to QuickPay`:=as.factor(x)]
+
+ggplot(data_event_study,aes(x=`Quarter relative to QuickPay`,
+                            y=y,
+                            group=1))+
+  geom_point(size=1.5,alpha=0.7)+
+  geom_errorbar(aes(ymin = ci_low, 
+                    ymax = ci_high),
+                width=0.01,
+                size=0.25,
+                alpha=0.7)+
+#  geom_line(alpha=0.7,size=0.25)+
+  geom_hline(yintercept =0,alpha=0.6,size=0.15)+
+  geom_vline(xintercept =5.5,alpha=0.8,size=0.15,linetype="dashed")+
+  theme_minimal()+ 
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(size=11),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+    legend.text = element_text(size=11))+
+  theme(legend.position="bottom")+
+  ylab("Point estimate \n (Percent delay)")#+ 
+  #ylim(-1.05, 2.5)+
+  # scale_y_continuous(breaks = seq(min(data_event_study$estimate),
+  #                                 max(data_event_study$estimate), 
+  #                                 0.5))
 ```
