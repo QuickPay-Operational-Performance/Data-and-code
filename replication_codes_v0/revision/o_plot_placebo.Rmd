@@ -1,0 +1,310 @@
+---
+title: "Treatment Group -- Placebo Test"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(MatchIt)
+library(tidyverse)
+library(DescTools) 
+library(ggpubr)
+library(broom)
+library(cowplot)
+```
+
+```{r read_data,include=FALSE}
+working_path='~/Dropbox/data_quickpay/qp_replication/working/'
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+
+input_path='~/Dropbox/data_quickpay/qp_replication/input/'
+reg_df=fread(paste0(input_path,
+                 'quickpay_delays.csv'))
+```
+
+```{r treatment_group_placebo, include=FALSE}
+projects=unique(reg_df_subset[,c('contract_award_unique_key')])
+```
+
+```{r treatment_group_placebo_2, include=FALSE}
+set.seed(1458); # to get same result everytime
+
+placebo_regs=list()
+for(i in 1:100){
+    print(i)
+    # Placebo Treatment Group
+    projects[,false_treat:=sample(0:1, size = nrow(projects), replace = TRUE)]
+    
+    reg_df_subset[,false_treat:=NULL] # remove previous treat column
+    reg_df_subset=merge(reg_df_subset,
+                        projects,
+                        by='contract_award_unique_key')
+    
+    treatment_group=feols(wins_percentage_delay~false_treat+
+                                post_t:false_treat+
+                               log(wins_project_quarter_stage)+
+                                log(1+winsorized_initial_duration_in_days_i)+
+                                log(1+winsorized_initial_budget_i)+
+                                number_of_offers_received+
+                                post_t:log(1+winsorized_initial_duration_in_days_i)+
+                                post_t:log(1+winsorized_initial_budget_i)+
+                                post_t:number_of_offers_received|
+                                naics_code+product_or_service_code+action_date_year_quarter,
+                          cluster=~contract_award_unique_key,
+                              data=reg_df_subset)
+    placebo_regs[[i]]=setDT(tidy(treatment_group,
+                                 conf.int = T))[term=='false_treat:post_t']
+    i=i+1
+}
+
+placebo_reg_table=do.call("rbind",placebo_regs)
+```
+
+```{r placebo_plot, include=FALSE}
+setDT(placebo_reg_table)
+placebo_reg_table[,specification:=as.factor(seq(1,nrow(placebo_reg_table)))]
+
+treatment_group_placebo=ggplot(placebo_reg_table, 
+       aes(x = specification,
+           y = estimate,
+           color =  p.value<0.05)) +         
+    geom_point(size = 1) +
+    geom_errorbar(aes(ymin = conf.low, 
+                      ymax = conf.high,
+                      width = 2)) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(size = 12),
+          axis.title.y = element_text(size = 12),
+          axis.ticks = element_blank(),
+          panel.grid = element_blank(),
+          axis.line = element_blank(),
+          panel.background = element_rect(color = "black"),
+          legend.position = "top") +
+    geom_hline(yintercept = 0, color = "maroon") +
+    scale_colour_manual(labels = setNames(c("p<0.05", "p>0.05"),
+                          c(T, F)), 
+        values = setNames(c('black',
+                            'lightgray'),
+                          c(T, F))) +
+    ylab("Estimate \n (Percentage delay)") +
+    xlab("")+
+    labs(color = "")
+```
+
+```{r save_plot, include=FALSE}
+ggsave(paste0(getwd(),
+              '/treatment_group_placebo.png'),
+       treatment_group_placebo,
+       bg="white",
+       width=10)
+```
+
+```{r treatment_time_placebo, include=FALSE}
+reg_df_placebo=subset(reg_df_subset,post_t==0)
+reg_df_placebo[,wins_percentage_delay:=Winsorize(100*percentage_delay,
+                               probs=c(0.05,0.95),
+                               na.rm=T)]
+reg_df_placebo[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+reg_df_placebo[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(initial_duration_in_days_i,
+                    probs=c(0.05,0.95),
+                    na.rm=T)]
+reg_df_placebo[,winsorized_initial_budget_i:=
+                    Winsorize(base_and_all_options_value,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+reg_df_placebo[,wins_number_of_offers_received:=
+                    Winsorize(number_of_offers_received,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+# Placebo Treatment Time
+reg_df_placebo[,post_t:=ifelse(action_date_year_quarter>=
+                                      as.Date('2010-09-30'),
+                                         1,
+                                         0)]  
+
+placebo_time=list()
+## Placebo: Treatment Time
+m1=feols(wins_percentage_delay~treat_new+
+                treat_new:post_t+
+                post_t,
+                cluster=~contract_award_unique_key,
+              data=reg_df_placebo)
+
+placebo_time[[1]]=setDT(tidy(m1,conf.int=T))[term=='treat_new:post_t']
+
+m2=feols(wins_percentage_delay~treat_new+
+                treat_new:post_t+
+                log(wins_project_quarter_stage)+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                wins_number_of_offers_received+
+                post_t:log(1+winsorized_initial_duration_in_days_i)+
+                post_t:log(1+winsorized_initial_budget_i)+
+                post_t:wins_number_of_offers_received+
+                post_t,
+                cluster=~contract_award_unique_key,
+              data=reg_df_placebo)
+
+placebo_time[[2]]=setDT(tidy(m2,conf.int=T))[term=='treat_new:post_t']
+
+m3=feols(wins_percentage_delay~treat_new+
+                treat_new:post_t+
+                log(wins_project_quarter_stage)+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                wins_number_of_offers_received+
+                post_t:log(1+winsorized_initial_duration_in_days_i)+
+                post_t:log(1+winsorized_initial_budget_i)+
+                post_t:wins_number_of_offers_received|
+                action_date_year_quarter,
+                cluster=~contract_award_unique_key,
+              data=reg_df_placebo)
+
+placebo_time[[3]]=setDT(tidy(m3,conf.int=T))[term=='treat_new:post_t']
+
+m4=feols(wins_percentage_delay~treat_new+
+                treat_new:post_t+
+                log(wins_project_quarter_stage)+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                wins_number_of_offers_received+
+                post_t:log(1+winsorized_initial_duration_in_days_i)+
+                post_t:log(1+winsorized_initial_budget_i)+
+                post_t:wins_number_of_offers_received|
+                product_or_service_code+
+                action_date_year_quarter,
+                cluster=~contract_award_unique_key,
+              data=reg_df_placebo)
+
+placebo_time[[4]]=setDT(tidy(m4,conf.int=T))[term=='treat_new:post_t']
+
+
+m5=feols(wins_percentage_delay~treat_new+
+                treat_new:post_t+
+                log(wins_project_quarter_stage)+
+                log(1+winsorized_initial_duration_in_days_i)+
+                log(1+winsorized_initial_budget_i)+
+                wins_number_of_offers_received+
+                post_t:log(1+winsorized_initial_duration_in_days_i)+
+                post_t:log(1+winsorized_initial_budget_i)+
+                post_t:wins_number_of_offers_received|
+                product_or_service_code+
+                action_date_year_quarter+
+                naics_code,
+                cluster=~contract_award_unique_key,
+              data=reg_df_placebo)
+
+placebo_time[[5]]=setDT(tidy(m5,conf.int=T))[term=='treat_new:post_t']
+
+placebo_time_table=do.call("rbind",placebo_time)
+```
+
+```{r placebo_plot_time, include=FALSE}
+setDT(placebo_time_table)
+placebo_time_table[,specification:=as.factor(seq(1,nrow(placebo_time_table)))]
+
+treatment_time_placebo=ggplot(placebo_time_table, 
+       aes(x = specification,
+           y = estimate,
+           color =  p.value<0.05)) +         
+    geom_point(size = 1) +
+    geom_errorbar(aes(ymin = conf.low, 
+                      ymax = conf.high,
+                      width = 0.5)) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(size = 12),
+          axis.title.y = element_text(size = 12),
+          axis.ticks = element_blank(),
+          panel.grid = element_blank(),
+          axis.line = element_blank(),
+          panel.background = element_rect(color = "black"),
+          legend.position = "none") +
+    geom_hline(yintercept = 0, color = "maroon") +
+    scale_colour_manual(labels = setNames(c("p<0.05", "p>0.05"),
+                          c(T, F)), 
+        values = setNames(c('black',
+                            'lightgray'),
+                          c(T, F))) +
+    ylab("Estimate \n (Percentage delay)") +
+    xlab("")+
+    labs(color = "")
+```
+
+```{r specification, include=FALSE}
+
+placebo_time_table[,method:= c("",
+                              "Controls",
+                               "Controls+Time FE",
+                               "Controls+Time FE+Task FE",
+                               "Controls+Time FE+Task FE+Industry FE")]
+
+models2=fastDummies::dummy_cols(placebo_time_table[,c('specification','method')],
+                                select_columns = "method",
+                                remove_selected_columns = TRUE,
+                                ignore_na = TRUE,
+                                split = "\\+")
+models2=models2%>%
+  pivot_longer(!specification, names_to = "method", values_to = "binary")
+
+setDT(models2)[,method:=str_replace_all(models2$method, "method_", "")]
+
+order_of_methods=c("Controls",
+                   "Time FE",
+                   "Task FE",
+                   "Industry FE")
+specification_table=ggplot(models2, aes(x = specification, 
+                      y = factor(method,
+                                 levels = rev(order_of_methods)),
+                      fill =ifelse(binary==0, 
+                                   NA, 
+                                   "black"))) +
+  geom_point(shape = 21,
+             color="black",
+             size=3) +
+  scale_fill_discrete(na.value = "transparent") +
+  scale_size_area(max_size=2)  +
+  ylab("Specification") +
+  xlab("")+
+  theme_minimal()+
+  theme(axis.text.x = element_text(size=12),
+        axis.text.y = element_text(size=12),
+        axis.title.y = element_text(size=12),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.line = element_blank(),
+        panel.background = element_rect(color="black"))+
+  theme(legend.position = "none")
+
+treatment_time_placebo_full=plot_grid(treatment_time_placebo,
+                   specification_table,
+          ncol = 1,
+          align = "v",             # to align vertically
+          axis = "rbl",            # align axes
+          rel_heights = c(1, 0.5))
+```
+
+```{r save_plot_placebo_time, include=FALSE}
+ggsave(paste0(getwd(),
+              '/treatment_time_placebo_full.png'),
+       treatment_time_placebo_full,
+       bg="white")
+```

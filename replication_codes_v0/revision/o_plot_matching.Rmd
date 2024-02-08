@@ -1,0 +1,388 @@
+---
+title: "Alternative matching methodology"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(lfe)
+library(stargazer)
+library(fixest)
+library(MatchIt)
+library(tidyverse)
+library(DescTools) 
+library(broom)
+library(scales) # for comma in ggplot
+library(cowplot)
+```
+
+```{r read_data,include=FALSE}
+working_path='~/Dropbox/data_quickpay/qp_replication/working/'
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+```
+
+```{r matching, include=FALSE}
+reg_df_subset[, two_digit_psc:=substr(product_or_service_code,1,2)]
+reg_df_subset[, two_digit_naics:=substr(naics_code,1,2)]
+
+set.seed(190)
+
+input=na.omit(reg_df_subset,
+                            cols=c('product_or_service_code',
+                                'awarding_sub_agency_code',
+                                'naics_code',
+                                'wins_project_quarter_stage',
+                                'wins_number_of_offers_received',
+                                'winsorized_initial_duration_in_days_i',
+                                'winsorized_initial_budget_i'))
+
+matched_df_1=match.data(matchit(treat_new~as.factor(awarding_sub_agency_code)+
+                                  as.factor(two_digit_naics)+
+                                  as.factor(action_date_year_quarter)+
+                                  winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                                data=input,
+                                cutpoints= list(winsorized_initial_duration_in_days_i = 5,
+                                                winsorized_initial_budget_i = 5,
+                                                wins_number_of_offers_received=5),
+                                method='cem'))
+
+matched_df_2=match.data(matchit(treat_new~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter)+
+                                  winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      method='quick'))
+
+matched_df_3=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      method='nearest',
+                      ratio=1))
+
+matched_df_4=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      method='nearest',
+                      ratio=2))
+
+matched_df_5=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      method='nearest',
+                      ratio=3))
+
+matched_df_6=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      method='nearest',
+                      ratio=4))
+
+matched_df_7=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      distance='mahalanobis'))
+
+matched_df_8=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      distance='lasso'))
+
+matched_df_9=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      distance='rpart'))
+
+matched_df_10=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      caliper=0.3))
+
+matched_df_11=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      caliper=0.4))
+
+matched_df_12=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      caliper=0.5))
+```
+
+```{r regs, include=FALSE}
+df_list=list(matched_df_1,
+             matched_df_2,
+             matched_df_3,
+             matched_df_4,
+             matched_df_5,
+             matched_df_6,
+             matched_df_7,
+             matched_df_8,
+             matched_df_9,
+             matched_df_10,
+             matched_df_11,
+             matched_df_12)
+
+reg_list=list()
+estimate_percentage_delay=list()
+sample_size_percentage_delay=list()
+
+i=1
+for(df in df_list){
+  print(i)
+  setDT(df)
+  df[,wins_percentage_delay:=100*Winsorize(percentage_delay,probs=c(0.025,0.975),na.rm=T)]
+  df[,winsorized_delay:=Winsorize(delay,probs=c(0.025,0.975),na.rm=T)]
+  m=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+                          data=df, 
+                          weights=~weights,
+                          cluster=~contract_award_unique_key)
+  
+  estimate_percentage_delay[[i]]=setDT(tidy(m, conf.int=T))[term=='treat_new:post_t']
+  sample_size_percentage_delay[[i]]=glance(m)$nobs
+  reg_list[[i]]=m
+  i=i+1
+}
+```
+
+```{r set_order, include=FALSE}
+order=c("coarsened_exact",
+        "quick",
+        "psm",
+        "nn_2",
+        "nn_3",
+        "nn_4",
+        "mahalanobis",
+        "lasso",
+        "rpart",
+        "caliper_03",
+        "caliper_04",
+        "caliper_05")
+
+models=do.call("rbind",estimate_percentage_delay)
+
+models=setDT(models)
+models[,specification:=as.factor(seq(1,12))]
+models[,sample_size:=unlist(sample_size_percentage_delay)]
+
+```
+
+```{r plot, include=FALSE}
+a=ggplot(models, aes(x=specification,y=estimate)) +         
+  geom_point(size = 1) +
+  geom_errorbar(aes(ymin = conf.low, 
+                    ymax = conf.high,
+                    width=0.1))+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.title.y = element_text(size=12),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.line = element_blank(),
+        panel.background = element_rect(color="black"))+
+  geom_hline(yintercept = 0, color="maroon")+
+  ylab("Estimate \n (Percentage delay)")+
+  ylim(-1,5)+
+  xlab("")
+
+b=ggplot(models, aes(x=specification,
+                     y=sample_size)) +         
+  geom_bar(stat = "identity", 
+           color="gray",
+           width=0.6) +
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.title.y = element_text(size=12),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.line = element_blank(),
+        panel.background = element_rect(color="black"))+
+  scale_y_continuous(label=comma,limits=c(0,230000))+
+  ylab("Sample size")+
+  xlab("")
+
+models[,method:= order]
+
+models2=fastDummies::dummy_cols(models[,c('specification','method')],
+                                select_columns = "method",
+                                remove_selected_columns = TRUE,
+                                ignore_na = TRUE,
+                                split = "\\+")
+models2=models2%>%
+  pivot_longer(!specification, names_to = "method", values_to = "binary")
+
+setDT(models2)[,method:=str_replace_all(models2$method, "method_", "")]
+models2[,method_name:=case_when(method=="quick"~"Full matching",
+                                method=="coarsened_exact"~"Coarsened Exact matching",
+                                method=="lasso"~"Lasso",
+                                method=="rpart"~"Tree-based",
+                                method=="mahalanobis"~"Mahalanobis",
+                                method=="psm"~"Propensity score",
+                                method=="nn_2"~"2-Nearest neighbor",
+                                method=="nn_3"~"3-Nearest neighbor",
+                                method=="nn_4"~"4-Nearest neighbor",
+                                method=="caliper_03"~"Caliper 0.3",
+                                method=="caliper_04"~"Caliper 0.4",
+                                method=="caliper_05"~"Caliper 0.5")]
+
+order_of_methods=c("Coarsened Exact matching",
+                   "Full matching",
+                   "Propensity score",
+                   "2-Nearest neighbor",
+                   "3-Nearest neighbor",
+                   "4-Nearest neighbor",
+                   "Mahalanobis",
+                   "Lasso",
+                   "Tree-based",
+                   "Caliper 0.3",
+                   "Caliper 0.4",
+                   "Caliper 0.5")
+
+c=ggplot(models2, aes(x = specification, 
+                      y = factor(method_name,
+                                 levels = rev(order_of_methods)),
+                      fill =ifelse(binary==0, 
+                                   NA, 
+                                   "black"))) +
+  geom_point(shape = 21,
+             color="black",
+             size=3) +
+  scale_fill_discrete(na.value = "transparent") +
+  scale_size_area(max_size=2)  +
+  ylab("Matching method") +
+  xlab("")+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_text(size=12),
+        axis.title.y = element_text(size=12),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.line = element_blank(),
+        panel.background = element_rect(color="black"))+
+  theme(legend.position = "none")
+
+percentage_delay=plot_grid(a, b,c,
+          ncol = 1,
+          align = "v",             # to align vertically
+          axis = "rbl",            # align axes
+          rel_heights = c(2, 2, 2))   # adjust relative heights
+
+```
+
+```{r save_plot,include=FALSE}
+ggsave(paste0(getwd(),
+              "/alt_matching_qp.png"),
+       plot=percentage_delay,
+       width=8,
+       height=10,
+       bg="white")
+```
+
+```{r export_tables, eval=FALSE, include=FALSE}
+setFixest_dict(dict=c("treat_new" = "Treat",
+               "post_t"="Post",
+               "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
+               "log(1+winsorized_initial_budget_i)"="Initial budget",
+               "wins_number_of_offers_received"="Number of offers received",
+               "log(wins_project_quarter_stage)"="Project stage",
+               "naics_code"="NAICS code",
+               "product_or_service_code"="Task code",
+               "action_date_year_quarter"="Time",
+               "contract_award_unique_key"="Project ID"))
+
+etable(reg_list[1:7],
+       tex=TRUE,
+       fontsize = "tiny",
+       drop=c("Initial duration",
+              "Initial budget",
+              "Number of offers received",
+              "Project stage")
+)
+
+etable(reg_list[8:12],
+       tex=TRUE,
+       fontsize = "tiny",
+       drop=c("Initial duration",
+              "Initial budget",
+              "Number of offers received",
+              "Project stage")
+)
+```
