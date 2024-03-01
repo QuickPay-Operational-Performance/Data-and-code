@@ -89,19 +89,19 @@ treatment_group_placebo=ggplot(placebo_reg_table,
                       ymax = conf.high,
                       width = 2)) +
     theme_minimal() +
-    theme(axis.text.x = element_text(size = 12),
+    theme(axis.text.x = element_blank(),
           axis.title.y = element_text(size = 12),
           axis.ticks = element_blank(),
           panel.grid = element_blank(),
           axis.line = element_blank(),
           panel.background = element_rect(color = "black"),
           legend.position = "top") +
-    geom_hline(yintercept = 0, color = "maroon") +
+    geom_hline(yintercept = 0, color = "black",alpha=0.3) +
     scale_colour_manual(labels = setNames(c("p<0.05", "p>0.05"),
-                          c(T, F)), 
-        values = setNames(c('black',
-                            'lightgray'),
-                          c(T, F))) +
+                                          c(T, F)), 
+                        values = setNames(c('#CC5500',
+                                            '#536872'),
+                                          c(T, F))) +
     ylab("Estimate \n (Percentage delay)") +
     xlab("")+
     labs(color = "")
@@ -229,20 +229,20 @@ treatment_time_placebo=ggplot(placebo_time_table,
     geom_point(size = 1) +
     geom_errorbar(aes(ymin = conf.low, 
                       ymax = conf.high,
-                      width = 0.5)) +
+                      width = 0.25)) +
     theme_minimal() +
-    theme(axis.text.x = element_text(size = 12),
+    theme(axis.text.x = element_blank(),
           axis.title.y = element_text(size = 12),
           axis.ticks = element_blank(),
           panel.grid = element_blank(),
           axis.line = element_blank(),
           panel.background = element_rect(color = "black"),
           legend.position = "none") +
-    geom_hline(yintercept = 0, color = "maroon") +
+    geom_hline(yintercept = 0, color = "black",alpha=0.6) +
     scale_colour_manual(labels = setNames(c("p<0.05", "p>0.05"),
                           c(T, F)), 
-        values = setNames(c('black',
-                            'lightgray'),
+        values = setNames(c('#CC5500',
+                            '#536872'),
                           c(T, F))) +
     ylab("Estimate \n (Percentage delay)") +
     xlab("")+
@@ -285,7 +285,7 @@ specification_table=ggplot(models2, aes(x = specification,
   ylab("Specification") +
   xlab("")+
   theme_minimal()+
-  theme(axis.text.x = element_text(size=12),
+  theme(axis.text.x = element_blank(),
         axis.text.y = element_text(size=12),
         axis.title.y = element_text(size=12),
         axis.ticks = element_blank(),

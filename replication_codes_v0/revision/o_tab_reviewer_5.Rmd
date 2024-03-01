@@ -3,7 +3,7 @@ title: "Non C8A participants"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
-    keep_tex: false
+    keep_tex: true
     number_sections: true
 header-includes:
  \usepackage{booktabs,longtable,dcolumn}
@@ -108,7 +108,7 @@ m5=feols(wins_percentage_delay~treat_new+
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset[c8a_program_participant=="f"])
 
-non_c8a=list(m1,m2,m3,m4,m5)
+non_c8a=list(m4,m5)
 ```
 
 ## No set aside used
@@ -172,7 +172,45 @@ m5=feols(wins_percentage_delay~treat_new+
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset[type_of_set_aside%in%c("","NO SET ASIDE USED.")])
 
-no_set_aside_used=list(m1,m2,m3,m4,m5)
+no_set_aside_used=list(m4,m5)
+```
+
+## Started before QuickPay
+
+```{r before_qp, include=FALSE}
+projects_started_before_qp=unique(reg_df_subset[initial_start_date<=
+                                                  as.Date('2011-04-27')]$contract_award_unique_key)
+
+
+m4=feols(wins_percentage_delay~treat_new+
+                              post_t:treat_new+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset[contract_award_unique_key%in%
+                                               projects_started_before_qp])
+
+m5=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset[contract_award_unique_key%in%
+                                               projects_started_before_qp])
+
+projects_before_qp=list(m4,m5)
 ```
 
 ## JOBS act
@@ -248,7 +286,7 @@ m5=feols(wins_percentage_delay~treat_new+
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset)
 
-jobs_act_regs=list(m1,m2,m3,m4,m5)
+jobs_act_regs=list(m4,m5)
 ```
 
 ```{r export_results, echo=FALSE,results='asis'}
@@ -265,6 +303,24 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percentage delay",
                       "naics_code"="NAICS",
                       "jobs_act"="JOBS Act"
                       ))
+
+etable(non_c8a,
+       no_set_aside_used,
+       projects_before_qp,
+       jobs_act_regs,
+       digits='r2',
+       fontsize = 'tiny',
+       title="Alternative explanations",
+       headers=list("Excluding C8A participant"=2, 
+                    "Excluding set-aside used"=2,
+                    "Excluding projects that started after QuickPay"=2,
+                    "JOBS act"=2),
+       drop=c("Project stage",
+              "Initial duration",
+              "Initial budget",
+              "Number of offers"),
+       notes="Sample restricted to projects whose contractors are not C8A participants. Controls include project stage, initial duration, initial budget, and number of bids. Initial duration, initial budget, and number of bids are also interacted with Post are also included as controls",
+       tex=TRUE)
 
 etable(non_c8a,
        digits='r2',

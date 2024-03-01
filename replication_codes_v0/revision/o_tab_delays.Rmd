@@ -141,6 +141,12 @@ full_df_tr_2[,wins_initial_budget:=Winsorize(initial_budget,probs=c(0.05,0.99),n
 full_df_tr_2[,wins_offers:=Winsorize(number_of_offers_received,probs=c(0.01,0.99),na.rm=T)]
 ```
 
+```{r project_time, include=FALSE}
+full_df_tr_2[,project_quarter:=paste(contract_award_unique_key,
+                                     start_yr_qtr,
+                                     sep="_")]
+```
+
 ```{r proportion_plots, echo=FALSE,results='asis'}
 ##### All projects #####
 small=full_df_tr_2[contracting_officers_determination_of_business_size_code=='S' &
@@ -358,6 +364,111 @@ m4=feglm(negative_delay~treat_new+
 clean_control=list(m1,m2,m3,m4)
 ```
 
+```{r clean_control_delay_days, include=FALSE}
+m1=feols(wins_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr,
+                  #  cluster=~contract_award_unique_key, # clustered at project level
+                  data=full_df_tr_2)
+
+m2=feols(wins_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr+
+                    product_or_service_code,
+                  #  cluster=~contract_award_unique_key, # clustered at project level
+                  data=full_df_tr_2)
+
+m3=feols(wins_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr+
+                    product_or_service_code+
+                    naics_code,
+                  #  cluster=~contract_award_unique_key, # clustered at project level
+                  data=full_df_tr_2)
+
+clean_control_delay_days=list(m1,m2,m3)
+```
+
+```{r clean_logit, include=FALSE}
+m1=feglm(positive_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr,
+              #      cluster=~contract_award_unique_key, # clustered at project level
+                  data=full_df_tr_2, 
+                  family = 'binomial')
+
+m2=feglm(positive_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr+
+                    product_or_service_code,
+              #      cluster=~contract_award_unique_key, # clustered at project level
+                  data=full_df_tr_2, 
+                  family = 'binomial')
+
+m3=feglm(positive_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr+
+                    product_or_service_code+
+                    naics_code,
+              #      cluster=~contract_award_unique_key, # clustered at project level
+                  data=full_df_tr_2, 
+                  family = 'binomial')
+
+clean_control_delay_logit=list(m1,m2,m3)
+```
+
+```{r clean_conditional_delay, include=FALSE}
+m1=feols(wins_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr,
+                  #  cluster=~contract_award_unique_key, # clustered at project level
+                  data=full_df_tr_2[delay>0])
+
+m2=feols(wins_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr+
+                    product_or_service_code,
+                  #  cluster=~contract_award_unique_key, # clustered at project level
+                  data=full_df_tr_2[delay>0])
+
+m3=feols(wins_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr+
+                    product_or_service_code+
+                    naics_code,
+                  #  cluster=~contract_award_unique_key, # clustered at project level
+                  data=full_df_tr_2[delay>0])
+
+clean_control_delay_conditional=list(m1,m2,m3)
+```
+
 ```{r output, echo=FALSE,results='asis'}
 setFixest_dict(c("wins_delay"="Delay days",
                  "start_yr_qtr"="Start Year-Quarter",
@@ -376,23 +487,38 @@ setFixest_dict(c("wins_delay"="Delay days",
               "contract_award_unique_key"="Project ID",
               "wins_initial_budget"="Initial budget"))
 
-etable(main_results,
-       drop=c("Number of offers",
-              "Initial duration",
-              "Initial budget"),
-       extralines = list("Controls"=rep("Yes",4)),
-       title="Full sample",
+etable(clean_control_delay_days,
+       clean_control_delay_logit,
+       clean_control_delay_conditional,
        digits='r2',
-       tex=T)
+       title="Delay days",
+       headers=list("OLS"=3, 
+                    "Logit"=3,
+                    "Conditional"=3),
+       drop=c("Initial duration",
+              "Initial budget",
+              "Number of offers"),
+       notes="Controls include project stage, initial duration, initial budget, and number of bids.",
+       tex=TRUE)
 
-etable(clean_control,
-       drop=c("Number of offers",
-              "Initial duration",
-              "Initial budget"),
-       extralines = list("Controls"=rep("Yes",4)),
-       title="Clean control group",
-              digits='r2',
-       tex=T)
+
+# etable(main_results,
+#        drop=c("Number of offers",
+#               "Initial duration",
+#               "Initial budget"),
+#        extralines = list("Controls"=rep("Yes",4)),
+#        title="Full sample",
+#        digits='r2',
+#        tex=T)
+# 
+# etable(clean_control,
+#        drop=c("Number of offers",
+#               "Initial duration",
+#               "Initial budget"),
+#        extralines = list("Controls"=rep("Yes",4)),
+#        title="Clean control group",
+#               digits='r2',
+#        tex=T)
 ```
 
 ```{r positive_delay_only, include=FALSE}
@@ -481,36 +607,36 @@ started_before_qp=list(m1,m2)
 ```
 
 ```{r output_subsample,echo=FALSE,results='asis'}
-
-etable(no_set_aside,
-       drop=c("Number of offers",
-              "Initial duration",
-              "Initial budget"),
-        extralines = list("Controls"=rep("Yes",2)),
-       digits='r2',
-       headers=c("All","Clean control"),
-       title="No set aside used",
-       tex=T)
-
-etable(started_before_qp,
-       drop=c("Number of offers",
-              "Initial duration",
-              "Initial budget"),
-       extralines = list("Controls"=rep("Yes",2)),
-       digits='r2',
-       headers=c("All","Clean control"),
-       title="Projects that started before QuickPay",
-       tex=T)
-
-etable(positive_delay_only,
-       drop=c("Number of offers",
-              "Initial duration",
-              "Initial budget"),
-       extralines = list("Controls"=rep("Yes",2)),
-       digits='r2',
-       headers=c("All","Clean control"),
-       title="Projects that had a positive delay only",
-       tex=T)
+# 
+# etable(no_set_aside,
+#        drop=c("Number of offers",
+#               "Initial duration",
+#               "Initial budget"),
+#         extralines = list("Controls"=rep("Yes",2)),
+#        digits='r2',
+#        headers=c("All","Clean control"),
+#        title="No set aside used",
+#        tex=T)
+# 
+# etable(started_before_qp,
+#        drop=c("Number of offers",
+#               "Initial duration",
+#               "Initial budget"),
+#        extralines = list("Controls"=rep("Yes",2)),
+#        digits='r2',
+#        headers=c("All","Clean control"),
+#        title="Projects that started before QuickPay",
+#        tex=T)
+# 
+# etable(positive_delay_only,
+#        drop=c("Number of offers",
+#               "Initial duration",
+#               "Initial budget"),
+#        extralines = list("Controls"=rep("Yes",2)),
+#        digits='r2',
+#        headers=c("All","Clean control"),
+#        title="Projects that had a positive delay only",
+#        tex=T)
 ```
 
 
