@@ -1,0 +1,230 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array} \usepackage{wrapfig,float} \floatplacement{figure}{H}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Non C8A participants},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Non C8A participants}
+\author{}
+\date{\vspace{-2.5em}2024-02-13}
+
+\begin{document}
+\maketitle
+
+\hypertarget{non-c8a-participants}{%
+\subsection{Non-C8A participants}\label{non-c8a-participants}}
+
+\hypertarget{no-set-aside-used}{%
+\subsection{No set aside used}\label{no-set-aside-used}}
+
+\hypertarget{started-before-quickpay}{%
+\subsection{Started before QuickPay}\label{started-before-quickpay}}
+
+\hypertarget{jobs-act}{%
+\subsection{JOBS act}\label{jobs-act}}
+
+\begin{itemize}
+\tightlist
+\item
+  Jobs act = 1 if Date\textgreater{} Sept 30, 2010
+\item
+  Jobs act was announced on Sept 27, 2010
+\item
+  This variable is zero for only three quarters in our study period: Mar
+  31, 2010; June 30, 2010; and Sept 30, 2010.
+\end{itemize}
+
+\begin{table}[htbp]
+   \caption{Alternative explanations}
+   \centering
+   \tiny
+   \begin{tabular}{lcccccccc}
+      \tabularnewline \midrule \midrule
+      Dependent Variable: & \multicolumn{8}{c}{Percentage delay}\\
+       & \multicolumn{2}{c}{Excluding C8A participant} & \multicolumn{2}{c}{Excluding set-aside used} & \multicolumn{2}{c}{Excluding projects that started after QuickPay} & \multicolumn{2}{c}{JOBS act} \\ 
+      Model:                   & (1)           & (2)           & (3)           & (4)           & (5)           & (6)           & (7)           & (8)\\  
+      \midrule
+      \emph{Variables}\\
+      Treat                    & -0.96$^{***}$ & -0.96$^{***}$ & -1.21$^{***}$ & -1.18$^{***}$ & -0.78$^{***}$ & -0.82$^{***}$ & -0.71$^{***}$ & -0.73$^{***}$\\   
+                               & (0.11)        & (0.11)        & (0.12)        & (0.12)        & (0.11)        & (0.11)        & (0.16)        & (0.16)\\   
+      Treat $\times$ Post      & 0.90$^{***}$  & 0.93$^{***}$  & 1.02$^{***}$  & 1.05$^{***}$  & 1.36$^{***}$  & 1.36$^{***}$  & 1.12$^{***}$  & 1.14$^{***}$\\   
+                               & (0.14)        & (0.14)        & (0.15)        & (0.15)        & (0.17)        & (0.17)        & (0.16)        & (0.16)\\   
+      Treat $\times$ JOBS Act  &               &               &               &               &               &               & -0.32         & -0.31\\   
+                               &               &               &               &               &               &               & (0.21)        & (0.21)\\   
+      \midrule
+      \emph{Fixed-effects}\\
+      Task code                & Yes           & Yes           & Yes           & Yes           & Yes           & Yes           & Yes           & Yes\\  
+      Time                     & Yes           & Yes           & Yes           & Yes           & Yes           & Yes           & Yes           & Yes\\  
+      NAICS                    &               & Yes           &               & Yes           &               & Yes           &               & Yes\\  
+      \midrule
+      \emph{Fit statistics}\\
+      Observations             & 191,396       & 191,396       & 139,862       & 139,862       & 134,365       & 134,365       & 201,738       & 201,738\\  
+      R$^2$                    & 0.21077       & 0.21238       & 0.21134       & 0.21266       & 0.21272       & 0.21510       & 0.21296       & 0.21444\\  
+      Within R$^2$             & 0.14367       & 0.14112       & 0.13636       & 0.13481       & 0.13558       & 0.13231       & 0.14650       & 0.14411\\  
+      \midrule \midrule
+      \multicolumn{9}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{9}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+   
+   \par \raggedright 
+   Sample restricted to projects whose contractors are not C8A participants. Controls include project stage, initial duration, initial budget, and number of bids. Initial duration, initial budget, and number of bids are also interacted with Post are also included as controls
+\end{table}
+\begin{table}[htbp]
+   \caption{Non-C8A participants}
+   \centering
+   \begin{tabular}{lcc}
+      \tabularnewline \midrule \midrule
+      Dependent Variable: & \multicolumn{2}{c}{Percentage delay}\\
+      Model:               & (1)           & (2)\\  
+      \midrule
+      \emph{Variables}\\
+      Treat                & -0.96$^{***}$ & -0.96$^{***}$\\   
+                           & (0.11)        & (0.11)\\   
+      Treat $\times$ Post  & 0.90$^{***}$  & 0.93$^{***}$\\   
+                           & (0.14)        & (0.14)\\   
+      \midrule
+      \emph{Fixed-effects}\\
+      Task code            & Yes           & Yes\\  
+      Time                 & Yes           & Yes\\  
+      NAICS                &               & Yes\\  
+      \midrule
+      \emph{Fit statistics}\\
+      Observations         & 191,396       & 191,396\\  
+      R$^2$                & 0.21077       & 0.21238\\  
+      Within R$^2$         & 0.14367       & 0.14112\\  
+      \midrule \midrule
+      \multicolumn{3}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{3}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+   
+   \par \raggedright 
+   Sample restricted to projects whose contractors are not C8A participants. Controls include project stage, initial duration, initial budget, and number of bids. Initial duration, initial budget, and number of bids are also interacted with Post are also included as controls
+\end{table}
+\begin{table}[htbp]
+   \caption{JOBS act}
+   \centering
+   \begin{tabular}{lcc}
+      \tabularnewline \midrule \midrule
+      Dependent Variable: & \multicolumn{2}{c}{Percentage delay}\\
+      Model:                   & (1)           & (2)\\  
+      \midrule
+      \emph{Variables}\\
+      Treat                    & -0.71$^{***}$ & -0.73$^{***}$\\   
+                               & (0.16)        & (0.16)\\   
+      Treat $\times$ Post      & 1.12$^{***}$  & 1.14$^{***}$\\   
+                               & (0.16)        & (0.16)\\   
+      Treat $\times$ JOBS Act  & -0.32         & -0.31\\   
+                               & (0.21)        & (0.21)\\   
+      \midrule
+      \emph{Fixed-effects}\\
+      Task code                & Yes           & Yes\\  
+      Time                     & Yes           & Yes\\  
+      NAICS                    &               & Yes\\  
+      \midrule
+      \emph{Fit statistics}\\
+      Observations             & 201,738       & 201,738\\  
+      R$^2$                    & 0.21296       & 0.21444\\  
+      Within R$^2$             & 0.14650       & 0.14411\\  
+      \midrule \midrule
+      \multicolumn{3}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{3}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+   
+   \par \raggedright 
+   Controls include project stage, initial duration, initial budget, and number of bids. Initial duration, initial budget, and number of bids are also interacted with Post are also included as controls
+\end{table}
+\begin{table}[htbp]
+   \caption{No set aside used}
+   \centering
+   \begin{tabular}{lcc}
+      \tabularnewline \midrule \midrule
+      Dependent Variable: & \multicolumn{2}{c}{Percentage delay}\\
+      Model:               & (1)           & (2)\\  
+      \midrule
+      \emph{Variables}\\
+      Treat                & -1.21$^{***}$ & -1.18$^{***}$\\   
+                           & (0.12)        & (0.12)\\   
+      Treat $\times$ Post  & 1.02$^{***}$  & 1.05$^{***}$\\   
+                           & (0.15)        & (0.15)\\   
+      \midrule
+      \emph{Fixed-effects}\\
+      Task code            & Yes           & Yes\\  
+      Time                 & Yes           & Yes\\  
+      NAICS                &               & Yes\\  
+      \midrule
+      \emph{Fit statistics}\\
+      Observations         & 139,862       & 139,862\\  
+      R$^2$                & 0.21134       & 0.21266\\  
+      Within R$^2$         & 0.13636       & 0.13481\\  
+      \midrule \midrule
+      \multicolumn{3}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{3}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+   
+   \par \raggedright 
+   Sample restricted to projects that did not use any set aside in the solicitation process. Controls include project stage, initial duration, initial budget, and number of bids. Initial duration, initial budget, and number of bids are also interacted with Post are also included as controls
+\end{table}
+
+\end{document}

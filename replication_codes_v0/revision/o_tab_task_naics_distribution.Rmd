@@ -1,0 +1,188 @@
+---
+title: "Task + NAICS distribution"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(lfe)
+library(stargazer)
+library(fixest)
+library(tidyverse)
+library(DescTools)
+library(ggpubr)
+```
+
+```{r read_data,include=FALSE}
+working_path='~/Dropbox/data_quickpay/qp_replication/working/'
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+reg_df_subset[,five_digit_naics:=substr(naics_code,1,5)]
+reg_df_subset[,one_digit_psc:=substr(product_or_service_code,1,1)]
+```
+
+```{r naics_distribution, include=FALSE}
+small_before_qp=ggplot(reg_df_subset[treat_new==1 &
+                                         post_t==0], 
+                       aes(five_digit_naics)) + 
+                        geom_bar(aes(y =..prop.., group = 1)) + 
+                      theme_minimal()+
+                      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                           plot.background = element_blank(),
+                           panel.grid.major = element_blank(),
+                           panel.grid.minor = element_blank(),
+                           panel.border = element_rect(colour = "black", fill=NA))+
+                        xlab("Five-digit NAICS code")+
+                        ylab("Proportion")+
+                        ggtitle("Small business projects before QuickPay")
+
+small_after_qp=ggplot(reg_df_subset[treat_new==1 &
+                                         post_t==1], 
+                       aes(five_digit_naics)) + 
+                        geom_bar(aes(y =..prop.., group = 1)) + 
+                      theme_minimal()+
+                      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                             plot.background = element_blank(),
+                             panel.grid.major = element_blank(),
+                             panel.grid.minor = element_blank(),
+                             panel.border = element_rect(colour = "black", fill=NA))+
+                        xlab("Five-digit NAICS code")+
+                        ylab("Proportion")+
+                        ggtitle("Small business projects after QuickPay")
+
+large_before_qp=ggplot(reg_df_subset[treat_new==0 &
+                                         post_t==0], 
+                       aes(five_digit_naics)) + 
+                        geom_bar(aes(y =..prop.., group = 1)) + 
+                      theme_minimal()+
+                      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                           plot.background = element_blank(),
+                           panel.grid.major = element_blank(),
+                           panel.grid.minor = element_blank(),
+                           panel.border = element_rect(colour = "black", fill=NA))+
+                        xlab("Five-digit NAICS code")+
+                        ylab("Proportion")+
+                        ggtitle("Large business projects before QuickPay")
+
+large_after_qp=ggplot(reg_df_subset[treat_new==0 &
+                                         post_t==1], 
+                       aes(five_digit_naics)) + 
+                        geom_bar(aes(y =..prop.., group = 1)) + 
+                      theme_minimal()+
+                      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                             plot.background = element_blank(),
+                             panel.grid.major = element_blank(),
+                             panel.grid.minor = element_blank(),
+                             panel.border = element_rect(colour = "black", fill=NA))+
+                        xlab("Five-digit NAICS code")+
+                        ylab("Proportion")+
+                        ggtitle("Large business projects after QuickPay")
+
+
+naics_distribution=ggarrange(small_before_qp,
+          small_after_qp,
+          nrow=2)
+```
+
+```{r task_distribution, include=FALSE}
+
+small_before_qp_task=ggplot(reg_df_subset[treat_new==1 &
+                                         post_t==0], 
+                       aes(one_digit_psc)) + 
+                        geom_bar(aes(y =..prop.., group = 1)) + 
+                      theme_minimal()+
+                      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                           plot.background = element_blank(),
+                           panel.grid.major = element_blank(),
+                           panel.grid.minor = element_blank(),
+                           panel.border = element_rect(colour = "black", fill=NA))+
+                        # Only every third value is displayed on x-axis
+                    #     scale_x_discrete(breaks = function(x){x[c(TRUE, FALSE, FALSE)]})+
+                        xlab("One-digit task code")+
+                        ylab("Proportion")+
+                        ggtitle("Small business projects before QuickPay")
+
+small_after_qp_task=ggplot(reg_df_subset[treat_new==1 &
+                                         post_t==1], 
+                       aes(one_digit_psc)) + 
+                        geom_bar(aes(y =..prop.., group = 1)) + 
+                      theme_minimal()+
+                      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                             plot.background = element_blank(),
+                             panel.grid.major = element_blank(),
+                             panel.grid.minor = element_blank(),
+                             panel.border = element_rect(colour = "black", fill=NA))+
+                        # Only every third value is displayed on x-axis
+                     #    scale_x_discrete(breaks = function(x){x[c(TRUE, FALSE, FALSE)]})+
+                        xlab("One-digit task code")+
+                        ylab("Proportion")+
+                        ggtitle("Small business projects after QuickPay")
+
+large_before_qp_task=ggplot(reg_df_subset[treat_new==0 &
+                                         post_t==0], 
+                       aes(one_digit_psc)) + 
+                        geom_bar(aes(y =..prop.., group = 1)) + 
+                      theme_minimal()+
+                      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                           plot.background = element_blank(),
+                           panel.grid.major = element_blank(),
+                           panel.grid.minor = element_blank(),
+                           panel.border = element_rect(colour = "black", fill=NA))+
+                        # Only every third value is displayed on x-axis
+                      #   scale_x_discrete(breaks = function(x){x[c(TRUE, FALSE, FALSE)]})+
+                        xlab("One-digit task code")+
+                        ylab("Proportion")+
+                        ggtitle("Large business projects before QuickPay")
+
+large_after_qp_task=ggplot(reg_df_subset[treat_new==0 &
+                                         post_t==1], 
+                       aes(one_digit_psc)) + 
+                        geom_bar(aes(y =..prop.., group = 1)) + 
+                      theme_minimal()+
+                      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                             plot.background = element_blank(),
+                             panel.grid.major = element_blank(),
+                             panel.grid.minor = element_blank(),
+                             panel.border = element_rect(colour = "black", fill=NA))+
+                        # Only every third value is displayed on x-axis
+                       #  scale_x_discrete(breaks = function(x){x[c(TRUE, FALSE, FALSE)]})+
+                        xlab("One-digit task code")+
+                        ylab("Proportion")+
+                        ggtitle("Large business projects after QuickPay")
+
+
+task_distribution=ggarrange(small_before_qp_task,
+          small_after_qp_task,
+          nrow=2)
+```
+
+```{r save_plots, include=FALSE}
+ggsave(paste0(getwd(),
+              "/naics_distribution.png"),
+       naics_distribution,
+       width=8,
+       height=6,
+       bg="white")
+
+ggsave(paste0(getwd(),
+              "/task_distribution.png"),
+       task_distribution,
+       width=10,
+       height=6,
+       bg="white")
+
+```
