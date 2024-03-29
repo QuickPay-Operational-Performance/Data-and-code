@@ -7,7 +7,7 @@ output:
     number_sections: true
 header-includes:
  \usepackage{booktabs,longtable,dcolumn}
- \usepackage{multirow,array}
+ \usepackage{multirow,array,makecell}
  \usepackage{wrapfig,float}
  \floatplacement{figure}{H}
 ---
@@ -37,12 +37,14 @@ df_first_reported=fread(paste0(data_folder,'qp_data_first_reported.csv'))
 ```
 
 ```{r 8a_participants, include=FALSE}
-c8a_participants=df_first_reported[,c('contract_award_unique_key',
+get_vars=df_first_reported[,c('contract_award_unique_key',
                                       'c8a_program_participant',
-                                      'type_of_set_aside')]
+                                      'type_of_set_aside',
+                                      'sba_certified_8a_joint_venture',
+                                      'receives_grants')]
 
 reg_df_subset=merge(reg_df_subset,
-                    c8a_participants,
+                    get_vars,
                     by='contract_award_unique_key',
                     all.x=T)
 ```
@@ -50,52 +52,7 @@ reg_df_subset=merge(reg_df_subset,
 ## Non-C8A participants
 
 ```{r non_c8a_regs, include=FALSE,warning=FALSE,message=FALSE}
-m1=feols(wins_percentage_delay~treat_new+
-                     post_t:treat_new+
-                     post_t,
-                  cluster=~contract_award_unique_key, # clustered at project level
-                  data=reg_df_subset[c8a_program_participant=="f"])
-
-m2=feols(wins_percentage_delay~treat_new+
-                           post_t:treat_new+
-                           post_t+
-                           log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            wins_number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received,
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset[c8a_program_participant=="f"])
-
-m3=feols(wins_percentage_delay~treat_new+
-                             post_t:treat_new+
-                           log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            wins_number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received|
-                            action_date_year_quarter,
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset[c8a_program_participant=="f"])
-
-m4=feols(wins_percentage_delay~treat_new+
-                              post_t:treat_new+
-                           log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            wins_number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received|
-                            product_or_service_code+action_date_year_quarter,
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset[c8a_program_participant=="f"])
-
-m5=feols(wins_percentage_delay~treat_new+
+non_c8a=feols(wins_percentage_delay~treat_new+
                             post_t:treat_new+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -106,60 +63,15 @@ m5=feols(wins_percentage_delay~treat_new+
                             post_t:wins_number_of_offers_received|
                             naics_code+product_or_service_code+action_date_year_quarter,
                             cluster=~contract_award_unique_key,
-                          data=reg_df_subset[c8a_program_participant=="f"])
+                          data=reg_df_subset[c8a_program_participant=="f"&
+                                       sba_certified_8a_joint_venture=="f"])
 
-non_c8a=list(m4,m5)
 ```
 
 ## No set aside used
 
 ```{r no_set_aside, include=FALSE,warning=FALSE,message=FALSE}
-m1=feols(wins_percentage_delay~treat_new+
-                     post_t:treat_new+
-                     post_t,
-                  cluster=~contract_award_unique_key, # clustered at project level
-                  data=reg_df_subset[type_of_set_aside%in%c("","NO SET ASIDE USED.")])
-
-m2=feols(wins_percentage_delay~treat_new+
-                           post_t:treat_new+
-                           post_t+
-                           log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            wins_number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received,
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset[type_of_set_aside%in%c("","NO SET ASIDE USED.")])
-
-m3=feols(wins_percentage_delay~treat_new+
-                             post_t:treat_new+
-                           log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            wins_number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received|
-                            action_date_year_quarter,
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset[type_of_set_aside%in%c("","NO SET ASIDE USED.")])
-
-m4=feols(wins_percentage_delay~treat_new+
-                              post_t:treat_new+
-                           log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            wins_number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received|
-                            product_or_service_code+action_date_year_quarter,
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset[type_of_set_aside%in%c("","NO SET ASIDE USED.")])
-
-m5=feols(wins_percentage_delay~treat_new+
+no_set_aside_used=feols(wins_percentage_delay~treat_new+
                             post_t:treat_new+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -171,32 +83,36 @@ m5=feols(wins_percentage_delay~treat_new+
                             naics_code+product_or_service_code+action_date_year_quarter,
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset[type_of_set_aside%in%c("","NO SET ASIDE USED.")])
+```
 
-no_set_aside_used=list(m4,m5)
+## Does not receive grants
+
+```{r no_grants,include=FALSE}
+contracts_receiving_grants=unique(reg_df_subset[receives_grants=='t']$
+                                    recipient_duns)
+
+no_grants=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset[!(recipient_duns%in%
+                                                 contracts_receiving_grants)])
 ```
 
 ## Started before QuickPay
 
 ```{r before_qp, include=FALSE}
-projects_started_before_qp=unique(reg_df_subset[initial_start_date<=
+projects_started_before_qp=unique(reg_df_subset[initial_start_date<
                                                   as.Date('2011-04-27')]$contract_award_unique_key)
 
-
-m4=feols(wins_percentage_delay~treat_new+
-                              post_t:treat_new+
-                           log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            wins_number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received|
-                            product_or_service_code+action_date_year_quarter,
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset[contract_award_unique_key%in%
-                                               projects_started_before_qp])
-
-m5=feols(wins_percentage_delay~treat_new+
+projects_before_qp=feols(wins_percentage_delay~treat_new+
                             post_t:treat_new+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -210,69 +126,19 @@ m5=feols(wins_percentage_delay~treat_new+
                           data=reg_df_subset[contract_award_unique_key%in%
                                                projects_started_before_qp])
 
-projects_before_qp=list(m4,m5)
 ```
 
-## JOBS act
+## Small business jobs act
 
 * Jobs act = 1 if Date> Sept 30, 2010
 * Jobs act was announced on Sept 27, 2010
 * This variable is zero for only three quarters in our study period: Mar 31, 2010; June 30, 2010; and Sept 30, 2010.
 
 ```{r jobs_act,include=FALSE,warning=FALSE,message=FALSE}
-reg_df_subset[,jobs_act:=ifelse(action_date_year_quarter>as.Date('2010-09-30'),1,0)]
+reg_df_subset[,jobs_act:=ifelse(action_date_year_quarter>as.Date('2010-09-30'),
+                                1,0)]
 
-m1=feols(wins_percentage_delay~treat_new+
-                            treat_new:jobs_act+
-                     post_t:treat_new+
-                     post_t+
-                    jobs_act,
-                  cluster=~contract_award_unique_key, # clustered at project level
-                  data=reg_df_subset)
-
-m2=feols(wins_percentage_delay~treat_new+
-                            treat_new:jobs_act+
-                           post_t:treat_new+
-                           post_t+
-                           log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            wins_number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received,
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset)
-
-m3=feols(wins_percentage_delay~treat_new+
-                            treat_new:jobs_act+
-                             post_t:treat_new+
-                           log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            wins_number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received|
-                            action_date_year_quarter,
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset)
-
-m4=feols(wins_percentage_delay~treat_new+
-                              post_t:treat_new+
-                            treat_new:jobs_act+
-                           log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            wins_number_of_offers_received+
-                            post_t:log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received|
-                            product_or_service_code+action_date_year_quarter,
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset)
-
-m5=feols(wins_percentage_delay~treat_new+
+jobs_act_regs=feols(wins_percentage_delay~treat_new+
                             post_t:treat_new+
                             treat_new:jobs_act+
                             log(wins_project_quarter_stage)+
@@ -285,36 +151,38 @@ m5=feols(wins_percentage_delay~treat_new+
                             naics_code+product_or_service_code+action_date_year_quarter,
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset)
-
-jobs_act_regs=list(m4,m5)
 ```
 
 ```{r export_results, echo=FALSE,results='asis'}
 setFixest_dict(dict=c("wins_percentage_delay"="Percentage delay",
-                      "post_t"="Post",
-                      "treat_new"="Treat",
+                      "post_t"="$Post_t$",
+                      "treat_new"="$Treat_i$",
                       "log(wins_project_quarter_stage)"="Project stage",
                       "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
                       "log(1+winsorized_initial_budget_i)"="Initial budget",
                       "wins_number_of_offers_received"="Number of offers",
                       "contract_award_unique_key"="Project ID",
-                      "product_or_service_code"="Task code",
+                      "product_or_service_code"="Task",
                       "action_date_year_quarter"="Time",
-                      "naics_code"="NAICS",
-                      "jobs_act"="JOBS Act"
+                      "naics_code"="Industry",
+                      "jobs_act"="After Jobs Act"
                       ))
 
-etable(non_c8a,
+etable(jobs_act_regs,
+       no_grants,
        no_set_aside_used,
+       non_c8a,
        projects_before_qp,
-       jobs_act_regs,
        digits='r2',
        fontsize = 'tiny',
        title="Alternative explanations",
-       headers=list("Excluding C8A participant"=2, 
-                    "Excluding set-aside used"=2,
-                    "Excluding projects that started after QuickPay"=2,
-                    "JOBS act"=2),
+       headers=list(c("\\makecell{Small business \\\\ jobs act}",
+                    "\\makecell{Excluding contractors \\\\
+                    that receive grants}",
+                    "\\makecell{Excluding set-aside \\\\ projects}",
+                    "\\makecell{Excluding 8(A) \\\\ contractors}", 
+                    "\\makecell{Excluding projects that\\\\ started after QuickPay}"
+                    )),
        drop=c("Project stage",
               "Initial duration",
               "Initial budget",
@@ -330,6 +198,6 @@ etable(non_c8a,
                            yesNo = c("Yes","No"),
                            line.bottom="simple",
                            line.top="simple"),
-       notes="Sample restricted to projects whose contractors are not C8A participants. Controls include project stage, initial duration, initial budget, and number of bids. Initial duration, initial budget, and number of bids are also interacted with Post are also included as controls",
+       notes="Controls include project stage, initial duration, initial budget, and number of bids. Initial duration, initial budget, and number of bids are also interacted with Post are also included as controls",
        tex=TRUE)
 ```

@@ -70,7 +70,88 @@ m3=feols(wins_percentage_delay~treat_new+
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset)
 
+m1_stage_post=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(wins_project_quarter_stage)+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+m2_stage_post=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(wins_project_quarter_stage)+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+m3_stage_post=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(wins_project_quarter_stage)+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+m1_no_post_interaction=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+m2_no_post_interaction=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+m3_no_post_interaction=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
 delay_rates=list(m1,m2,m3)
+
+stage_post=list(m1_stage_post,
+                m2_stage_post,
+                m3_stage_post)
+
+no_post_interaction=list(m1_no_post_interaction,
+                         m2_no_post_interaction,
+                         m3_no_post_interaction)
+
 ```
 
 ```{r positive_delay_setup, include=FALSE}
@@ -207,6 +288,35 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       "awarding_sub_agency_code"="Subagency"
                       ))
 
+
+etable(delay_rates,
+       stage_post,
+       no_post_interaction,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       title="Baseline diff-in-diff effect",
+       headers=list("Excluding Stage $\\times Post_t$"=length(delay_rates),
+                    "Including Stage $\\times Post_t$"=length(stage_post),
+                    "Excluding X $\\times Post_t$"=length(no_post_interaction)),
+       fitstat = c("pr2","n","r2"),
+       drop=c("Project stage",
+              "Initial duration",
+              "Initial budget",
+              "Number of offers"),
+       style.tex=style.tex(fixef.title = "",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "",
+                           model.title = "",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls",
+       tex=TRUE)
+       
 etable(delay_rates,
        positive_delay_logit,
        conditional_delay_rates,

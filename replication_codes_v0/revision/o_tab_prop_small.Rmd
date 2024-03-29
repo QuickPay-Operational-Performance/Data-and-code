@@ -1,0 +1,152 @@
+---
+title: "Congestion"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float,makecell}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(lfe)
+library(stargazer)
+library(fixest)
+library(tidyverse)
+library(DescTools) 
+```
+
+```{r read_data,include=FALSE}
+input_path='~/Dropbox/data_quickpay/qp_replication/input/'
+reg_df=fread(paste0(input_path,
+                 'quickpay_delays.csv'))
+```
+
+```{r regs, echo=FALSE, results='asis'}
+# Treated projects
+a=reg_df[treat_i==1 &
+           recipient_duns!=0,
+       .(num_small=n_distinct(contract_award_unique_key)),
+       by=c('recipient_duns',
+            'action_date_year_quarter')]
+
+# Control projects
+b=reg_df[treat_i==0 &
+           recipient_duns!=0,
+         .(num_large=n_distinct(contract_award_unique_key)),
+         by=c('recipient_duns',
+              'action_date_year_quarter')]
+
+c=merge(a,
+        b,
+        by=c('recipient_duns',
+             'action_date_year_quarter'),
+        all=T)
+
+# If no small or no large project for a contractor, set as zero
+c[is.na(c)]=0
+
+c[,prop_small:=num_small/(num_small+num_large)]
+c[,post_t:=ifelse(action_date_year_quarter>=as.Date('2011-04-27'),
+                      1,0)]
+
+# Contractors that have at least one small and at least one large project
+m1=feols(prop_small~post_t|recipient_duns,
+      data=c)
+
+m2=feols(prop_small~post_t|recipient_duns,
+      data=c[prop_small>0
+                       &prop_small<1])
+
+c[,Q:=relevel(as.factor(action_date_year_quarter),
+                            ref="2011-03-31")]
+
+m3=feols(prop_small~Q|recipient_duns,
+      data=c)
+
+m4=feols(prop_small~Q|recipient_duns,
+      data=c[prop_small>0
+                       &prop_small<1])
+
+setFixest_dict(c(post_t="$Post_t$", 
+                 recipient_duns="Contractor",
+                 action_date_year_quarter="Time"))
+
+etable(m1,m2,
+       tex=T,
+       extralines = list("Sub-sample"=c("All contractors", 
+                                        "Contractors with \n both type of projects")))
+
+etable(m3,m4,
+       tex=T,
+       extralines = list("Sub-sample"=c("All contractors", 
+                                        "Contractors with \n both type of projects")))
+
+```
+
+```{r time_plot, echo=FALSE, results='asis'}
+c[,type:=case_when(prop_small==1~"Only small projects",
+                   prop_small==0~"Only large projects",
+                   prop_small>0 & prop_small<1 ~ "Both S&L projects")]
+
+c_avg=c[,.(avg_small=mean(num_small,na.rm=T),
+           avg_large=mean(num_large,na.rm=T)),
+        by=c('action_date_year_quarter',
+             'type')]
+
+ggplot(c_avg, 
+       aes(x=as.factor(action_date_year_quarter),
+           y=avg_small,
+           group=type,
+           linetype=type,
+           color=type,
+           shape=type))+
+    geom_point()+geom_line()+
+    theme_minimal()+
+    theme(axis.text.x = element_text(angle = 90, 
+                                     vjust = 0.5, hjust=1))+
+    xlab("Time")+
+    ylab("Average number of small projects")+
+    ggtitle("Full sample")
+
+ggplot(c_avg, 
+       aes(x=as.factor(action_date_year_quarter),
+           y=avg_large,
+           group=type,
+           linetype=type,
+           color=type,
+           shape=type))+
+    geom_point()+geom_line()+
+    theme_minimal()+
+    theme(axis.text.x = element_text(angle = 90, 
+                                     vjust = 0.5, hjust=1))+
+    xlab("Time")+
+    ylab("Average number of large projects")+
+    ggtitle("Full sample")
+
+c_avg_2=c[prop_small>0 &
+            prop_small<1,
+          .(avg_prop=mean(prop_small,na.rm=T)),
+        by=c('action_date_year_quarter')]
+
+ggplot(c_avg_2, 
+       aes(x=as.factor(action_date_year_quarter),
+           y=avg_prop,group=1))+
+  geom_point()+geom_line()+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90, 
+                                   vjust = 0.5, hjust=1))+
+  xlab("Time")+
+  ylab("Average proportion of small projects")+
+  ggtitle("Contractors holding both types of projects")
+```

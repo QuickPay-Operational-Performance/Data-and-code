@@ -31,67 +31,111 @@ library(ggpubr)
 working_path='~/Dropbox/data_quickpay/qp_replication/working/'
 reg_df_subset=fread(paste0(working_path,
                  'w_clean_control.csv'))
-reg_df_subset[,five_digit_naics:=substr(naics_code,1,5)]
+reg_df_subset[,four_digit_naics:=substr(naics_code,1,4)]
 reg_df_subset[,one_digit_psc:=substr(product_or_service_code,1,1)]
+reg_df_subset[,two_digit_psc:=substr(product_or_service_code,1,2)]
+
+reg_df_subset[,started_after_qp:=fifelse(initial_start_date>=as.Date('2011-04-27'),1,0)]
+
+reg_df_subset=reg_df_subset[initial_start_date<=action_date_year_quarter]
 ```
 
 ```{r naics_distribution, include=FALSE}
-small_before_qp=ggplot(reg_df_subset[treat_new==1 &
-                                         post_t==0], 
-                       aes(five_digit_naics)) + 
-                        geom_bar(aes(y =..prop.., group = 1)) + 
+
+#### Before QuickPay #### 
+small_before=reg_df_subset[treat_new==1 & 
+                             started_after_qp==0, 
+                           .(num_small_projs=n_distinct(contract_award_unique_key)),
+                           by='four_digit_naics']
+
+large_before=reg_df_subset[treat_new==0 & 
+                             started_after_qp==0, 
+                           .(num_large_projs=n_distinct(contract_award_unique_key)),
+                           by='four_digit_naics']
+
+trend_before=merge(small_before,
+                   large_before,
+                   by='four_digit_naics',
+                   all=T)
+
+trend_before[is.na(trend_before)]=0
+trend_before[,prop_small_before:=num_small_projs/(num_small_projs+num_large_projs)]
+
+
+#### After QuickPay ####
+small_after=reg_df_subset[treat_new==1 & 
+                             started_after_qp==1, 
+                           .(num_small_projs=n_distinct(contract_award_unique_key)),
+                           by='four_digit_naics']
+
+large_after=reg_df_subset[treat_new==0 & 
+                             started_after_qp==1, 
+                           .(num_large_projs=n_distinct(contract_award_unique_key)),
+                           by='four_digit_naics']
+
+trend_after=merge(small_after,
+                   large_after,
+                   by='four_digit_naics',
+                   all=T)
+
+trend_after[is.na(trend_after)]=0
+trend_after[,prop_small_after:=num_small_projs/(num_small_projs+num_large_projs)]
+
+#### Merge ####
+trend_naics=merge(trend_after[,c('four_digit_naics','prop_small_after')],
+                  trend_before[,c('four_digit_naics','prop_small_before')],
+                  by='four_digit_naics',
+                  all=T)
+
+trend_naics[,difference_in_prop:=prop_small_after-prop_small_before]
+
+#### Plot codes ####
+
+small_difference_in_prop_naics=ggplot(trend_naics, 
+       aes(x = four_digit_naics, 
+                           y = c(difference_in_prop)))+
+                      geom_bar(stat = "identity", position = "dodge") +
                       theme_minimal()+
                       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
                            plot.background = element_blank(),
                            panel.grid.major = element_blank(),
                            panel.grid.minor = element_blank(),
                            panel.border = element_rect(colour = "black", fill=NA))+
-                        xlab("Five-digit NAICS code")+
-                        ylab("Proportion")+
-                        ggtitle("Small business projects before QuickPay")
+                        xlab("Four-digit NAICS code")+
+                        ylab("Difference in Proportion")+
+                        ylim(-1,1)+
+                        ggtitle("Difference in Proportion of small business projects after QuickPay")
 
-small_after_qp=ggplot(reg_df_subset[treat_new==1 &
-                                         post_t==1], 
-                       aes(five_digit_naics)) + 
-                        geom_bar(aes(y =..prop.., group = 1)) + 
-                      theme_minimal()+
-                      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-                             plot.background = element_blank(),
-                             panel.grid.major = element_blank(),
-                             panel.grid.minor = element_blank(),
-                             panel.border = element_rect(colour = "black", fill=NA))+
-                        xlab("Five-digit NAICS code")+
-                        ylab("Proportion")+
-                        ggtitle("Small business projects after QuickPay")
 
-large_before_qp=ggplot(reg_df_subset[treat_new==0 &
-                                         post_t==0], 
-                       aes(five_digit_naics)) + 
-                        geom_bar(aes(y =..prop.., group = 1)) + 
+small_before_qp=ggplot(trend_naics, 
+                       aes(x = four_digit_naics, 
+                           y = c(prop_small_before)))+
+                      geom_bar(stat = "identity", position = "dodge") +
                       theme_minimal()+
+                        ylim(0,1)+
                       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
                            plot.background = element_blank(),
                            panel.grid.major = element_blank(),
                            panel.grid.minor = element_blank(),
                            panel.border = element_rect(colour = "black", fill=NA))+
-                        xlab("Five-digit NAICS code")+
+                        xlab("Four-digit NAICS code")+
                         ylab("Proportion")+
-                        ggtitle("Large business projects before QuickPay")
+                        ggtitle("Proportion of small business projects before QuickPay")
 
-large_after_qp=ggplot(reg_df_subset[treat_new==0 &
-                                         post_t==1], 
-                       aes(five_digit_naics)) + 
-                        geom_bar(aes(y =..prop.., group = 1)) + 
+small_after_qp=ggplot(trend_naics, 
+                       aes(x = four_digit_naics, 
+                           y = c(prop_small_after)))+
+                      geom_bar(stat = "identity", position = "dodge")  + 
                       theme_minimal()+
+                        ylim(0,1)+
                       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
                              plot.background = element_blank(),
                              panel.grid.major = element_blank(),
                              panel.grid.minor = element_blank(),
                              panel.border = element_rect(colour = "black", fill=NA))+
-                        xlab("Five-digit NAICS code")+
+                        xlab("Four-digit NAICS code")+
                         ylab("Proportion")+
-                        ggtitle("Large business projects after QuickPay")
-
+                        ggtitle("Proportion of small business projects after QuickPay")
 
 naics_distribution=ggarrange(small_before_qp,
           small_after_qp,
@@ -100,70 +144,99 @@ naics_distribution=ggarrange(small_before_qp,
 
 ```{r task_distribution, include=FALSE}
 
-small_before_qp_task=ggplot(reg_df_subset[treat_new==1 &
-                                         post_t==0], 
-                       aes(one_digit_psc)) + 
-                        geom_bar(aes(y =..prop.., group = 1)) + 
+#### Before QuickPay #### 
+small_before=reg_df_subset[treat_new==1 & 
+                             started_after_qp==0, 
+                           .(num_small_projs=n_distinct(contract_award_unique_key)),
+                           by='one_digit_psc']
+
+large_before=reg_df_subset[treat_new==0 & 
+                             started_after_qp==0, 
+                           .(num_large_projs=n_distinct(contract_award_unique_key)),
+                           by='one_digit_psc']
+
+trend_before=merge(small_before,
+                   large_before,
+                   by='one_digit_psc',
+                   all=T)
+
+trend_before[is.na(trend_before)]=0
+trend_before[,prop_small_before:=num_small_projs/(num_small_projs+num_large_projs)]
+
+
+#### After QuickPay ####
+small_after=reg_df_subset[treat_new==1 & 
+                             started_after_qp==1, 
+                           .(num_small_projs=n_distinct(contract_award_unique_key)),
+                           by='one_digit_psc']
+
+large_after=reg_df_subset[treat_new==0 & 
+                             started_after_qp==1, 
+                           .(num_large_projs=n_distinct(contract_award_unique_key)),
+                           by='one_digit_psc']
+
+trend_after=merge(small_after,
+                   large_after,
+                   by='one_digit_psc',
+                   all=T)
+
+trend_after[is.na(trend_after)]=0
+trend_after[,prop_small_after:=num_small_projs/(num_small_projs+num_large_projs)]
+
+#### Merge ####
+trend_psc=merge(trend_after[,c('one_digit_psc','prop_small_after')],
+                  trend_before[,c('one_digit_psc','prop_small_before')],
+                  by='one_digit_psc',
+                  all=T)
+
+#### Plot codes ####
+
+trend_psc[,difference_in_proportion:=prop_small_after-prop_small_before]
+
+small_difference_in_prop_task=ggplot(trend_psc, 
+                       aes(x = one_digit_psc, 
+                           y = c(difference_in_proportion)))+
+                      geom_bar(stat = "identity", position = "dodge") +
                       theme_minimal()+
                       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
                            plot.background = element_blank(),
                            panel.grid.major = element_blank(),
                            panel.grid.minor = element_blank(),
                            panel.border = element_rect(colour = "black", fill=NA))+
-                        # Only every third value is displayed on x-axis
-                    #     scale_x_discrete(breaks = function(x){x[c(TRUE, FALSE, FALSE)]})+
-                        xlab("One-digit task code")+
-                        ylab("Proportion")+
-                        ggtitle("Small business projects before QuickPay")
+                        xlab("One-digit Task code")+
+                        ylab("Difference in proportion")+
+                        ylim(-1,1)+
+                        ggtitle("Difference in proportion of small business projects after QuickPay")
 
-small_after_qp_task=ggplot(reg_df_subset[treat_new==1 &
-                                         post_t==1], 
-                       aes(one_digit_psc)) + 
-                        geom_bar(aes(y =..prop.., group = 1)) + 
-                      theme_minimal()+
-                      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-                             plot.background = element_blank(),
-                             panel.grid.major = element_blank(),
-                             panel.grid.minor = element_blank(),
-                             panel.border = element_rect(colour = "black", fill=NA))+
-                        # Only every third value is displayed on x-axis
-                     #    scale_x_discrete(breaks = function(x){x[c(TRUE, FALSE, FALSE)]})+
-                        xlab("One-digit task code")+
-                        ylab("Proportion")+
-                        ggtitle("Small business projects after QuickPay")
-
-large_before_qp_task=ggplot(reg_df_subset[treat_new==0 &
-                                         post_t==0], 
-                       aes(one_digit_psc)) + 
-                        geom_bar(aes(y =..prop.., group = 1)) + 
+small_before_qp_task=ggplot(trend_psc, 
+                       aes(x = one_digit_psc, 
+                           y = c(prop_small_before)))+
+                      geom_bar(stat = "identity", position = "dodge") +
                       theme_minimal()+
                       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
                            plot.background = element_blank(),
                            panel.grid.major = element_blank(),
                            panel.grid.minor = element_blank(),
                            panel.border = element_rect(colour = "black", fill=NA))+
-                        # Only every third value is displayed on x-axis
-                      #   scale_x_discrete(breaks = function(x){x[c(TRUE, FALSE, FALSE)]})+
-                        xlab("One-digit task code")+
+                        xlab("One-digit Task code")+
                         ylab("Proportion")+
-                        ggtitle("Large business projects before QuickPay")
+                        ylim(0,1)+
+                        ggtitle("Proportion of small business projects before QuickPay")
 
-large_after_qp_task=ggplot(reg_df_subset[treat_new==0 &
-                                         post_t==1], 
-                       aes(one_digit_psc)) + 
-                        geom_bar(aes(y =..prop.., group = 1)) + 
+small_after_qp_task=ggplot(trend_psc, 
+                       aes(x = one_digit_psc, 
+                           y = c(prop_small_after)))+
+                      geom_bar(stat = "identity", position = "dodge")  + 
                       theme_minimal()+
                       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
                              plot.background = element_blank(),
                              panel.grid.major = element_blank(),
                              panel.grid.minor = element_blank(),
                              panel.border = element_rect(colour = "black", fill=NA))+
-                        # Only every third value is displayed on x-axis
-                       #  scale_x_discrete(breaks = function(x){x[c(TRUE, FALSE, FALSE)]})+
-                        xlab("One-digit task code")+
+                        xlab("One-digit Task code")+
                         ylab("Proportion")+
-                        ggtitle("Large business projects after QuickPay")
-
+                        ylim(0,1)+
+                        ggtitle("Proportion of small business projects after QuickPay")
 
 task_distribution=ggarrange(small_before_qp_task,
           small_after_qp_task,
@@ -172,8 +245,22 @@ task_distribution=ggarrange(small_before_qp_task,
 
 ```{r save_plots, include=FALSE}
 ggsave(paste0(getwd(),
+              '/small_difference_in_prop_naics.png'),
+       small_difference_in_prop_naics,
+       width=8,
+       height=6,
+       bg="white")
+
+ggsave(paste0(getwd(),
               "/naics_distribution.png"),
        naics_distribution,
+       width=8,
+       height=6,
+       bg="white")
+
+ggsave(paste0(getwd(),
+              '/small_difference_in_prop_task.png'),
+       small_difference_in_prop_task,
        width=8,
        height=6,
        bg="white")
@@ -184,5 +271,5 @@ ggsave(paste0(getwd(),
        width=10,
        height=6,
        bg="white")
-
 ```
+
