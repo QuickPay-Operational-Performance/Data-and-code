@@ -46,7 +46,7 @@ projects=unique(reg_df_subset[,c('contract_award_unique_key')])
 set.seed(1458); # to get same result everytime
 
 placebo_regs=list()
-for(i in 1:100){
+for(i in 1:500){
     print(i)
     # Placebo Treatment Group
     projects[,false_treat:=sample(0:1, size = nrow(projects), replace = TRUE)]
@@ -61,10 +61,10 @@ for(i in 1:100){
                                log(wins_project_quarter_stage)+
                                 log(1+winsorized_initial_duration_in_days_i)+
                                 log(1+winsorized_initial_budget_i)+
-                                number_of_offers_received+
+                                wins_number_of_offers_received+
                                 post_t:log(1+winsorized_initial_duration_in_days_i)+
                                 post_t:log(1+winsorized_initial_budget_i)+
-                                post_t:number_of_offers_received|
+                                post_t:wins_number_of_offers_received|
                                 naics_code+product_or_service_code+action_date_year_quarter,
                           cluster=~contract_award_unique_key,
                               data=reg_df_subset)
@@ -79,12 +79,40 @@ placebo_reg_table=do.call("rbind",placebo_regs)
 ```{r placebo_plot, include=FALSE}
 setDT(placebo_reg_table)
 placebo_reg_table[,specification:=as.factor(seq(1,nrow(placebo_reg_table)))]
+```
+
+```{r density_plot, include=FALSE}
+treatment_group_placebo_density=ggplot(placebo_reg_table, 
+       aes(x = estimate, 
+           fill = p.value<0.05)) + 
+  geom_histogram(colour = "black",
+                 lwd = 0.25,
+                 linetype = 1,
+                 position = "identity",
+                 bins = 50) + 
+    scale_fill_manual(labels = setNames(c("p<0.05", "p>0.05"),
+                                          c(T, F)), 
+                        values = setNames(c('darkgray',
+                                            'white'),
+                                          c(T, F)))+
+    theme_minimal() +
+    theme(axis.title.y = element_text(size = 12),
+          axis.ticks = element_blank(),
+          panel.grid = element_blank(),
+          axis.line = element_blank(),
+          panel.background = element_rect(color = "black"),
+          legend.position = "top",
+          legend.title = element_blank())+
+    xlab("Estimate (Percentage delay)") +
+    ylab("")+
+    labs(color = "")
 
 treatment_group_placebo=ggplot(placebo_reg_table, 
        aes(x = specification,
            y = estimate,
            color =  p.value<0.05)) +         
     geom_point(size = 1) +
+    geom_density()+
     geom_errorbar(aes(ymin = conf.low, 
                       ymax = conf.high,
                       width = 2)) +
@@ -111,6 +139,12 @@ treatment_group_placebo=ggplot(placebo_reg_table,
 ggsave(paste0(getwd(),
               '/treatment_group_placebo.png'),
        treatment_group_placebo,
+       bg="white",
+       width=10)
+
+ggsave(paste0(getwd(),
+              '/treatment_group_placebo_density.png'),
+       treatment_group_placebo_density,
        bg="white",
        width=10)
 ```

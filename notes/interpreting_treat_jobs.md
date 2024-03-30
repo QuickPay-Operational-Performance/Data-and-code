@@ -1,8 +1,8 @@
-$Delay_{p,t}=a+b*Treat_p +c*(Treat\times Post) + d*(Treat\times Jobs)+ e*Post + f*Jobs +e$
+$Delay_{p,t}=a+bTreat_p +c(Treat\times Post) + d(Treat\times Jobs)+ ePost + fJobs +e$
 
 * Let $t_{jobs}$ denote the time period when Jobs act was launched
 * Let $t_{qp}$ denote the time period QP was launched
-* $t_{jobs}<t_{qp}$
+* $t_{jobs} < t_{qp}$
 * Let $t=0$ denote start of the observation horizon, and $t=T$ denote the end of the observation horizon
 * $Jobs=1$ if $t>t_{jobs}$
 *  $Post=1$ if $t>t_{qp}$
