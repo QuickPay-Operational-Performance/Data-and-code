@@ -32,7 +32,7 @@ reg_df=fread(paste0(input_path,
                  'quickpay_delays.csv'))
 ```
 
-```{r regs, echo=FALSE, results='asis'}
+```{r prep_data, echo=FALSE, results='asis'}
 # Treated projects
 a=reg_df[treat_i==1 &
            recipient_duns!=0,
@@ -60,20 +60,26 @@ c[,prop_small:=num_small/(num_small+num_large)]
 c[,post_t:=ifelse(action_date_year_quarter>=as.Date('2011-04-27'),
                       1,0)]
 
-# Contractors that have at least one small and at least one large project
+```
+
+```{r regs, echo=FALSE, results='asis'}
+# All contractors
 m1=feols(prop_small~post_t|recipient_duns,
       data=c)
 
+# Contractors that have at least one small and at least one large project
 m2=feols(prop_small~post_t|recipient_duns,
       data=c[prop_small>0
                        &prop_small<1])
 
+# Get quarter
 c[,Q:=relevel(as.factor(action_date_year_quarter),
                             ref="2011-03-31")]
 
 m3=feols(prop_small~Q|recipient_duns,
       data=c)
 
+# Contractors that have at least one small and at least one large project
 m4=feols(prop_small~Q|recipient_duns,
       data=c[prop_small>0
                        &prop_small<1])
@@ -99,14 +105,33 @@ c[,type:=case_when(prop_small==1~"Only small projects",
                    prop_small==0~"Only large projects",
                    prop_small>0 & prop_small<1 ~ "Both S&L projects")]
 
+c[,num_total:=num_small+num_large]
+
+pre_qp_mean=c[action_date_year_quarter==as.Date('2010-03-31')][,
+                          .(pre_qp_small=mean(num_small,na.rm=T),
+                            pre_qp_large=mean(num_large,na.rm=T),
+                            pre_qp_total=mean(num_total,na.rm=T)),
+                         by='type']
+
 c_avg=c[,.(avg_small=mean(num_small,na.rm=T),
-           avg_large=mean(num_large,na.rm=T)),
+           avg_large=mean(num_large,na.rm=T),
+           avg_total=mean(num_total,na.rm=T)),
         by=c('action_date_year_quarter',
              'type')]
 
+c_avg=merge(c_avg,
+        pre_qp_mean,
+        by='type',
+        all.x=T)
+
+c_avg[,demeaned_small:=avg_small-pre_qp_small]
+c_avg[,demeaned_large:=avg_large-pre_qp_large]
+c_avg[,demeaned_all:=avg_total-pre_qp_total]
+
+# Num small projects
 ggplot(c_avg, 
        aes(x=as.factor(action_date_year_quarter),
-           y=avg_small,
+           y=demeaned_small,
            group=type,
            linetype=type,
            color=type,
@@ -116,12 +141,13 @@ ggplot(c_avg,
     theme(axis.text.x = element_text(angle = 90, 
                                      vjust = 0.5, hjust=1))+
     xlab("Time")+
-    ylab("Average number of small projects")+
+    ylab("Average number of small projects \n demeaned by March 2010 average")+
     ggtitle("Full sample")
 
+# Num large projects
 ggplot(c_avg, 
        aes(x=as.factor(action_date_year_quarter),
-           y=avg_large,
+           y=demeaned_large,
            group=type,
            linetype=type,
            color=type,
@@ -131,9 +157,28 @@ ggplot(c_avg,
     theme(axis.text.x = element_text(angle = 90, 
                                      vjust = 0.5, hjust=1))+
     xlab("Time")+
-    ylab("Average number of large projects")+
+    ylab("Average number of large projects \n demeaned by March 2010 average")+
     ggtitle("Full sample")
 
+# Total Num projects
+ggplot(c_avg, 
+       aes(x=as.factor(action_date_year_quarter),
+           y=demeaned_all,
+           group=type,
+           linetype=type,
+           color=type,
+           shape=type))+
+    geom_point()+geom_line()+
+    theme_minimal()+
+    theme(axis.text.x = element_text(angle = 90, 
+                                     vjust = 0.5, hjust=1))+
+    xlab("Time")+
+    ylab("Average number of total projects \n demeaned by March 2010 average")+
+    ggtitle("Full sample")
+```
+
+
+```{r more_plots, echo=FALSE, results='asis'}
 c_avg_2=c[prop_small>0 &
             prop_small<1,
           .(avg_prop=mean(prop_small,na.rm=T)),
@@ -149,4 +194,23 @@ ggplot(c_avg_2,
   xlab("Time")+
   ylab("Average proportion of small projects")+
   ggtitle("Contractors holding both types of projects")
+
+d=reg_df[,.(num_projects=n_distinct(contract_award_unique_key)),
+         by='action_date_year_quarter']
+
+pre_qp_num_projs=n_distinct(reg_df[action_date_year_quarter==as.Date('2010-03-31')]$contract_award_unique_key)
+
+d[,num_projects_relative:=num_projects/pre_qp_num_projs]
+ggplot(d, 
+       aes(x=as.factor(action_date_year_quarter),
+           y=num_projects_relative,group=1))+
+  geom_point()+geom_line()+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90, 
+                                   vjust = 0.5, hjust=1))+
+  xlab("Time")+
+  ylab("Number of projects \n (normalized by March 2010)")+
+  ggtitle("Full sample")
+
+
 ```

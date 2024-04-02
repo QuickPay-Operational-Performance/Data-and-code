@@ -62,6 +62,6 @@ $Delay_{p,t}=a+bTreat_p +c(Treat\times Post) + d(Treat\times Jobs)+ ePost + fJob
 * Large after QP - Large before Jobs
   * $(a+e+f)-(a)=e+f$​
 * Diff-in-diff =  $(c+d+e+f)-(e+f)=c+d$
-
 * $c+d=\Delta Delays_{[t_{qp},T]}-\Delta Delays_{[0,t_{jobs}]}$
 * Not clear what this can be attributed to... 
+
