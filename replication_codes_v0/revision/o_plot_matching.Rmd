@@ -1,5 +1,5 @@
 ---
-title: "Alternative matching methodology"
+title: "Main Table"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
@@ -36,10 +36,44 @@ reg_df_subset=fread(paste0(working_path,
                  'w_clean_control.csv'))
 ```
 
-```{r matching, include=FALSE}
+```{r contractor_capability, include=FALSE}
+
+# Number of projects with positive delay before QuickPay
+
+delay_before_qp=reg_df_subset[post_t==0 & delay>0][,
+                         .(num_projs_delayed=n_distinct(contract_award_unique_key)),
+                       by='recipient_duns']
+
+
+num_proj_before_qp=reg_df_subset[post_t==0][,
+                         .(num_projs=n_distinct(contract_award_unique_key)),
+                       by='recipient_duns']
+
+contractor_capability=merge(delay_before_qp,
+                            num_proj_before_qp,
+         by='recipient_duns',
+         all.y=T)
+
+contractor_capability=contractor_capability[!is.na(recipient_duns)]
+# Set na values for num_projs_delayed to be zero 
+contractor_capability[is.na(contractor_capability)]=0
+contractor_capability[,frac_delayed:=num_projs_delayed/num_projs]
+```
+
+
+```{r merge_with_reg, include=FALSE}
 reg_df_subset[, two_digit_psc:=substr(product_or_service_code,1,2)]
 reg_df_subset[, two_digit_naics:=substr(naics_code,1,2)]
 
+reg_df_subset=merge(reg_df_subset,
+                    contractor_capability[,c('recipient_duns',
+                                             'frac_delayed')],
+                    by='recipient_duns',
+                    all.x=T)
+```
+
+
+```{r matching, include=FALSE}
 set.seed(190)
 
 input=na.omit(reg_df_subset,
@@ -49,31 +83,25 @@ input=na.omit(reg_df_subset,
                                 'wins_project_quarter_stage',
                                 'wins_number_of_offers_received',
                                 'winsorized_initial_duration_in_days_i',
-                                'winsorized_initial_budget_i'))
+                                'winsorized_initial_budget_i',
+                                'frac_delayed'))
 
-matched_df_1=match.data(matchit(treat_new~as.factor(awarding_sub_agency_code)+
+matched_df_1=match.data(matchit(treat_new~frac_delayed+
+                                  as.factor(awarding_sub_agency_code)+
                                   as.factor(two_digit_naics)+
                                   as.factor(action_date_year_quarter)+
                                   winsorized_initial_duration_in_days_i+
                                   winsorized_initial_budget_i+
                                   wins_number_of_offers_received,
                                 data=input,
-                                cutpoints= list(winsorized_initial_duration_in_days_i = 5,
+                                cutpoints= list(frac_delayed=5,
+                                                winsorized_initial_duration_in_days_i = 5,
                                                 winsorized_initial_budget_i = 5,
                                                 wins_number_of_offers_received=5),
                                 method='cem'))
 
-matched_df_2=match.data(matchit(treat_new~as.factor(awarding_sub_agency_code)+
-                                as.factor(two_digit_psc)+
-                               as.factor(two_digit_naics)+
-                                as.factor(action_date_year_quarter)+
+matched_df_2=match.data(matchit(treat_new~frac_delayed+
                                   winsorized_initial_duration_in_days_i+
-                                  winsorized_initial_budget_i+
-                                  wins_number_of_offers_received,
-                      data=input,
-                      method='quick'))
-
-matched_df_3=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
                                   winsorized_initial_budget_i+
                                   wins_number_of_offers_received,
                       data=input,
@@ -84,7 +112,8 @@ matched_df_3=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
                       method='nearest',
                       ratio=1))
 
-matched_df_4=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+matched_df_3=match.data(matchit(treat_new~frac_delayed+
+                                  winsorized_initial_duration_in_days_i+
                                   winsorized_initial_budget_i+
                                   wins_number_of_offers_received,
                       data=input,
@@ -95,7 +124,8 @@ matched_df_4=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
                       method='nearest',
                       ratio=2))
 
-matched_df_5=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+matched_df_4=match.data(matchit(treat_new~frac_delayed+
+                                  winsorized_initial_duration_in_days_i+
                                   winsorized_initial_budget_i+
                                   wins_number_of_offers_received,
                       data=input,
@@ -106,7 +136,8 @@ matched_df_5=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
                       method='nearest',
                       ratio=3))
 
-matched_df_6=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+matched_df_5=match.data(matchit(treat_new~frac_delayed+
+                                  winsorized_initial_duration_in_days_i+
                                   winsorized_initial_budget_i+
                                   wins_number_of_offers_received,
                       data=input,
@@ -117,7 +148,8 @@ matched_df_6=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
                       method='nearest',
                       ratio=4))
 
-matched_df_7=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+matched_df_6=match.data(matchit(treat_new~frac_delayed+
+                                  winsorized_initial_duration_in_days_i+
                                   winsorized_initial_budget_i+
                                   wins_number_of_offers_received,
                       data=input,
@@ -127,7 +159,8 @@ matched_df_7=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
                                 as.factor(action_date_year_quarter),
                       distance='mahalanobis'))
 
-matched_df_8=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+matched_df_7=match.data(matchit(treat_new~frac_delayed+
+                                  winsorized_initial_duration_in_days_i+
                                   winsorized_initial_budget_i+
                                   wins_number_of_offers_received,
                       data=input,
@@ -137,7 +170,8 @@ matched_df_8=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
                                 as.factor(action_date_year_quarter),
                       distance='lasso'))
 
-matched_df_9=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+matched_df_8=match.data(matchit(treat_new~frac_delayed+
+                                  winsorized_initial_duration_in_days_i+
                                   winsorized_initial_budget_i+
                                   wins_number_of_offers_received,
                       data=input,
@@ -147,7 +181,19 @@ matched_df_9=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
                                 as.factor(action_date_year_quarter),
                       distance='rpart'))
 
-matched_df_10=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+matched_df_9=match.data(matchit(treat_new~frac_delayed+
+                                  winsorized_initial_duration_in_days_i+
+                                  winsorized_initial_budget_i+
+                                  wins_number_of_offers_received,
+                      data=input,
+                      exact=~as.factor(awarding_sub_agency_code)+
+                                as.factor(two_digit_psc)+
+                               as.factor(two_digit_naics)+
+                                as.factor(action_date_year_quarter),
+                      caliper=0.2))
+
+matched_df_10=match.data(matchit(treat_new~frac_delayed+
+                                  winsorized_initial_duration_in_days_i+
                                   winsorized_initial_budget_i+
                                   wins_number_of_offers_received,
                       data=input,
@@ -157,7 +203,8 @@ matched_df_10=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i
                                 as.factor(action_date_year_quarter),
                       caliper=0.3))
 
-matched_df_11=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+matched_df_11=match.data(matchit(treat_new~frac_delayed+
+                                  winsorized_initial_duration_in_days_i+
                                   winsorized_initial_budget_i+
                                   wins_number_of_offers_received,
                       data=input,
@@ -167,7 +214,8 @@ matched_df_11=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i
                                 as.factor(action_date_year_quarter),
                       caliper=0.4))
 
-matched_df_12=match.data(matchit(treat_new~winsorized_initial_duration_in_days_i+
+matched_df_12=match.data(matchit(treat_new~frac_delayed+
+                                  winsorized_initial_duration_in_days_i+
                                   winsorized_initial_budget_i+
                                   wins_number_of_offers_received,
                       data=input,
@@ -225,7 +273,6 @@ for(df in df_list){
 
 ```{r set_order, include=FALSE}
 order=c("coarsened_exact",
-        "quick",
         "psm",
         "nn_2",
         "nn_3",
@@ -233,6 +280,7 @@ order=c("coarsened_exact",
         "mahalanobis",
         "lasso",
         "rpart",
+        "caliper_02",
         "caliper_03",
         "caliper_04",
         "caliper_05")
@@ -290,8 +338,7 @@ models2=models2%>%
   pivot_longer(!specification, names_to = "method", values_to = "binary")
 
 setDT(models2)[,method:=str_replace_all(models2$method, "method_", "")]
-models2[,method_name:=case_when(method=="quick"~"Full matching",
-                                method=="coarsened_exact"~"Coarsened Exact matching",
+models2[,method_name:=case_when(method=="coarsened_exact"~"Coarsened Exact matching",
                                 method=="lasso"~"Lasso",
                                 method=="rpart"~"Tree-based",
                                 method=="mahalanobis"~"Mahalanobis",
@@ -299,12 +346,12 @@ models2[,method_name:=case_when(method=="quick"~"Full matching",
                                 method=="nn_2"~"2-Nearest neighbor",
                                 method=="nn_3"~"3-Nearest neighbor",
                                 method=="nn_4"~"4-Nearest neighbor",
+                                method=="caliper_02"~"Caliper 0.2",
                                 method=="caliper_03"~"Caliper 0.3",
                                 method=="caliper_04"~"Caliper 0.4",
                                 method=="caliper_05"~"Caliper 0.5")]
 
 order_of_methods=c("Coarsened Exact matching",
-                   "Full matching",
                    "Propensity score",
                    "2-Nearest neighbor",
                    "3-Nearest neighbor",
@@ -312,6 +359,7 @@ order_of_methods=c("Coarsened Exact matching",
                    "Mahalanobis",
                    "Lasso",
                    "Tree-based",
+                   "Caliper 0.2",
                    "Caliper 0.3",
                    "Caliper 0.4",
                    "Caliper 0.5")
@@ -356,33 +404,3 @@ ggsave(paste0(getwd(),
        bg="white")
 ```
 
-```{r export_tables, eval=FALSE, include=FALSE}
-setFixest_dict(dict=c("treat_new" = "Treat",
-               "post_t"="Post",
-               "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
-               "log(1+winsorized_initial_budget_i)"="Initial budget",
-               "wins_number_of_offers_received"="Number of offers received",
-               "log(wins_project_quarter_stage)"="Project stage",
-               "naics_code"="NAICS code",
-               "product_or_service_code"="Task code",
-               "action_date_year_quarter"="Time",
-               "contract_award_unique_key"="Project ID"))
-
-etable(reg_list[1:7],
-       tex=TRUE,
-       fontsize = "tiny",
-       drop=c("Initial duration",
-              "Initial budget",
-              "Number of offers received",
-              "Project stage")
-)
-
-etable(reg_list[8:12],
-       tex=TRUE,
-       fontsize = "tiny",
-       drop=c("Initial duration",
-              "Initial budget",
-              "Number of offers received",
-              "Project stage")
-)
-```

@@ -38,12 +38,46 @@ reg_df_subset=fread(paste0(working_path,
                  'w_clean_control.csv'))
 ```
 
-```{r matching, include=FALSE}
+```{r contractor_capability, include=FALSE}
+
+# Number of projects with positive delay before QuickPay
+
+delay_before_qp=reg_df_subset[post_t==0 & delay>0][,
+                         .(num_projs_delayed=n_distinct(contract_award_unique_key)),
+                       by='recipient_duns']
+
+
+num_proj_before_qp=reg_df_subset[post_t==0][,
+                         .(num_projs=n_distinct(contract_award_unique_key)),
+                       by='recipient_duns']
+
+contractor_capability=merge(delay_before_qp,
+                            num_proj_before_qp,
+         by='recipient_duns',
+         all.y=T)
+
+contractor_capability=contractor_capability[!is.na(recipient_duns)]
+# Set na values for num_projs_delayed to be zero 
+contractor_capability[is.na(contractor_capability)]=0
+contractor_capability[,frac_delayed:=num_projs_delayed/num_projs]
+```
+
+
+```{r merge_with_reg, include=FALSE}
 reg_df_subset[, two_digit_psc:=substr(product_or_service_code,1,2)]
 reg_df_subset[, two_digit_naics:=substr(naics_code,1,2)]
 
+reg_df_subset=merge(reg_df_subset,
+                    contractor_capability[,c('recipient_duns',
+                                             'frac_delayed')],
+                    by='recipient_duns',
+                    all.x=T)
+```
+
+```{r matching, include=FALSE}
 input=na.omit(reg_df_subset,
-                            cols=c('product_or_service_code',
+                            cols=c('frac_delayed',
+                            'product_or_service_code',
                                 'awarding_sub_agency_code',
                                 'naics_code',
                                 'wins_project_quarter_stage',
@@ -55,16 +89,19 @@ input=na.omit(reg_df_subset,
 
 ```{r matching, include=FALSE}
 set.seed(129)
+input[,budget_000s:=winsorized_initial_budget_i/1000]
 # CEM
 m.out=matchit(treat_new~as.factor(awarding_sub_agency_code)+
                                   as.factor(two_digit_naics)+
                                   as.factor(action_date_year_quarter)+
+                                  frac_delayed+
                                   winsorized_initial_duration_in_days_i+
-                                  winsorized_initial_budget_i+
+                                  budget_000s+
                                   wins_number_of_offers_received,
                                 data=input,
-                                cutpoints= list(winsorized_initial_duration_in_days_i = 5,
-                                                winsorized_initial_budget_i = 5,
+                                cutpoints= list(frac_delayed=5,
+                                                winsorized_initial_duration_in_days_i = 5,
+                                                budget_000s = 5,
                                                 wins_number_of_offers_received=5),
                                 method='cem')
 
@@ -80,8 +117,9 @@ duration_a=bal.plot(m.out,
          colors = c("lightgray", "black"),
          sample.names = 
              c("Unmatched Sample", "Matched Sample"))+
-  xlab("Initial project duration")+
-  ggtitle("")
+  xlab("Days")+
+  ggtitle("")+
+  theme(axis.text=element_text(size=11))
 
 duration_b=bal.plot(m.out, 
                     var.name = "winsorized_initial_duration_in_days_i", 
@@ -90,8 +128,9 @@ duration_b=bal.plot(m.out,
          colors = c("lightgray", "black"),
          sample.names = 
              c("Unmatched Sample", "Matched Sample"))+
-  xlab("Initial project duration")+
-  ggtitle("")
+  xlab("Days")+
+  ggtitle("")+
+  theme(axis.text=element_text(size=11))
 
 duration_c=bal.plot(m.out, 
                     var.name = "winsorized_initial_duration_in_days_i", 
@@ -100,47 +139,48 @@ duration_c=bal.plot(m.out,
          colors = c("lightgray", "black"),
          sample.names = 
              c("Unmatched Sample", "Matched Sample"))+
-  xlab("Initial project duration")+
-  ggtitle("")
+  xlab("Days")+
+  ggtitle("")+
+  theme(axis.text=element_text(size=11))
 ```
 
 ```{r budget,include=FALSE,warning=FALSE}
 budget_a=bal.plot(m.out, 
-                  var.name = "winsorized_initial_budget_i", 
+                  var.name = "budget_000s", 
                   which = "both", 
                   mirror = TRUE,
          type = "histogram", 
          colors = c("lightgray", "black"),
          sample.names = 
              c("Unmatched Sample", "Matched Sample"))+
-  xlab("Initial project budget")+
-  xlim(1350,297613)+
-  scale_x_continuous(labels = scales::comma)+
-  ggtitle("")
+  xlab("Dollars (000s)")+
+  scale_x_continuous(labels = comma)+
+  ggtitle("")+
+  theme(axis.text=element_text(size=11))
 
 budget_b=bal.plot(m.out, 
-                    var.name = "winsorized_initial_budget_i", 
+                    var.name = "budget_000s", 
                     which = "both",
          type = "ecdf", 
          colors = c("lightgray", "black"),
          sample.names = 
              c("Unmatched Sample", "Matched Sample"))+
-  xlab("Initial project budget")+
-  xlim(1350,297613)+
+  xlab("Dollars (000s)")+
   scale_x_continuous(labels = scales::comma)+
-  ggtitle("")
+  ggtitle("")+
+  theme(axis.text=element_text(size=11))
 
 budget_c=bal.plot(m.out, 
-                    var.name = "winsorized_initial_budget_i", 
+                    var.name = "budget_000s", 
                     which = "both",
          type = "density", 
          colors = c("lightgray", "black"),
          sample.names = 
              c("Unmatched Sample", "Matched Sample"))+
-  xlab("Initial project budget")+
-  scale_x_continuous(labels = scales::comma)+
-  xlim(1350,297613)+
-  ggtitle("")
+  xlab("Dollars (000s)")+
+  scale_x_continuous(labels = comma)+
+  ggtitle("")+
+  theme(axis.text=element_text(size=11))
 ```
 
 ```{r offers,include=FALSE,warning=FALSE}
@@ -153,7 +193,8 @@ offers_a=bal.plot(m.out,
          sample.names = 
              c("Unmatched Sample", "Matched Sample"))+
   xlab("Number of offers")+
-  ggtitle("")
+  ggtitle("")+
+  theme(axis.text=element_text(size=11))
 
 offers_b=bal.plot(m.out, 
                     var.name = "wins_number_of_offers_received", 
@@ -163,7 +204,8 @@ offers_b=bal.plot(m.out,
          sample.names = 
              c("Unmatched Sample", "Matched Sample"))+
   xlab("Number of offers")+
-  ggtitle("")
+  ggtitle("")+
+  theme(axis.text=element_text(size=11))
 
 offers_c=bal.plot(m.out, 
                     var.name = "wins_number_of_offers_received", 
@@ -173,25 +215,74 @@ offers_c=bal.plot(m.out,
          sample.names = 
              c("Unmatched Sample", "Matched Sample"))+
   xlab("Number of offers")+
-  xlim(1,8)+
-  ggtitle("")
+  ggtitle("")+
+  theme(axis.text=element_text(size=11))
 ```
 
-```{r combine_plots,include=FALSE}
+```{r frac_delayed_plot,include=FALSE,warning=FALSE}
+frac_delayed_a=bal.plot(m.out, 
+                  var.name = "frac_delayed", 
+                  which = "both", 
+                  mirror = TRUE,
+         type = "histogram", 
+         colors = c("lightgray", "black"),
+         sample.names = 
+             c("Unmatched Sample", "Matched Sample"))+
+  xlab("Fraction of projects delayed before QuickPay")+
+  scale_x_continuous(labels = scales::comma)+
+  ggtitle("")+
+  theme(axis.text=element_text(size=11))
+
+frac_delayed_b=bal.plot(m.out, 
+                    var.name = "frac_delayed", 
+                    which = "both",
+         type = "ecdf", 
+         colors = c("lightgray", "black"),
+         sample.names = 
+             c("Unmatched Sample", "Matched Sample"))+
+  xlab("Fraction of projects delayed before QuickPay")+
+  scale_x_continuous(labels = scales::comma)+
+  ggtitle("")+
+  theme(axis.text=element_text(size=11))
+
+frac_delayed_c=bal.plot(m.out, 
+                    var.name = "frac_delayed", 
+                    which = "both",
+         type = "density", 
+         colors = c("lightgray", "black"),
+         sample.names = 
+             c("Unmatched Sample", "Matched Sample"))+
+  xlab("Fraction of projects delayed before QuickPay")+
+  scale_x_continuous(labels = scales::comma)+
+  ggtitle("")+
+  theme(axis.text=element_text(size=11))
+
+```
+
+```{r combine_plots,warning=FALSE, include=FALSE}
 balance_plots=ggarrange(duration_a,duration_b,duration_c,
-          budget_a,budget_b,budget_c,
-          offers_a,offers_b,offers_c,
-          nrow=3,
+                        budget_a,budget_b,budget_c,
+                        offers_a,offers_b,offers_c,
+                        frac_delayed_a,frac_delayed_b,frac_delayed_c,
+          nrow=4,
           ncol=3,
-          common.legend = T)+
-    theme(plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
+          common.legend = T,
+          labels = c("A. Initial duration","","",
+                     "B. Initial budget","","",
+                     "C. Number of offers","","",
+                     "D. Past performance","",""),
+                  font.label=list(color="black",size=16))+
+    theme(plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"),
+        axis.text.x = element_text(hjust = 0.5,
+                                   vjust=0.5))
 ```
 
 ```{r save_plot,include=FALSE}
 ggsave(paste0(getwd(),
               "/balance_plots.png"),
        plot=balance_plots,
-       width=15,
-       height=12,
+       width=16,
+       height=14,
+       dpi=300, # for print quality
        bg="white")
 ```
