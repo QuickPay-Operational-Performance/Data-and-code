@@ -299,10 +299,10 @@ reg_df_subset[,wins_number_of_offers_received:=
 
 ```{r plot,echo=FALSE, results='asis'}
 
-mean_delay=reg_df_subset[!is.na(wins_pc_cumulative_delay) 
+mean_delay=reg_df_subset[!is.na(wins_cumulative_delay) 
                   & action_date_year_quarter<=as.Date('2012-06-30'), 
-              .(avg_delay=mean(wins_pc_cumulative_delay),
-                se_delay=sd(wins_pc_cumulative_delay,na.rm=T)/sqrt(.N)
+              .(avg_delay=mean(wins_cumulative_delay),
+                se_delay=sd(wins_cumulative_delay,na.rm=T)/sqrt(.N)
                 ),  
               by = c('action_date_year_quarter','treat_new')]
 mean_delay[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
@@ -334,7 +334,7 @@ ggplot(mean_delay, aes(x=year_quarter,
   geom_vline(xintercept =10.2,alpha=0.8,linewidth=0.15,linetype="solid")+
   theme_minimal()+
   labs(x="Time", 
-       y = "Average percentage \n cumulative delay rate")+
+       y = "Average cumulative delay rate (in days)")+
   scale_linetype_manual(name  ="",
                         breaks=c("S", "O"),
                         labels=c("Treated","Control"),
@@ -359,7 +359,7 @@ ggplot(mean_delay, aes(x=year_quarter,
 ```
 
 ```{r delay_rates,include=FALSE}
-m1=feols(wins_pc_cumulative_delay~treat_new+
+m1=feols(wins_cumulative_delay~treat_new+
                             post_t:treat_new+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -372,7 +372,7 @@ m1=feols(wins_pc_cumulative_delay~treat_new+
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset)
 
-m2=feols(wins_pc_cumulative_delay~treat_new+
+m2=feols(wins_cumulative_delay~treat_new+
                             post_t:treat_new+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -385,7 +385,7 @@ m2=feols(wins_pc_cumulative_delay~treat_new+
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset)
 
-m3=feols(wins_pc_cumulative_delay~treat_new+
+m3=feols(wins_cumulative_delay~treat_new+
                             post_t:treat_new+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
