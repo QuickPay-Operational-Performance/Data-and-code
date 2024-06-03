@@ -80,6 +80,39 @@ reg_df_first_reported=subset(reg_df_first_reported,
 
 ```
 
+
+```{r before_qp}
+mydf=reg_df_first_reported[project_signed_after_quickpay==0]
+afterdf=reg_df_first_reported[project_signed_after_quickpay==1]
+
+mydf=na.omit(mydf[,c('winsorized_initial_duration_in_days_i',
+             'treat_i',
+             'product_or_service_code',
+             'quarter_when_project_signed',
+             'naics_code',
+             'awarding_sub_agency_code',
+             'recipient_duns',
+             'contract_financing_i',
+             'performance_based_service_acquisition_code')])
+
+myreg=feols(winsorized_initial_duration_in_days_i~treat_i+
+              contract_financing_i|
+              product_or_service_code+
+           naics_code+
+           quarter_when_project_signed+
+             awarding_sub_agency_code+
+             recipient_duns+
+             performance_based_service_acquisition_code,
+         data=mydf,
+         fixef.rm = 'none')
+
+mydf[,predicted_durations:=myreg$fitted.values]
+
+afterdf[,predicted_durations:=predict(myreg,
+                                      newdata=afterdf)]
+
+```
+
 ```{r competition_subsample_ii, echo=FALSE, results='asis'}
 bids=felm(number_of_offers_received~treat_i+
               treat_i:project_signed_after_quickpay|
