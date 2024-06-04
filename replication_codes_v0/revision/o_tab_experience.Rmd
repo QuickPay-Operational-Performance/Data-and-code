@@ -481,8 +481,36 @@ m5=feglm(task_inexperienced_i~treat_new+
                                   cluster=~contract_award_unique_key, # clustered at project level
                                   data=subset(reg_df_subset,competitively_awarded_i==1))
 
+m6=feglm(task_inexperienced_i~treat_new+
+                                  treat_new:post_t+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  family='binomial',
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_subset,competitively_awarded_i==1))
 
-task_inexperience_logit=list(m2,m3,m4,m5)
+m7=feglm(task_inexperienced_i~treat_new+
+                                  treat_new:post_t+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  family='binomial',
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_subset,competitively_awarded_i==1))
+
+task_inexperience_logit=list(m1,m2,m3,m4,m5,m6,m7)
 ```
 
 ```{r inexp_ols, include=FALSE}
@@ -559,7 +587,26 @@ m6=feols(wins_percentage_delay~treat_new+
                                   cluster=~contract_award_unique_key, # clustered at project level
                                   data=subset(reg_df_subset,competitively_awarded_i==1))
 
-task_inexperience_delays=list(m1,m2,m3,m4,m5,m6)
+m7=feols(wins_percentage_delay~treat_new+
+                                  task_inexperienced_i+
+                                  treat_new:task_inexperienced_i+
+                                  post_t:task_inexperienced_i+
+                                  treat_new:post_t+
+                                  treat_new:post_t:task_inexperienced_i+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_subset,competitively_awarded_i==1))
+
+task_inexperience_delays=list(m1,m2,m3,m4,m5,m6,m7)
 ```
 
 ```{r new_entrant_logit, include=FALSE}
@@ -608,8 +655,36 @@ m5=feglm(new_entrant_i~treat_new+
                                   cluster=~contract_award_unique_key, # clustered at project level
                                   data=subset(reg_df_subset,competitively_awarded_i==1))
 
+m6=feglm(new_entrant_i~treat_new+
+                                  treat_new:post_t+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  family='binomial',
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_subset,competitively_awarded_i==1))
 
-new_entrant_logit=list(m1,m2,m3,m4,m5)
+m7=feglm(new_entrant_i~treat_new+
+                                  treat_new:post_t+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  family='binomial',
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_subset,competitively_awarded_i==1))
+
+new_entrant_logit=list(m1,m2,m3,m4,m5,m6,m7)
 ```
 
 ```{r new_entrant_ols, include=FALSE}
@@ -686,7 +761,26 @@ m6=feols(wins_percentage_delay~treat_new+
                                   cluster=~contract_award_unique_key, # clustered at project level
                                   data=subset(reg_df_subset,competitively_awarded_i==1))
 
-new_entrant_delays=list(m1,m2,m3,m4,m5,m6)
+m7=feols(wins_percentage_delay~treat_new+
+                                  new_entrant_i+
+                                  treat_new:new_entrant_i+
+                                  post_t:new_entrant_i+
+                                  treat_new:post_t+
+                                  treat_new:post_t:new_entrant_i+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_subset,competitively_awarded_i==1))
+
+new_entrant_delays=list(m1,m2,m3,m4,m5,m6,m7)
 ```
 
 ```{r output, echo=FALSE, results='asis'}
@@ -815,8 +909,34 @@ m5=feols(inexp~treat_new+
                                   cluster=~contract_award_unique_key, # clustered at project level
                                   data=subset(reg_df_subset,competitively_awarded_i==1))
 
+m6=feols(inexp~treat_new+
+                                  treat_new:post_t+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_subset,competitively_awarded_i==1))
 
-cts_task_inexperience_dep=list(m2,m3,m4,m5)
+m7=feols(inexp~treat_new+
+                                  treat_new:post_t+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_subset,competitively_awarded_i==1))
+
+cts_task_inexperience_dep=list(m1,m2,m3,m4,m5,m6,m7)
 ```
 
 ```{r cts_inexp_ols, include=FALSE}
@@ -893,8 +1013,26 @@ m6=feols(wins_percentage_delay~treat_new+
                                   cluster=~contract_award_unique_key, # clustered at project level
                                   data=subset(reg_df_subset,competitively_awarded_i==1))
                                   
-
-cts_task_inexperience_delays=list(m1,m2,m3,m4,m5,m6)
+m7=feols(wins_percentage_delay~treat_new+
+                                  inexp+
+                                  treat_new:inexp+
+                                  post_t:inexp+
+                                  treat_new:post_t+
+                                  treat_new:post_t:inexp+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_subset,competitively_awarded_i==1))
+         
+cts_task_inexperience_delays=list(m1,m2,m3,m4,m5,m6,m7)
 ```
 
 ```{r output_2, echo=FALSE,results='asis'}
