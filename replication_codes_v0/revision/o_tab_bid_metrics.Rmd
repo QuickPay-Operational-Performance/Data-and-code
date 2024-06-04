@@ -86,6 +86,7 @@ mydf=reg_df_first_reported[project_signed_after_quickpay==0]
 afterdf=reg_df_first_reported[project_signed_after_quickpay==1]
 
 mydf=na.omit(mydf[,c('winsorized_initial_duration_in_days_i',
+                     'wins_number_of_offers_received',
              'treat_i',
              'product_or_service_code',
              'quarter_when_project_signed',
@@ -95,21 +96,44 @@ mydf=na.omit(mydf[,c('winsorized_initial_duration_in_days_i',
              'contract_financing_i',
              'performance_based_service_acquisition_code')])
 
-myreg=feols(winsorized_initial_duration_in_days_i~treat_i+
-              contract_financing_i|
+mydf[,ln_duration:=log(winsorized_initial_duration_in_days_i)]
+myreg=feols(ln_duration~wins_number_of_offers_received+
+              treat_i|
               product_or_service_code+
            naics_code+
            quarter_when_project_signed+
              awarding_sub_agency_code+
              recipient_duns+
-             performance_based_service_acquisition_code,
+             performance_based_service_acquisition_code+
+             contract_financing_i,
          data=mydf,
          fixef.rm = 'none')
 
 mydf[,predicted_durations:=myreg$fitted.values]
+mydf[,predic_diff:=predicted_durations-ln_duration]
 
+afterdf=afterdf[,c('winsorized_initial_duration_in_days_i',
+                     'wins_number_of_offers_received',
+             'treat_i',
+             'product_or_service_code',
+             'quarter_when_project_signed',
+             'naics_code',
+             'awarding_sub_agency_code',
+             'recipient_duns',
+             'contract_financing_i',
+             'performance_based_service_acquisition_code')]
+
+afterdf[,ln_duration:=log(winsorized_initial_duration_in_days_i)]
 afterdf[,predicted_durations:=predict(myreg,
                                       newdata=afterdf)]
+
+all_df=rbind(afterdf,
+             mydf,
+             fill=T)
+
+all_df[,duration:=ifelse(!is.na(predicted_durations),
+                         predicted_durations,
+                         ln_duration)]
 
 ```
 
