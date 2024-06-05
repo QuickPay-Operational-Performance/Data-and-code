@@ -35,6 +35,14 @@ reg_df_subset=reg_df_subset[!(initial_start_date>as.Date('2011-04-27')
 reg_df_subset=reg_df_subset[!is.na(recipient_duns)]
 ```
 
+```{r competition_delays_subsample, echo=FALSE, results='asis'}
+reg_df_subset[,project_signed_after_quickpay:=case_when(initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter>=as.Date('2011-04-27')~1,
+                                                 initial_start_date<as.Date('2011-04-27') ~ 0,
+                                                 initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter<as.Date('2011-04-27')~NaN)]
+```
+
 ```{r define_var, include=FALSE}
 
 # Number of projects held by a contractor in a given quarter
@@ -787,6 +795,7 @@ new_entrant_delays=list(m1,m2,m3,m4,m5,m6,m7)
 setFixest_dict(c("wins_percentage_delay"="Percentage delay rate",
                  "treat_new"="Treat",
                  "post_t"="Post",
+                 "project_signed_after_quickpay"="SA$_i$",
                  "inexp"="Level of inexperience",
                  "log(wins_project_quarter_stage)"="Ln(Stage)",
                  "new_entrant_i"="New Entrant",
@@ -1068,3 +1077,241 @@ etable(cts_task_inexperience_delays,
        digits.stats = 'r2',
        fontsize = "small")
 ```
+
+# Bidding effect
+
+## Old vs New Entrant
+
+```{r new_entrant_bid_delays, include=FALSE}
+m1=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)+
+                            post_t,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,new_entrant_i==1&
+                                        competitively_awarded_i==1))
+
+m2=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,new_entrant_i==1&
+                                        competitively_awarded_i==1))
+
+m3=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,new_entrant_i==1&
+                                        competitively_awarded_i==1))
+
+m4=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,new_entrant_i==1&
+                                        competitively_awarded_i==1))
+
+new_entrant_delays=list(m1,m2,m3,m4)
+```
+
+```{r old_entrant_bid_delays, include=FALSE}
+m1=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)+
+                            post_t,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,new_entrant_i==0&
+                                        competitively_awarded_i==1))
+
+m2=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,new_entrant_i==0&
+                                        competitively_awarded_i==1))
+
+m3=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,new_entrant_i==0&
+                                        competitively_awarded_i==1))
+
+m4=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,new_entrant_i==0&
+                                        competitively_awarded_i==1))
+
+old_entrant_delays=list(m1,m2,m3,m4)
+```
+
+```{r output_3, echo=FALSE,results='asis'}
+etable(old_entrant_delays,
+       new_entrant_delays,
+        headers=list(":_:"=list("Old entrants"=4,
+                    "New entrants"=4)),
+       tex=T,
+       style.tex = style.tex(depvar.title = "",
+                             model.title = "",
+                             model.format = "I",
+                             var.title = "",
+                             line.bottom = "simple",
+                             line.top = "simple",
+                             stats.title = "",
+                             fixef.title = "",
+                             fixef.suffix = " FE",
+                             yesNo = c("Yes","No")),
+       digits='r3',
+       digits.stats = 'r2',
+       fontsize = "small")
+
+```
+
+# Experienced vs Inexperienced
+
+```{r inexperienced_bid_delays, include=FALSE}
+m1=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)+
+                            post_t,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,task_inexperienced_i==1&
+                                        competitively_awarded_i==1))
+
+m2=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,task_inexperienced_i==1&
+                                        competitively_awarded_i==1))
+
+m3=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,task_inexperienced_i==1&
+                                        competitively_awarded_i==1))
+
+m4=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,task_inexperienced_i==1&
+                                        competitively_awarded_i==1))
+
+task_inexperienced_delays=list(m1,m2,m3,m4)
+```
+
+```{r experienced_bid_delays, include=FALSE}
+m1=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)+
+                            post_t,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,task_inexperienced_i==0&
+                                        competitively_awarded_i==1))
+
+m2=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,task_inexperienced_i==0&
+                                        competitively_awarded_i==1))
+
+m3=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,task_inexperienced_i==0&
+                                        competitively_awarded_i==1))
+
+m4=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,task_inexperienced_i==0&
+                                        competitively_awarded_i==1))
+
+task_experienced_delays=list(m1,m2,m3,m4)
+```
+
+```{r output_4, echo=FALSE,results='asis'}
+etable(task_experienced_delays,
+        task_inexperienced_delays,
+        headers=list(":_:"=list("Experienced contractors"=4,
+                    "Inxperienced contractors"=4)),
+       tex=T,
+       style.tex = style.tex(depvar.title = "",
+                             model.title = "",
+                             model.format = "I",
+                             var.title = "",
+                             line.bottom = "simple",
+                             line.top = "simple",
+                             stats.title = "",
+                             fixef.title = "",
+                             fixef.suffix = " FE",
+                             yesNo = c("Yes","No")),
+       digits='r3',
+       digits.stats = 'r2',
+       fontsize = "small")
+```
+
