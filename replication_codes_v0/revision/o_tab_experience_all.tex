@@ -1,0 +1,161 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array,makecell} \usepackage{wrapfig,float} \floatplacement{figure}{H}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Competition -- Contractor Experience},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Competition -- Contractor Experience}
+\author{}
+\date{\vspace{-2.5em}2024-06-12}
+
+\begin{document}
+\maketitle
+
+\begin{itemize}
+\item
+  Let \(n^{task}_{i}=\) Number of projects of the same task held by the
+  contractor in the three quarters before starting project \(i\)
+\item
+  Let \(n_{i}=\) Number of projects held by the contractor in the three
+  quarters before starting project \(i\)
+\item
+  Define:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Inexperienced contractor\(_i\) = 1 if \(n^{task}_{i}=0\)
+  \item
+    New entrant\(_i\) = 1 if \(n_{i}=0\)
+  \item
+    Level of inexperience\(_{i}= 1 - \frac{n^{task}_{i}}{n_{i}}\) if
+    \(n_{i}>0\)
+  \item
+    Level of inexperience\(_{i}= 1\) if \(n_{i,k,t}=0\).
+  \end{itemize}
+\end{itemize}
+
+\hypertarget{regression-results}{%
+\section{Regression results}\label{regression-results}}
+
+\begin{table}[htbp]
+   \caption{Logit model}
+   \centering
+   \small
+   \begin{tabular}{lccc}
+      \toprule
+       & \multicolumn{3}{c}{IE}\\
+                           & Task inexperienced & New entrant   & Level of inexperience \\   
+                           & I                  & II            & III\\  
+                           &  Logit             & Logit         & OLS\\  
+      Treat                & 0.407$^{***}$      & 0.556$^{***}$ & 0.001\\   
+                           & (0.032)            & (0.042)       & (0.003)\\   
+      Treat $\times$ Post  & 0.083$^{***}$      & 0.229$^{***}$ & 0.016$^{***}$\\   
+                           & (0.032)            & (0.041)       & (0.004)\\   
+      Time FE              & Yes                & Yes           & Yes\\  
+      Task FE              & Yes                & Yes           & Yes\\  
+      Industry FE          & Yes                & Yes           & Yes\\  
+      Observations         & 182,794            & 189,340       & 192,743\\  
+      Squared Correlation  & 0.30               & 0.20          & 0.31\\  
+      Pseudo R$^2$         & 0.25               & 0.22          & 0.45\\  
+      BIC                  & 177,101.39         & 125,903.49    & 104,731.94\\  
+      \midrule
+      \multicolumn{4}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{4}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+\end{table}
+\begingroup
+\centering
+\small
+\begin{tabular}{lccc}
+   \toprule
+    & \multicolumn{3}{c}{Percentage delay rate}\\
+                                     & Task inexperienced & New entrant    & Level of inexperience \\   
+                                     & I                  & II             & III\\  
+   Treat                             & -1.007$^{***}$     & -1.006$^{***}$ & -0.188\\   
+                                     & (0.139)            & (0.118)        & (0.263)\\   
+   IE                                & 1.084$^{***}$      & 0.873$^{***}$  & 2.172$^{***}$\\   
+                                     & (0.178)            & (0.240)        & (0.253)\\   
+   Treat $\times$ IE                 & -0.151             & -0.255         & -1.063$^{***}$\\   
+                                     & (0.204)            & (0.293)        & (0.309)\\   
+   IE $\times$ Post                  & -0.432$^{*}$       & -0.118         & -0.771$^{**}$\\   
+                                     & (0.256)            & (0.362)        & (0.321)\\   
+   Treat $\times$ Post               & 1.014$^{***}$      & 1.085$^{***}$  & 0.667$^{**}$\\   
+                                     & (0.173)            & (0.152)        & (0.319)\\   
+   Treat $\times$ IE $\times$ Post   & 0.540$^{*}$        & 0.521          & 0.553\\   
+                                     & (0.310)            & (0.449)        & (0.403)\\   
+   Time FE                           & Yes                & Yes            & Yes\\  
+   Task FE                           & Yes                & Yes            & Yes\\  
+   Industry FE                       & Yes                & Yes            & Yes\\  
+   Observations                      & 192,629            & 192,629        & 192,629\\  
+   R$^2$                             & 0.27               & 0.27           & 0.27\\  
+   Within R$^2$                      & 0.19               & 0.19           & 0.19\\  
+   \midrule
+   \multicolumn{4}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+   \multicolumn{4}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup
+
+\end{document}

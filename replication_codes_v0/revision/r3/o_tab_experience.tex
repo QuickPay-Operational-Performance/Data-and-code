@@ -1,0 +1,147 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array,makecell} \usepackage{wrapfig,float} \floatplacement{figure}{H}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Competition -- Contractor Experience},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Competition -- Contractor Experience}
+\author{}
+\date{\vspace{-2.5em}2024-05-15}
+
+\begin{document}
+\maketitle
+
+\begingroup
+\centering
+\small
+\begin{tabular}{lcccc}
+   \toprule
+    & \multicolumn{4}{c}{Percentage delay rate}\\
+                                              & I             & II            & III           & IV\\  
+   Constant                                   & 9.95$^{***}$  &               &               &   \\   
+                                              & (0.13)        &               &               &   \\   
+   Treat                                      & -1.94$^{***}$ & -1.95$^{***}$ & -0.55$^{***}$ & -0.56$^{***}$\\   
+                                              & (0.12)        & (0.12)        & (0.12)        & (0.12)\\   
+   New entrant                                & 1.29$^{***}$  & 1.45$^{***}$  & 1.16$^{***}$  & 1.13$^{***}$\\   
+                                              & (0.35)        & (0.35)        & (0.37)        & (0.37)\\   
+   New task                                   & 1.15$^{***}$  & 1.28$^{***}$  & 0.79$^{**}$   & 0.68$^{**}$\\   
+                                              & (0.29)        & (0.29)        & (0.31)        & (0.31)\\   
+   Ln(Stage)                                  & 2.91$^{***}$  & 2.96$^{***}$  & 2.77$^{***}$  & 2.75$^{***}$\\   
+                                              & (0.03)        & (0.03)        & (0.03)        & (0.03)\\   
+   Post                                       & -0.88$^{***}$ &               &               &   \\   
+                                              & (0.14)        &               &               &   \\   
+   Treat $\times$ Post                        & 0.50$^{***}$  & 0.53$^{***}$  & 0.62$^{***}$  & 0.60$^{***}$\\   
+                                              & (0.15)        & (0.15)        & (0.15)        & (0.15)\\   
+   Treat $\times$ New entrant $\times$ Post   & 1.54$^{***}$  & 1.45$^{***}$  & 0.15          & 0.23\\   
+                                              & (0.42)        & (0.42)        & (0.44)        & (0.44)\\   
+   Treat $\times$ New task $\times$ Post      & 0.60$^{*}$    & 0.55          & -0.33         & -0.22\\   
+                                              & (0.35)        & (0.35)        & (0.36)        & (0.36)\\   
+   Time FE                                    & No            & Yes           & Yes           & Yes\\  
+   Task FE                                    & No            & No            & Yes           & Yes\\  
+   Industry FE                                & No            & No            & No            & Yes\\  
+   Observations                               & 184,885       & 184,885       & 184,885       & 184,885\\  
+   R$^2$                                      & 0.06          & 0.06          & 0.12          & 0.12\\  
+   Within R$^2$                               &               & 0.06          & 0.05          & 0.05\\  
+   \midrule
+   \multicolumn{5}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+   \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup
+\begingroup
+\centering
+\small
+\begin{tabular}{lcccc}
+   \toprule
+    & \multicolumn{4}{c}{Percentage delay rate}\\
+                                                               & I              & II             & III            & IV\\  
+   Constant                                                    & 6.017$^{***}$  &                &                &   \\   
+                                                               & (0.118)        &                &                &   \\   
+   Treat                                                       & -0.664$^{***}$ & -0.676$^{***}$ & 0.087          & 0.094\\   
+                                                               & (0.113)        & (0.114)        & (0.121)        & (0.121)\\   
+   \% of past projects delayed                                 & 0.222$^{***}$  & 0.221$^{***}$  & 0.178$^{***}$  & 0.175$^{***}$\\   
+                                                               & (0.004)        & (0.004)        & (0.004)        & (0.004)\\   
+   Ln(Stage)                                                   & 2.578$^{***}$  & 2.606$^{***}$  & 2.570$^{***}$  & 2.557$^{***}$\\   
+                                                               & (0.029)        & (0.030)        & (0.030)        & (0.030)\\   
+   Post                                                        & 1.572$^{***}$  &                &                &   \\   
+                                                               & (0.139)        &                &                &   \\   
+   \% of past projects delayed $\times$ Post                   & -0.137$^{***}$ & -0.137$^{***}$ & -0.122$^{***}$ & -0.120$^{***}$\\   
+                                                               & (0.006)        & (0.006)        & (0.006)        & (0.006)\\   
+   Treat $\times$ Post                                         & -0.358$^{**}$  & -0.343$^{**}$  & -0.217         & -0.221\\   
+                                                               & (0.160)        & (0.160)        & (0.153)        & (0.153)\\   
+   Treat $\times$ \% of past projects delayed $\times$ Post    & 0.017$^{***}$  & 0.017$^{***}$  & 0.004          & 0.004\\   
+                                                               & (0.006)        & (0.006)        & (0.006)        & (0.006)\\   
+   Time FE                                                     & No             & Yes            & Yes            & Yes\\  
+   Task FE                                                     & No             & No             & Yes            & Yes\\  
+   Industry FE                                                 & No             & No             & No             & Yes\\  
+   Observations                                                & 178,606        & 178,606        & 178,606        & 178,606\\  
+   R$^2$                                                       & 0.10           & 0.10           & 0.14           & 0.15\\  
+   Within R$^2$                                                &                & 0.10           & 0.07           & 0.07\\  
+   \midrule
+   \multicolumn{5}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+   \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup
+
+\end{document}

@@ -1,0 +1,730 @@
+---
+title: "QuickPay Delay Rate -- All Defense Projects"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(pryr)
+library(DescTools) 
+library(zoo) # for year quarter
+library(broom)
+library(fixest)
+library(data.table)
+library(scales)
+library(MatchIt)
+```
+
+```{r read_data,include=FALSE}
+reg_df=readRDS("qp_delay_rates.Rds")
+
+reg_df=setDT(reg_df)
+```
+
+# QuickPay Expanded Sample
+
+* Consider ALL defense projects that started b/w FY 2010 and FY 2012
+* Only consider delays not caused by action types "D","A","L","G"
+* Restrict to June 30, 2012 -- QP expanded to all projects after that
+
+```{r fp_project_delays, include=FALSE}
+m1=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+          post_t,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Fixed"])
+
+m2=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage+
+          post_t,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Fixed"])
+
+m3=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Fixed"])
+
+m4=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter+
+        product_or_service_code,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Fixed"])
+
+m5=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter+
+        awarding_sub_agency_code+
+          product_or_service_code,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Fixed"])
+
+m6=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter+
+        awarding_sub_agency_code+
+          product_or_service_code+
+          naics_code,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Fixed"])
+
+clean_control=list(m1,m2,m3,m4,m5,m6)
+```
+
+```{r dictionary, include=FALSE}
+setFixest_dict(c("wins_percentage_delay"="Percentage delay rate",
+                 "action_date_year_quarter"="Year-Quarter",
+                 "treat_new"="Treat", # Clean control group
+                 "post_t"="Post",
+                 "jobs_act"="JOBS act",
+              "wins_initial_duration"="Initial duration",
+              "wins_project_quarter_stage"="Project stage",
+              "wins_offers"="Number of offers",
+              "positive_delay"="I(Delay>0)",
+              "negative_delay"="I(Delay<0)",
+              "product_or_service_code"="Task",
+              "naics_code"="NAICS",
+              "recipient_duns"="Contractor",
+              "awarding_sub_agency_code"="Sub-agency",
+              "contract_award_unique_key"="Project ID",
+              "wins_initial_budget"="Initial budget"))
+```
+
+```{r fp_table, echo=FALSE, results='asis'}
+etable(clean_control,
+       drop=c("Number of offers",
+              "Initial duration",
+              "Initial budget",
+              "Project stage"),
+       extralines = list("Controls"=c("No",rep("Yes",
+                                        length(clean_control)-1))),
+       title="Full sample of Fixed Price Contracts",
+       notes="Controls include initial budget, offers, duration, their interaction with post, and project stage. ",
+       digits='r2',
+       fontsize='footnotesize',
+       tex=T)
+```
+
+```{r cost_project_delays,include=FALSE}
+m1=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+          post_t,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Cost"])
+
+m2=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage+
+          post_t,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Cost"])
+
+m3=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Cost"])
+
+m4=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter+
+        product_or_service_code,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Cost"])
+
+m5=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter+
+        awarding_sub_agency_code+
+          product_or_service_code,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Cost"])
+
+m6=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter+
+        awarding_sub_agency_code+
+          product_or_service_code+
+          naics_code,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Cost"])
+
+clean_control_cost=list(m1,m2,m3,m4,m5,m6)
+```
+
+```{r cost_table, echo=FALSE, results='asis'}
+etable(clean_control_cost,
+       drop=c("Number of offers",
+              "Initial duration",
+              "Initial budget",
+              "Project stage"),
+       extralines = list("Controls"=c("No",rep("Yes",
+                                        length(clean_control_cost)-1))),
+       title="Full sample of Cost Plus Contracts",
+       notes="Controls include initial budget, offers, duration, their interaction with post, and project stage. ",
+       digits='r2',
+       fontsize='footnotesize',
+       tex=T)
+```
+
+```{r jobs_act,include=FALSE}
+reg_df[,jobs_act:=ifelse(action_date_year_quarter>as.Date('2010-09-30'),1,0)]
+
+m1=feols(wins_percentage_delay~treat_new+
+                            treat_new:jobs_act+
+                     post_t:treat_new+
+                     post_t+
+                    jobs_act,
+                  cluster=~contract_award_unique_key, # clustered at project level
+                  data=reg_df[price_structure=="Fixed"])
+
+m2=feols(wins_percentage_delay~treat_new+
+                            treat_new:jobs_act+
+                           post_t:treat_new+
+                           post_t+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"])
+
+m3=feols(wins_percentage_delay~treat_new+
+                            treat_new:jobs_act+
+                             post_t:treat_new+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"])
+
+m4=feols(wins_percentage_delay~treat_new+
+                              post_t:treat_new+
+                            treat_new:jobs_act+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage|
+                            product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"])
+
+m5=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            treat_new:jobs_act+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"])
+
+jobs_act_regs=list(m1,m2,m3,m4,m5)
+```
+
+```{r jobs_act_table, echo=FALSE, results='asis'}
+etable(jobs_act_regs,
+       drop=c("Number of offers",
+              "Initial duration",
+              "Initial budget",
+              "Project stage"),
+       extralines = list("Controls"=c("No",rep("Yes",
+                                        length(jobs_act_regs)-1))),
+       title="JOBS act -- Sample of Fixed Price Contracts",
+       notes="Controls include initial budget, offers, duration, their interaction with post, and project stage. ",
+       digits='r2',
+       fontsize='footnotesize',
+       tex=T)
+```
+
+```{r no_set_aside, include=FALSE,warning=FALSE,message=FALSE}
+m1=feols(wins_percentage_delay~treat_new+
+                     post_t:treat_new+
+                     post_t,
+                  cluster=~contract_award_unique_key, # clustered at project level
+                  data=reg_df[price_structure=="Fixed"&
+                                       type_of_set_aside_code%in%c("","NONE")])
+
+m2=feols(wins_percentage_delay~treat_new+
+                           post_t:treat_new+
+                           post_t+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"&
+                                        type_of_set_aside_code%in%c("","NONE")])
+
+m3=feols(wins_percentage_delay~treat_new+
+                             post_t:treat_new+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"&
+                                       type_of_set_aside_code%in%c("","NONE")])
+
+m4=feols(wins_percentage_delay~treat_new+
+                              post_t:treat_new+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage|
+                            product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"&
+                                       type_of_set_aside_code%in%c("","NONE")])
+
+m5=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"&
+                                        type_of_set_aside_code%in%c("","NONE")])
+
+no_set_aside_used=list(m1,m2,m3,m4,m5)
+```
+
+```{r no_set_aside_table, echo=FALSE, results='asis'}
+etable(no_set_aside_used,
+       drop=c("Number of offers",
+              "Initial duration",
+              "Initial budget",
+              "Project stage"),
+       extralines = list("Controls"=c("No",rep("Yes",
+                                        length(no_set_aside_used)-1))),
+       title="No Set Aside Used -- Sample of Fixed Price Contracts",
+       notes="Controls include initial budget, offers, duration, their interaction with post, and project stage. ",
+       digits='r2',
+       fontsize='footnotesize',
+       tex=T)
+```
+
+```{r c8a_participant, include=FALSE,warning=FALSE,message=FALSE}
+m1=feols(wins_percentage_delay~treat_new+
+                     post_t:treat_new+
+                     post_t,
+                  cluster=~contract_award_unique_key, # clustered at project level
+                  data=reg_df[price_structure=="Fixed"&
+                              c8a_program_participant=="f"])
+
+m2=feols(wins_percentage_delay~treat_new+
+                           post_t:treat_new+
+                           post_t+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"&
+                                        c8a_program_participant=="f"])
+
+m3=feols(wins_percentage_delay~treat_new+
+                             post_t:treat_new+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"&
+                                       c8a_program_participant=="f"])
+
+m4=feols(wins_percentage_delay~treat_new+
+                              post_t:treat_new+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage|
+                            product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"&
+                                       c8a_program_participant=="f"])
+
+m5=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"&
+                                        c8a_program_participant=="f"])
+
+no_c8a_participant=list(m1,m2,m3,m4,m5)
+```
+
+
+```{r no_c8a_table, echo=FALSE, results='asis'}
+etable(no_c8a_participant,
+       drop=c("Number of offers",
+              "Initial duration",
+              "Initial budget",
+              "Project stage"),
+       extralines = list("Controls"=c("No",rep("Yes",
+                                        length(no_c8a_participant)-1))),
+       title="No C8A Participant -- Sample of Fixed Price Contracts",
+       notes="Controls include initial budget, offers, duration, their interaction with post, and project stage. ",
+       digits='r2',
+       fontsize='footnotesize',
+       tex=T)
+```
+
+```{r started_before_qp, include=FALSE,warning=FALSE,message=FALSE}
+projects_started_before_qp=unique(reg_df[initial_start_date<
+                                           as.Date('2011-04-27')]$contract_award_unique_key)
+
+m1=feols(wins_percentage_delay~treat_new+
+                     post_t:treat_new+
+                     post_t,
+                  cluster=~contract_award_unique_key, # clustered at project level
+                  data=reg_df[price_structure=="Fixed"&
+                              contract_award_unique_key%in%projects_started_before_qp])
+
+m2=feols(wins_percentage_delay~treat_new+
+                           post_t:treat_new+
+                           post_t+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"&
+                              contract_award_unique_key%in%projects_started_before_qp])
+
+m3=feols(wins_percentage_delay~treat_new+
+                             post_t:treat_new+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"&
+                              contract_award_unique_key%in%projects_started_before_qp])
+
+m4=feols(wins_percentage_delay~treat_new+
+                              post_t:treat_new+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage|
+                            product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"&
+                              contract_award_unique_key%in%projects_started_before_qp])
+
+m5=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            wins_initial_duration+
+                            wins_initial_budget+
+                            wins_offers+
+                            post_t:wins_initial_duration+
+                            post_t:wins_initial_budget+
+                            post_t:wins_offers+
+                            wins_project_quarter_stage|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df[price_structure=="Fixed"&
+                              contract_award_unique_key%in%projects_started_before_qp])
+
+projects_before_qp=list(m1,m2,m3,m4,m5)
+```
+
+```{r projects_before_qp, echo=FALSE, results='asis'}
+etable(projects_before_qp,
+       drop=c("Number of offers",
+              "Initial duration",
+              "Initial budget",
+              "Project stage"),
+       extralines = list("Controls"=c("No",rep("Yes",
+                                        length(projects_before_qp)-1))),
+       title="Projects that started before QP -- Sample of Fixed Price Contracts",
+       notes="Controls include initial budget, offers, duration, their interaction with post, and project stage. ",
+       digits='r2',
+       fontsize='footnotesize',
+       tex=T)
+```
+
+```{r plot_nanda_naics, echo=FALSE, results='asis'}
+reg_df[,four_digit_naics:=substr(naics_code,1,4)]
+mean_delay=reg_df[!is.na(wins_percentage_delay) &
+                    !is.na(treat_new) 
+                         & action_date_year_quarter<=as.Date('2012-06-30')&
+                    price_structure=="Fixed", 
+                         .(avg_delay=mean(wins_percentage_delay,na.rm=T),
+                           se_delay=sd(wins_percentage_delay,na.rm=T)/sqrt(.N)
+                         ),  
+                         by = c('action_date_year_quarter','treat_new')]
+mean_delay[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
+mean_delay=mean_delay[order(action_date_year_quarter,treat_new)]
+
+pre_qp_mean_small=mean(subset(mean_delay,
+                              action_date_year_quarter<=as.Date('2011-04-27') &
+                                treat_new==1)$avg_delay,na.rm=T)
+pre_qp_mean_large=mean(subset(mean_delay,
+                              action_date_year_quarter<=as.Date('2011-04-27') &
+                                treat_new==0)$avg_delay,na.rm=T)
+
+mean_delay[,demeaned_delay:=ifelse(treat_new==1,
+                                   avg_delay-pre_qp_mean_small,
+                                   avg_delay-pre_qp_mean_large)]
+
+mean_delay[,business_type:=ifelse(treat_new==1,"S","O")]
+
+ggplot(mean_delay, aes(x=year_quarter,
+                       y=demeaned_delay, 
+                       group = business_type))+
+  geom_point(aes(shape=business_type),size=1.5)+
+  geom_errorbar(aes(ymin=demeaned_delay-1.96*se_delay, 
+                    ymax=demeaned_delay+1.96*se_delay), 
+                colour="black", 
+                width=.1) +
+  geom_line(aes(linetype=business_type, color=business_type),alpha=0.7) +    
+  scale_x_discrete(limits=mean_delay$year_quarter)+
+  geom_vline(xintercept =10.2,alpha=0.8,linewidth=0.15,linetype="solid")+
+  theme_minimal()+
+  labs(x="Time", 
+       y = "Average percentage delay rate")+
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", "O"),
+                        labels=c("Treated","Control"),
+                        values=c("solid","dashed"))+
+  scale_color_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c('black','black'))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c(16,17))+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))+
+  ggtitle("Fixed Price Contracts -- All NAICS codes")
+```
+
+```{r plot_all_naics, echo=FALSE, results='asis'}
+nanda_naics=c("3329",
+  "2362",
+  "2379",
+  "5311",
+  "5612",
+  "5629",
+  "5415",
+  "4831",
+  "6114",
+  "4812",
+  "3149",
+  "3325",
+  "1153",
+  "3333",
+  "4247",
+  "3159",
+  "3162",
+  "3169",
+  "3366",
+  "3112")
+
+reg_df[,four_digit_naics:=substr(naics_code,1,4)]
+mean_delay=reg_df[!is.na(wins_percentage_delay) &
+                    !is.na(treat_new) 
+                         & action_date_year_quarter<=as.Date('2012-06-30')&
+                    price_structure=="Fixed" &
+                    four_digit_naics%in%nanda_naics, 
+                         .(avg_delay=mean(wins_percentage_delay,na.rm=T),
+                           se_delay=sd(wins_percentage_delay,na.rm=T)/sqrt(.N)
+                         ),  
+                         by = c('action_date_year_quarter','treat_new')]
+mean_delay[,year_quarter:=format(action_date_year_quarter,"%Y-%b")]
+mean_delay=mean_delay[order(action_date_year_quarter,treat_new)]
+
+pre_qp_mean_small=mean(subset(mean_delay,
+                              action_date_year_quarter<=as.Date('2011-04-27') &
+                                treat_new==1)$avg_delay,na.rm=T)
+pre_qp_mean_large=mean(subset(mean_delay,
+                              action_date_year_quarter<=as.Date('2011-04-27') &
+                                treat_new==0)$avg_delay,na.rm=T)
+
+mean_delay[,demeaned_delay:=ifelse(treat_new==1,
+                                   avg_delay-pre_qp_mean_small,
+                                   avg_delay-pre_qp_mean_large)]
+
+mean_delay[,business_type:=ifelse(treat_new==1,"S","O")]
+
+ggplot(mean_delay, aes(x=year_quarter,
+                       y=demeaned_delay, 
+                       group = business_type))+
+  geom_point(aes(shape=business_type),size=1.5)+
+  geom_errorbar(aes(ymin=demeaned_delay-1.96*se_delay, 
+                    ymax=demeaned_delay+1.96*se_delay), 
+                colour="black", 
+                width=.1) +
+  geom_line(aes(linetype=business_type, color=business_type),alpha=0.7) +    
+  scale_x_discrete(limits=mean_delay$year_quarter)+
+  geom_vline(xintercept =10.2,alpha=0.8,linewidth=0.15,linetype="solid")+
+  theme_minimal()+
+  labs(x="Time", 
+       y = "Average percentage delay rate")+
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", "O"),
+                        labels=c("Treated","Control"),
+                        values=c("solid","dashed"))+
+  scale_color_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c('black','black'))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c(16,17))+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))+
+  ggtitle("Fixed Price Contracts -- Top 20 NAICS codes in Barrot and Nanda")
+```

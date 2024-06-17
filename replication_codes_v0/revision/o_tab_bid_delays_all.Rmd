@@ -1,0 +1,509 @@
+---
+title: "Bidding Metrics"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(lfe)
+library(stargazer)
+library(fixest)
+library(tidyverse)
+library(zoo) # for year quarter
+library(DescTools) 
+library(corrplot)
+```
+
+```{r read_data,include=FALSE}
+input_path='~/Dropbox/data_quickpay/qp_replication/input/'
+reg_df=fread(paste0(input_path,
+               'quickpay_delays.csv'))
+```
+
+```{r remove_na,include=FALSE}
+reg_df=reg_df[!is.na(recipient_duns)]
+```
+
+```{r competition_delays_subsample, echo=FALSE, results='asis'}
+reg_df[,project_signed_after_quickpay:=case_when(initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter>=as.Date('2011-04-27')~1,
+                                                 initial_start_date<as.Date('2011-04-27') ~ 0,
+                                                 initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter<as.Date('2011-04-27')~NaN)]
+
+reg_df[,quarter_when_project_signed:=as.Date(as.yearqtr(as.Date(initial_start_date)),
+                                                       frac = 1)]
+```
+
+```{r define_var, include=FALSE}
+# Number of projects held by a contractor in a given quarter
+num_proj_per_contractor_df=reg_df[,
+                .(num_projects=
+                    n_distinct(contract_award_unique_key)),
+              by=c('recipient_duns',
+                   'action_date_year_quarter')]
+
+# Number of projects of a given task type held by a contractor in a given quarter
+num_proj_same_task_df=reg_df[,
+                .(num_projects_same_task=
+                    n_distinct(contract_award_unique_key)),
+              by=c('recipient_duns',
+                   'product_or_service_code',
+                   'action_date_year_quarter')]
+
+# Merge the two datasets
+num_proj_same_task_df=merge(num_proj_same_task_df,
+                            num_proj_per_contractor_df,
+                            by=c('recipient_duns',
+                                 'action_date_year_quarter'),
+                            all.x=T)
+
+num_proj_same_task_df=num_proj_same_task_df[order(recipient_duns,
+                                                   product_or_service_code,
+                                                   action_date_year_quarter)]
+```
+
+```{r get_lags, include=FALSE}
+###########################################
+# LAG OF 1
+##########################################
+# If same contractor last quarter + same task last quarter, take lag value. Else take zero.
+# Zero can indicate:
+# 1. Same contractor last quarter + different task last quarter, OR
+# 2. Different contractor last quarter i.e., contractor is new entrant
+num_proj_same_task_df[,num_projects_same_task_lag_1:=ifelse(recipient_duns==
+                                                                 lag(recipient_duns)&
+                                                            product_or_service_code==
+                                                              lag(product_or_service_code),
+                                                            lag(num_projects_same_task),
+                                                            0)]
+
+num_proj_same_task_df[,num_projects_lag_1:=ifelse(recipient_duns==lag(recipient_duns),
+                                                            lag(num_projects),
+                                                            0)]
+###########################################
+# LAG OF 2
+##########################################
+# If same contractor second-to-last quarter + same task second-to-last quarter, take lag-2 value. Else take zero.
+# Zero can indicate:
+# 1. Same contractor second-to-last quarter + different task second-to-last quarter, OR
+# 2. Different contractor second-to-last quarter i.e., contractor is new entrant
+num_proj_same_task_df[,num_projects_same_task_lag_2:=ifelse(recipient_duns==
+                                                                 lag(recipient_duns,2)&
+                                                            product_or_service_code==
+                                                              lag(product_or_service_code,2),
+                                                            lag(num_projects_same_task,2),
+                                                            0)]
+
+num_proj_same_task_df[,num_projects_lag_2:=ifelse(recipient_duns==lag(recipient_duns,2),
+                                                            lag(num_projects,2),
+                                                            0)]
+
+###########################################
+# LAG OF 3
+##########################################
+num_proj_same_task_df[,num_projects_same_task_lag_3:=ifelse(recipient_duns==
+                                                                 lag(recipient_duns,3)&
+                                                            product_or_service_code==
+                                                              lag(product_or_service_code,3),
+                                                            lag(num_projects_same_task,3),
+                                                            0)]
+
+
+num_proj_same_task_df[,num_projects_lag_3:=ifelse(recipient_duns==
+                                                                 lag(recipient_duns,3),
+                                                            lag(num_projects,3),
+                                                            0)]
+
+###########################################
+# ADD IT UP
+##########################################
+
+num_proj_same_task_df[,num_projs_same_task_past_three_qtrs:=num_projects_same_task_lag_2+
+                                                          num_projects_same_task_lag_1+
+                                                          num_projects_same_task_lag_3]
+
+
+num_proj_same_task_df[,num_projs_past_three_qtrs:=num_projects_lag_1+
+                                                  num_projects_lag_2+
+                                                  num_projects_lag_3]
+
+```
+
+* Let $n^{task}_{i}=$ Number of projects of the same task held by the contractor in the three quarters before starting project $i$
+* Let $n_{i}=$ Number of projects held by the contractor in the three quarters before starting project $i$
+
+* Define:
+  * Inexperienced contractor$_i$ = 1 if $n^{task}_{i}=0$ 
+  * New entrant$_i$ = 1 if $n_{i}=0$
+  * Level of inexperience$_{i}= 1 - \frac{n^{task}_{i}}{n_{i}}$ if $n_{i}>0$
+  * Level of inexperience$_{i}= 1$ if $n_{i,k,t}=0$.
+    
+
+```{r project_quarter, include=FALSE}
+# Get first quarter for every project
+project_quarter=reg_df[,.(start_quarter=min(action_date_year_quarter)),
+                              by=c('contract_award_unique_key',
+                                 'recipient_duns',
+                                 'product_or_service_code')]
+
+project_quarter=merge(project_quarter,
+                      num_proj_same_task_df,
+                      by.x=c('start_quarter',
+                             'recipient_duns',
+                             'product_or_service_code'),
+                      by.y=c('action_date_year_quarter',
+                             'recipient_duns',
+                             'product_or_service_code'),
+                      all.x=T)
+
+# Task inexperienced if
+project_quarter[,task_inexperienced_i:=ifelse(num_projs_same_task_past_three_qtrs==0,1,0)]
+project_quarter[,new_entrant_i:=ifelse(num_projs_past_three_qtrs==0,1,0)]
+
+# Proportion of projects on which contractor has past experience
+project_quarter[,prop_exp:=ifelse(num_projs_past_three_qtrs>0,
+                                 num_projs_same_task_past_three_qtrs/num_projs_past_three_qtrs,
+                                       0)]
+
+project_entrant=project_quarter[,c('contract_award_unique_key',
+                                   'task_inexperienced_i',
+                                   'new_entrant_i',
+                                   'num_projs_same_task_past_three_qtrs',
+                                   'num_projs_past_three_qtrs',
+                                   'prop_exp')]
+
+reg_df=merge(reg_df,
+                    project_entrant,
+                    by='contract_award_unique_key',
+                    all.x = T)
+```
+
+```{r define_inexp, include=FALSE}
+reg_df[,inexp:=1-prop_exp]
+```
+
+<!-- ```{r get_first_reported, include=FALSE} -->
+<!-- reg_df_first_reported=unique(reg_df, -->
+<!--                              by='contract_award_unique_key') -->
+
+<!-- reg_df_first_reported=subset(reg_df_first_reported, -->
+<!--                              initial_start_date>as.Date('2009-12-31') &  -->
+<!--                                initial_start_date<as.Date('2012-03-31')& -->
+<!--                               competitively_awarded_i==1 ) -->
+<!-- ``` -->
+
+<!-- # Effect on Bids -->
+
+<!-- ```{r competition_subsample_i, include=FALSE} -->
+<!-- bids=feols(wins_number_of_offers_received~treat_i+ -->
+<!--            treat_i:project_signed_after_quickpay| -->
+<!--                             product_or_service_code+ -->
+<!--                             quarter_when_project_signed, -->
+<!--        cluster=~contract_award_unique_key, -->
+<!--        data=reg_df_first_reported[number_of_offers_received>1& -->
+<!--                                     number_of_offers_received<32]) -->
+<!-- # remove outliers -- these are 0.1 and 0.99 quantile -->
+
+<!-- duration=feols(winsorized_initial_duration_in_days_i~treat_i+ -->
+<!--                                    treat_i:project_signed_after_quickpay| -->
+<!--                             product_or_service_code+ -->
+<!--                             quarter_when_project_signed, -->
+<!--              cluster=~contract_award_unique_key, -->
+<!--              data=reg_df_first_reported) -->
+
+<!-- budget=feols(I(winsorized_initial_budget_i/1000)~treat_i+ -->
+<!--                                    treat_i:project_signed_after_quickpay| -->
+<!--                             product_or_service_code+ -->
+<!--                             quarter_when_project_signed, -->
+<!--              cluster=~contract_award_unique_key, -->
+<!--              data=reg_df_first_reported) -->
+
+<!-- bids_list=list(bids,duration,budget) -->
+<!-- ``` -->
+
+```{r output, echo=FALSE,results='asis'}
+setFixest_dict(c("wins_percentage_delay"="Percentage delay rate",
+                 "treat_i"="Treat",
+                 "post_t"="Post",
+                 "project_signed_after_quickpay"="SA$_i$",
+                 "inexp"="Level of inexperience",
+                 "log(wins_project_quarter_stage)"="Ln(Stage)",
+                 "new_entrant_i"="New Entrant",
+                 "task_inexperienced_i"="Inexperienced contractor",
+                 "action_date_year_quarter"="Time",
+                 "product_or_service_code"="Task",
+                 "naics_code"="Industry",
+                 "contract_award_unique_key"="Project ID",
+                 "number_of_offers_received"="Num offers",
+                 "quarter_when_project_signed"="Time",
+                 "I(winsorized_initial_budget_i/1000)"="Initial Budget (000s)",
+                  "winsorized_initial_duration_in_days_i"="Initial Duration"))
+
+# etable(bids_list,
+#        tex=T,
+#        style.tex = style.tex(depvar.title = "",
+#                              model.title = "",
+#                              model.format = "I",
+#                              var.title = "",
+#                              line.bottom = "simple",
+#                              line.top = "simple",
+#                              stats.title = "",
+#                              fixef.title = "",
+#                              fixef.suffix = " FE",
+#                              yesNo = c("Yes","No")),
+#        digits='r2',
+#        digits.stats = 'r2',
+#        fontsize = "small")
+```
+
+# Effect on Delays
+
+## Old vs New Entrant
+
+```{r new_entrant_bid_delays, include=FALSE}
+m1=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)+
+                            post_t,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,new_entrant_i==1&
+                                        competitively_awarded_i==1))
+
+m2=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,new_entrant_i==1&
+                                        competitively_awarded_i==1))
+
+m3=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,new_entrant_i==1&
+                                        competitively_awarded_i==1))
+
+m4=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,new_entrant_i==1&
+                                        competitively_awarded_i==1))
+
+new_entrant_delays=list(m1,m2,m3,m4)
+```
+
+```{r old_entrant_bid_delays, include=FALSE}
+m1=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)+
+                            post_t,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,new_entrant_i==0&
+                                        competitively_awarded_i==1))
+
+m2=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,new_entrant_i==0&
+                                        competitively_awarded_i==1))
+
+m3=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,new_entrant_i==0&
+                                        competitively_awarded_i==1))
+
+m4=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,new_entrant_i==0&
+                                        competitively_awarded_i==1))
+
+old_entrant_delays=list(m1,m2,m3,m4)
+```
+
+```{r output_3, echo=FALSE,results='asis'}
+etable(old_entrant_delays,
+       new_entrant_delays,
+        headers=list(":_:"=list("Old entrants"=4,
+                    "New entrants"=4)),
+       tex=T,
+       style.tex = style.tex(depvar.title = "",
+                             model.title = "",
+                             model.format = "I",
+                             var.title = "",
+                             line.bottom = "simple",
+                             line.top = "simple",
+                             stats.title = "",
+                             fixef.title = "",
+                             fixef.suffix = " FE",
+                             yesNo = c("Yes","No")),
+       digits='r3',
+       digits.stats = 'r2',
+       fontsize = "small")
+
+```
+
+# Experienced vs Inexperienced
+
+```{r inexperienced_bid_delays, include=FALSE}
+m1=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)+
+                            post_t,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,task_inexperienced_i==1&
+                                        competitively_awarded_i==1))
+
+m2=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,task_inexperienced_i==1&
+                                        competitively_awarded_i==1))
+
+m3=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,task_inexperienced_i==1&
+                                        competitively_awarded_i==1))
+
+m4=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,task_inexperienced_i==1&
+                                        competitively_awarded_i==1))
+
+task_inexperienced_delays=list(m1,m2,m3,m4)
+```
+
+```{r experienced_bid_delays, include=FALSE}
+m1=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)+
+                            post_t,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,task_inexperienced_i==0&
+                                        competitively_awarded_i==1))
+
+m2=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,task_inexperienced_i==0&
+                                        competitively_awarded_i==1))
+
+m3=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,task_inexperienced_i==0&
+                                        competitively_awarded_i==1))
+
+m4=feols(wins_percentage_delay~treat_i+
+                                  project_signed_after_quickpay+
+                                  treat_i:post_t+
+                                  treat_i:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=subset(reg_df,task_inexperienced_i==0&
+                                        competitively_awarded_i==1))
+
+task_experienced_delays=list(m1,m2,m3,m4)
+```
+
+```{r output_4, echo=FALSE,results='asis'}
+etable(task_experienced_delays,
+        task_inexperienced_delays,
+        headers=list(":_:"=list("Experienced contractors"=4,
+                    "Inxperienced contractors"=4)),
+       tex=T,
+       style.tex = style.tex(depvar.title = "",
+                             model.title = "",
+                             model.format = "I",
+                             var.title = "",
+                             line.bottom = "simple",
+                             line.top = "simple",
+                             stats.title = "",
+                             fixef.title = "",
+                             fixef.suffix = " FE",
+                             yesNo = c("Yes","No")),
+       digits='r3',
+       digits.stats = 'r2',
+       fontsize = "small")
+```
