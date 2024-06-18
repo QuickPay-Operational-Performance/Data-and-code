@@ -13,7 +13,8 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r packages,warning=FALSE,message=FALSE,include=FALSE}
@@ -49,7 +50,9 @@ keep_cols=c('contract_award_unique_key',
             'modification_number',
             'contract_financing_code',
             'extent_competed_code',
-            'c8a_program_participant')
+            'c8a_program_participant',
+            'contract_bundling',
+            'contract_bundling_code')
 
 folder='/Users/vibhutid_admin/Dropbox/USA_Spending_Downloads/award_data_archive_20200205/'
 # everything 
@@ -233,7 +236,9 @@ df_first=df[,.(initial_end_date = first(period_of_performance_current_end_date),
                type_of_set_aside_code=first(type_of_set_aside_code),
                extent_competed_code=first(extent_competed_code),
                contract_financing_code=first(contract_financing_code),
-               c8a_program_participant=first(c8a_program_participant)),
+               c8a_program_participant=first(c8a_program_participant),
+               contract_bundling=first(contract_bundling),
+               contract_bundling_code=first(contract_bundling_code)),
             by='contract_award_unique_key']
 
 df_first[,initial_duration:=as.numeric(initial_end_date-initial_start_date)]
@@ -308,8 +313,7 @@ reg_df[,treat_new:=case_when(treat_i==1 ~ 1,
 ```
 
 ```{r export_file, include=FALSE}
-path='/Users/vibhutid_admin/Desktop/Research/QuickPay/extended_sample/all_action_types'
 saveRDS(reg_df, 
-        file = paste0(path,
+        file = paste0(getwd(),
                       "/qp_delay_rates_all_action_types.rds"))
 ```

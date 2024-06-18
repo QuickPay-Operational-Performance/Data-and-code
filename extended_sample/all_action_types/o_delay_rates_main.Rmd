@@ -62,7 +62,8 @@ reg_df[,four_digit_naics:=substr(naics_code,1,4)]
 # QuickPay Expanded Sample
 
 * Consider ALL defense projects that started b/w FY 2010 and FY 2012
-* Consdier ALL action types
+* Consider ALL action types
+* Treat is N/A for Small Disadvantaged Business (i.e., they are excluded)
 * Restrict to June 30, 2012 -- QP expanded to all projects after that
 
 ```{r fp_project_delays, include=FALSE}
@@ -119,7 +120,7 @@ m5=feols(wins_percentage_delay~treat_new+
         post_t:wins_initial_budget+
         post_t:wins_offers+
         wins_project_quarter_stage|action_date_year_quarter+
-        awarding_sub_agency_code+
+        naics_code+
           product_or_service_code,
       cluster=~contract_award_unique_key,
       data=reg_df[price_structure=="Fixed"])
@@ -139,12 +140,12 @@ m6=feols(wins_percentage_delay~treat_new+
       cluster=~contract_award_unique_key,
       data=reg_df[price_structure=="Fixed"])
 
-clean_control=list(m1,m2,m3,m4,m5,m6)
+clean_control=list(m2,m3,m4,m5)
 ```
 
 ```{r dictionary, include=FALSE}
 setFixest_dict(c("wins_percentage_delay"="Percentage delay rate",
-                 "action_date_year_quarter"="Year-Quarter",
+                 "action_date_year_quarter"="Time",
                  "treat_new"="Treat", # Clean control group
                  "post_t"="Post",
                  "jobs_act"="JOBS act",
@@ -167,11 +168,22 @@ etable(clean_control,
               "Initial duration",
               "Initial budget",
               "Project stage"),
-       extralines = list("Controls"=c("No",rep("Yes",
-                                        length(clean_control)-1))),
+       extralines = list("-Controls"=c(rep("Yes",
+                                          length(clean_control)))),
        title="Full sample of Fixed Price Contracts",
        notes="Controls include initial budget, offers, duration, their interaction with post, and project stage. ",
+       style.tex=style.tex(depvar.title = "",
+                           model.title = "",
+                           model.format = "I",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule",
+                           fixef.title = "\\midrule",
+                           yesNo = c("Yes","No"),
+                           line.top = "simple",
+                           line.bottom = "simple",
+                           stats.title = ""),
        digits='r2',
+       digits.stats = "r2",
        fontsize='footnotesize',
        tex=T)
 ```
@@ -230,7 +242,7 @@ m5=feols(wins_percentage_delay~treat_new+
         post_t:wins_initial_budget+
         post_t:wins_offers+
         wins_project_quarter_stage|action_date_year_quarter+
-        awarding_sub_agency_code+
+        naics_code+
           product_or_service_code,
       cluster=~contract_award_unique_key,
       data=reg_df[price_structure=="Cost"])
@@ -250,7 +262,7 @@ m6=feols(wins_percentage_delay~treat_new+
       cluster=~contract_award_unique_key,
       data=reg_df[price_structure=="Cost"])
 
-clean_control_cost=list(m1,m2,m3,m4,m5,m6)
+clean_control_cost=list(m2,m3,m4,m5)
 ```
 
 ```{r cost_table, echo=FALSE, results='asis'}
@@ -259,17 +271,22 @@ etable(clean_control_cost,
               "Initial duration",
               "Initial budget",
               "Project stage"),
-       extralines = list("Controls"=c("No",rep("Yes",
-                                        length(clean_control_cost)-1))),
+       extralines = list("-Controls"=c(rep("Yes",
+                                        length(clean_control_cost)))),
        title="Full sample of Cost Plus Contracts",
        notes="Controls include initial budget, offers, duration, their interaction with post, and project stage. ",
        digits='r2',
-       digits.stats = 2,
-       style.tex=style.tex(fixef.title = "",
-                           fixef.suffix = "FE",
-                           var.title = "",
-                           stats.title = "",
-                           yesNo = c("Yes","No")),
+       digits.stats = 'r2',
+       style.tex=style.tex(depvar.title = "",
+                           model.title = "",
+                           model.format = "I",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule",
+                           fixef.title = "\\midrule",
+                           yesNo = c("Yes","No"),
+                           line.top = "simple",
+                           line.bottom = "simple",
+                           stats.title = ""),
        fontsize='footnotesize',
        tex=T)
 ```

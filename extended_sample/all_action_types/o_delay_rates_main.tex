@@ -68,7 +68,7 @@
 
 \title{QuickPay Delay Rate -- All Defense Projects}
 \author{}
-\date{\vspace{-2.5em}2024-06-17}
+\date{\vspace{-2.5em}2024-06-18}
 
 \begin{document}
 \maketitle
@@ -81,7 +81,10 @@
 \item
   Consider ALL defense projects that started b/w FY 2010 and FY 2012
 \item
-  Consdier ALL action types
+  Consider ALL action types
+\item
+  Treat is N/A for Small Disadvantaged Business (i.e., they are
+  excluded)
 \item
   Restrict to June 30, 2012 -- QP expanded to all projects after that
 \end{itemize}
@@ -90,35 +93,30 @@
    \caption{Full sample of Fixed Price Contracts}
    \centering
    \footnotesize
-   \begin{tabular}{lcccccc}
-      \tabularnewline \midrule \midrule
-      Dependent Variable: & \multicolumn{6}{c}{Percentage delay rate}\\
-      Model:               & (1)           & (2)           & (3)           & (4)           & (5)           & (6)\\  
+   \begin{tabular}{lcccc}
+      \toprule
+       & \multicolumn{4}{c}{Percentage delay rate}\\
+                           & I             & II            & III           & IV\\  
+      \midrule 
+      Constant             & 0.40$^{***}$  &               &               &   \\   
+                           & (0.03)        &               &               &   \\   
+      Treat                & -0.62$^{***}$ & -0.62$^{***}$ & -0.37$^{***}$ & -0.39$^{***}$\\   
+                           & (0.02)        & (0.02)        & (0.02)        & (0.03)\\   
+      Post                 & -0.10$^{**}$  &               &               &   \\   
+                           & (0.04)        &               &               &   \\   
+      Treat $\times$ Post  & 0.30$^{***}$  & 0.31$^{***}$  & 0.31$^{***}$  & 0.32$^{***}$\\   
+                           & (0.03)        & (0.03)        & (0.03)        & (0.03)\\   
+      \midrule 
+      Time FE              & No            & Yes           & Yes           & Yes\\  
+      Task FE              & No            & No            & Yes           & Yes\\  
+      NAICS FE             & No            & No            & No            & Yes\\  
+      Controls             & Yes           & Yes           & Yes           & Yes\\  
+      Observations         & 1,191,596     & 1,191,596     & 1,191,596     & 1,189,571\\  
+      R$^2$                & 0.08          & 0.08          & 0.11          & 0.12\\  
+      Within R$^2$         &               & 0.08          & 0.07          & 0.07\\  
       \midrule
-      \emph{Variables}\\
-      Constant             & 2.00$^{***}$  & 0.40$^{***}$  &               &               &               &   \\   
-                           & (0.02)        & (0.03)        &               &               &               &   \\   
-      Treat                & -0.43$^{***}$ & -0.62$^{***}$ & -0.62$^{***}$ & -0.37$^{***}$ & -0.35$^{***}$ & -0.35$^{***}$\\   
-                           & (0.02)        & (0.02)        & (0.02)        & (0.02)        & (0.02)        & (0.03)\\   
-      Post                 & 0.20$^{***}$  & -0.10$^{**}$  &               &               &               &   \\   
-                           & (0.02)        & (0.04)        &               &               &               &   \\   
-      Treat $\times$ Post  & 0.54$^{***}$  & 0.30$^{***}$  & 0.31$^{***}$  & 0.31$^{***}$  & 0.32$^{***}$  & 0.32$^{***}$\\   
-                           & (0.03)        & (0.03)        & (0.03)        & (0.03)        & (0.03)        & (0.03)\\   
-      Controls             & No            & Yes           & Yes           & Yes           & Yes           & Yes\\  
-      \midrule
-      \emph{Fixed-effects}\\
-      Year-Quarter         &               &               & Yes           & Yes           & Yes           & Yes\\  
-      Task                 &               &               &               & Yes           & Yes           & Yes\\  
-      Sub-agency           &               &               &               &               & Yes           & Yes\\  
-      NAICS                &               &               &               &               &               & Yes\\  
-      \midrule
-      \emph{Fit statistics}\\
-      Observations         & 1,191,926     & 1,191,596     & 1,191,596     & 1,191,596     & 1,191,596     & 1,189,571\\  
-      R$^2$                & 0.00130       & 0.07740       & 0.07974       & 0.11329       & 0.11923       & 0.12331\\  
-      Within R$^2$         &               &               & 0.07666       & 0.06789       & 0.06656       & 0.06548\\  
-      \midrule \midrule
-      \multicolumn{7}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
-      \multicolumn{7}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+      \multicolumn{5}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
    \end{tabular}
    
    \par \raggedright 
@@ -129,29 +127,30 @@
    \caption{Full sample of Cost Plus Contracts}
    \centering
    \footnotesize
-   \begin{tabular}{lcccccc}
-      \tabularnewline \midrule \midrule
-      Dependent Variable: & \multicolumn{6}{c}{Percentage delay rate}\\
-      Model:               & (1)           & (2)           & (3)          & (4)    & (5)    & (6)\\  
-      Constant             & 3.41$^{***}$  & 2.79$^{***}$  &              &        &        &   \\   
-                           & (0.07)        & (0.17)        &              &        &        &   \\   
-      Treat                & -0.48$^{***}$ & 0.30$^{**}$   & 0.31$^{***}$ & -0.04  & -0.01  & -0.16\\   
-                           & (0.13)        & (0.12)        & (0.12)       & (0.12) & (0.12) & (0.13)\\   
-      Post                 & 0.35$^{***}$  & -1.66$^{***}$ &              &        &        &   \\   
-                           & (0.08)        & (0.20)        &              &        &        &   \\   
-      Treat $\times$ Post  & 0.47$^{***}$  & 0.05          & 0.03         & 0.11   & 0.14   & 0.12\\   
-                           & (0.15)        & (0.15)        & (0.15)       & (0.15) & (0.15) & (0.15)\\   
-      Controls             & No            & Yes           & Yes          & Yes    & Yes    & Yes\\  
-      Year-QuarterFE       & No            & No            & Yes          & Yes    & Yes    & Yes\\  
-      TaskFE               & No            & No            & No           & Yes    & Yes    & Yes\\  
-      Sub-agencyFE         & No            & No            & No           & No     & Yes    & Yes\\  
-      NAICSFE              & No            & No            & No           & No     & No     & Yes\\  
-      Observations         & 86,940        & 86,851        & 86,851       & 86,851 & 86,851 & 86,851\\  
-      R$^2$                & 0.0006        & 0.11          & 0.11         & 0.13   & 0.13   & 0.14\\  
-      Within R$^2$         &               &               & 0.11         & 0.11   & 0.11   & 0.11\\  
-      \midrule \midrule
-      \multicolumn{7}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
-      \multicolumn{7}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \begin{tabular}{lcccc}
+      \toprule
+       & \multicolumn{4}{c}{Percentage delay rate}\\
+                           & I             & II           & III    & IV\\  
+      \midrule 
+      Constant             & 2.79$^{***}$  &              &        &   \\   
+                           & (0.17)        &              &        &   \\   
+      Treat                & 0.30$^{**}$   & 0.31$^{***}$ & -0.04  & -0.21$^{*}$\\   
+                           & (0.12)        & (0.12)       & (0.12) & (0.13)\\   
+      Post                 & -1.66$^{***}$ &              &        &   \\   
+                           & (0.20)        &              &        &   \\   
+      Treat $\times$ Post  & 0.05          & 0.03         & 0.11   & 0.09\\   
+                           & (0.15)        & (0.15)       & (0.15) & (0.15)\\   
+      \midrule 
+      Time FE              & No            & Yes          & Yes    & Yes\\  
+      Task FE              & No            & No           & Yes    & Yes\\  
+      NAICS FE             & No            & No           & No     & Yes\\  
+      Controls             & Yes           & Yes          & Yes    & Yes\\  
+      Observations         & 86,851        & 86,851       & 86,851 & 86,851\\  
+      R$^2$                & 0.11          & 0.11         & 0.13   & 0.14\\  
+      Within R$^2$         &               & 0.11         & 0.11   & 0.11\\  
+      \midrule
+      \multicolumn{5}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
    \end{tabular}
    
    \par \raggedright 
@@ -179,7 +178,7 @@
       Treat $\times$ Post      & 0.52$^{***}$  & 0.45$^{***}$  & 0.35$^{***}$  & 0.35$^{***}$  & 0.34$^{***}$\\   
                                & (0.04)        & (0.03)        & (0.04)        & (0.04)        & (0.04)\\   
       Controls                 & No            & Yes           & Yes           & Yes           & Yes\\  
-      Year-QuarterFE           & No            & No            & Yes           & Yes           & Yes\\  
+      TimeFE                   & No            & No            & Yes           & Yes           & Yes\\  
       TaskFE                   & No            & No            & No            & Yes           & Yes\\  
       NAICSFE                  & No            & No            & No            & No            & Yes\\  
       Observations             & 1,191,926     & 1,191,596     & 1,191,596     & 1,191,596     & 1,189,571\\  
@@ -211,7 +210,7 @@
       Treat $\times$ Post  & 0.40$^{***}$  & 0.23$^{***}$  & 0.24$^{***}$  & 0.28$^{***}$  & 0.28$^{***}$\\   
                            & (0.03)        & (0.04)        & (0.04)        & (0.03)        & (0.04)\\   
       Controls             & No            & Yes           & Yes           & Yes           & Yes\\  
-      Year-QuarterFE       & No            & No            & Yes           & Yes           & Yes\\  
+      TimeFE               & No            & No            & Yes           & Yes           & Yes\\  
       TaskFE               & No            & No            & No            & Yes           & Yes\\  
       NAICSFE              & No            & No            & No            & No            & Yes\\  
       Observations         & 908,710       & 908,466       & 908,466       & 908,466       & 906,441\\  
@@ -243,7 +242,7 @@
       Treat $\times$ Post  & 0.51$^{***}$  & 0.29$^{***}$  & 0.30$^{***}$  & 0.31$^{***}$  & 0.31$^{***}$\\   
                            & (0.03)        & (0.03)        & (0.03)        & (0.03)        & (0.03)\\   
       Controls             & No            & Yes           & Yes           & Yes           & Yes\\  
-      Year-QuarterFE       & No            & No            & Yes           & Yes           & Yes\\  
+      TimeFE               & No            & No            & Yes           & Yes           & Yes\\  
       TaskFE               & No            & No            & No            & Yes           & Yes\\  
       NAICSFE              & No            & No            & No            & No            & Yes\\  
       Observations         & 1,171,183     & 1,170,855     & 1,170,855     & 1,170,855     & 1,168,830\\  
@@ -275,7 +274,7 @@
       Treat $\times$ Post  & 1.02$^{***}$  & 0.52$^{***}$  & 0.51$^{***}$  & 0.56$^{***}$  & 0.58$^{***}$\\   
                            & (0.04)        & (0.04)        & (0.04)        & (0.04)        & (0.04)\\   
       Controls             & No            & Yes           & Yes           & Yes           & Yes\\  
-      Year-QuarterFE       & No            & No            & Yes           & Yes           & Yes\\  
+      TimeFE               & No            & No            & Yes           & Yes           & Yes\\  
       TaskFE               & No            & No            & No            & Yes           & Yes\\  
       NAICSFE              & No            & No            & No            & No            & Yes\\  
       Observations         & 862,533       & 862,313       & 862,313       & 862,313       & 860,314\\  
