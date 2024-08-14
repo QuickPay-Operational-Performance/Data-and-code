@@ -106,6 +106,26 @@ no_grants=feols(wins_percentage_delay~treat_new+
                                                  contracts_receiving_grants)])
 ```
 
+```{r no_grants_8a_set_aside, include=FALSE}
+no_grants_8a_set_aside=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset[c8a_program_participant=="f"&
+                                       sba_certified_8a_joint_venture=="f"&
+                                         type_of_set_aside%in%
+                                               c("","NO SET ASIDE USED.")&
+                                               !(recipient_duns%in%
+                                                 contracts_receiving_grants)])
+```
+
 ## Started before QuickPay
 
 ```{r before_qp, include=FALSE}
@@ -126,6 +146,28 @@ projects_before_qp=feols(wins_percentage_delay~treat_new+
                           data=reg_df_subset[contract_award_unique_key%in%
                                                projects_started_before_qp])
 
+```
+
+```{r exclude_all, include=FALSE}
+exclude_all=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        log(wins_project_quarter_stage)+
+        log(1+winsorized_initial_duration_in_days_i)+
+        log(1+winsorized_initial_budget_i)+
+        wins_number_of_offers_received+
+        post_t:log(1+winsorized_initial_duration_in_days_i)+
+        post_t:log(1+winsorized_initial_budget_i)+
+        post_t:wins_number_of_offers_received|
+        naics_code+product_or_service_code+action_date_year_quarter,
+      cluster=~contract_award_unique_key,
+      data=reg_df_subset[c8a_program_participant=="f"&
+                           sba_certified_8a_joint_venture=="f"&
+                           type_of_set_aside%in%
+                           c("","NO SET ASIDE USED.")&
+                           !(recipient_duns%in%
+                               contracts_receiving_grants) &
+                           contract_award_unique_key%in%
+                           projects_started_before_qp])
 ```
 
 ## Small business jobs act
@@ -168,20 +210,20 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percentage delay",
                       "jobs_act"="After Jobs Act"
                       ))
 
-etable(jobs_act_regs,
-       no_grants,
+etable(no_grants,
        no_set_aside_used,
        non_c8a,
        projects_before_qp,
+       exclude_all,
        digits='r2',
        fontsize = 'tiny',
        title="Alternative explanations",
-       headers=list(c("\\makecell{Small business \\\\ jobs act}",
-                    "\\makecell{Excluding contractors \\\\
+       headers=list(c("\\makecell{Excluding contractors \\\\
                     that receive grants}",
                     "\\makecell{Excluding set-aside \\\\ projects}",
                     "\\makecell{Excluding 8(A) \\\\ contractors}", 
-                    "\\makecell{Excluding projects that\\\\ started after QuickPay}"
+                    "\\makecell{Excluding projects that\\\\ started after QuickPay}",
+                    "\\makecell{Excluding all\\\\ measures}"
                     )),
        drop=c("Project stage",
               "Initial duration",
