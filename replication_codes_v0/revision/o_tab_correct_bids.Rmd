@@ -1,0 +1,248 @@
+---
+title: "Correct for aggressive bids"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls()) # Clear environment
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(DescTools) 
+library(broom)
+```
+
+```{r read_data,include=FALSE}
+working_path='~/Dropbox/data_quickpay/qp_replication/working/'
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+```
+
+```{r merge_with_reg, include=FALSE}
+# Create two digit task and naics codes
+reg_df_subset[, two_digit_psc:=substr(product_or_service_code,1,2)]
+reg_df_subset[, two_digit_naics:=substr(naics_code,1,2)]
+# Restrict to competitively awarded projects 
+reg_df_subset=reg_df_subset[competitively_awarded_i==1]
+```
+
+```{r did_on_subsamples, include=FALSE}
+# Create task-naics ID by concatenating the two
+reg_df_subset[,task_naics:=paste(two_digit_psc,
+                                 two_digit_naics,
+                                 sep="_")]
+# Get list of unique task-naics combinations
+list_of_task_naics=unique(reg_df_subset$task_naics)
+# Create a data table corresponding to each task-naics code
+did_list=unique(reg_df_subset[,c('task_naics')])
+# Create empty columns
+did_list[,duration_did_coef:=NaN]
+did_list[,duration_did_se:=NaN]
+did_list[,duration_did_nobs:=NaN]
+
+did_list[,budget_did_coef:=NaN]
+did_list[,budget_did_se:=NaN]
+did_list[,budget_did_nobs:=NaN]
+
+did_list[,offers_did_coef:=NaN]
+did_list[,offers_did_se:=NaN]
+did_list[,offers_did_nobs:=NaN]
+
+```
+```{r run_loop, include=FALSE, message=FALSE, warning=FALSE}
+i=1
+for(i in 1:length(list_of_task_naics)){
+  print(i)
+  tryCatch({
+  # Create subsample for every task-naics combination
+  df=reg_df_subset[task_naics==list_of_task_naics[i]]
+  # Regress duration, budget, offers against treat x post with time FE
+  m_duration=feols(winsorized_initial_duration_in_days_i~treat_new+
+                 treat_new:post_t|action_date_year_quarter,
+        cluster=~contract_award_unique_key,
+        data=df
+      )
+  m_budget=feols(winsorized_initial_budget_i~treat_new+
+                 treat_new:post_t|action_date_year_quarter,
+        cluster=~contract_award_unique_key,
+        data=df
+      )
+  m_offers=feols(wins_number_of_offers_received~treat_new+
+                 treat_new:post_t|action_date_year_quarter,
+        cluster=~contract_award_unique_key,
+        data=df
+      )
+  
+  # Save DID coefficients
+  duration_summary=setDT(tidy(m_duration))
+  duration_did_estimate=duration_summary[term=='treat_new:post_t']$estimate[[1]]
+  duration_did_std_error=duration_summary[term=='treat_new:post_t']$std.error[[1]]
+  did_list[i,duration_did_coef:=duration_did_estimate]
+  did_list[i,duration_did_se:=duration_did_std_error]
+  did_list[i,duration_did_nobs:=nobs(m_duration)]
+  
+  budget_summary=setDT(tidy(m_budget))
+  budget_did_estimate=budget_summary[term=='treat_new:post_t']$estimate[[1]]
+  budget_did_std_error=budget_summary[term=='treat_new:post_t']$std.error[[1]]
+  did_list[i,budget_did_coef:=budget_did_estimate]
+  did_list[i,budget_did_se:=budget_did_std_error]
+  did_list[i,budget_did_nobs:=nobs(m_budget)]
+  
+  offers_summary=setDT(tidy(m_offers))
+  offers_did_estimate=offers_summary[term=='treat_new:post_t']$estimate[[1]]
+  offers_did_std_error=offers_summary[term=='treat_new:post_t']$std.error[[1]]
+  did_list[i,offers_did_coef:=offers_did_estimate]
+  did_list[i,offers_did_se:=offers_did_std_error]
+  did_list[i,offers_did_nobs:=nobs(m_offers)]
+  
+  i=i+1}, 
+  error=function(e){}) # skip errors
+}
+
+```
+
+```{r merge_df, include=FALSE}
+# Merge with the data on competitively awarded projects
+reg_df_subset=merge(reg_df_subset,
+                    did_list,
+                    by=c('task_naics'),
+                    all.x=T)
+
+# Get "correct" bid metrics; essentially subtract DiD coefficient from actual value
+# E.g., if DID coef for duration = -10. It means initial durations are 10 days shorter after QP
+# So we want to add this back to the actual duration. 
+# Do this only for projects that started after QP, keep the pre-QP as is
+
+reg_df_subset[,correct_durations:=ifelse(initial_start_date>as.Date('2011-04-27') & 
+                                           post_t==1,
+                                         winsorized_initial_duration_in_days_i-duration_did_coef,
+                                         winsorized_initial_duration_in_days_i)]
+
+reg_df_subset[,correct_budget:=ifelse(initial_start_date>as.Date('2011-04-27') & 
+                                           post_t==1,
+                                         winsorized_initial_budget_i-budget_did_coef,
+                                      winsorized_initial_budget_i)]
+
+reg_df_subset[,correct_offers:=ifelse(initial_start_date>as.Date('2011-04-27') & 
+                                           post_t==1,
+                                         wins_number_of_offers_received-offers_did_coef,
+                                      wins_number_of_offers_received)]
+```
+
+
+```{r compare_results, include=FALSE}
+reg_new_1=feols(wins_percentage_delay~treat_new+
+                 treat_new:post_t+
+        log(1+correct_durations)+
+        correct_offers+
+        log(1+correct_budget)+
+          log(wins_project_quarter_stage)|
+                 action_date_year_quarter+
+                 product_or_service_code+
+                 naics_code,
+        cluster=~contract_award_unique_key,
+        data=reg_df_subset
+      )
+
+reg_new_2=feols(wins_percentage_delay~treat_new+
+                 treat_new:post_t+
+        log(1+correct_durations)+
+        correct_offers+
+        log(1+correct_budget)+
+        post_t:log(1+correct_durations)+
+        post_t:correct_offers+
+        post_t:log(1+correct_budget)+
+          log(wins_project_quarter_stage)|
+                 action_date_year_quarter+
+                 product_or_service_code+
+                 naics_code,
+        cluster=~contract_award_unique_key,
+        data=reg_df_subset
+      )
+
+reg_old_1=feols(wins_percentage_delay~treat_new+
+                 treat_new:post_t+
+        log(1+winsorized_initial_duration_in_days_i)+
+        wins_number_of_offers_received+
+        log(1+winsorized_initial_budget_i)+
+          log(wins_project_quarter_stage)|
+                 action_date_year_quarter+
+                 product_or_service_code+
+                 naics_code,
+        cluster=~contract_award_unique_key,
+        data=reg_df_subset
+      )
+
+reg_old_2=feols(wins_percentage_delay~treat_new+
+                 treat_new:post_t+
+        log(1+winsorized_initial_duration_in_days_i)+
+        wins_number_of_offers_received+
+        log(1+winsorized_initial_budget_i)+
+        post_t:log(1+winsorized_initial_duration_in_days_i)+
+        post_t:wins_number_of_offers_received+
+        post_t:log(1+winsorized_initial_budget_i)+
+          log(wins_project_quarter_stage)|
+                 action_date_year_quarter+
+                 product_or_service_code+
+                 naics_code,
+        cluster=~contract_award_unique_key,
+        data=reg_df_subset
+      )
+```
+
+```{r output, results='asis'}
+setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
+                      "post_t"="Post",
+                      "treat_new"="Treat",
+                      "log(wins_project_quarter_stage)"="Project stage",
+                      "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
+                      "log(1+winsorized_initial_budget_i)"="Initial budget",
+                      "wins_number_of_offers_received"="Number of offers",
+                      "log(1+correct_durations)"="Corrected duration",
+                      "log(1+correct_budget)"="Corrected budget",
+                      "correct_offers"="Corrected offers",
+                      "contract_award_unique_key"="Project ID",
+                      "product_or_service_code"="Task",
+                      "action_date_year_quarter"="Time",
+                      "naics_code"="Industry",
+                      "awarding_sub_agency_code"="Subagency"
+                      ))
+
+etable(reg_new_1,
+       reg_new_2,
+       reg_old_1,
+       reg_old_2,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       title="Competitively awarded projects",
+       headers=list("Corrected"=2,
+                    "Original"=2),
+       fitstat = c("pr2","n","r2"),
+       drop=c("Project stage"),
+       style.tex=style.tex(fixef.title = "",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "",
+                           model.title = "",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       # notes="Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls",
+       tex=TRUE)
+```
