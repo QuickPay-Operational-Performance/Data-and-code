@@ -1,5 +1,5 @@
 ---
-title: "Competition -- Contractor Experience"
+title: "Clean Control Group -- Contractor Experience"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
@@ -14,7 +14,8 @@ header-includes:
 
 ```{r setup, include=FALSE}
 rm(list=ls())
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+options(xtable.comment = FALSE)
 ```
 
 ```{r packages,warning=FALSE,message=FALSE,include=FALSE}
@@ -313,7 +314,7 @@ m3=feols(wins_percentage_delay~treat_i+
 contractor_pool_delays=list(m1,m2,m3)
 ```
 
-* For $IE + Treat \times IE + IE \times Post$ using the two discrete metrics, we get:
+* For $IE + Treat \times IE + IE \times Post + Treat \times IE \times Post$ using the two discrete metrics, we get:
 
 ```{r task_inexp_sum, echo=FALSE, results='asis'}
 # using first principles
