@@ -13,6 +13,7 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
+rm(list=ls())
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -22,12 +23,15 @@ library(dplyr)
 library(fixest)
 library(tidyverse)
 library(DescTools) 
+library(xtable)
+library(car) # for deltaMethod
+library(xtable)
 ```
 
 ```{r read_data,include=FALSE}
-input_path='~/Dropbox/data_quickpay/qp_replication/input/'
-reg_df=fread(paste0(input_path,
-               'quickpay_delays.csv'))
+working_path='~/Dropbox/data_quickpay/qp_replication/working/'
+reg_df=fread(paste0(working_path,
+                 'w_clean_control.csv'))
 
 reg_df=reg_df[!(initial_start_date>as.Date('2011-04-27') 
                               & post_t==0)]
@@ -242,7 +246,6 @@ m3=feols(inexp~treat_i+
                                  action_date_year_quarter+
                                   product_or_service_code+
                                   naics_code,
-                                  family='binomial',
                                   cluster=~contract_award_unique_key, # clustered at project level
                                   data=subset(reg_df,competitively_awarded_i==1))
 
@@ -308,6 +311,43 @@ m3=feols(wins_percentage_delay~treat_i+
                                   data=subset(reg_df,competitively_awarded_i==1))
 
 contractor_pool_delays=list(m1,m2,m3)
+```
+
+* For $IE + Treat \times IE + IE \times Post$ using the two discrete metrics, we get:
+
+```{r task_inexp_sum, echo=FALSE, results='asis'}
+# using first principles
+# relevant regressors have indices 2, 7, and 8
+# cov_matrix=vcov(m1) # this is already clustered
+# v=c(0,1,0,0,0,0,1,1,0,0,0,0,0)
+# sqrt(t(v)%*%cov_matrix%*%v)
+# coef_m1[2]+coef_m1[7]+coef_m1[8]
+
+# vcov(m1) is same as vcov_cluster(m1,cluster='contract_award_unique_key')
+# this is because cluster variable was specified in m1
+# But vcov(m1)!=vcov_cluster(m1) because then a different clustering variable is picked by default
+
+# using delta method from library car
+d1=deltaMethod(m1,
+            "task_inexperienced_i+
+            `treat_i:task_inexperienced_i`+
+            `task_inexperienced_i:post_t`+
+            `treat_i:task_inexperienced_i:post_t`",
+            rhs=0)
+d1_df <- as.data.frame(d1)
+rownames(d1_df) <- c("Task inexperienced")
+print(xtable(d1_df,type='latex'))
+
+d2=deltaMethod(m2,
+            "new_entrant_i+
+            `treat_i:new_entrant_i`+
+            `new_entrant_i:post_t`+
+            `treat_i:new_entrant_i:post_t`",
+            rhs=0)
+
+d2_df <- as.data.frame(d2)
+rownames(d2_df) <- c("New entrant")
+print(xtable(d2_df,type='latex'))
 ```
 
 ```{r output, echo=FALSE, results='asis'}

@@ -13,6 +13,7 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
+rm(list=ls())
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -29,9 +30,14 @@ library(corrplot)
 ```
 
 ```{r read_data,include=FALSE}
-input_path='~/Dropbox/data_quickpay/qp_replication/input/'
-reg_df=fread(paste0(input_path,
-               'quickpay_delays.csv'))
+# input_path='~/Dropbox/data_quickpay/qp_replication/input/'
+# reg_df=fread(paste0(input_path,
+#                'quickpay_delays.csv'))
+
+working_path='~/Dropbox/data_quickpay/qp_replication/working/'
+reg_df=fread(paste0(working_path,
+               'w_clean_control.csv'))
+
 ```
 
 ```{r remove_na,include=FALSE}

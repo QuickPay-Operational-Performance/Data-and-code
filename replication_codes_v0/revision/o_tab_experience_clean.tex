@@ -68,7 +68,7 @@
 
 \title{Competition -- Contractor Experience}
 \author{}
-\date{\vspace{-2.5em}2024-06-12}
+\date{\vspace{-2.5em}2024-08-22}
 
 \begin{document}
 \maketitle
@@ -100,6 +100,41 @@
 \hypertarget{regression-results}{%
 \section{Regression results}\label{regression-results}}
 
+\begin{itemize}
+\tightlist
+\item
+  For \(IE + Treat \times IE + IE \times Post\) using the two discrete
+  metrics, we get:
+\end{itemize}
+
+\% latex table generated in R 4.2.2 by xtable 1.8-4 package \% Thu Aug
+22 09:32:08 2024
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrrrrr}
+  \hline
+ & Estimate & SE & 2.5 \% & 97.5 \% & Hypothesis & z value & Pr($>$$|$z$|$) \\ 
+  \hline
+Task inexperienced & 1.15 & 0.13 & 0.89 & 1.42 & 0.00 & 8.60 & 0.00 \\ 
+   \hline
+\end{tabular}
+\end{table}
+
+\% latex table generated in R 4.2.2 by xtable 1.8-4 package \% Thu Aug
+22 09:32:08 2024
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrrrrr}
+  \hline
+ & Estimate & SE & 2.5 \% & 97.5 \% & Hypothesis & z value & Pr($>$$|$z$|$) \\ 
+  \hline
+New entrant & 1.08 & 0.18 & 0.73 & 1.44 & 0.00 & 5.98 & 0.00 \\ 
+   \hline
+\end{tabular}
+\end{table}
+
 \begin{table}[htbp]
    \caption{Logit model}
    \centering
@@ -110,17 +145,17 @@
                            & Task inexperienced & New entrant   & Level of inexperience \\   
                            & I                  & II            & III\\  
                            &  Logit             & Logit         & OLS\\  
-      Treat                & 0.407$^{***}$      & 0.556$^{***}$ & 0.001\\   
-                           & (0.032)            & (0.042)       & (0.003)\\   
-      Treat $\times$ Post  & 0.083$^{***}$      & 0.229$^{***}$ & 0.016$^{***}$\\   
-                           & (0.032)            & (0.041)       & (0.004)\\   
+      Treat                & 0.201$^{***}$      & 0.271$^{***}$ & -0.014$^{***}$\\   
+                           & (0.037)            & (0.047)       & (0.004)\\   
+      Treat $\times$ Post  & 0.055              & 0.200$^{***}$ & 0.028$^{***}$\\   
+                           & (0.036)            & (0.043)       & (0.004)\\   
       Time FE              & Yes                & Yes           & Yes\\  
       Task FE              & Yes                & Yes           & Yes\\  
       Industry FE          & Yes                & Yes           & Yes\\  
-      Observations         & 182,794            & 189,340       & 192,743\\  
-      Squared Correlation  & 0.30               & 0.20          & 0.31\\  
-      Pseudo R$^2$         & 0.25               & 0.22          & 0.45\\  
-      BIC                  & 177,101.39         & 125,903.49    & 104,731.94\\  
+      Observations         & 156,327            & 162,648       & 165,567\\  
+      Squared Correlation  & 0.30               & 0.21          & 0.30\\  
+      Pseudo R$^2$         & 0.25               & 0.21          & 0.43\\  
+      BIC                  & 157,141.70         & 118,828.23    & 95,229.34\\  
       \midrule
       \multicolumn{4}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
       \multicolumn{4}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
@@ -134,24 +169,24 @@
     & \multicolumn{3}{c}{Percentage delay rate}\\
                                      & Task inexperienced & New entrant    & Level of inexperience \\   
                                      & I                  & II             & III\\  
-   Treat                             & -1.007$^{***}$     & -1.006$^{***}$ & -0.188\\   
-                                     & (0.139)            & (0.118)        & (0.263)\\   
-   IE                                & 1.084$^{***}$      & 0.873$^{***}$  & 2.172$^{***}$\\   
-                                     & (0.178)            & (0.240)        & (0.253)\\   
-   Treat $\times$ IE                 & -0.151             & -0.255         & -1.063$^{***}$\\   
-                                     & (0.204)            & (0.293)        & (0.309)\\   
-   IE $\times$ Post                  & -0.432$^{*}$       & -0.118         & -0.771$^{**}$\\   
-                                     & (0.256)            & (0.362)        & (0.321)\\   
-   Treat $\times$ Post               & 1.014$^{***}$      & 1.085$^{***}$  & 0.667$^{**}$\\   
-                                     & (0.173)            & (0.152)        & (0.319)\\   
-   Treat $\times$ IE $\times$ Post   & 0.540$^{*}$        & 0.521          & 0.553\\   
-                                     & (0.310)            & (0.449)        & (0.403)\\   
+   Treat                             & -0.497$^{***}$     & -0.633$^{***}$ & -0.297\\   
+                                     & (0.155)            & (0.130)        & (0.284)\\   
+   IE                                & 1.414$^{***}$      & 1.310$^{***}$  & 1.264$^{***}$\\   
+                                     & (0.184)            & (0.228)        & (0.282)\\   
+   Treat $\times$ IE                 & -0.585$^{***}$     & -0.736$^{***}$ & -0.550$^{*}$\\   
+                                     & (0.206)            & (0.270)        & (0.323)\\   
+   IE $\times$ Post                  & -0.095             & 0.043          & 0.327\\   
+                                     & (0.257)            & (0.339)        & (0.352)\\   
+   Treat $\times$ Post               & 0.806$^{***}$      & 0.917$^{***}$  & 1.057$^{***}$\\   
+                                     & (0.188)            & (0.163)        & (0.337)\\   
+   Treat $\times$ IE $\times$ Post   & 0.418              & 0.465          & -0.211\\   
+                                     & (0.301)            & (0.409)        & (0.413)\\   
    Time FE                           & Yes                & Yes            & Yes\\  
    Task FE                           & Yes                & Yes            & Yes\\  
    Industry FE                       & Yes                & Yes            & Yes\\  
-   Observations                      & 192,629            & 192,629        & 192,629\\  
-   R$^2$                             & 0.27               & 0.27           & 0.27\\  
-   Within R$^2$                      & 0.19               & 0.19           & 0.19\\  
+   Observations                      & 165,473            & 165,473        & 165,473\\  
+   R$^2$                             & 0.22               & 0.22           & 0.22\\  
+   Within R$^2$                      & 0.15               & 0.15           & 0.15\\  
    \midrule
    \multicolumn{4}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
    \multicolumn{4}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
