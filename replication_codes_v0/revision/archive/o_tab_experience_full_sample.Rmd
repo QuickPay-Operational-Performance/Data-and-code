@@ -313,6 +313,50 @@ m3=feols(wins_percentage_delay~treat_i+
 contractor_pool_delays=list(m1,m2,m3)
 ```
 
+```{r}
+reg_df[,two_digit_psc:=substr(product_or_service_code,1,2)]
+lpm=task_inexperienced_i~treat_i+
+                                  treat_i:post_t+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)+
+                                # as.factor(two_digit_psc)+
+                                post_t
+
+delay=wins_percentage_delay~treat_i+
+                                  task_inexperienced_i+
+                                  treat_i:task_inexperienced_i+
+                                  post_t:task_inexperienced_i+
+                                  treat_i:post_t+
+                                  treat_i:post_t:task_inexperienced_i+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)+
+                                # as.factor(two_digit_psc)+
+                                post_t
+
+fitsur <- systemfit(list(lpm = lpm, delay = delay), data=subset(reg_df,competitively_awarded_i==1))
+
+deltaMethod(fitsur,'`lpm_treat_i:post_t`*`delay_treat_i:post_t`',rhs=0)
+
+# deltaMethod(fitsur,)
+# means <- c(coef(logit_m)['treat_l:post_t'],
+#            coef(delay_m)['treat_i:post_t'])
+# 
+# # assumes independence (covariance = 0)
+# vcov  <- diag(c(logit_m$coeftable['treat_l:post_t', 2],
+#                 delay_m$coeftable['treat_i:post_t', 2])^2)
+# deltaMethod(means, '`treat_l:post_t`*`treat_i:post_t`', vcov,rhs=0)
+```
+
 * For $IE + Treat \times IE + IE \times Post + Treat \times IE \times Post$ using the two discrete metrics, we get:
 
 ```{r task_inexp_sum, echo=FALSE, results='asis'}

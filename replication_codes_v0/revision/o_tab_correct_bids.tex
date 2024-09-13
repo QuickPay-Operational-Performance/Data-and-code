@@ -1,0 +1,113 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array} \usepackage{wrapfig,float} \floatplacement{figure}{H}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Correct for aggressive bids},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Correct for aggressive bids}
+\author{}
+\date{\vspace{-2.5em}2024-08-28}
+
+\begin{document}
+\maketitle
+
+\begin{table}[htbp]
+   \caption{Corrected bids: Competitively awarded projects}
+   \centering
+   \tiny
+   \begin{tabular}{lcccc}
+      \toprule
+       & \multicolumn{4}{c}{Percent delay rate}\\
+                                        & I             & II            & III           & IV\\  
+      \midrule \\
+      Treat                             & -1.36$^{***}$ & -1.43$^{***}$ & -0.67$^{***}$ & -0.71$^{***}$\\   
+                                        & (0.11)        & (0.12)        & (0.12)        & (0.12)\\   
+      Corrected duration                & -7.39$^{***}$ & -8.14$^{***}$ & -7.79$^{***}$ & -7.73$^{***}$\\   
+                                        & (0.08)        & (0.12)        & (0.13)        & (0.13)\\   
+      Corrected offers                  & -0.02$^{**}$  & -0.07$^{***}$ & -0.05$^{***}$ & -0.04$^{***}$\\   
+                                        & (0.01)        & (0.01)        & (0.01)        & (0.01)\\   
+      Corrected budget                  & 0.93$^{***}$  & 0.91$^{***}$  & 0.43$^{***}$  & 0.40$^{***}$\\   
+                                        & (0.02)        & (0.03)        & (0.03)        & (0.03)\\   
+      Treat $\times$ Post               & 0.78$^{***}$  & 0.85$^{***}$  & 1.05$^{***}$  & 1.07$^{***}$\\   
+                                        & (0.15)        & (0.16)        & (0.15)        & (0.15)\\   
+      Post $\times$ Corrected duration  &               & 1.34$^{***}$  & 0.82$^{***}$  & 0.79$^{***}$\\   
+                                        &               & (0.16)        & (0.16)        & (0.16)\\   
+      Post $\times$ Corrected offers    &               & 0.09$^{***}$  & 0.06$^{***}$  & 0.06$^{***}$\\   
+                                        &               & (0.02)        & (0.02)        & (0.02)\\   
+      Post $\times$ Corrected budget    &               & 0.03          & -0.03         & -0.02\\   
+                                        &               & (0.03)        & (0.03)        & (0.03)\\   
+      Time FE                           & Yes           & Yes           & Yes           & Yes\\  
+      Task FE                           & No            & No            & Yes           & Yes\\  
+      Industry FE                       & No            & No            & No            & Yes\\  
+      Pseudo R$^2$                      & 0.02          & 0.02          & 0.03          & 0.03\\  
+      Observations                      & 156,183       & 156,183       & 156,183       & 156,183\\  
+      R$^2$                             & 0.17          & 0.17          & 0.21          & 0.21\\  
+      \midrule
+      \multicolumn{5}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+\end{table}
+
+\end{document}

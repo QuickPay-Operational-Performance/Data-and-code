@@ -3,8 +3,7 @@ title: "Correct for aggressive bids"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
-    keep_tex: false
-    number_sections: true
+    keep_tex: true
 header-includes:
  \usepackage{booktabs,longtable,dcolumn}
  \usepackage{multirow,array}
@@ -142,7 +141,6 @@ reg_df_subset[,correct_offers:=ifelse(initial_start_date>as.Date('2011-04-27') &
                                       wins_number_of_offers_received)]
 ```
 
-
 ```{r compare_results, include=FALSE}
 reg_new_1=feols(wins_percentage_delay~treat_new+
                  treat_new:post_t+
@@ -201,64 +199,6 @@ reg_new_4=feols(wins_percentage_delay~treat_new+
       )
 
 corrected=list(reg_new_1,reg_new_2,reg_new_3, reg_new_4)
-
-reg_old_1=feols(wins_percentage_delay~treat_new+
-                 treat_new:post_t+
-        log(1+winsorized_initial_duration_in_days_i)+
-        wins_number_of_offers_received+
-        log(1+winsorized_initial_budget_i)+
-          log(wins_project_quarter_stage)|
-                 action_date_year_quarter,
-        cluster=~contract_award_unique_key,
-        data=reg_df_subset
-      )
-
-reg_old_2=feols(wins_percentage_delay~treat_new+
-                 treat_new:post_t+
-        log(1+winsorized_initial_duration_in_days_i)+
-        wins_number_of_offers_received+
-        log(1+winsorized_initial_budget_i)+
-        post_t:log(1+winsorized_initial_duration_in_days_i)+
-        post_t:wins_number_of_offers_received+
-        post_t:log(1+winsorized_initial_budget_i)+
-          log(wins_project_quarter_stage)|
-                 action_date_year_quarter,
-        cluster=~contract_award_unique_key,
-        data=reg_df_subset
-      )
-
-reg_old_3=feols(wins_percentage_delay~treat_new+
-                 treat_new:post_t+
-        log(1+winsorized_initial_duration_in_days_i)+
-        wins_number_of_offers_received+
-        log(1+winsorized_initial_budget_i)+
-        post_t:log(1+winsorized_initial_duration_in_days_i)+
-        post_t:wins_number_of_offers_received+
-        post_t:log(1+winsorized_initial_budget_i)+
-          log(wins_project_quarter_stage)|
-                 action_date_year_quarter+
-                 product_or_service_code,
-        cluster=~contract_award_unique_key,
-        data=reg_df_subset
-      )
-
-reg_old_4=feols(wins_percentage_delay~treat_new+
-                 treat_new:post_t+
-        log(1+winsorized_initial_duration_in_days_i)+
-        wins_number_of_offers_received+
-        log(1+winsorized_initial_budget_i)+
-        post_t:log(1+winsorized_initial_duration_in_days_i)+
-        post_t:wins_number_of_offers_received+
-        post_t:log(1+winsorized_initial_budget_i)+
-          log(wins_project_quarter_stage)|
-                 action_date_year_quarter+
-                 product_or_service_code+
-                 naics_code,
-        cluster=~contract_award_unique_key,
-        data=reg_df_subset
-      )
-
-original=list(reg_old_1,reg_old_2,reg_old_3, reg_old_4)
 ```
 
 ```{r output, results='asis'}
@@ -280,13 +220,10 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       ))
 
 etable(corrected,
-       original,
        digits='r2',
        digits.stats = 2,
        fontsize = "tiny",
-       title="Competitively awarded projects",
-       headers=list("Corrected"=length(corrected),
-                    "Original"=length(original)),
+       title="Corrected bids: Competitively awarded projects",
        fitstat = c("pr2","n","r2"),
        drop=c("Project stage"),
        style.tex=style.tex(fixef.title = "",
