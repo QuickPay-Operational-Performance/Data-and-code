@@ -1,15 +1,12 @@
 ---
-title: "Project Stage"
+title: "Parallel Trends Test"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
-    keep_tex: false
+    keep_tex: true
     number_sections: true
 header-includes:
- \usepackage{booktabs,longtable,dcolumn}
- \usepackage{multirow,array}
- \usepackage{wrapfig,float}
- \floatplacement{figure}{H}
+ \usepackage{booktabs}
 ---
 
 ```{r setup, include=FALSE}
@@ -19,10 +16,7 @@ knitr::opts_chunk$set(echo = FALSE, message=FALSE)
 ```{r packages,warning=FALSE,message=FALSE,include=FALSE}
 library(data.table)
 library(dplyr)
-#library(lfe)
-#library(stargazer)
 library(fixest)
-#library(tidyverse)
 library(DescTools) 
 ```
 
@@ -30,32 +24,6 @@ library(DescTools)
 working_path='~/Dropbox/data_quickpay/qp_replication/working/'
 reg_df_subset=fread(paste0(working_path,
                  'w_clean_control.csv'))
-```
-
-```{r stargazer_format, include=FALSE}
-# Code to extract only the inner part (nested within tabular) of table from stargazer
-# We will use this along with threeparttable in latex later 
-# Code adapted from Patrick Baylis's blog on the topic:
-# https://www.patrickbaylis.com/blog/2019-11-25-r-reg-tables/
-make_tex_pieces <- function(stargazer_output) {
-  # Split up into header, footer, and inner
-  idx0 <- grep("begin{tabular}", stargazer_output, fixed = T) # Start of \begin{tabular}
-  idx1 <- grep("end{tabular}", stargazer_output, fixed = T) # End of \begin{tabular}
-  idx2<-grep("Adjusted",stargazer_output,fixed=T)
-  
-  tex_header <- c(stargazer_output[idx0],"\\toprule")
-  tex_footer <- c("\\bottomrule", stargazer_output[idx1])
-  tex_inner<-c(stargazer_output[(idx0+3):idx2])
-  
-  # Remove [-1.8ex] and replace \hline with \midrule
-  tex_inner <- gsub("\\\\[-[\\.0-9]+ex]", "", tex_inner)
-  
-  tex_inner <- gsub("\\hline ", "\\midrule", tex_inner)
-  # Return these as a 3 element list so that the user can insert header rows (column labels)
-  # and footer rows (summary statistics, fixed effects)
-  # list(header = tex_header, inner = tex_inner, footer = tex_footer)
-  c(tex_header,tex_inner,tex_footer)
-}
 ```
 
 ```{r parallel_trends_test, echo=FALSE, results='asis'}
@@ -184,7 +152,7 @@ etable(delay_days,
               "Initial duration",
               "Initial budget",
               "Number of offers"),
-       style.tex=style.tex(fixef.title = "",
+       style.tex=style.tex(fixef.title = "\\midrule",
                            fixef.suffix = " FE",
                            var.title = "\\midrule ",
                            depvar.title = "",

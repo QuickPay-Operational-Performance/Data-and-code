@@ -22,7 +22,7 @@ options(xtable.comment = FALSE)
 library(data.table)
 library(dplyr)
 library(fixest)
-library(tidyverse)
+#library(tidyverse)
 library(DescTools) 
 library(xtable)
 library(car) # for deltaMethod
@@ -206,6 +206,112 @@ reg_df_clean=fread(paste0(working_path,
 reg_df=reg_df[contract_award_unique_key%in%reg_df_clean$contract_award_unique_key]
 ```
 
+# Parallel trends test
+
+```{r define_qt, include=FALSE}
+df_qn<-unique(reg_df,by='action_date_year_quarter')[,"action_date_year_quarter"]
+df_qn=df_qn[order(action_date_year_quarter)][,quarter_number:=seq.int(nrow(df_qn))]
+reg_df=merge(reg_df,df_qn,by='action_date_year_quarter')
+```
+
+```{r pt_new_entrant, include=FALSE}
+m1=feglm(new_entrant_i~treat_i+
+                             quarter_number:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                          quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:wins_number_of_offers_received|
+                            action_date_year_quarter,
+         cluster=~contract_award_unique_key,
+         family='binomial',
+                          data=subset(reg_df, competitively_awarded_i==1 &
+                                              post_t==0))
+
+m2=feglm(new_entrant_i~treat_i+
+                              quarter_number:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:wins_number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter,
+         cluster=~contract_award_unique_key,
+         family='binomial',
+                          data=subset(reg_df, competitively_awarded_i==1 &
+                                              post_t==0))
+
+m3=feglm(new_entrant_i~treat_i+
+                            quarter_number:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:wins_number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+         cluster=~contract_award_unique_key,
+         family='binomial',
+                          data=subset(reg_df, competitively_awarded_i==1 &
+                                              post_t==0))
+
+pt_new_entrant=list(m1,m2,m3)
+```
+
+```{r pt_task_inexperienced, include=FALSE}
+m1=feglm(task_inexperienced_i~treat_i+
+                             quarter_number:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                          quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:wins_number_of_offers_received|
+                            action_date_year_quarter,
+         cluster=~contract_award_unique_key,
+         family='binomial',
+                          data=subset(reg_df, competitively_awarded_i==1 &
+                                              post_t==0))
+
+m2=feglm(task_inexperienced_i~treat_i+
+                              quarter_number:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:wins_number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter,
+         cluster=~contract_award_unique_key,
+         family='binomial',
+                          data=subset(reg_df, competitively_awarded_i==1 &
+                                              post_t==0))
+
+m3=feglm(task_inexperienced_i~treat_i+
+                            quarter_number:treat_i+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:wins_number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+         cluster=~contract_award_unique_key,
+         family='binomial',
+                          data=subset(reg_df, competitively_awarded_i==1 &
+                                              post_t==0))
+
+pt_task_inexperienced=list(m1,m2,m3)
+```
+
 # Regression results
 
 ```{r inexp_logit, include=FALSE}
@@ -320,6 +426,106 @@ m3=feols(wins_percentage_delay~treat_i+
 contractor_pool_delays=list(m1,m2)
 ```
 
+```{r output, echo=FALSE, results='asis'}
+setFixest_dict(c("wins_percentage_delay"="Percentage delay rate",
+                 "treat_i"="$Treat_i$",
+                 "post_t"="$Post_t$",
+                 "project_signed_after_quickpay"="$SA_i$",
+                 "inexp"="IE",
+                 "log(wins_project_quarter_stage)"="Ln(Stage)",
+                 "new_entrant_i"="IE",
+                 "task_inexperienced_i"="IE",
+                 "action_date_year_quarter"="Time",
+                      "quarter_number"="$QtrNum$",
+                 "product_or_service_code"="Task",
+                 "naics_code"="Industry",
+                 "contract_award_unique_key"="Project ID",
+                 "wins_number_of_offers_received"="Num offers",
+                 "log(winsorized_initial_budget_i)"="Ln(Initial Budget)",
+                  "log(winsorized_initial_duration_in_days_i)"="Ln(Initial Duration)"))
+
+etable(pt_task_inexperienced,
+       pt_new_entrant,
+       tex=T,
+       drop=c('%wins_project_quarter_stage',
+              '%wins_number_of_offers_received',
+              '%winsorized_initial_budget_i',
+              '%winsorized_initial_duration_in_days_i',
+              '%post_t:wins_number_of_offers_received',
+              '%post_t:winsorized_initial_budget_i',
+              '%post_t:winsorized_initial_duration_in_days_i'),
+       style.tex = style.tex(depvar.title = "",
+                             model.title = "\\midrule",
+                             model.format = "I",
+                             var.title = "\\midrule",
+                             line.bottom = "simple",
+                             line.top = "simple",
+                             stats.title = "",
+                             fixef.title = "\\midrule",
+                             fixef.suffix = " FE",
+                             yesNo = c("Yes","No")),
+       headers=list("Task inexperienced"=length(pt_task_inexperienced),
+                    "New entrant"=length(pt_new_entrant)),
+       digits='r3',
+       digits.stats = 'r2',
+       fitstat = c('r2','pr2','n'),
+       title="Parallel trends test",
+       fontsize = "small")
+
+etable(contractor_pool_entry,
+       tex=T,
+       drop=c('%wins_project_quarter_stage',
+              '%wins_number_of_offers_received',
+              '%winsorized_initial_budget_i',
+              '%winsorized_initial_duration_in_days_i',
+              '%post_t:wins_number_of_offers_received',
+              '%post_t:winsorized_initial_budget_i',
+              '%post_t:winsorized_initial_duration_in_days_i'),
+       style.tex = style.tex(depvar.title = "",
+                             model.title = "\\midrule",
+                             model.format = "I",
+                             var.title = "\\midrule",
+                             line.bottom = "simple",
+                             line.top = "simple",
+                             stats.title = "",
+                             fixef.title = "\\midrule",
+                             fixef.suffix = " FE",
+                             yesNo = c("Yes","No")),
+       headers=list("Task inexperienced"=1,
+                    "New entrant"=1),
+       digits='r3',
+       digits.stats = 'r2',
+       fitstat = c('r2','pr2','n'),
+       title="Logit model",
+       fontsize = "small")
+
+etable(contractor_pool_delays,
+       tex=T,
+       drop=c('%wins_project_quarter_stage',
+              '%wins_number_of_offers_received',
+              '%winsorized_initial_budget_i',
+              '%winsorized_initial_duration_in_days_i',
+              '%post_t:wins_number_of_offers_received',
+              '%post_t:winsorized_initial_budget_i',
+              '%post_t:winsorized_initial_duration_in_days_i'),
+       style.tex = style.tex(depvar.title = "",
+                             model.title = "\\midrule",
+                             model.format = "I",
+                             var.title = "\\midrule",
+                             line.bottom = "simple",
+                             line.top = "simple",
+                             stats.title = "",
+                             fixef.title = "\\midrule",
+                             fixef.suffix = " FE",
+                             yesNo = c("Yes","No")),
+       headers=list("Task inexperienced"=1,
+                    "New entrant"=1),
+       digits='r3',
+       digits.stats = 'r2',
+       fitstat = c('r2','pr2','n'),
+       fontsize = "small")
+```
+
 * For $IE + Treat \times IE + IE \times Post + Treat \times IE \times Post$ using the two discrete metrics, we get:
 
 ```{r task_inexp_sum, echo=FALSE, results='asis'}
@@ -355,73 +561,4 @@ d2=deltaMethod(m2,
 d2_df <- as.data.frame(d2)
 rownames(d2_df) <- c("New entrant")
 print(xtable(d2_df,type='latex'))
-```
-
-```{r output, echo=FALSE, results='asis'}
-setFixest_dict(c("wins_percentage_delay"="Percentage delay rate",
-                 "treat_i"="Treat",
-                 "post_t"="Post",
-                 "project_signed_after_quickpay"="SA$_i$",
-                 "inexp"="IE",
-                 "log(wins_project_quarter_stage)"="Ln(Stage)",
-                 "new_entrant_i"="IE",
-                 "task_inexperienced_i"="IE",
-                 "action_date_year_quarter"="Time",
-                 "product_or_service_code"="Task",
-                 "naics_code"="Industry",
-                 "contract_award_unique_key"="Project ID",
-                 "wins_number_of_offers_received"="Num offers",
-                 "log(winsorized_initial_budget_i)"="Ln(Initial Budget)",
-                  "log(winsorized_initial_duration_in_days_i)"="Ln(Initial Duration)"))
-
-etable(contractor_pool_entry,
-       tex=T,
-       drop=c('%wins_project_quarter_stage',
-              '%wins_number_of_offers_received',
-              '%winsorized_initial_budget_i',
-              '%winsorized_initial_duration_in_days_i',
-              '%post_t:wins_number_of_offers_received',
-              '%post_t:winsorized_initial_budget_i',
-              '%post_t:winsorized_initial_duration_in_days_i'),
-       style.tex = style.tex(depvar.title = "",
-                             model.title = "",
-                             model.format = "I",
-                             var.title = "",
-                             line.bottom = "simple",
-                             line.top = "simple",
-                             stats.title = "",
-                             fixef.title = "",
-                             fixef.suffix = " FE",
-                             yesNo = c("Yes","No")),
-       headers=list("Task inexperienced"=1,
-                    "New entrant"=1),
-       digits='r3',
-       digits.stats = 'r2',
-       title="Logit model",
-       fontsize = "small")
-
-etable(contractor_pool_delays,
-       tex=T,
-       drop=c('%wins_project_quarter_stage',
-              '%wins_number_of_offers_received',
-              '%winsorized_initial_budget_i',
-              '%winsorized_initial_duration_in_days_i',
-              '%post_t:wins_number_of_offers_received',
-              '%post_t:winsorized_initial_budget_i',
-              '%post_t:winsorized_initial_duration_in_days_i'),
-       style.tex = style.tex(depvar.title = "",
-                             model.title = "",
-                             model.format = "I",
-                             var.title = "",
-                             line.bottom = "simple",
-                             line.top = "simple",
-                             stats.title = "",
-                             fixef.title = "",
-                             fixef.suffix = " FE",
-                             yesNo = c("Yes","No")),
-       headers=list("Task inexperienced"=1,
-                    "New entrant"=1),
-       digits='r3',
-       digits.stats = 'r2',
-       fontsize = "small")
 ```

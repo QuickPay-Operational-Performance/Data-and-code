@@ -68,7 +68,7 @@
 
 \title{Full Sample -- Contractor Experience}
 \author{}
-\date{\vspace{-2.5em}2024-09-04}
+\date{\vspace{-2.5em}2024-09-16}
 
 \begin{document}
 \maketitle
@@ -97,8 +97,95 @@
   \end{itemize}
 \end{itemize}
 
+\hypertarget{parallel-trends-test}{%
+\section{Parallel trends test}\label{parallel-trends-test}}
+
 \hypertarget{regression-results}{%
 \section{Regression results}\label{regression-results}}
+
+\begin{table}[htbp]
+   \caption{Parallel trends test}
+   \centering
+   \small
+   \begin{tabular}{lcccccc}
+      \toprule
+       & \multicolumn{6}{c}{IE}\\
+       & \multicolumn{3}{c}{Task inexperienced} & \multicolumn{3}{c}{New entrant} \\ 
+      \midrule & I & II & III & IV & V & VI\\
+      \midrule 
+      $Treat_i$                    & 0.543$^{***}$  & -0.008       & -0.057       & -0.329$^{***}$ & -0.217$^{**}$ & -0.252$^{**}$\\   
+                                   & (0.091)        & (0.111)      & (0.112)      & (0.091)        & (0.106)       & (0.107)\\   
+      $Treat_i$ $\times$ $QtrNum$  & -0.058$^{***}$ & 0.047$^{**}$ & 0.054$^{**}$ & 0.098$^{***}$  & 0.103$^{***}$ & 0.113$^{***}$\\   
+                                   & (0.018)        & (0.022)      & (0.022)      & (0.019)        & (0.021)       & (0.022)\\   
+      \midrule 
+      Time FE                      & Yes            & Yes          & Yes          & Yes            & Yes           & Yes\\  
+      Task FE                      & No             & Yes          & Yes          & No             & Yes           & Yes\\  
+      Industry FE                  & No             & No           & Yes          & No             & No            & Yes\\  
+      Pseudo R$^2$                 & 0.07           & 0.21         & 0.22         & 0.05           & 0.20          & 0.21\\  
+      Observations                 & 59,939         & 58,079       & 58,063       & 65,933         & 64,114        & 64,102\\  
+      \midrule
+      \multicolumn{7}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{7}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+\end{table}
+\begin{table}[htbp]
+   \caption{Logit model}
+   \centering
+   \small
+   \begin{tabular}{lcc}
+      \toprule
+       & \multicolumn{2}{c}{IE}\\
+                                   & Task inexperienced & New entrant \\   
+      \midrule & I & II\\
+      \midrule 
+      $Treat_i$                    & 0.172$^{***}$      & 0.198$^{***}$\\   
+                                   & (0.037)            & (0.047)\\   
+      $Treat_i$ $\times$ $Post_t$  & 0.056              & 0.217$^{***}$\\   
+                                   & (0.036)            & (0.044)\\   
+      \midrule 
+      Time FE                      & Yes                & Yes\\  
+      Task FE                      & Yes                & Yes\\  
+      Industry FE                  & Yes                & Yes\\  
+      Pseudo R$^2$                 & 0.25               & 0.21\\  
+      Observations                 & 156,393            & 162,523\\  
+      \midrule
+      \multicolumn{3}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{3}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+\end{table}
+\begingroup
+\centering
+\small
+\begin{tabular}{lcc}
+   \toprule
+    & \multicolumn{2}{c}{Percentage delay rate}\\
+                                             & Task inexperienced & New entrant \\   
+   \midrule & I & II\\
+   \midrule 
+   $Treat_i$                                 & -0.614$^{***}$     & -0.758$^{***}$\\   
+                                             & (0.177)            & (0.148)\\   
+   IE                                        & 1.585$^{***}$      & 1.467$^{***}$\\   
+                                             & (0.210)            & (0.260)\\   
+   $Treat_i$ $\times$ IE                     & -0.619$^{***}$     & -0.763$^{**}$\\   
+                                             & (0.235)            & (0.310)\\   
+   IE $\times$ $Post_t$                      & -0.197             & -0.004\\   
+                                             & (0.293)            & (0.386)\\   
+   $Treat_i$ $\times$ $Post_t$               & 0.976$^{***}$      & 1.095$^{***}$\\   
+                                             & (0.214)            & (0.185)\\   
+   $Treat_i$ $\times$ IE $\times$ $Post_t$   & 0.477              & 0.526\\   
+                                             & (0.344)            & (0.470)\\   
+   \midrule 
+   Time FE                                   & Yes                & Yes\\  
+   Task FE                                   & Yes                & Yes\\  
+   Industry FE                               & Yes                & Yes\\  
+   R$^2$                                     & 0.22               & 0.22\\  
+   Pseudo R$^2$                              & 0.03               & 0.03\\  
+   Observations                              & 165,473            & 165,473\\  
+   \midrule
+   \multicolumn{3}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+   \multicolumn{3}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup
 
 \begin{itemize}
 \tightlist
@@ -128,62 +215,5 @@ New entrant & 1.23 & 0.21 & 0.81 & 1.64 & 0.00 & 5.83 & 0.00 \\
    \hline
 \end{tabular}
 \end{table}
-
-\begin{table}[htbp]
-   \caption{Logit model}
-   \centering
-   \small
-   \begin{tabular}{lcc}
-      \toprule
-       & \multicolumn{2}{c}{IE}\\
-                           & Task inexperienced & New entrant \\   
-                           & I                  & II\\  
-      Treat                & 0.172$^{***}$      & 0.198$^{***}$\\   
-                           & (0.037)            & (0.047)\\   
-      Treat $\times$ Post  & 0.056              & 0.217$^{***}$\\   
-                           & (0.036)            & (0.044)\\   
-      Time FE              & Yes                & Yes\\  
-      Task FE              & Yes                & Yes\\  
-      Industry FE          & Yes                & Yes\\  
-      Observations         & 156,393            & 162,523\\  
-      Squared Correlation  & 0.30               & 0.21\\  
-      Pseudo R$^2$         & 0.25               & 0.21\\  
-      BIC                  & 156,836.80         & 117,055.77\\  
-      \midrule
-      \multicolumn{3}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
-      \multicolumn{3}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
-   \end{tabular}
-\end{table}
-\begingroup
-\centering
-\small
-\begin{tabular}{lcc}
-   \toprule
-    & \multicolumn{2}{c}{Percentage delay rate}\\
-                                     & Task inexperienced & New entrant \\   
-                                     & I                  & II\\  
-   Treat                             & -0.614$^{***}$     & -0.758$^{***}$\\   
-                                     & (0.177)            & (0.148)\\   
-   IE                                & 1.585$^{***}$      & 1.467$^{***}$\\   
-                                     & (0.210)            & (0.260)\\   
-   Treat $\times$ IE                 & -0.619$^{***}$     & -0.763$^{**}$\\   
-                                     & (0.235)            & (0.310)\\   
-   IE $\times$ Post                  & -0.197             & -0.004\\   
-                                     & (0.293)            & (0.386)\\   
-   Treat $\times$ Post               & 0.976$^{***}$      & 1.095$^{***}$\\   
-                                     & (0.214)            & (0.185)\\   
-   Treat $\times$ IE $\times$ Post   & 0.477              & 0.526\\   
-                                     & (0.344)            & (0.470)\\   
-   Time FE                           & Yes                & Yes\\  
-   Task FE                           & Yes                & Yes\\  
-   Industry FE                       & Yes                & Yes\\  
-   Observations                      & 165,473            & 165,473\\  
-   R$^2$                             & 0.22               & 0.22\\  
-   Within R$^2$                      & 0.15               & 0.15\\  
-   \midrule
-   \multicolumn{3}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
-   \multicolumn{3}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
-\end{tabular}
-\par\endgroup
 
 \end{document}
