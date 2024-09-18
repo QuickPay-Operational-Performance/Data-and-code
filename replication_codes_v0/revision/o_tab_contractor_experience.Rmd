@@ -22,7 +22,7 @@ options(xtable.comment = FALSE)
 library(data.table)
 library(dplyr)
 library(fixest)
-#library(tidyverse)
+library(ggplot2)
 library(DescTools) 
 library(xtable)
 library(car) # for deltaMethod
@@ -64,19 +64,12 @@ num_proj_same_task_df=reg_df[,
                    'product_or_service_code',
                    'action_date_year_quarter')]
 
-# Merge the two datasets
-num_proj_same_task_df=merge(num_proj_same_task_df,
-                            num_proj_per_contractor_df,
-                            by=c('recipient_duns',
-                                 'action_date_year_quarter'),
-                            all.x=T)
-
-# Proportion of projects of same task type held by a contractor in a given quarter
-#num_proj_same_task_df[,prop_projects_same_task:=num_projects_same_task/num_projects]
-
 num_proj_same_task_df=num_proj_same_task_df[order(recipient_duns,
                                                    product_or_service_code,
                                                    action_date_year_quarter)]
+
+num_proj_per_contractor_df=num_proj_per_contractor_df[order(recipient_duns,
+                                                            action_date_year_quarter)]
 ```
 
 ```{r get_lags, include=FALSE}
@@ -94,7 +87,7 @@ num_proj_same_task_df[,num_projects_same_task_lag_1:=ifelse(recipient_duns==
                                                             lag(num_projects_same_task),
                                                             0)]
 
-num_proj_same_task_df[,num_projects_lag_1:=ifelse(recipient_duns==lag(recipient_duns),
+num_proj_per_contractor_df[,num_projects_lag_1:=ifelse(recipient_duns==lag(recipient_duns),
                                                             lag(num_projects),
                                                             0)]
 
@@ -111,7 +104,7 @@ num_proj_same_task_df[,num_projects_same_task_lag_2:=ifelse(recipient_duns==
                                                             lag(num_projects_same_task,2),
                                                             0)]
 
-num_proj_same_task_df[,num_projects_lag_2:=ifelse(recipient_duns==lag(recipient_duns,2),
+num_proj_per_contractor_df[,num_projects_lag_2:=ifelse(recipient_duns==lag(recipient_duns,2),
                                                             lag(num_projects,2),
                                                             0)]
 
@@ -126,7 +119,7 @@ num_proj_same_task_df[,num_projects_same_task_lag_3:=ifelse(recipient_duns==
                                                             0)]
 
 
-num_proj_same_task_df[,num_projects_lag_3:=ifelse(recipient_duns==
+num_proj_per_contractor_df[,num_projects_lag_3:=ifelse(recipient_duns==
                                                                  lag(recipient_duns,3),
                                                             lag(num_projects,3),
                                                             0)]
@@ -139,10 +132,19 @@ num_proj_same_task_df[,num_projs_same_task_past_three_qtrs:=num_projects_same_ta
                                                           num_projects_same_task_lag_3]
 
 
-num_proj_same_task_df[,num_projs_past_three_qtrs:=num_projects_lag_1+
+num_proj_per_contractor_df[,num_projs_past_three_qtrs:=num_projects_lag_1+
                                                   num_projects_lag_2+
                                                   num_projects_lag_3]
 
+```
+
+```{r merge, include=FALSE}
+# Merge the two datasets
+num_proj_same_task_df=merge(num_proj_same_task_df,
+                            num_proj_per_contractor_df,
+                            by=c('recipient_duns',
+                                 'action_date_year_quarter'),
+                            all.x=T)
 ```
 
 * Let $n^{task}_{i}=$ Number of projects of the same task held by the contractor in the three quarters before starting project $i$
@@ -227,7 +229,8 @@ m1=feglm(new_entrant_i~treat_i+
                             action_date_year_quarter,
          cluster=~contract_award_unique_key,
          family='binomial',
-                          data=subset(reg_df, competitively_awarded_i==1 &
+                          data=subset(reg_df, 
+                                        competitively_awarded_i==1 &
                                               post_t==0))
 
 m2=feglm(new_entrant_i~treat_i+
@@ -242,7 +245,8 @@ m2=feglm(new_entrant_i~treat_i+
                             product_or_service_code+action_date_year_quarter,
          cluster=~contract_award_unique_key,
          family='binomial',
-                          data=subset(reg_df, competitively_awarded_i==1 &
+                          data=subset(reg_df, 
+                                        competitively_awarded_i==1 &
                                               post_t==0))
 
 m3=feglm(new_entrant_i~treat_i+
@@ -257,7 +261,8 @@ m3=feglm(new_entrant_i~treat_i+
                             naics_code+product_or_service_code+action_date_year_quarter,
          cluster=~contract_award_unique_key,
          family='binomial',
-                          data=subset(reg_df, competitively_awarded_i==1 &
+                          data=subset(reg_df, 
+                                        competitively_awarded_i==1 &
                                               post_t==0))
 
 pt_new_entrant=list(m1,m2,m3)
@@ -310,6 +315,60 @@ m3=feglm(task_inexperienced_i~treat_i+
                                               post_t==0))
 
 pt_task_inexperienced=list(m1,m2,m3)
+```
+
+# Parallel trends plot
+
+```{r plot, results='asis',fig.width=7,fig.height=5}
+# Average value of an indicator will be the probability
+inexp_plot=reg_df[competitively_awarded_i==1,
+                  .(prob_task_inexp=mean(task_inexperienced_i,
+                               na.rm=T),
+                    prob_new_entrant=mean(new_entrant_i,
+                               na.rm=T)),
+                  by=c('treat_i','quarter_number')]
+
+inexp_plot[,log_odds_task_inexp:=log(prob_task_inexp/(1-prob_task_inexp))]
+inexp_plot[,log_odds_new_entrant:=log(prob_new_entrant/(1-prob_new_entrant))]
+inexp_plot[,status:=ifelse(treat_i==1,'Treated','Control')]
+
+ggplot(inexp_plot,
+       aes(x=as.factor(quarter_number),
+           y=log_odds_task_inexp,
+           group=status))+
+  labs(x="Quarter Number", 
+       y = "Log-odds of Task Inexperienced")+
+  geom_point(aes(shape=status),size=1.5)+
+  geom_line(aes(linetype=status, 
+                color=status),alpha=0.7)+
+  geom_vline(xintercept =6.5,alpha=0.8,linewidth=0.15,linetype="solid")+
+  theme(axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))
+
+ggplot(inexp_plot,
+       aes(x=as.factor(quarter_number),
+           y=log_odds_new_entrant,
+           group=status))+
+  labs(x="Quarter Number", 
+       y = "Log-odds of New Entrant")+
+  geom_point(aes(shape=status),size=1.5)+
+  geom_line(aes(linetype=status, 
+                color=status),alpha=0.7)+
+  geom_vline(xintercept =6.5,alpha=0.8,linewidth=0.15,linetype="solid")+
+  theme(axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))
 ```
 
 # Regression results
