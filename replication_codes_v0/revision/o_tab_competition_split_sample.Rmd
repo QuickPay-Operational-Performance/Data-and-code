@@ -52,6 +52,7 @@ reg_df[,quarter_when_project_signed:=as.Date(as.yearqtr(as.Date(initial_start_da
 ```
 
 ```{r define_var, include=FALSE}
+
 # Number of projects held by a contractor in a given quarter
 num_proj_per_contractor_df=reg_df[,
                 .(num_projects=
@@ -67,21 +68,17 @@ num_proj_same_task_df=reg_df[,
                    'product_or_service_code',
                    'action_date_year_quarter')]
 
-# Merge the two datasets
-num_proj_same_task_df=merge(num_proj_same_task_df,
-                            num_proj_per_contractor_df,
-                            by=c('recipient_duns',
-                                 'action_date_year_quarter'),
-                            all.x=T)
-
 num_proj_same_task_df=num_proj_same_task_df[order(recipient_duns,
                                                    product_or_service_code,
                                                    action_date_year_quarter)]
+
+num_proj_per_contractor_df=num_proj_per_contractor_df[order(recipient_duns,
+                                                            action_date_year_quarter)]
 ```
 
 ```{r get_lags, include=FALSE}
 
-# LAG OF 1  ------------------------------------
+# LAG OF 1 ------------------------------
 
 # If same contractor last quarter + same task last quarter, take lag value. Else take zero.
 # Zero can indicate:
@@ -94,11 +91,11 @@ num_proj_same_task_df[,num_projects_same_task_lag_1:=ifelse(recipient_duns==
                                                             lag(num_projects_same_task),
                                                             0)]
 
-num_proj_same_task_df[,num_projects_lag_1:=ifelse(recipient_duns==lag(recipient_duns),
+num_proj_per_contractor_df[,num_projects_lag_1:=ifelse(recipient_duns==lag(recipient_duns),
                                                             lag(num_projects),
                                                             0)]
 
-# LAG OF 2  ------------------------------------
+# LAG OF 2 ------------------------------
 
 # If same contractor second-to-last quarter + same task second-to-last quarter, take lag-2 value. Else take zero.
 # Zero can indicate:
@@ -111,12 +108,12 @@ num_proj_same_task_df[,num_projects_same_task_lag_2:=ifelse(recipient_duns==
                                                             lag(num_projects_same_task,2),
                                                             0)]
 
-num_proj_same_task_df[,num_projects_lag_2:=ifelse(recipient_duns==lag(recipient_duns,2),
+num_proj_per_contractor_df[,num_projects_lag_2:=ifelse(recipient_duns==lag(recipient_duns,2),
                                                             lag(num_projects,2),
                                                             0)]
 
 
-# LAG OF 3  ------------------------------------
+# LAG OF 3  ------------------------------
 
 num_proj_same_task_df[,num_projects_same_task_lag_3:=ifelse(recipient_duns==
                                                                  lag(recipient_duns,3)&
@@ -126,23 +123,32 @@ num_proj_same_task_df[,num_projects_same_task_lag_3:=ifelse(recipient_duns==
                                                             0)]
 
 
-num_proj_same_task_df[,num_projects_lag_3:=ifelse(recipient_duns==
+num_proj_per_contractor_df[,num_projects_lag_3:=ifelse(recipient_duns==
                                                                  lag(recipient_duns,3),
                                                             lag(num_projects,3),
                                                             0)]
 
 
-# ADD IT UP  ------------------------------------
+# ADD IT UP  ------------------------------
 
 num_proj_same_task_df[,num_projs_same_task_past_three_qtrs:=num_projects_same_task_lag_2+
                                                           num_projects_same_task_lag_1+
                                                           num_projects_same_task_lag_3]
 
 
-num_proj_same_task_df[,num_projs_past_three_qtrs:=num_projects_lag_1+
+num_proj_per_contractor_df[,num_projs_past_three_qtrs:=num_projects_lag_1+
                                                   num_projects_lag_2+
                                                   num_projects_lag_3]
 
+```
+
+```{r merge, include=FALSE}
+# Merge the two datasets
+num_proj_same_task_df=merge(num_proj_same_task_df,
+                            num_proj_per_contractor_df,
+                            by=c('recipient_duns',
+                                 'action_date_year_quarter'),
+                            all.x=T)
 ```
 
 * Let $n^{task}_{i}=$ Number of projects of the same task held by the contractor in the three quarters before starting project $i$
