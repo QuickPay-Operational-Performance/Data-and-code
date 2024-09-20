@@ -54,7 +54,7 @@
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
-\usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array} \usepackage{wrapfig,float} \floatplacement{figure}{H}
+\usepackage{booktabs}
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
@@ -68,7 +68,7 @@
 
 \title{Correct for aggressive bids}
 \author{}
-\date{\vspace{-2.5em}2024-08-28}
+\date{\vspace{-2.5em}2024-09-20}
 
 \begin{document}
 \maketitle
@@ -76,33 +76,33 @@
 \begin{table}[htbp]
    \caption{Corrected bids: Competitively awarded projects}
    \centering
-   \tiny
+   \small
    \begin{tabular}{lcccc}
       \toprule
        & \multicolumn{4}{c}{Percent delay rate}\\
                                         & I             & II            & III           & IV\\  
       \midrule \\
-      Treat                             & -1.36$^{***}$ & -1.43$^{***}$ & -0.67$^{***}$ & -0.71$^{***}$\\   
+      Treat                             & -1.32$^{***}$ & -1.44$^{***}$ & -0.67$^{***}$ & -0.71$^{***}$\\   
                                         & (0.11)        & (0.12)        & (0.12)        & (0.12)\\   
-      Corrected duration                & -7.39$^{***}$ & -8.14$^{***}$ & -7.79$^{***}$ & -7.73$^{***}$\\   
+      Corrected duration                & -7.33$^{***}$ & -8.17$^{***}$ & -7.82$^{***}$ & -7.77$^{***}$\\   
                                         & (0.08)        & (0.12)        & (0.13)        & (0.13)\\   
-      Corrected offers                  & -0.02$^{**}$  & -0.07$^{***}$ & -0.05$^{***}$ & -0.04$^{***}$\\   
+      Corrected offers                  & -0.03$^{***}$ & -0.07$^{***}$ & -0.04$^{***}$ & -0.04$^{***}$\\   
                                         & (0.01)        & (0.01)        & (0.01)        & (0.01)\\   
-      Corrected budget                  & 0.93$^{***}$  & 0.91$^{***}$  & 0.43$^{***}$  & 0.40$^{***}$\\   
+      Corrected budget                  & 0.96$^{***}$  & 0.91$^{***}$  & 0.43$^{***}$  & 0.41$^{***}$\\   
                                         & (0.02)        & (0.03)        & (0.03)        & (0.03)\\   
-      Treat $\times$ Post               & 0.78$^{***}$  & 0.85$^{***}$  & 1.05$^{***}$  & 1.07$^{***}$\\   
+      Treat $\times$ Post               & 0.63$^{***}$  & 0.81$^{***}$  & 1.08$^{***}$  & 1.10$^{***}$\\   
                                         & (0.15)        & (0.16)        & (0.15)        & (0.15)\\   
-      Post $\times$ Corrected duration  &               & 1.34$^{***}$  & 0.82$^{***}$  & 0.79$^{***}$\\   
+      Post $\times$ Corrected duration  &               & 1.47$^{***}$  & 0.95$^{***}$  & 0.91$^{***}$\\   
                                         &               & (0.16)        & (0.16)        & (0.16)\\   
-      Post $\times$ Corrected offers    &               & 0.09$^{***}$  & 0.06$^{***}$  & 0.06$^{***}$\\   
+      Post $\times$ Corrected offers    &               & 0.06$^{***}$  & 0.04$^{***}$  & 0.04$^{***}$\\   
                                         &               & (0.02)        & (0.02)        & (0.02)\\   
-      Post $\times$ Corrected budget    &               & 0.03          & -0.03         & -0.02\\   
+      Post $\times$ Corrected budget    &               & 0.08$^{**}$   & -0.02         & -0.01\\   
                                         &               & (0.03)        & (0.03)        & (0.03)\\   
       Time FE                           & Yes           & Yes           & Yes           & Yes\\  
       Task FE                           & No            & No            & Yes           & Yes\\  
       Industry FE                       & No            & No            & No            & Yes\\  
       Pseudo R$^2$                      & 0.02          & 0.02          & 0.03          & 0.03\\  
-      Observations                      & 156,183       & 156,183       & 156,183       & 156,183\\  
+      Observations                      & 157,057       & 157,057       & 157,057       & 157,057\\  
       R$^2$                             & 0.17          & 0.17          & 0.21          & 0.21\\  
       \midrule
       \multicolumn{5}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\

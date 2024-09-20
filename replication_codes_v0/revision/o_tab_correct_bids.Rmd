@@ -5,10 +5,7 @@ output:
   pdf_document:
     keep_tex: true
 header-includes:
- \usepackage{booktabs,longtable,dcolumn}
- \usepackage{multirow,array}
- \usepackage{wrapfig,float}
- \floatplacement{figure}{H}
+ \usepackage{booktabs}
 ---
 
 ```{r setup, include=FALSE}
@@ -22,6 +19,7 @@ library(dplyr)
 library(fixest)
 library(DescTools) 
 library(broom)
+library(zoo)
 ```
 
 ```{r read_data,include=FALSE}
@@ -38,15 +36,31 @@ reg_df_subset[, two_digit_naics:=substr(naics_code,1,2)]
 reg_df_subset=reg_df_subset[competitively_awarded_i==1]
 ```
 
+```{r define_sa, include=FALSE}
+reg_df_subset[,quarter_when_project_signed:=as.Date(as.yearqtr(as.Date(initial_start_date)),
+                                                       frac = 1)]
+reg_df_subset=reg_df_subset[quarter_when_project_signed<=action_date_year_quarter]
+
+reg_df_subset[,project_signed_after_quickpay:=case_when(initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter>=as.Date('2011-04-27')~1,
+                                                 initial_start_date<as.Date('2011-04-27') ~ 0)]
+
+reg_df_subset=reg_df_subset[order(contract_award_unique_key,
+                                  quarter_when_project_signed)]
+
+competition_df=unique(reg_df_subset,
+                   by='contract_award_unique_key')
+```
+
 ```{r did_on_subsamples, include=FALSE}
 # Create task-naics ID by concatenating the two
-reg_df_subset[,task_naics:=paste(two_digit_psc,
+competition_df[,task_naics:=paste(two_digit_psc,
                                  two_digit_naics,
                                  sep="_")]
 # Get list of unique task-naics combinations
-list_of_task_naics=unique(reg_df_subset$task_naics)
+list_of_task_naics=unique(competition_df$task_naics)
 # Create a data table corresponding to each task-naics code
-did_list=unique(reg_df_subset[,c('task_naics')])
+did_list=unique(competition_df[,c('task_naics')])
 # Create empty columns
 did_list[,duration_did_coef:=NaN]
 did_list[,duration_did_se:=NaN]
@@ -59,50 +73,50 @@ did_list[,budget_did_nobs:=NaN]
 did_list[,offers_did_coef:=NaN]
 did_list[,offers_did_se:=NaN]
 did_list[,offers_did_nobs:=NaN]
-
 ```
+
 ```{r run_loop, include=FALSE, message=FALSE, warning=FALSE}
 i=1
 for(i in 1:length(list_of_task_naics)){
   print(i)
   tryCatch({
   # Create subsample for every task-naics combination
-  df=reg_df_subset[task_naics==list_of_task_naics[i]]
+  df=competition_df[task_naics==list_of_task_naics[i]]
   # Regress duration, budget, offers against treat x post with time FE
   m_duration=feols(winsorized_initial_duration_in_days_i~treat_new+
-                 treat_new:post_t|action_date_year_quarter,
+                 treat_new:project_signed_after_quickpay|quarter_when_project_signed,
         cluster=~contract_award_unique_key,
         data=df
       )
   m_budget=feols(winsorized_initial_budget_i~treat_new+
-                 treat_new:post_t|action_date_year_quarter,
+                 treat_new:project_signed_after_quickpay|quarter_when_project_signed,
         cluster=~contract_award_unique_key,
         data=df
       )
   m_offers=feols(wins_number_of_offers_received~treat_new+
-                 treat_new:post_t|action_date_year_quarter,
+                 treat_new:project_signed_after_quickpay|quarter_when_project_signed,
         cluster=~contract_award_unique_key,
         data=df
       )
   
   # Save DID coefficients
   duration_summary=setDT(tidy(m_duration))
-  duration_did_estimate=duration_summary[term=='treat_new:post_t']$estimate[[1]]
-  duration_did_std_error=duration_summary[term=='treat_new:post_t']$std.error[[1]]
+  duration_did_estimate=duration_summary[term=='treat_new:project_signed_after_quickpay']$estimate[[1]]
+  duration_did_std_error=duration_summary[term=='treat_new:project_signed_after_quickpay']$std.error[[1]]
   did_list[i,duration_did_coef:=duration_did_estimate]
   did_list[i,duration_did_se:=duration_did_std_error]
   did_list[i,duration_did_nobs:=nobs(m_duration)]
   
   budget_summary=setDT(tidy(m_budget))
-  budget_did_estimate=budget_summary[term=='treat_new:post_t']$estimate[[1]]
-  budget_did_std_error=budget_summary[term=='treat_new:post_t']$std.error[[1]]
+  budget_did_estimate=budget_summary[term=='treat_new:project_signed_after_quickpay']$estimate[[1]]
+  budget_did_std_error=budget_summary[term=='treat_new:project_signed_after_quickpay']$std.error[[1]]
   did_list[i,budget_did_coef:=budget_did_estimate]
   did_list[i,budget_did_se:=budget_did_std_error]
   did_list[i,budget_did_nobs:=nobs(m_budget)]
   
   offers_summary=setDT(tidy(m_offers))
-  offers_did_estimate=offers_summary[term=='treat_new:post_t']$estimate[[1]]
-  offers_did_std_error=offers_summary[term=='treat_new:post_t']$std.error[[1]]
+  offers_did_estimate=offers_summary[term=='treat_new:project_signed_after_quickpay']$estimate[[1]]
+  offers_did_std_error=offers_summary[term=='treat_new:project_signed_after_quickpay']$std.error[[1]]
   did_list[i,offers_did_coef:=offers_did_estimate]
   did_list[i,offers_did_se:=offers_did_std_error]
   did_list[i,offers_did_nobs:=nobs(m_offers)]
@@ -115,7 +129,7 @@ for(i in 1:length(list_of_task_naics)){
 
 ```{r merge_df, include=FALSE}
 # Merge with the data on competitively awarded projects
-reg_df_subset=merge(reg_df_subset,
+competition_df=merge(competition_df,
                     did_list,
                     by=c('task_naics'),
                     all.x=T)
@@ -125,20 +139,32 @@ reg_df_subset=merge(reg_df_subset,
 # So we want to add this back to the actual duration. 
 # Do this only for treated projects that started after QP, keep the pre-QP projects and post-QP control projects as is
 
-reg_df_subset[,correct_durations:=ifelse(initial_start_date>as.Date('2011-04-27') & 
+competition_df[,correct_durations:=ifelse(initial_start_date>as.Date('2011-04-27') & 
                                           treat_new==1,
                                          winsorized_initial_duration_in_days_i-duration_did_coef,
                                          winsorized_initial_duration_in_days_i)]
 
-reg_df_subset[,correct_budget:=ifelse(initial_start_date>as.Date('2011-04-27') & 
+competition_df[,correct_budget:=ifelse(initial_start_date>as.Date('2011-04-27') & 
                                             treat_new==1,
                                          winsorized_initial_budget_i-budget_did_coef,
                                       winsorized_initial_budget_i)]
 
-reg_df_subset[,correct_offers:=ifelse(initial_start_date>as.Date('2011-04-27') & 
+competition_df[,correct_offers:=ifelse(initial_start_date>as.Date('2011-04-27') & 
                                             treat_new==1,
                                       wins_number_of_offers_received-offers_did_coef,
                                       wins_number_of_offers_received)]
+```
+
+```{r merge_with_comp, include=FALSE}
+competition_df_sub=competition_df[,c('contract_award_unique_key',
+                                 'correct_budget',
+                                 'correct_durations',
+                                 'correct_offers')]
+
+reg_df_subset=merge(reg_df_subset,
+                    competition_df_sub,
+                    by='contract_award_unique_key',
+                    all.x = T)
 ```
 
 ```{r compare_results, include=FALSE}
@@ -222,7 +248,7 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
 etable(corrected,
        digits='r2',
        digits.stats = 2,
-       fontsize = "tiny",
+       fontsize = "small",
        title="Corrected bids: Competitively awarded projects",
        fitstat = c("pr2","n","r2"),
        drop=c("Project stage"),
