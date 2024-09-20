@@ -30,7 +30,7 @@ reg_df_subset=fread(paste0(working_path,
 
 ```{r merge_with_reg, include=FALSE}
 # Create two digit task and naics codes
-reg_df_subset[, two_digit_psc:=substr(product_or_service_code,1,3)]
+reg_df_subset[, three_digit_psc:=substr(product_or_service_code,1,3)]
 reg_df_subset[, two_digit_naics:=substr(naics_code,1,2)]
 # Restrict to competitively awarded projects 
 reg_df_subset=reg_df_subset[competitively_awarded_i==1]
@@ -54,7 +54,7 @@ competition_df=unique(reg_df_subset,
 
 ```{r did_on_subsamples, include=FALSE}
 # Create task-naics ID by concatenating the two
-competition_df[,task_naics:=paste(two_digit_psc,
+competition_df[,task_naics:=paste(three_digit_psc,
                                  two_digit_naics,
                                  sep="_")]
 # Get list of unique task-naics combinations
