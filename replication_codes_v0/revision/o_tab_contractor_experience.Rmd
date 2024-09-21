@@ -1,15 +1,12 @@
 ---
-title: "Full Sample -- Contractor Experience"
+title: "Contractor Experience"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
     keep_tex: true
     number_sections: true
 header-includes:
- \usepackage{booktabs,longtable,dcolumn}
- \usepackage{multirow,array,makecell}
- \usepackage{wrapfig,float}
- \floatplacement{figure}{H}
+ \usepackage{booktabs}
 ---
 
 ```{r setup, include=FALSE}
@@ -196,24 +193,29 @@ reg_df=merge(reg_df,
                     all.x = T)
 ```
 
-```{r define_inexp, include=FALSE}
-reg_df[,inexp:=1-prop_exp]
-```
-
 ```{r clean_sample, include=FALSE}
 working_path='~/Dropbox/data_quickpay/qp_replication/working/'
-reg_df_clean=fread(paste0(working_path,
+reg_df_working=fread(paste0(working_path,
                  'w_clean_control.csv'))
 
-reg_df=reg_df[contract_award_unique_key%in%reg_df_clean$contract_award_unique_key]
+reg_df_sub=reg_df[,c('contract_award_unique_key',
+                     'action_date_year_quarter',
+                     'new_entrant_i',
+                     'task_inexperienced_i')]
+
+reg_df_working=merge(reg_df_sub,
+                     reg_df_working,
+                     by=c('contract_award_unique_key',
+                     'action_date_year_quarter'),
+                     all.y=T)
 ```
 
 # Parallel trends test
 
 ```{r define_qt, include=FALSE}
-df_qn<-unique(reg_df,by='action_date_year_quarter')[,"action_date_year_quarter"]
+df_qn<-unique(reg_df_working,by='action_date_year_quarter')[,"action_date_year_quarter"]
 df_qn=df_qn[order(action_date_year_quarter)][,quarter_number:=seq.int(nrow(df_qn))]
-reg_df=merge(reg_df,df_qn,by='action_date_year_quarter')
+reg_df_working=merge(reg_df_working,df_qn,by='action_date_year_quarter')
 ```
 
 ```{r pt_new_entrant, include=FALSE}
@@ -229,7 +231,7 @@ m1=feglm(new_entrant_i~treat_i+
                             action_date_year_quarter,
          cluster=~contract_award_unique_key,
          family='binomial',
-                          data=subset(reg_df, 
+                          data=subset(reg_df_working, 
                                         competitively_awarded_i==1 &
                                               post_t==0))
 
@@ -245,7 +247,7 @@ m2=feglm(new_entrant_i~treat_i+
                             product_or_service_code+action_date_year_quarter,
          cluster=~contract_award_unique_key,
          family='binomial',
-                          data=subset(reg_df, 
+                          data=subset(reg_df_working, 
                                         competitively_awarded_i==1 &
                                               post_t==0))
 
@@ -261,7 +263,7 @@ m3=feglm(new_entrant_i~treat_i+
                             naics_code+product_or_service_code+action_date_year_quarter,
          cluster=~contract_award_unique_key,
          family='binomial',
-                          data=subset(reg_df, 
+                          data=subset(reg_df_working, 
                                         competitively_awarded_i==1 &
                                               post_t==0))
 
@@ -281,7 +283,7 @@ m1=feglm(task_inexperienced_i~treat_i+
                             action_date_year_quarter,
          cluster=~contract_award_unique_key,
          family='binomial',
-                          data=subset(reg_df, competitively_awarded_i==1 &
+                          data=subset(reg_df_working, competitively_awarded_i==1 &
                                               post_t==0))
 
 m2=feglm(task_inexperienced_i~treat_i+
@@ -296,7 +298,7 @@ m2=feglm(task_inexperienced_i~treat_i+
                             product_or_service_code+action_date_year_quarter,
          cluster=~contract_award_unique_key,
          family='binomial',
-                          data=subset(reg_df, competitively_awarded_i==1 &
+                          data=subset(reg_df_working, competitively_awarded_i==1 &
                                               post_t==0))
 
 m3=feglm(task_inexperienced_i~treat_i+
@@ -311,7 +313,7 @@ m3=feglm(task_inexperienced_i~treat_i+
                             naics_code+product_or_service_code+action_date_year_quarter,
          cluster=~contract_award_unique_key,
          family='binomial',
-                          data=subset(reg_df, competitively_awarded_i==1 &
+                          data=subset(reg_df_working, competitively_awarded_i==1 &
                                               post_t==0))
 
 pt_task_inexperienced=list(m1,m2,m3)
@@ -321,7 +323,7 @@ pt_task_inexperienced=list(m1,m2,m3)
 
 ```{r plot, results='asis',fig.width=7,fig.height=5}
 # Average value of an indicator will be the probability
-inexp_plot=reg_df[competitively_awarded_i==1,
+inexp_plot=reg_df_working[competitively_awarded_i==1,
                   .(prob_task_inexp=mean(task_inexperienced_i,
                                na.rm=T),
                     prob_new_entrant=mean(new_entrant_i,
@@ -388,7 +390,7 @@ m1=feglm(task_inexperienced_i~treat_i+
                                   naics_code,
                                   family='binomial',
                                   cluster=~contract_award_unique_key, # clustered at project level
-                                  data=subset(reg_df,competitively_awarded_i==1))
+                                  data=subset(reg_df_working,competitively_awarded_i==1))
 
 m2=feglm(new_entrant_i~treat_i+
                                   treat_i:post_t+
@@ -404,22 +406,7 @@ m2=feglm(new_entrant_i~treat_i+
                                   naics_code,
                                   family='binomial',
                                   cluster=~contract_award_unique_key, # clustered at project level
-                                  data=subset(reg_df,competitively_awarded_i==1))
-
-m3=feols(inexp~treat_i+
-                                  treat_i:post_t+
-                                 log(wins_project_quarter_stage)+
-                                 wins_number_of_offers_received+
-                                 log(winsorized_initial_budget_i)+
-                                 log(winsorized_initial_duration_in_days_i)+
-                                 post_t:wins_number_of_offers_received+
-                                 post_t:log(winsorized_initial_budget_i)+
-                                 post_t:log(winsorized_initial_duration_in_days_i)|
-                                 action_date_year_quarter+
-                                  product_or_service_code+
-                                  naics_code,
-                                  cluster=~contract_award_unique_key, # clustered at project level
-                                  data=subset(reg_df,competitively_awarded_i==1))
+                                  data=subset(reg_df_working,competitively_awarded_i==1))
 
 contractor_pool_entry=list(m1,m2)
 ```
@@ -442,7 +429,7 @@ m1=feols(wins_percentage_delay~treat_i+
                                   product_or_service_code+
                                   naics_code,
                                   cluster=~contract_award_unique_key, # clustered at project level
-                                  data=subset(reg_df,competitively_awarded_i==1))
+                                  data=subset(reg_df_working,competitively_awarded_i==1))
 
 m2=feols(wins_percentage_delay~treat_i+
                                   new_entrant_i+
@@ -461,32 +448,13 @@ m2=feols(wins_percentage_delay~treat_i+
                                   product_or_service_code+
                                   naics_code,
                                   cluster=~contract_award_unique_key, # clustered at project level
-                                  data=subset(reg_df,competitively_awarded_i==1))
-
-m3=feols(wins_percentage_delay~treat_i+
-                                  inexp+
-                                  treat_i:inexp+
-                                  post_t:inexp+
-                                  treat_i:post_t+
-                                  treat_i:post_t:inexp+
-                                 log(wins_project_quarter_stage)+
-                                 wins_number_of_offers_received+
-                                 log(winsorized_initial_budget_i)+
-                                 log(winsorized_initial_duration_in_days_i)+
-                                 post_t:wins_number_of_offers_received+
-                                 post_t:log(winsorized_initial_budget_i)+
-                                 post_t:log(winsorized_initial_duration_in_days_i)|
-                                 action_date_year_quarter+
-                                  product_or_service_code+
-                                  naics_code,
-                                  cluster=~contract_award_unique_key, # clustered at project level
-                                  data=subset(reg_df,competitively_awarded_i==1))
+                                  data=subset(reg_df_working,competitively_awarded_i==1))
 
 contractor_pool_delays=list(m1,m2)
 ```
 
 ```{r output, echo=FALSE, results='asis'}
-setFixest_dict(c("wins_percentage_delay"="Percentage delay rate",
+setFixest_dict(c("wins_percentage_delay"="\\textit{Percent delay rate}$_{it}$",
                  "treat_i"="$Treat_i$",
                  "post_t"="$Post_t$",
                  "project_signed_after_quickpay"="$SA_i$",
@@ -606,6 +574,7 @@ d1=deltaMethod(m1,
             `task_inexperienced_i:post_t`+
             `treat_i:task_inexperienced_i:post_t`",
             rhs=0)
+
 d1_df <- as.data.frame(d1)
 rownames(d1_df) <- c("Task inexperienced")
 print(xtable(d1_df,type='latex'))
