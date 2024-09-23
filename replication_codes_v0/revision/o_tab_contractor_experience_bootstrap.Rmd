@@ -1,0 +1,433 @@
+---
+title: "Contractor Experience"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: true
+    number_sections: true
+header-includes:
+ \usepackage{booktabs}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+options(xtable.comment = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(ggplot2)
+library(DescTools) 
+library(xtable)
+library(car) # for deltaMethod
+```
+
+```{r read_data,include=FALSE}
+input_path='~/Dropbox/data_quickpay/qp_replication/input/'
+reg_df=fread(paste0(input_path,
+               'quickpay_delays.csv'))
+
+reg_df=reg_df[!(initial_start_date>as.Date('2011-04-27') 
+                              & post_t==0)]
+
+reg_df=reg_df[!is.na(recipient_duns)]
+```
+
+```{r competition_delays_subsample, echo=FALSE, results='asis'}
+reg_df[,project_signed_after_quickpay:=case_when(initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter>=as.Date('2011-04-27')~1,
+                                                 initial_start_date<as.Date('2011-04-27') ~ 0,
+                                                 initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter<as.Date('2011-04-27')~NaN)]
+```
+
+```{r define_var, include=FALSE}
+
+# Number of projects held by a contractor in a given quarter
+num_proj_per_contractor_df=reg_df[,
+                .(num_projects=
+                    n_distinct(contract_award_unique_key)),
+              by=c('recipient_duns',
+                   'action_date_year_quarter')]
+
+# Number of projects of a given task type held by a contractor in a given quarter
+num_proj_same_task_df=reg_df[,
+                .(num_projects_same_task=
+                    n_distinct(contract_award_unique_key)),
+              by=c('recipient_duns',
+                   'product_or_service_code',
+                   'action_date_year_quarter')]
+
+num_proj_same_task_df=num_proj_same_task_df[order(recipient_duns,
+                                                   product_or_service_code,
+                                                   action_date_year_quarter)]
+
+num_proj_per_contractor_df=num_proj_per_contractor_df[order(recipient_duns,
+                                                            action_date_year_quarter)]
+```
+
+```{r get_lags, include=FALSE}
+
+# LAG OF 1 ------------------------------
+
+# If same contractor last quarter + same task last quarter, take lag value. Else take zero.
+# Zero can indicate:
+# 1. Same contractor last quarter + different task last quarter, OR
+# 2. Different contractor last quarter i.e., contractor is new entrant
+num_proj_same_task_df[,num_projects_same_task_lag_1:=ifelse(recipient_duns==
+                                                                 lag(recipient_duns)&
+                                                            product_or_service_code==
+                                                              lag(product_or_service_code),
+                                                            lag(num_projects_same_task),
+                                                            0)]
+
+num_proj_per_contractor_df[,num_projects_lag_1:=ifelse(recipient_duns==lag(recipient_duns),
+                                                            lag(num_projects),
+                                                            0)]
+
+# LAG OF 2 ------------------------------
+
+# If same contractor second-to-last quarter + same task second-to-last quarter, take lag-2 value. Else take zero.
+# Zero can indicate:
+# 1. Same contractor second-to-last quarter + different task second-to-last quarter, OR
+# 2. Different contractor second-to-last quarter i.e., contractor is new entrant
+num_proj_same_task_df[,num_projects_same_task_lag_2:=ifelse(recipient_duns==
+                                                                 lag(recipient_duns,2)&
+                                                            product_or_service_code==
+                                                              lag(product_or_service_code,2),
+                                                            lag(num_projects_same_task,2),
+                                                            0)]
+
+num_proj_per_contractor_df[,num_projects_lag_2:=ifelse(recipient_duns==lag(recipient_duns,2),
+                                                            lag(num_projects,2),
+                                                            0)]
+
+
+# LAG OF 3  ------------------------------
+
+num_proj_same_task_df[,num_projects_same_task_lag_3:=ifelse(recipient_duns==
+                                                                 lag(recipient_duns,3)&
+                                                            product_or_service_code==
+                                                              lag(product_or_service_code,3),
+                                                            lag(num_projects_same_task,3),
+                                                            0)]
+
+
+num_proj_per_contractor_df[,num_projects_lag_3:=ifelse(recipient_duns==
+                                                                 lag(recipient_duns,3),
+                                                            lag(num_projects,3),
+                                                            0)]
+
+
+# ADD IT UP  ------------------------------
+
+num_proj_same_task_df[,num_projs_same_task_past_three_qtrs:=num_projects_same_task_lag_2+
+                                                          num_projects_same_task_lag_1+
+                                                          num_projects_same_task_lag_3]
+
+
+num_proj_per_contractor_df[,num_projs_past_three_qtrs:=num_projects_lag_1+
+                                                  num_projects_lag_2+
+                                                  num_projects_lag_3]
+
+```
+
+```{r merge, include=FALSE}
+# Merge the two datasets
+num_proj_same_task_df=merge(num_proj_same_task_df,
+                            num_proj_per_contractor_df,
+                            by=c('recipient_duns',
+                                 'action_date_year_quarter'),
+                            all.x=T)
+```
+
+* Let $n^{task}_{i}=$ Number of projects of the same task held by the contractor in the three quarters before starting project $i$
+* Let $n_{i}=$ Number of projects held by the contractor in the three quarters before starting project $i$
+
+* Define:
+  * Inexperienced contractor$_i$ = 1 if $n^{task}_{i}=0$ 
+  * New entrant$_i$ = 1 if $n_{i}=0$
+  * Level of inexperience$_{i}= 1 - \frac{n^{task}_{i}}{n_{i}}$ if $n_{i}>0$
+  * Level of inexperience$_{i}= 1$ if $n_{i,k,t}=0$.
+    
+
+```{r project_quarter, include=FALSE}
+# Get first quarter for every project
+project_quarter=reg_df[,.(start_quarter=min(action_date_year_quarter)),
+                              by=c('contract_award_unique_key',
+                                 'recipient_duns',
+                                 'product_or_service_code')]
+
+project_quarter=merge(project_quarter,
+                      num_proj_same_task_df,
+                      by.x=c('start_quarter',
+                             'recipient_duns',
+                             'product_or_service_code'),
+                      by.y=c('action_date_year_quarter',
+                             'recipient_duns',
+                             'product_or_service_code'),
+                      all.x=T)
+
+# Task inexperienced if
+project_quarter[,task_inexperienced_i:=ifelse(num_projs_same_task_past_three_qtrs==0,1,0)]
+project_quarter[,new_entrant_i:=ifelse(num_projs_past_three_qtrs==0,1,0)]
+
+# Proportion of projects on which contractor has past experience
+project_quarter[,prop_exp:=ifelse(num_projs_past_three_qtrs>0,
+                                 num_projs_same_task_past_three_qtrs/num_projs_past_three_qtrs,
+                                       0)]
+
+project_entrant=project_quarter[,c('contract_award_unique_key',
+                                   'task_inexperienced_i',
+                                   'new_entrant_i',
+                                   'num_projs_same_task_past_three_qtrs',
+                                   'num_projs_past_three_qtrs',
+                                   'prop_exp')]
+
+reg_df=merge(reg_df,
+                    project_entrant,
+                    by='contract_award_unique_key',
+                    all.x = T)
+```
+
+```{r clean_sample, include=FALSE}
+working_path='~/Dropbox/data_quickpay/qp_replication/working/'
+reg_df_working=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+
+reg_df_sub=reg_df[,c('contract_award_unique_key',
+                     'action_date_year_quarter',
+                     'new_entrant_i',
+                     'task_inexperienced_i')]
+
+reg_df_working=merge(reg_df_sub,
+                     reg_df_working,
+                     by=c('contract_award_unique_key',
+                     'action_date_year_quarter'),
+                     all.y=T)
+```
+
+# Task Inexperience Bootstrap
+
+```{r task_inexp_bs, include=FALSE}
+df=subset(reg_df_working,competitively_awarded_i==1)
+n = nrow(df)
+nrep=100
+# Create a "nrep" dimension vector of lists
+delta.alpha.coefs = vector("list", nrep)
+multiplier.coefs=vector("list",nrep)
+
+# Do this nrep times
+for(i in 1:nrep){
+  print(i)
+  set.seed(100+i)
+  df_sub=df[sample(n, n/2, replace=T), ]
+  m1=feglm(task_inexperienced_i~treat_i+
+                                  treat_i:post_t+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  family='binomial',
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=df_sub)
+  delta.alpha.coefs[[i]]=coef(m1,'treat_i:post_t')
+
+  m2=feols(wins_percentage_delay~treat_i+
+                                  task_inexperienced_i+
+                                  treat_i:task_inexperienced_i+
+                                  post_t:task_inexperienced_i+
+                                  treat_i:post_t+
+                                  treat_i:post_t:task_inexperienced_i+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=df_sub)
+
+  d2=deltaMethod(m2,
+            "task_inexperienced_i+
+            `treat_i:task_inexperienced_i`+
+            `task_inexperienced_i:post_t`+
+            `treat_i:task_inexperienced_i:post_t`",
+            rhs=0)
+
+  multiplier.coefs[[i]]=d2$Estimate
+}
+# Save all coefficients as a matrix
+all_coef_multiplier = do.call("rbind", multiplier.coefs)
+all_coef_delta_alpha_logit = do.call("rbind", delta.alpha.coefs)
+
+coef_mat=cbind(all_coef_multiplier,
+               all_coef_delta_alpha_logit)
+
+coef_mat_task=as.data.frame(coef_mat)
+setDT(coef_mat_task)
+setnames(coef_mat_task,
+         c("V1","treat_i:post_t"),
+         c("multiplier","delta_alpha_logit"))
+coef_mat_task[,product:=multiplier*delta_alpha_logit]
+```
+
+```{r export_csv, include=FALSE}
+write.csv(coef_mat_task,
+          '~/Desktop/coef_mat_task.csv')
+```
+
+# New Entrant Bootstrap
+
+```{r new_entrant_bs, include=FALSE}
+n = nrow(df)
+nrep=100
+# Create a "nrep" dimension vector of lists
+delta.alpha.coefs = vector("list", nrep)
+multiplier.coefs=vector("list",nrep)
+
+# Do this nrep times
+for(i in 1:nrep){
+  print(i)
+  set.seed(100+i)
+  df_sub=df[sample(n, n/2, replace=T), ]
+  m1_entrant=feglm(new_entrant_i~treat_i+
+                                  treat_i:post_t+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  family='binomial',
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=df_sub)
+  delta.alpha.coefs[[i]]=coef(m1_entrant,'treat_i:post_t')
+
+  m2_entrant=feols(wins_percentage_delay~treat_i+
+                                  new_entrant_i+
+                                  treat_i:new_entrant_i+
+                                  post_t:new_entrant_i+
+                                  treat_i:post_t+
+                                  treat_i:post_t:new_entrant_i+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=df_sub)
+
+  d2_entrant=deltaMethod(m2_entrant,
+            "new_entrant_i+
+            `treat_i:new_entrant_i`+
+            `new_entrant_i:post_t`+
+            `treat_i:new_entrant_i:post_t`",
+            rhs=0)
+
+  multiplier.coefs[[i]]=d2_entrant$Estimate
+}
+# Save all coefficients as a matrix
+all_coef_multiplier = do.call("rbind", multiplier.coefs)
+all_coef_delta_alpha_logit = do.call("rbind", delta.alpha.coefs)
+
+coef_mat=cbind(all_coef_multiplier,
+               all_coef_delta_alpha_logit)
+
+coef_mat_entrant=as.data.frame(coef_mat)
+setDT(coef_mat_entrant)
+setnames(coef_mat_entrant,
+         c("V1","treat_i:post_t"),
+         c("multiplier","delta_alpha_logit"))
+coef_mat_entrant[,product:=multiplier*delta_alpha_logit]
+```
+
+```{r export_csv_entrant, include=FALSE}
+write.csv(coef_mat_entrant,
+          '~/Desktop/coef_mat_entrant.csv')
+```
+
+```{r make_hist,include=FALSE}
+entrant_plot=ggplot(coef_mat_entrant, aes(x = product)) + 
+  geom_histogram(color = "black",
+                 fill = "gray", 
+                 bins = 20, 
+                 alpha = 0.7) +  
+  theme_minimal(base_size = 14) +  
+  xlab("Estimate") +
+  ylab("Frequency") +
+  ggtitle("New Entrant") +  
+  geom_vline(xintercept = 0, 
+             linetype = "solid", 
+             color = "darkred", 
+             size = 0.8) +
+  theme(panel.grid = element_blank(),  
+        panel.border = element_rect(color = "black", fill = NA),  
+        plot.title = element_text(hjust = 0.5, size = 20),  
+        axis.title.x = element_text(size = 20),  
+        axis.title.y = element_text(size = 20),  
+        axis.text = element_text(size = 10),  
+        axis.ticks = element_line(color = "gray"),  
+        plot.background = element_rect(fill = "white", color = NA)) +  
+  scale_x_continuous(limits = c(-max(abs(coef_mat_entrant$product)), 
+                                max(abs(coef_mat_entrant$product))))  
+
+task_plot=ggplot(coef_mat_task, aes(x = product)) + 
+  geom_histogram(color = "black",
+                 fill = "gray", 
+                 bins = 20, 
+                 alpha = 0.7) +  
+  theme_minimal(base_size = 14) +  
+  xlab("Estimate") +
+  ylab("Frequency") +
+  ggtitle("Task inexperienced") +  
+  geom_vline(xintercept = 0, 
+             linetype = "solid", 
+             color = "darkred", 
+             size = 0.8) +
+  theme(panel.grid = element_blank(),  
+        panel.border = element_rect(color = "black", fill = NA),  
+        plot.title = element_text(hjust = 0.5, size = 20),  
+        axis.title.x = element_text(size = 20),  
+        axis.title.y = element_text(size = 20),  
+        axis.text = element_text(size = 10),  
+        axis.ticks = element_line(color = "gray"),  
+        plot.background = element_rect(fill = "white", color = NA)) +  
+  scale_x_continuous(limits = c(-max(abs(coef_mat_task$product)), 
+                                max(abs(coef_mat_task$product)))) 
+
+```
+
+```{r save_plots, include=FALSE}
+ggsave('~/Desktop/entrant_hist.png',
+       entrant_plot,
+        width=10,
+       dpi=300)
+
+ggsave('~/Desktop/task_hist.png',
+       task_plot,
+        width=10,
+       dpi=300)
+```
