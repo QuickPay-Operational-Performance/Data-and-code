@@ -1,0 +1,385 @@
+---
+title: "Contractor Experience"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: true
+    number_sections: true
+header-includes:
+ \usepackage{booktabs}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+options(xtable.comment = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(ggplot2)
+library(DescTools) 
+library(xtable)
+library(car) # for deltaMethod
+```
+
+```{r read_data,include=FALSE}
+input_path='~/Dropbox/data_quickpay/qp_replication/input/'
+reg_df=fread(paste0(input_path,
+               'quickpay_delays.csv'))
+
+reg_df=reg_df[!(initial_start_date>as.Date('2011-04-27') 
+                              & post_t==0)]
+
+reg_df=reg_df[!is.na(recipient_duns)]
+reg_df[,action_date_year_quarter:=as.Date(action_date_year_quarter)]
+```
+
+```{r competition_delays_subsample, echo=FALSE, results='asis'}
+reg_df[,project_signed_after_quickpay:=case_when(initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter>=as.Date('2011-04-27')~1,
+                                                 initial_start_date<as.Date('2011-04-27') ~ 0,
+                                                 initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter<as.Date('2011-04-27')~NaN)]
+```
+
+```{r define_var, include=FALSE}
+
+# Number of projects held by a contractor in a given quarter
+num_proj_per_contractor_df=reg_df[,
+                .(num_projects=
+                    n_distinct(contract_award_unique_key)),
+              by=c('recipient_duns',
+                   'action_date_year_quarter')]
+
+# Number of projects of a given task type held by a contractor in a given quarter
+num_proj_same_task_df=reg_df[,
+                .(num_projects_same_task=
+                    n_distinct(contract_award_unique_key)),
+              by=c('recipient_duns',
+                   'product_or_service_code',
+                   'action_date_year_quarter')]
+```
+
+```{r num_projs_lag}
+num_proj_per_contractor_df=num_proj_per_contractor_df[order(recipient_duns,
+                                                            action_date_year_quarter)]
+
+num_proj_per_contractor_df[,num_projects_lag_1:=ifelse(recipient_duns==
+                                                         lag(recipient_duns),
+                                                            lag(num_projects),
+                                                            0)]
+
+num_proj_per_contractor_df[,num_projects_lag_2:=ifelse(recipient_duns==lag(recipient_duns,2),
+                                                            lag(num_projects,2),
+                                                            0)]
+
+num_proj_per_contractor_df[,num_projects_lag_3:=ifelse(recipient_duns==
+                                                                 lag(recipient_duns,3),
+                                                            lag(num_projects,3),
+                                                            0)]
+
+num_proj_per_contractor_df[,num_projs_past_three_qtrs:=num_projects_lag_1+
+                                                  num_projects_lag_2+
+                                                  num_projects_lag_3]
+
+```
+
+```{r get_lags, include=FALSE}
+num_proj_same_task_df=num_proj_same_task_df[order(recipient_duns,
+                                                   product_or_service_code,
+                                                   action_date_year_quarter)]
+
+# LAG OF 1 ------------------------------
+
+# If same contractor last quarter + same task last quarter, take lag value. Else take zero.
+# Zero can indicate:
+# 1. Same contractor last quarter + different task last quarter, OR
+# 2. Different contractor last quarter i.e., contractor is new entrant
+num_proj_same_task_df[,num_projects_same_task_lag_1:=ifelse(recipient_duns==
+                                                                 lag(recipient_duns)&
+                                                            product_or_service_code==
+                                                              lag(product_or_service_code),
+                                                            lag(num_projects_same_task),
+                                                            0)]
+
+
+# LAG OF 2 ------------------------------
+
+# If same contractor second-to-last quarter + same task second-to-last quarter, take lag-2 value. Else take zero.
+# Zero can indicate:
+# 1. Same contractor second-to-last quarter + different task second-to-last quarter, OR
+# 2. Different contractor second-to-last quarter i.e., contractor is new entrant
+num_proj_same_task_df[,num_projects_same_task_lag_2:=ifelse(recipient_duns==
+                                                                 lag(recipient_duns,2)&
+                                                            product_or_service_code==
+                                                              lag(product_or_service_code,2),
+                                                            lag(num_projects_same_task,2),
+                                                            0)]
+
+# LAG OF 3  ------------------------------
+
+num_proj_same_task_df[,num_projects_same_task_lag_3:=ifelse(recipient_duns==
+                                                                 lag(recipient_duns,3)&
+                                                            product_or_service_code==
+                                                              lag(product_or_service_code,3),
+                                                            lag(num_projects_same_task,3),
+                                                            0)]
+
+
+# ADD IT UP  ------------------------------
+
+num_proj_same_task_df[,num_projs_same_task_past_three_qtrs:=num_projects_same_task_lag_2+
+                                                          num_projects_same_task_lag_1+
+                                                          num_projects_same_task_lag_3]
+```
+
+```{r merge, include=FALSE}
+# Merge the two datasets
+num_proj_same_task_df=merge(num_proj_same_task_df,
+                            num_proj_per_contractor_df,
+                            by=c('recipient_duns',
+                                 'action_date_year_quarter'),
+                            all.x=T)
+
+num_proj_same_task_df=num_proj_same_task_df[num_projs_same_task_past_three_qtrs<=
+                                              num_projs_past_three_qtrs]
+```
+
+* Let $n^{task}_{i}=$ Number of projects of the same task held by the contractor in the three quarters before starting project $i$
+* Let $n_{i}=$ Number of projects held by the contractor in the three quarters before starting project $i$
+
+* Define:
+  * Level of inexperience$_{i}= 1 - \frac{n^{task}_{i}}{n_{i}}$ if $n_{i}>0$
+  * Level of inexperience$_{i}= 1$ if $n_{i}=0$
+
+```{r project_quarter_task, include=FALSE}
+# Get first quarter for every project
+project_quarter=reg_df[,.(start_quarter=min(action_date_year_quarter)),
+                              by=c('contract_award_unique_key',
+                                 'recipient_duns',
+                                 'product_or_service_code')]
+
+project_quarter=merge(project_quarter,
+                      num_proj_same_task_df,
+                      by.x=c('start_quarter',
+                             'recipient_duns',
+                             'product_or_service_code'),
+                      by.y=c('action_date_year_quarter',
+                             'recipient_duns',
+                             'product_or_service_code'),
+                      all.x=T)
+```
+
+
+```{r prop_exp,include=FALSE}
+# Proportion of projects on which contractor has past experience
+project_quarter[,prop_exp:=ifelse(num_projs_past_three_qtrs>0,
+                                 num_projs_same_task_past_three_qtrs/num_projs_past_three_qtrs,
+                                       0)]
+
+project_entrant=project_quarter[,c('contract_award_unique_key',
+                                   'num_projs_same_task_past_three_qtrs',
+                                   'num_projs_past_three_qtrs',
+                                   'prop_exp')]
+
+reg_df=merge(reg_df,
+                    project_entrant,
+                    by='contract_award_unique_key',
+                    all.x = T)
+```
+
+```{r clean_sample, include=FALSE}
+working_path='~/Dropbox/data_quickpay/qp_replication/working/'
+reg_df_working=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+reg_df_working[,action_date_year_quarter:=as.Date(action_date_year_quarter)]
+
+reg_df_sub=reg_df[,c('contract_award_unique_key',
+                     'action_date_year_quarter',
+                                   'num_projs_same_task_past_three_qtrs',
+                                   'num_projs_past_three_qtrs',
+                     'prop_exp')]
+
+reg_df_working=merge(reg_df_sub,
+                     reg_df_working,
+                     by=c('contract_award_unique_key',
+                     'action_date_year_quarter'),
+                     all.y=T)
+```
+
+```{r cts_measure, include=FALSE}
+reg_df_working[,inexp:=1-prop_exp]
+```
+
+```{r cts_measure_reg,include=FALSE}
+m1=feols(num_projs_same_task_past_three_qtrs~treat_i+
+          treat_i:post_t+
+          log(wins_project_quarter_stage)+
+          wins_number_of_offers_received+
+          log(winsorized_initial_budget_i)+
+          log(winsorized_initial_duration_in_days_i)+
+          post_t:wins_number_of_offers_received+
+          post_t:log(winsorized_initial_budget_i)+
+          post_t:log(winsorized_initial_duration_in_days_i)|
+          action_date_year_quarter+
+          product_or_service_code+
+          naics_code,
+      cluster=~contract_award_unique_key, # clustered at project level
+      data=subset(reg_df_working,competitively_awarded_i==1))
+
+m2=feols(num_projs_past_three_qtrs~treat_i+
+          treat_i:post_t+
+          log(wins_project_quarter_stage)+
+          wins_number_of_offers_received+
+          log(winsorized_initial_budget_i)+
+          log(winsorized_initial_duration_in_days_i)+
+          post_t:wins_number_of_offers_received+
+          post_t:log(winsorized_initial_budget_i)+
+          post_t:log(winsorized_initial_duration_in_days_i)|
+          action_date_year_quarter+
+          product_or_service_code+
+          naics_code,
+      cluster=~contract_award_unique_key, # clustered at project level
+      data=subset(reg_df_working,competitively_awarded_i==1))
+
+m3=feols(inexp~treat_i+
+                                  treat_i:post_t+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_working,competitively_awarded_i==1))
+
+cts_ols=list(m1,m2,m3)
+```
+
+# Discretizing 
+
+* Inexperienced $= 1$(Level of inexperience$_{i}>0.5$)
+    * This means less than 50% of contractor projects in the last three quarters were of same task
+* Inexperienced $= 1$(Level of inexperience$_{i}>0.7$)
+    * This means less than 30% of contractor projects in the last three quarters were of same task type
+
+```{r task_inexperienced, include=FALSE}
+reg_df_working[,inexperienced_0.5:=ifelse(inexp>0.5,1,0)]
+reg_df_working[,inexperienced_0.7:=ifelse(inexp>0.7,1,0)]
+```
+
+```{r cutoff_0, include=FALSE}
+m1=feglm(inexperienced_0.5~treat_i+
+                                  treat_i:post_t+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  family='binomial',
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_working,competitively_awarded_i==1))
+
+m2=feglm(inexperienced_0.7~treat_i+
+                                  treat_i:post_t+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  family='binomial',
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_working,competitively_awarded_i==1))
+
+discretized_regs=list(m1,m2)
+```
+
+```{r output, echo=FALSE, results='asis'}
+setFixest_dict(c("wins_percentage_delay"="\\textit{Percent delay rate}$_{it}$",
+                 "treat_i"="$Treat_i$",
+                 "post_t"="$Post_t$",
+                 "num_projs_past_three_qtrs"="Num projects past 3 qtrs",
+                 "num_projs_same_task_past_three_qtrs"="Num projects of same task past 3 qtrs",
+                 "project_signed_after_quickpay"="$SA_i$",
+                 "inexp"="IE",
+                 "inexperienced_0.7"="IE",
+                 "inexperienced_0.5"="IE",
+                 "log(wins_project_quarter_stage)"="Ln(Stage)",
+                 "action_date_year_quarter"="Time",
+                      "quarter_number"="$QtrNum$",
+                 "product_or_service_code"="Task",
+                 "naics_code"="Industry",
+                 "contract_award_unique_key"="Project ID",
+                 "wins_number_of_offers_received"="Num offers",
+                 "log(winsorized_initial_budget_i)"="Ln(Initial Budget)",
+                  "log(winsorized_initial_duration_in_days_i)"="Ln(Initial Duration)"))
+
+etable(cts_ols,
+       tex=T,
+       drop=c('%wins_project_quarter_stage',
+              '%wins_number_of_offers_received',
+              '%winsorized_initial_budget_i',
+              '%winsorized_initial_duration_in_days_i',
+              '%post_t:wins_number_of_offers_received',
+              '%post_t:winsorized_initial_budget_i',
+              '%post_t:winsorized_initial_duration_in_days_i'),
+       style.tex = style.tex(depvar.title = "",
+                             model.title = "\\midrule",
+                             model.format = "I",
+                             var.title = "\\midrule",
+                             line.bottom = "simple",
+                             line.top = "simple",
+                             stats.title = "",
+                             fixef.title = "\\midrule",
+                             fixef.suffix = " FE",
+                             yesNo = c("Yes","No")),
+       title="Continuous measure",
+       digits='r3',
+       digits.stats = 'r2',
+       fitstat = c('r2','pr2','n'),
+       fontsize = "small")
+
+etable(discretized_regs,
+       tex=T,
+       drop=c('%wins_project_quarter_stage',
+              '%wins_number_of_offers_received',
+              '%winsorized_initial_budget_i',
+              '%winsorized_initial_duration_in_days_i',
+              '%post_t:wins_number_of_offers_received',
+              '%post_t:winsorized_initial_budget_i',
+              '%post_t:winsorized_initial_duration_in_days_i'),
+       style.tex = style.tex(depvar.title = "",
+                             model.title = "\\midrule",
+                             model.format = "I",
+                             var.title = "\\midrule",
+                             line.bottom = "simple",
+                             line.top = "simple",
+                             stats.title = "",
+                             fixef.title = "\\midrule",
+                             fixef.suffix = " FE",
+                             yesNo = c("Yes","No")),
+       headers=list("Threshold=0.5"=1,
+                    "Threshold=0.7"=1),
+       digits='r3',
+       digits.stats = 'r2',
+       fitstat = c('r2','pr2','n'),
+       fontsize = "small")
+```
+

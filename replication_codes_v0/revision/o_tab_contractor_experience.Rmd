@@ -142,6 +142,9 @@ num_proj_same_task_df=merge(num_proj_same_task_df,
                             by=c('recipient_duns',
                                  'action_date_year_quarter'),
                             all.x=T)
+
+num_proj_same_task_df=num_proj_same_task_df[num_projs_same_task_past_three_qtrs<=
+                                              num_projs_past_three_qtrs]
 ```
 
 * Let $n^{task}_{i}=$ Number of projects of the same task held by the contractor in the three quarters before starting project $i$
@@ -172,8 +175,21 @@ project_quarter=merge(project_quarter,
                       all.x=T)
 
 # Task inexperienced if
-project_quarter[,task_inexperienced_i:=ifelse(num_projs_same_task_past_three_qtrs==0,1,0)]
-project_quarter[,new_entrant_i:=ifelse(num_projs_past_three_qtrs==0,1,0)]
+#project_quarter[,task_inexperienced_i:=ifelse(num_projs_same_task_past_three_qtrs==0,1,0)]
+#project_quarter[,new_entrant_i:=ifelse(num_projs_past_three_qtrs==0,1,0)]
+
+threshold_task=quantile(project_quarter$num_projs_same_task_past_three_qtrs,
+                        0.7,
+                        na.rm=T)
+project_quarter[,task_inexperienced_i:=ifelse(num_projs_same_task_past_three_qtrs<threshold_task,
+                                              1,0)]
+
+threshold_entrant=quantile(project_quarter$num_projs_past_three_qtrs,
+                           0.7,
+                           na.rm=T)
+
+project_quarter[,new_entrant_i:=ifelse(num_projs_past_three_qtrs<threshold_entrant,
+                                              1,0)]
 
 # Proportion of projects on which contractor has past experience
 project_quarter[,prop_exp:=ifelse(num_projs_past_three_qtrs>0,
@@ -201,13 +217,18 @@ reg_df_working=fread(paste0(working_path,
 reg_df_sub=reg_df[,c('contract_award_unique_key',
                      'action_date_year_quarter',
                      'new_entrant_i',
-                     'task_inexperienced_i')]
+                     'task_inexperienced_i',
+                     'prop_exp')]
 
 reg_df_working=merge(reg_df_sub,
                      reg_df_working,
                      by=c('contract_award_unique_key',
                      'action_date_year_quarter'),
                      all.y=T)
+```
+
+```{r cts_measure, include=FALSE}
+reg_df_working[,inexp:=1-prop_exp]
 ```
 
 # Parallel trends test
@@ -408,7 +429,23 @@ m2=feglm(new_entrant_i~treat_i+
                                   cluster=~contract_award_unique_key, # clustered at project level
                                   data=subset(reg_df_working,competitively_awarded_i==1))
 
-contractor_pool_entry=list(m1,m2)
+m3=feglm(inexp~treat_i+
+                                  treat_i:post_t+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  family='binomial',
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_working,competitively_awarded_i==1))
+
+contractor_pool_entry=list(m1,m2,m3)
 ```
 
 ```{r inexp_ols, include=FALSE}
@@ -450,7 +487,26 @@ m2=feols(wins_percentage_delay~treat_i+
                                   cluster=~contract_award_unique_key, # clustered at project level
                                   data=subset(reg_df_working,competitively_awarded_i==1))
 
-contractor_pool_delays=list(m1,m2)
+m3=feols(wins_percentage_delay~treat_i+
+                                  inexp+
+                                  treat_i:inexp+
+                                  post_t:inexp+
+                                  treat_i:post_t+
+                                  treat_i:post_t:inexp+
+                                 log(wins_project_quarter_stage)+
+                                 wins_number_of_offers_received+
+                                 log(winsorized_initial_budget_i)+
+                                 log(winsorized_initial_duration_in_days_i)+
+                                 post_t:wins_number_of_offers_received+
+                                 post_t:log(winsorized_initial_budget_i)+
+                                 post_t:log(winsorized_initial_duration_in_days_i)|
+                                 action_date_year_quarter+
+                                  product_or_service_code+
+                                  naics_code,
+                                  cluster=~contract_award_unique_key, # clustered at project level
+                                  data=subset(reg_df_working,competitively_awarded_i==1))
+
+contractor_pool_delays=list(m1,m2,m3)
 ```
 
 ```{r output, echo=FALSE, results='asis'}
@@ -519,7 +575,8 @@ etable(contractor_pool_entry,
                              fixef.suffix = " FE",
                              yesNo = c("Yes","No")),
        headers=list("Task inexperienced"=1,
-                    "New entrant"=1),
+                    "New entrant"=1,
+                    "Inexp"=1),
        digits='r3',
        digits.stats = 'r2',
        fitstat = c('r2','pr2','n'),
@@ -546,7 +603,8 @@ etable(contractor_pool_delays,
                              fixef.suffix = " FE",
                              yesNo = c("Yes","No")),
        headers=list("Task inexperienced"=1,
-                    "New entrant"=1),
+                    "New entrant"=1,
+                    "Inexp"=1),
        digits='r3',
        digits.stats = 'r2',
        fitstat = c('r2','pr2','n'),
