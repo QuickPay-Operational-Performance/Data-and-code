@@ -138,66 +138,58 @@
    \caption{Logit model}
    \centering
    \small
-   \begin{tabular}{lccc}
+   \begin{tabular}{lcc}
       \toprule
-       & \multicolumn{2}{c}{IE} & Proportion inexperienced\\
-                                   & Task inexperienced & New entrant   & Inexp \\   
-      \midrule & I & II & III\\
+       & \multicolumn{2}{c}{IE}\\
+                                   & Task inexperienced & New entrant \\   
+      \midrule & I & II\\
       \midrule 
-      $Treat_i$                    & 0.174$^{***}$      & 0.324$^{***}$ & 0.037\\   
-                                   & (0.037)            & (0.043)       & (0.027)\\   
-      $Treat_i$ $\times$ $Post_t$  & 0.057              & -0.010        & 0.077$^{***}$\\   
-                                   & (0.036)            & (0.040)       & (0.025)\\   
+      $Treat_i$                    & 0.174$^{***}$      & 0.324$^{***}$\\   
+                                   & (0.037)            & (0.043)\\   
+      $Treat_i$ $\times$ $Post_t$  & 0.057              & -0.010\\   
+                                   & (0.036)            & (0.040)\\   
       \midrule 
-      Time FE                      & Yes                & Yes           & Yes\\  
-      Task FE                      & Yes                & Yes           & Yes\\  
-      Industry FE                  & Yes                & Yes           & Yes\\  
-      Pseudo R$^2$                 & 0.25               & 0.25          & 0.18\\  
-      Observations                 & 156,323            & 157,215       & 156,354\\  
+      Time FE                      & Yes                & Yes\\  
+      Task FE                      & Yes                & Yes\\  
+      Industry FE                  & Yes                & Yes\\  
+      Pseudo R$^2$                 & 0.25               & 0.25\\  
+      Observations                 & 156,323            & 157,215\\  
       \midrule
-      \multicolumn{4}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
-      \multicolumn{4}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+      \multicolumn{3}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{3}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
    \end{tabular}
 \end{table}
 \begingroup
 \centering
 \small
-\begin{tabular}{lccc}
+\begin{tabular}{lcc}
    \toprule
-    & \multicolumn{3}{c}{\textit{Percent delay rate}$_{it}$}\\
-                                                                   & Task inexperienced & New entrant    & Inexp \\   
-   \midrule & I & II & III\\
+    & \multicolumn{2}{c}{\textit{Percent delay rate}$_{it}$}\\
+                                             & Task inexperienced & New entrant \\   
+   \midrule & I & II\\
    \midrule 
-   $Treat_i$                                                       & -0.500$^{***}$     & -0.606$^{***}$ & -0.414$^{*}$\\   
-                                                                   & (0.155)            & (0.140)        & (0.238)\\   
-   IE                                                              & 1.417$^{***}$      & 1.654$^{***}$  &   \\   
-                                                                   & (0.184)            & (0.196)        &   \\   
-   $Treat_i$ $\times$ IE                                           & -0.566$^{***}$     & -0.578$^{***}$ &   \\   
-                                                                   & (0.206)            & (0.219)        &   \\   
-   IE $\times$ $Post_t$                                            & -0.095             & -0.277         &   \\   
-                                                                   & (0.257)            & (0.311)        &   \\   
-   $Treat_i$ $\times$ $Post_t$                                     & 0.814$^{***}$      & 0.815$^{***}$  & 1.113$^{***}$\\   
-                                                                   & (0.188)            & (0.171)        & (0.297)\\   
-   $Treat_i$ $\times$ IE $\times$ $Post_t$                         & 0.410              & 0.849$^{**}$   &   \\   
-                                                                   & (0.302)            & (0.374)        &   \\   
-   Proportion inexperienced                                        &                    &                & 1.192$^{***}$\\   
-                                                                   &                    &                & (0.249)\\   
-   $Treat_i$ $\times$ Proportion inexperienced                     &                    &                & -0.469\\   
-                                                                   &                    &                & (0.287)\\   
-   Proportion inexperienced $\times$ $Post_t$                      &                    &                & 0.274\\   
-                                                                   &                    &                & (0.325)\\   
-   $Treat_i$ $\times$ Proportion inexperienced $\times$ $Post_t$   &                    &                & -0.230\\   
-                                                                   &                    &                & (0.383)\\   
+   $Treat_i$                                 & -0.500$^{***}$     & -0.606$^{***}$\\   
+                                             & (0.155)            & (0.140)\\   
+   IE                                        & 1.417$^{***}$      & 1.654$^{***}$\\   
+                                             & (0.184)            & (0.196)\\   
+   $Treat_i$ $\times$ IE                     & -0.566$^{***}$     & -0.578$^{***}$\\   
+                                             & (0.206)            & (0.219)\\   
+   IE $\times$ $Post_t$                      & -0.095             & -0.277\\   
+                                             & (0.257)            & (0.311)\\   
+   $Treat_i$ $\times$ $Post_t$               & 0.814$^{***}$      & 0.815$^{***}$\\   
+                                             & (0.188)            & (0.171)\\   
+   $Treat_i$ $\times$ IE $\times$ $Post_t$   & 0.410              & 0.849$^{**}$\\   
+                                             & (0.302)            & (0.374)\\   
    \midrule 
-   Time FE                                                         & Yes                & Yes            & Yes\\  
-   Task FE                                                         & Yes                & Yes            & Yes\\  
-   Industry FE                                                     & Yes                & Yes            & Yes\\  
-   R$^2$                                                           & 0.22               & 0.22           & 0.22\\  
-   Pseudo R$^2$                                                    & 0.03               & 0.03           & 0.03\\  
-   Observations                                                    & 165,414            & 165,414        & 165,414\\  
+   Time FE                                   & Yes                & Yes\\  
+   Task FE                                   & Yes                & Yes\\  
+   Industry FE                               & Yes                & Yes\\  
+   R$^2$                                     & 0.22               & 0.22\\  
+   Pseudo R$^2$                              & 0.03               & 0.03\\  
+   Observations                              & 165,414            & 165,414\\  
    \midrule
-   \multicolumn{4}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
-   \multicolumn{4}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \multicolumn{3}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+   \multicolumn{3}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
 \end{tabular}
 \par\endgroup
 
