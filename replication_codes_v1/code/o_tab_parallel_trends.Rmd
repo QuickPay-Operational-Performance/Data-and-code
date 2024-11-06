@@ -1,0 +1,168 @@
+---
+title: "Parallel Trends Test"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: true
+    number_sections: true
+header-includes:
+ \usepackage{booktabs}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(DescTools) 
+```
+
+```{r read_data,include=FALSE}
+working_path='~/Dropbox/data_quickpay/qp_replication/working/'
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+```
+
+```{r parallel_trends_test, echo=FALSE, results='asis'}
+df_qn<-unique(reg_df_subset,by='action_date_year_quarter')[,"action_date_year_quarter"]
+df_qn=df_qn[order(action_date_year_quarter)][,quarter_number:=seq.int(nrow(df_qn))]
+reg_df_subset=merge(reg_df_subset,df_qn,by='action_date_year_quarter')
+reg_df_subset[,delay_ind:=ifelse(delay>0,1,0)]
+```
+
+```{r regs_delay, include=FALSE}
+m1=feols(wins_percentage_delay~treat_new+
+                             quarter_number:treat_new+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                          quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:wins_number_of_offers_received|
+                            action_date_year_quarter,
+         cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset, post_t==0))
+
+m2=feols(wins_percentage_delay~treat_new+
+                              quarter_number:treat_new+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:wins_number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter,
+         cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset, post_t==0))
+
+m3=feols(wins_percentage_delay~treat_new+
+                            quarter_number:treat_new+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:wins_number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+         cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset, post_t==0))
+
+delay_days=list(m1,m2,m3)
+```
+
+```{r regs_delay_logit, include=FALSE}
+m1=feglm(delay_ind~treat_new+
+                             quarter_number:treat_new+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                          quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:wins_number_of_offers_received|
+                            action_date_year_quarter,
+         cluster=~contract_award_unique_key,
+         family='binomial',
+                          data=subset(reg_df_subset, post_t==0))
+
+m2=feglm(delay_ind~treat_new+
+                              quarter_number:treat_new+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:wins_number_of_offers_received|
+                            product_or_service_code+action_date_year_quarter,
+         cluster=~contract_award_unique_key,
+         family='binomial',
+                          data=subset(reg_df_subset, post_t==0))
+
+m3=feglm(delay_ind~treat_new+
+                            quarter_number:treat_new+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            quarter_number:log(1+winsorized_initial_duration_in_days_i)+
+                            quarter_number:log(1+winsorized_initial_budget_i)+
+                            quarter_number:wins_number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+         cluster=~contract_award_unique_key,
+         family='binomial',
+                          data=subset(reg_df_subset, post_t==0))
+
+delay_logit=list(m1,m2,m3)
+```
+
+```{r set_dict, include=FALSE}
+setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
+                      "delay_ind"="Log odds (Delay rate >0)",
+                      "post_t"="$Post_t$",
+                      "quarter_number"="$QtrNum$",
+                      "treat_new"="$Treat_i$",
+                      "log(wins_project_quarter_stage)"="Project stage",
+                      "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
+                      "log(1+winsorized_initial_budget_i)"="Initial budget",
+                      "wins_number_of_offers_received"="Number of offers",
+                      "contract_award_unique_key"="Project ID",
+                      "product_or_service_code"="Task",
+                      "action_date_year_quarter"="Time",
+                      "naics_code"="Industry",
+                      "awarding_sub_agency_code"="Subagency"
+                      ))
+```
+
+```{r output, results='asis'}
+etable(delay_days,
+       delay_logit,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       title="Parallel trends test",
+       fitstat = c("pr2","n","r2"),
+       drop=c("Project stage",
+              "Initial duration",
+              "Initial budget",
+              "Number of offers"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "",
+                           model.title = "",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="This table measures the linear time trend between treated and control projects before QuickPay. Each specification controls for the project’s initial characteristics (such as duration, budget, and number of offers) and their interaction with QtrNum, as well as the project stage. The standard errors (reported in parentheses) are robust and clustered at the project level.",
+       tex=TRUE)
+```
+

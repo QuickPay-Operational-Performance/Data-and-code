@@ -1,5 +1,5 @@
 ---
-title: "Non C8A participants"
+title: "Alternative explanations"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
@@ -13,27 +13,30 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r packages,warning=FALSE,message=FALSE,include=FALSE}
 library(data.table)
 library(dplyr)
-library(lfe)
-library(stargazer)
-library(tidyverse)
 library(DescTools)
 library(fixest)
 ```
 
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
 ```{r read_data,include=FALSE}
-working_path='~/Dropbox/data_quickpay/qp_replication/working/'
 reg_df_subset=fread(paste0(working_path,
                  'w_clean_control.csv'))
 
-data_folder='~/Dropbox/data_quickpay/qp_data/'
-df_first_reported=fread(paste0(data_folder,'qp_data_first_reported.csv'))
-
+df_first_reported=fread(paste0(data_folder,
+                               'qp_data_first_reported.csv'))
 ```
 
 ```{r 8a_participants, include=FALSE}
@@ -49,9 +52,10 @@ reg_df_subset=merge(reg_df_subset,
                     all.x=T)
 ```
 
-## Non-C8A participants
 
 ```{r non_c8a_regs, include=FALSE,warning=FALSE,message=FALSE}
+## Non-C8A participants
+
 non_c8a=feols(wins_percentage_delay~treat_new+
                             post_t:treat_new+
                             log(wins_project_quarter_stage)+
@@ -68,9 +72,10 @@ non_c8a=feols(wins_percentage_delay~treat_new+
 
 ```
 
-## No set aside used
 
 ```{r no_set_aside, include=FALSE,warning=FALSE,message=FALSE}
+## No set aside used
+
 no_set_aside_used=feols(wins_percentage_delay~treat_new+
                             post_t:treat_new+
                             log(wins_project_quarter_stage)+
@@ -85,9 +90,9 @@ no_set_aside_used=feols(wins_percentage_delay~treat_new+
                           data=reg_df_subset[type_of_set_aside%in%c("","NO SET ASIDE USED.")])
 ```
 
-## Does not receive grants
 
 ```{r no_grants,include=FALSE}
+## Does not receive grants
 contracts_receiving_grants=unique(reg_df_subset[receives_grants=='t']$
                                     recipient_duns)
 
@@ -126,9 +131,10 @@ no_grants_8a_set_aside=feols(wins_percentage_delay~treat_new+
                                                  contracts_receiving_grants)])
 ```
 
-## Started before QuickPay
 
 ```{r before_qp, include=FALSE}
+## Started before QuickPay
+
 projects_started_before_qp=unique(reg_df_subset[initial_start_date<
                                                   as.Date('2011-04-27')]$contract_award_unique_key)
 
@@ -149,24 +155,6 @@ projects_before_qp=feols(wins_percentage_delay~treat_new+
 ```
 
 ```{r exclude_all, include=FALSE}
-exclude_other_acts=feols(wins_percentage_delay~treat_new+
-        post_t:treat_new+
-        log(wins_project_quarter_stage)+
-        log(1+winsorized_initial_duration_in_days_i)+
-        log(1+winsorized_initial_budget_i)+
-        wins_number_of_offers_received+
-        post_t:log(1+winsorized_initial_duration_in_days_i)+
-        post_t:log(1+winsorized_initial_budget_i)+
-        post_t:wins_number_of_offers_received|
-        naics_code+product_or_service_code+action_date_year_quarter,
-      cluster=~contract_award_unique_key,
-      data=reg_df_subset[c8a_program_participant=="f"&
-                           sba_certified_8a_joint_venture=="f"&
-                           type_of_set_aside%in%
-                           c("","NO SET ASIDE USED.")&
-                           !(recipient_duns%in%
-                               contracts_receiving_grants)])
-
 exclude_all=feols(wins_percentage_delay~treat_new+
         post_t:treat_new+
         log(wins_project_quarter_stage)+
@@ -188,13 +176,14 @@ exclude_all=feols(wins_percentage_delay~treat_new+
                            projects_started_before_qp])
 ```
 
-## Small business jobs act
-
-* Jobs act = 1 if Date> Sept 30, 2010
-* Jobs act was announced on Sept 27, 2010
-* This variable is zero for only three quarters in our study period: Mar 31, 2010; June 30, 2010; and Sept 30, 2010.
 
 ```{r jobs_act,include=FALSE,warning=FALSE,message=FALSE}
+## Small business jobs act
+
+# Jobs act = 1 if Date> Sept 30, 2010
+# Jobs act was announced on Sept 27, 2010
+# This variable is zero for only three quarters in our study period: Mar 31, 2010; June 30, 2010; and Sept 30, 2010.
+
 reg_df_subset[,jobs_act:=ifelse(action_date_year_quarter>as.Date('2010-09-30'),
                                 1,0)]
 
@@ -231,37 +220,6 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percentage delay",
 etable(no_grants,
        no_set_aside_used,
        non_c8a,
-       exclude_other_acts,
-       digits='r2',
-       fontsize = 'tiny',
-       title="Alternative explanations",
-       headers=list(c("\\makecell{Excluding contractors \\\\
-                    that receive grants}",
-                    "\\makecell{Excluding set-aside \\\\ projects}",
-                    "\\makecell{Excluding 8(A) \\\\ contractors}", 
-                    "\\makecell{Excluding all\\\\ preceding acts}"
-                    )),
-       drop=c("Project stage",
-              "Initial duration",
-              "Initial budget",
-              "Number of offers"),
-       digits.stats = 2,
-       style.tex=style.tex(fixef.title = "",
-                           fixef.suffix = " FE",
-                           var.title = "\\midrule ",
-                           depvar.title = "",
-                           model.title = "",
-                           stats.title = "",
-                           model.format = "I",
-                           yesNo = c("Yes","No"),
-                           line.bottom="simple",
-                           line.top="simple"),
-       notes="Controls include project stage, initial duration, initial budget, and number of bids. Initial duration, initial budget, and number of bids are also interacted with Post are also included as controls",
-       tex=TRUE)
-
-etable(no_grants,
-       no_set_aside_used,
-       non_c8a,
        projects_before_qp,
        exclude_all,
        digits='r2',
@@ -272,23 +230,23 @@ etable(no_grants,
                     "\\makecell{Excluding set-aside \\\\ projects}",
                     "\\makecell{Excluding 8(A) \\\\ contractors}", 
                     "\\makecell{Excluding projects that\\\\ started after QuickPay}",
-                    "\\makecell{Excluding all\\\\ measures}"
+                    "\\makecell{Excluding all\\\\ preceding projects}"
                     )),
        drop=c("Project stage",
               "Initial duration",
               "Initial budget",
               "Number of offers"),
        digits.stats = 2,
-       style.tex=style.tex(fixef.title = "",
+       style.tex=style.tex(fixef.title = "\\midrule ",
                            fixef.suffix = " FE",
                            var.title = "\\midrule ",
-                           depvar.title = "",
-                           model.title = "",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
                            stats.title = "",
                            model.format = "I",
                            yesNo = c("Yes","No"),
                            line.bottom="simple",
                            line.top="simple"),
-       notes="Controls include project stage, initial duration, initial budget, and number of bids. Initial duration, initial budget, and number of bids are also interacted with Post are also included as controls",
+       notes="Controls include project stage, log of initial duration, log of initial budget, and number of bids. Initial duration, initial budget, and number of bids are also interacted with Post are also included as controls",
        tex=TRUE)
 ```

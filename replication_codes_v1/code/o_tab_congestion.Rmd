@@ -1,0 +1,198 @@
+---
+title: "Congestion"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array,makecell}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(DescTools) 
+```
+
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r read_data,include=FALSE}
+reg_df=fread(paste0(input_path,
+                 'quickpay_delays.csv'))
+```
+
+```{r contractor_one_type,include=FALSE}
+one_type_contractors=reg_df[,n_distinct(treat_i),by='recipient_duns']
+one_type_contractors=unique(subset(one_type_contractors,V1==1 &
+                                     !is.na(recipient_duns))$recipient_duns)
+
+reg_df_one_type=subset(reg_df,recipient_duns%in%one_type_contractors)
+
+reg_df_one_type[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+reg_df_one_type[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+reg_df_one_type[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(initial_duration_in_days_i,
+                    probs=c(0.05,0.95),
+                    na.rm=T)]
+
+# InitialBudget_i
+
+reg_df_one_type[,winsorized_initial_budget_i:=
+                    Winsorize(base_and_all_options_value,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+```
+
+```{r num_projects_0,warning=FALSE, echo=FALSE, results='asis'}
+## Number of projects per contractor
+
+# Contractors holding only small or only large projects
+
+active_before_qp=unique(subset(reg_df,post_t==0)$recipient_duns)
+contractor_quarter=reg_df_one_type[,n_distinct(contract_award_unique_key),by=c('recipient_duns',
+                                                            'action_date_year_quarter')]
+setnames(contractor_quarter,'V1','num_projects')
+contractor_quarter[,post_t:=ifelse(action_date_year_quarter>as.Date('2011-04-27'),1,0)]
+
+contractor_quarter=merge(contractor_quarter,
+                         unique(reg_df_one_type[,c('recipient_duns','treat_i')]),
+                         by='recipient_duns')
+
+contractor_quarter[,business_type:=ifelse(treat_i==1,"S","O")]
+
+m1=feols(num_projects~treat_i+
+          post_t:treat_i+post_t,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m2=feols(num_projects~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+total_projects=list(m1,m2)
+```
+
+
+```{r budget_0,warning=FALSE, echo=FALSE, results='asis'}
+## Budget
+
+contractor_quarter=reg_df_one_type[,sum(winsorized_initial_budget_i),
+                                   by=c('recipient_duns',
+                                        'action_date_year_quarter')]
+setnames(contractor_quarter,'V1','total_budget_across_projects')
+contractor_quarter[,post_t:=ifelse(action_date_year_quarter>as.Date('2011-04-27'),1,0)]
+
+contractor_quarter=merge(contractor_quarter,
+                         unique(reg_df_one_type[,c('recipient_duns','treat_i')]),
+                         by='recipient_duns')
+
+contractor_quarter[,business_type:=ifelse(treat_i==1,"S","O")]
+
+m1=feols(I(total_budget_across_projects/1000000)~treat_i+
+          post_t:treat_i+post_t,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m2=feols(I(total_budget_across_projects/1000000)~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter,
+          cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+total_budget=list(m1,m2)
+```
+
+```{r tasks_0,warning=FALSE, echo=FALSE, results='asis'}
+## Number of tasks
+contractor_quarter=reg_df_one_type[,n_distinct(product_or_service_code),
+                                   by=c('recipient_duns',
+                                        'action_date_year_quarter')]
+setnames(contractor_quarter,'V1','number_of_tasks')
+contractor_quarter[,post_t:=ifelse(action_date_year_quarter>as.Date('2011-04-27'),1,0)]
+
+contractor_quarter=merge(contractor_quarter,
+                         unique(reg_df_one_type[,c('recipient_duns','treat_i')]),
+                         by='recipient_duns')
+
+contractor_quarter[,business_type:=ifelse(treat_i==1,"S","O")]
+
+m1=feols(number_of_tasks~treat_i+
+          post_t:treat_i+post_t,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m2=feols(number_of_tasks~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter,
+          cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+total_tasks=list(m1,m2)
+```
+
+```{r output, echo=FALSE, results='asis'}
+setFixest_dict(dict=c("number_of_tasks"="Number of tasks",
+                      "I(total_budget_across_projects/1e+06)"= 
+                        "Total budget",
+                      "num_projects"="Number of projects",
+                      "post_t"="$Post_t$",
+                      "treat_i"="$Treat_i$",
+                      "log(wins_project_quarter_stage)"="Project stage",
+                      "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
+                      "log(1+winsorized_initial_budget_i)"="Initial budget",
+                      "wins_number_of_offers_received"="Number of offers",
+                      "contract_award_unique_key"="Project ID",
+                      "product_or_service_code"="Task",
+                      "action_date_year_quarter"="Time",
+                      "naics_code"="Industry",
+                      "awarding_sub_agency_code"="Subagency"
+                      ))
+
+etable(total_projects,
+       total_budget,
+       total_tasks,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       title="Congestion and the QuickPay reform",
+       fitstat = c("n","r2"),
+       drop=c("Project stage",
+              "Initial duration",
+              "Initial budget",
+              "Number of offers"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls. Sample restricted to contractors holding only one type of project.",
+       tex=TRUE)
+```

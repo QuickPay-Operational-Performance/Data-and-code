@@ -1,0 +1,290 @@
+---
+title: "Project level delays"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(fixest)
+library(DescTools)
+library(data.table)
+library(dplyr)
+library(zoo)
+```
+
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r read_data,include=FALSE}
+# Keep only projects whose start dates match with API one
+projects_to_keep=fread(paste0(data_folder,'projects_to_keep.csv'))
+
+full_df=fread(paste0(data_folder,
+              'qp_data_fy10_to_fy18.csv'))
+```
+
+```{r subset_data,include=FALSE}
+full_df_tr=setDT(full_df[,c('contract_award_unique_key',
+                      'contracting_officers_determination_of_business_size_code',
+                      'period_of_performance_start_date',
+                      'period_of_performance_current_end_date',
+                      'action_date',
+                      'naics_code',
+                      'product_or_service_code',
+                      'awarding_sub_agency_code',
+                      'contract_financing_code',
+                      'base_and_all_options_value',
+                      'extent_competed_code',
+                      'recipient_duns',
+                      'action_type_code',
+                      'number_of_offers_received',
+                      'type_of_set_aside_code',
+                      'type_of_set_aside')])
+
+# date formats
+full_df_tr[,action_date:=as.Date(action_date)]
+
+full_df_tr[,period_of_performance_current_end_date:=
+             as.Date(period_of_performance_current_end_date)]
+
+full_df_tr[,period_of_performance_start_date:=
+             as.Date(period_of_performance_start_date)]
+
+full_df_tr=full_df_tr[action_date<=period_of_performance_current_end_date &
+                        action_date>=period_of_performance_start_date]
+
+# Action dates before July 1, 2012 --- QP extended to everyone after that
+full_df_tr=full_df_tr[action_date<as.Date('2012-07-01')]
+
+# Get initial and final dates
+full_df_tr=full_df_tr[order(contract_award_unique_key,
+                            action_date)]
+
+dates=full_df_tr[,.(initial_end_date = first(period_of_performance_current_end_date), # first reported end date
+                     eventual_end_date = last(period_of_performance_current_end_date),  # last reported end date
+                     initial_start_date = first(period_of_performance_start_date),
+                    initial_budget=first(base_and_all_options_value)), # first reported start date
+                     by='contract_award_unique_key']
+
+full_df_tr=merge(full_df_tr,
+                 dates,
+                 by='contract_award_unique_key',
+                 all.x=T)
+```
+
+```{r variables, include=FALSE}
+full_df_tr[,start_yr_qtr:=as.yearqtr(initial_start_date, format = "%Y-%m-%d")]
+
+full_df_tr[,delay:=as.numeric(eventual_end_date-initial_end_date)]
+full_df_tr[,positive_delay:=ifelse(delay>0,1,0)]
+full_df_tr[,negative_delay:=ifelse(delay<0,1,0)]
+
+full_df_tr[,initial_duration:=as.numeric(initial_end_date-initial_start_date)]
+full_df_tr[,contract_financing_i:=ifelse(!is.null(contract_financing_code)&
+                                                  !contract_financing_code%in%c("Z", ""),1,0)]
+
+# Competition_i
+full_df_tr[,competitively_awarded_i:=ifelse(!extent_competed_code%in%c("G","B", "C"),1,0)]
+
+full_df_tr[,treat_i:=ifelse(contracting_officers_determination_of_business_size_code=="S",
+                              1,0)]
+
+# projects that were slated to end after QuickPay
+full_df_tr[,post_t:=ifelse(initial_end_date>as.Date('2011-04-27'),
+                             1,0)]
+
+full_df_tr[,relative_delay:=delay/initial_duration]
+```
+
+```{r clean_control, include=FALSE}
+small_contractors=unique(subset(full_df_tr,treat_i==1)$recipient_duns)
+large_contractors=unique(subset(full_df_tr,treat_i==0)$recipient_duns)
+
+full_df_tr[,treat_new:=case_when(treat_i==1 ~ 1, # all small projects are 1
+                             treat_i==0 & !(recipient_duns%in%small_contractors)~0, 
+                             # only large projects w/o small project is zero
+                             treat_i==0 & recipient_duns%in%small_contractors~NaN)]
+
+```
+
+```{r keep_api, include=FALSE}
+full_df_tr_2=subset(full_df_tr,
+                    contract_award_unique_key%in%projects_to_keep$contract_award_unique_key)
+
+full_df_tr_2=full_df_tr_2[order(contract_award_unique_key,
+                                action_date)]
+# one observation per project...
+full_df_tr_2=unique(full_df_tr_2,by='contract_award_unique_key')
+
+full_df_tr_2[,wins_delay:=Winsorize(delay,probs=c(0.01,0.99),na.rm=T)]
+full_df_tr_2[,wins_relative_delay:=Winsorize(relative_delay,probs=c(0.01,0.99),na.rm=T)]
+# To fix zero duration and zero budget
+full_df_tr_2[,wins_initial_duration:=Winsorize(initial_duration,probs=c(0.05,0.99),na.rm=T)]
+full_df_tr_2[,wins_initial_budget:=Winsorize(initial_budget,probs=c(0.05,0.99),na.rm=T)]
+full_df_tr_2[,wins_offers:=Winsorize(number_of_offers_received,probs=c(0.01,0.99),na.rm=T)]
+```
+
+```{r project_time, include=FALSE}
+full_df_tr_2[,project_quarter:=paste(contract_award_unique_key,
+                                     start_yr_qtr,
+                                     sep="_")]
+```
+
+```{r clean_control_delay_days, include=FALSE}
+m1=feols(wins_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr,
+                  data=full_df_tr_2)
+
+m2=feols(wins_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr+
+                    product_or_service_code,
+                  data=full_df_tr_2)
+
+m3=feols(wins_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr+
+                    product_or_service_code+
+                    naics_code,
+
+                  data=full_df_tr_2)
+
+clean_control_delay_days=list(m1,m2,m3)
+```
+
+```{r clean_logit, include=FALSE}
+m1=feglm(positive_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr,
+                  data=full_df_tr_2, 
+                  family = 'binomial')
+
+m2=feglm(positive_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr+
+                    product_or_service_code,
+                  data=full_df_tr_2, 
+                  family = 'binomial')
+
+m3=feglm(positive_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr+
+                    product_or_service_code+
+                    naics_code,
+         data=full_df_tr_2, 
+                  family = 'binomial')
+
+clean_control_delay_logit=list(m1,m2,m3)
+```
+
+```{r clean_conditional_delay, include=FALSE}
+m1=feols(wins_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr,
+                  data=full_df_tr_2[delay>0])
+
+m2=feols(wins_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr+
+                    product_or_service_code,
+                  data=full_df_tr_2[delay>0])
+
+m3=feols(wins_delay~treat_new+
+                    post_t:treat_new+
+                    post_t+ 
+           wins_initial_duration+
+           wins_initial_budget+
+           wins_offers|start_yr_qtr+
+                    product_or_service_code+
+                    naics_code,
+                  data=full_df_tr_2[delay>0])
+
+clean_control_delay_conditional=list(m1,m2,m3)
+```
+
+```{r output, echo=FALSE,results='asis'}
+setFixest_dict(c("wins_delay"="Delay days",
+                 "start_yr_qtr"="Start Year-Quarter",
+                 "wins_relative_delay"="Delay/Initial duration",
+                 "treat_new"="$Treat_i$", 
+                 "post_t"="$Post_t$",
+              "wins_initial_duration"="Initial duration",
+              "wins_offers"="Number of offers",
+              "positive_delay"="I(Delay>0)",
+              "negative_delay"="I(Delay<0)",
+              "product_or_service_code"="Task",
+              "naics_code"="Industry",
+              "recipient_duns"="Contractor",
+              "awarding_sub_agency_code"="Sub-agency",
+              "contract_award_unique_key"="Project ID",
+              "wins_initial_budget"="Initial budget"))
+
+etable(clean_control_delay_days,
+       clean_control_delay_logit,
+       clean_control_delay_conditional,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       title="Effect of QuickPay on overall project delays",
+       headers=list("OLS"=3, 
+                    "Logit"=3,
+                    "Conditional"=3),
+       drop=c("Initial duration",
+              "Initial budget",
+              "Number of offers"),
+              fitstat = c("pr2","n","r2"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="Controls include project stage, initial duration, initial budget, and number of bids.",
+       tex=TRUE)
+```

@@ -1,0 +1,135 @@
+---
+title: "Project Sequence"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(tidyverse)
+library(DescTools)
+```
+
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r read_data,include=FALSE}
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+```
+
+## DID on small projects (Portfolio Treat)
+
+* PortfolioTreat_i = 1 if small project i has a concurrent large project.
+* Treat_i = 1 if project i is a small project.
+
+```{r portfolio_treat, results='asis', echo=FALSE, warning=FALSE}
+m1=feols(wins_percentage_delay~treat_new+
+          treat_small_with_large_new+
+          treat_new:post_t+
+          treat_small_with_large_new:post_t+
+          log(wins_project_quarter_stage)+
+          log(1+winsorized_initial_duration_in_days_i)+
+          log(1+winsorized_initial_budget_i)+
+          wins_number_of_offers_received+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:wins_number_of_offers_received|
+          action_date_year_quarter,
+          cluster=~contract_award_unique_key,
+          data=reg_df_subset)
+
+m2=feols(wins_percentage_delay~treat_new+
+          treat_small_with_large_new+
+          treat_new:post_t+
+          treat_small_with_large_new:post_t+
+          log(wins_project_quarter_stage)+
+          log(1+winsorized_initial_duration_in_days_i)+
+          log(1+winsorized_initial_budget_i)+
+          wins_number_of_offers_received+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:wins_number_of_offers_received|
+          product_or_service_code+
+           action_date_year_quarter,
+          cluster=~contract_award_unique_key,
+          data=reg_df_subset)
+
+m3=feols(wins_percentage_delay~treat_new+
+          treat_small_with_large_new+
+          treat_new:post_t+
+          treat_small_with_large_new:post_t+
+          log(wins_project_quarter_stage)+
+          log(1+winsorized_initial_duration_in_days_i)+
+          log(1+winsorized_initial_budget_i)+
+          wins_number_of_offers_received+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:wins_number_of_offers_received|
+          naics_code+
+           product_or_service_code+
+           action_date_year_quarter,
+         cluster=~contract_award_unique_key,
+          data=reg_df_subset)
+
+sequencing_regs=list(m1,m2,m3)
+```
+
+
+```{r output, echo=FALSE, results='asis'}
+setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
+                      "post_t"="$Post_t$",
+                      "treat_new"="$Treat_i$",
+                      "treat_small_with_large_new"="$PortfolioTreat_i$",
+                      "log(wins_project_quarter_stage)"="Project stage",
+                      "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
+                      "log(1+winsorized_initial_budget_i)"="Initial budget",
+                      "wins_number_of_offers_received"="Number of offers",
+                      "contract_award_unique_key"="Project ID",
+                      "product_or_service_code"="Task",
+                      "action_date_year_quarter"="Time",
+                      "naics_code"="Industry",
+                      "awarding_sub_agency_code"="Subagency"
+                      ))
+
+etable(sequencing_regs,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       title="Effect of QuickPay via project sequencing",
+       fitstat = c("n","r2"),
+       drop=c("Project stage",
+              "Initial duration",
+              "Initial budget",
+              "Number of offers"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls",
+       tex=TRUE)
+```

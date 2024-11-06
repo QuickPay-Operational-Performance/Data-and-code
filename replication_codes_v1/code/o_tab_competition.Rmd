@@ -1,0 +1,155 @@
+---
+title: "Competition"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(tidyverse)
+library(DescTools) 
+```
+
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r read_data,include=FALSE}
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+```
+
+```{r competition_delays_subsample, echo=FALSE, results='asis'}
+# Define
+# $$ SA_i = \begin{cases} 1, \text{ if project was signed after QuickPay}\\
+# 0, \text{ otherwise} \end{cases}$$
+
+reg_df_subset[,project_signed_after_quickpay:=case_when(initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter>=as.Date('2011-04-27')~1,
+                                                 initial_start_date<as.Date('2011-04-27') ~ 0,
+                                                 initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter<as.Date('2011-04-27')~NaN)]
+```
+
+```{r competition_subsample_ii, echo=FALSE, results='asis'}
+m1=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            action_date_year_quarter,
+                          cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,competitively_awarded_i==1))
+
+m2=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            product_or_service_code+
+                            action_date_year_quarter,
+                          cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,competitively_awarded_i==1))
+
+m3=feols(wins_percentage_delay~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                          cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,competitively_awarded_i==1))
+
+competition=list(m1,m2,m3)
+```
+
+```{r output, echo=FALSE, results='asis'}
+setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
+                      "positive_delay"="Log odds (Delay rate >0)",
+                      "post_t"="$Post_t$",
+                      "treat_new"="$Treat_i$",
+                      "log(wins_project_quarter_stage)"="Project stage",
+                      "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
+                      "log(1+winsorized_initial_budget_i)"="Initial budget",
+                      "wins_number_of_offers_received"="Number of offers",
+                      "contract_award_unique_key"="Project ID",
+                      "product_or_service_code"="Task",
+                      "action_date_year_quarter"="Time",
+                      "naics_code"="Industry",
+                      "project_signed_after_quickpay"="$SA_i$"
+                      ))
+
+etable(competition,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       title="Effect of QuickPay on percentage delay rates",
+       fitstat = c("pr2","n","r2"),
+       drop=c("Project stage"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="Controls include Log(project stage).",
+       tex=TRUE)
+```
+
+competitive_projects_table_ii=stargazer(controls_and_no_fe,
+          controls_and_time_fe,
+          controls_time_task_fe,
+          controls_and_all_fe,
+          digits=2,
+          digits.extra=2,
+          title = "Effect of QuickPay on competitively awarded projects",
+          dep.var.labels="$PercentDelay_{it}$  ",
+          dep.var.caption = "",
+          covariate.labels = c("$Treat_i$",
+                               "$SA_i$",
+                               "$Post_t$",
+                               "$Treat_i \\times Post_t$",
+                               "$Treat_i \\times Post_t \\times SA_i $",
+                               "Constant"),
+          object.names=FALSE, 
+          model.numbers=TRUE,
+          font.size = "small",
+          omit.stat=c("f", "ser"),
+          column.sep.width = "-2pt",
+          add.lines = list(
+                           c("Project stage",rep("No",1),rep("Yes",4)),
+                           c("Time fixed effects",rep("No",2),rep("Yes",3)),
+                           c("Task fixed effects",rep("No",3),rep("Yes",2)),
+                           c("Industry fixed effects",rep("No",4),rep("Yes",1))),
+          omit=c('wins_project_quarter_stage'),
+          table.placement = "H",
+          style="default",
+          notes=c("Each observation is a project-quarter.",
+                  "SEs are robust and clustered at the project level.",
+                  "Sample restricted to fully competed projects."),
+          header=F)
+```

@@ -1,0 +1,186 @@
+---
+title: "Robustness Tests"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(lfe)
+library(stargazer)
+library(fixest)
+library(MatchIt)
+library(tidyverse)
+library(DescTools) 
+```
+
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r read_data,include=FALSE}
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+reg_df=fread(paste0(input_path,
+                 'quickpay_delays.csv'))
+```
+
+```{r alt_measures, include=FALSE}
+## Days of delay
+### One quarter
+one_quarter=feols(winsorized_delay~treat_new+
+                            post_t:treat_new+
+                           log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                          cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+### Two quarter
+two_quarter=feols(winsorized_two_quarter_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+## Delay/Initial
+delay_initial=feols(wins_relative_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+```
+
+```{r contractor_one_type,include=FALSE}
+one_type_contractors=reg_df[,n_distinct(treat_i),by='recipient_duns']
+one_type_contractors=unique(subset(one_type_contractors,V1==1 &
+                                     !is.na(recipient_duns))$recipient_duns)
+reg_df_one_type=subset(reg_df,recipient_duns%in%one_type_contractors)
+
+reg_df_one_type[,wins_percentage_delay:=Winsorize(100*percentage_delay,               
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+reg_df_one_type[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+reg_df_one_type[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(initial_duration_in_days_i,
+                    probs=c(0.05,0.95),
+                    na.rm=T)]
+
+# InitialBudget_i
+reg_df_one_type[,winsorized_initial_budget_i:=
+                    Winsorize(base_and_all_options_value,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+# For ease of display later
+setnames(reg_df_one_type,'treat_i','treat_new')
+
+sutva=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_one_type)
+```
+
+
+```{r output, echo=FALSE, results='asis'}
+setFixest_dict(dict=c("wins_percentage_delay"="Percent delay (SUTVA)",
+                      "positive_delay"="Log odds (Delay rate >0)",
+                      "post_t"="Post",
+                      "treat_new"="Treat",
+                      "wins_relative_delay"="Delay/Initial",
+                      "log(wins_project_quarter_stage)"="Project stage",
+                      "log(1+winsorized_initial_duration_in_days_i)"=
+                        "Initial duration",
+                      "winsorized_two_quarter_delay"="Delay days (semi-annual)",
+                      "winsorized_delay"="Delay days (one quarter)",
+                      "log(1+winsorized_initial_budget_i)"="Initial budget",
+                      "wins_number_of_offers_received"="Number of offers",
+                      "contract_award_unique_key"="Project ID",
+                      "product_or_service_code"="Task",
+                      "action_date_year_quarter"="Time",
+                      "naics_code"="Industry",
+                      "awarding_sub_agency_code"="Subagency"
+                      ))
+
+etable(one_quarter,
+          two_quarter,
+          delay_initial,
+       sutva,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       title="Robustness tests",
+       fitstat = c("pr2","n","r2"),
+       drop=c("Project stage",
+              "Initial duration",
+              "Initial budget",
+              "Number of offers"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls",
+       tex=TRUE)
+```

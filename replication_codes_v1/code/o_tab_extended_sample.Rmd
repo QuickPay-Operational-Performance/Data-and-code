@@ -1,0 +1,226 @@
+---
+title: "QuickPay Delay Rate -- All Defense Projects"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: true
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(DescTools) 
+library(zoo) 
+library(fixest)
+library(data.table)
+```
+
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r read_data,include=FALSE}
+reg_df=readRDS(paste0(working_path,
+                      "w_qp_extended_sample.rds"))
+
+reg_df=setDT(reg_df)
+
+# QuickPay Expanded Sample
+
+# Consider ALL defense projects that started b/w FY 2010 and FY 2012
+# Consider ALL action types
+# Treat is N/A for Small Disadvantaged Business (i.e., they are excluded)
+# Restrict to June 30, 2012 -- QP expanded to all projects after that
+```
+
+```{r fp_project_delays, include=FALSE}
+m1=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage+
+          post_t,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Fixed"])
+
+m2=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Fixed"])
+
+m3=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter+
+        product_or_service_code,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Fixed"])
+
+m4=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter+
+        naics_code+
+          product_or_service_code,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Fixed"])
+
+fixed_price=list(m1,m2,m3,m4)
+```
+
+```{r dictionary, include=FALSE}
+setFixest_dict(c("wins_percentage_delay"="Percentage delay rate",
+                 "action_date_year_quarter"="Time",
+                 "treat_new"="$Treat_i$", 
+                 "post_t"="$Post_t$",
+              "wins_initial_duration"="Initial duration",
+              "wins_project_quarter_stage"="Project stage",
+              "wins_offers"="Number of offers",
+              "product_or_service_code"="Task",
+              "naics_code"="NAICS",
+              "contract_award_unique_key"="Project ID",
+              "wins_initial_budget"="Initial budget"))
+```
+
+```{r fp_table, echo=FALSE, results='asis'}
+etable(fixed_price,
+       drop=c("Number of offers",
+              "Initial duration",
+              "Initial budget",
+              "Project stage"),
+       extralines = list("-Controls"=c(rep("Yes",
+                                          length(fixed_price)))),
+       title="Full sample of Fixed Price Contracts",
+       notes="Controls include initial budget, offers, duration, their interaction with post, and project stage. ",
+       style.tex=style.tex(depvar.title = "",
+                           model.title = "",
+                           model.format = "I",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule",
+                           fixef.title = "\\midrule",
+                           yesNo = c("Yes","No"),
+                           line.top = "simple",
+                           line.bottom = "simple",
+                           stats.title = ""),
+       digits='r2',
+       digits.stats = "r2",
+       fontsize='footnotesize',
+       tex=T)
+```
+
+```{r cost_project_delays,include=FALSE}
+m1=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage+
+          post_t,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Cost"])
+
+m2=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Cost"])
+
+m3=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter+
+        product_or_service_code,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Cost"])
+
+m4=feols(wins_percentage_delay~treat_new+
+        post_t:treat_new+
+        wins_initial_duration+
+        wins_initial_budget+
+        wins_offers+
+        post_t:wins_initial_duration+
+        post_t:wins_initial_budget+
+        post_t:wins_offers+
+        wins_project_quarter_stage|action_date_year_quarter+
+        naics_code+
+          product_or_service_code,
+      cluster=~contract_award_unique_key,
+      data=reg_df[price_structure=="Cost"])
+
+cost_plus=list(m1,m2,m3,m4)
+```
+
+```{r cost_table, echo=FALSE, results='asis'}
+etable(cost_plus,
+       drop=c("Number of offers",
+              "Initial duration",
+              "Initial budget",
+              "Project stage"),
+       extralines = list("-Controls"=c(rep("Yes",
+                                        length(cost_plus)))),
+       title="Full sample of Cost Plus Contracts",
+       notes="Controls include initial budget, offers, duration, their interaction with post, and project stage. ",
+       digits='r2',
+       digits.stats = 'r2',
+       style.tex=style.tex(depvar.title = "",
+                           model.title = "",
+                           model.format = "I",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule",
+                           fixef.title = "\\midrule",
+                           yesNo = c("Yes","No"),
+                           line.top = "simple",
+                           line.bottom = "simple",
+                           stats.title = ""),
+       fontsize='footnotesize',
+       tex=T)
+```

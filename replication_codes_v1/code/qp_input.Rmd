@@ -1,0 +1,265 @@
+---
+title: "qp_input"
+output: pdf_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Setup
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(openxlsx)
+library(tidyverse)
+library(dplyr)
+library(pryr)
+library(lfe) # linear fixed effects 
+library(DescTools) 
+library(zoo) # for year quarter
+library(stargazer)
+library(broom)
+library(fixest)
+library(data.table)
+library(scales)
+library(coefplot)
+library(MatchIt)
+library(pBrackets)
+library(grid)
+library(fixest)
+library(xtable)
+```
+
+```{r set_path_for_exporting, include=FALSE}
+tables_folder='~/Desktop/Research/QuickPay/paper/Tables/percentage_delay_rate'
+figures_folder='~/Desktop/Research/QuickPay/paper/Figures'
+data_folder='~/Dropbox/data_quickpay/qp_data/'
+```
+
+```{r read_data, include=FALSE}
+# Keep only projects whose start dates match with API one
+projects_to_keep=fread(paste0(data_folder,'projects_to_keep.csv'))
+
+# read quarterly resampled data
+df=fread(paste0(data_folder,'resampled_qp_data/qp_resampled_data_fy10_to_fy12_with_zero_obs.csv'))
+# specify date columns
+date_cols=c("action_date_year_quarter","last_reported_start_date","last_reported_end_date")
+df[,(date_cols):= lapply(.SD, as.Date), .SDcols = date_cols]
+
+df[,api_projects:=ifelse(contract_award_unique_key%in%projects_to_keep$contract_award_unique_key,1,0)]
+
+# restrict to quarter ending June 30, 2012
+df=subset(df,as.Date(action_date_year_quarter)<as.Date('2012-07-01')&
+          api_projects==1)
+
+# data is truncated at July 1, 2012 -- 
+# so quarter ending Sept 30, 2012 will only have values as of July 1, 2012
+
+df_first_reported=fread(paste0(data_folder,'qp_data_first_reported.csv'))
+# contains time-invariant contract characteristics -- info when contract first appeared in the data
+
+```
+
+```{r assign_variables_1, include=FALSE}
+# Assign variables: Delay, Winsorized Delay, Post_t, Treat_i
+
+# some projects have action dates beyond project end date 
+# some could indicate projects that ended in the beginning of a quarter -- so taking 90 days difference
+# dropping these -- likely admin/documentation changes
+
+df[,diff_end_date_and_action_date:=as.numeric(last_reported_end_date-action_date_year_quarter)]
+# to ensure project ended sometime this quarter
+df=subset(df,diff_end_date_and_action_date>-90)
+
+
+# AD: 2015-06-30; End Date: 2015-03-31
+
+# sort by contract id and date 
+df=df[order(contract_award_unique_key,
+            action_date_year_quarter)]
+
+# determine quarter-to-quarter delay
+df[,delay:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1), 
+                  last_reported_end_date-lag(last_reported_end_date,1),NaN)]
+
+# winsorize quarter-to-quarter delay
+df[,winsorized_delay:=Winsorize(delay,
+                                probs=c(0.05,0.95),
+                                na.rm=TRUE)]
+
+#Post_t: A dummy that period t is post-treatment
+df[,post_t:=ifelse(action_date_year_quarter>as.Date("2011-04-27"),1,0)]
+# quickpay implemented on 27 April 2011. So all quarters starting 30 June 2011 will be in post-period
+
+#Treat_i: A dummy that contract i is in the treatment group
+df[,treat_i:=ifelse(business_type=="S",1,0)]
+# quickpay was implemented for small business contracts
+
+# determine quarter-to-quarter overrun
+df[,overrun:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1), 
+                  last_reported_budget-lag(last_reported_budget,1),NaN)]
+
+# winsorize quarter-to-quarter overrun
+df[,winsorized_overrun:=Winsorize(overrun,
+                                probs=c(0.05,0.95),
+                                na.rm=TRUE)]
+
+df[,percentage_overrun:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1) &
+                                     lag(last_reported_budget,1)>0,
+         overrun/lag(last_reported_budget,1),
+         NaN)]
+```
+
+```{r delay_over_two_quarters, include=FALSE}
+# keep_dates=as.Date(c('2009-12-31',
+#                       '2010-06-30',
+#                       '2010-12-31',
+#                        '2011-06-30',
+#                         '2011-12-31', 
+#                         '2012-06-30'))
+
+keep_dates=as.Date(c('2010-09-30',
+                      '2011-03-31',
+                       '2011-09-30',
+                        '2012-03-31'))
+
+df=df[order(contract_award_unique_key,
+            action_date_year_quarter)]
+
+df[,two_quarter_delay:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1)&
+                                action_date_year_quarter%in%keep_dates,
+                              delay+lag(delay,1),NaN)]
+
+df[,two_quarter_delay:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1)&
+                                action_date_year_quarter%in%keep_dates &
+                                is.na(lag(delay,1)),
+                              delay,two_quarter_delay)]
+```
+
+```{r assign_variables_2, include=FALSE}
+
+# ContractFinancing_i
+df_first_reported[,contract_financing_i:=ifelse(!is.null(contract_financing_code)&
+                                       !contract_financing_code%in%c("Z", ""),1,0)]
+
+# Competition_i
+df_first_reported[,competitively_awarded_i:=ifelse(!extent_competed_code%in%c("G","B", "C"),1,0)]
+df_first_reported[,initial_end_date:=period_of_performance_current_end_date]
+df_first_reported[,initial_start_date:=period_of_performance_start_date]
+
+# InitialDuration_i
+df_first_reported[,initial_duration_in_days_i:=
+                    as.numeric(
+                    as.Date(initial_end_date)-
+                    as.Date(initial_start_date))]
+
+select_cols=c("contract_award_unique_key",
+              "naics_code",
+              "product_or_service_code",
+              "number_of_offers_received",
+              "performance_based_service_acquisition_code",
+              "contract_financing_i",
+              "competitively_awarded_i",
+              "recipient_duns",
+              "initial_end_date",
+              "initial_start_date",
+              "initial_duration_in_days_i",
+              "base_and_all_options_value",
+              "awarding_sub_agency_code")
+
+# not necessary but speed efficient to set keys
+setkey(df_first_reported[,..select_cols],
+       contract_award_unique_key)
+setkey(df,contract_award_unique_key)
+```
+
+```{r combine_dfs, include=FALSE}
+# Combine all variables into dataframe needed for regression 
+reg_df=merge(df,
+             df_first_reported[,..select_cols],
+             all.x = TRUE, # keep values in df, add columns of df_first_reported_cols
+             by=c("contract_award_unique_key"))
+
+reg_df[,initial_start_date:=as.Date(initial_start_date)]
+reg_df[,initial_end_date:=as.Date(initial_end_date)]
+reg_df[,action_date_year_quarter:=as.Date(action_date_year_quarter)]
+
+reg_df[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(initial_duration_in_days_i,
+                    probs=c(0.05,0.95),
+                    na.rm=T)]
+
+# InitialBudget_i
+
+reg_df[,winsorized_initial_budget_i:=
+                    Winsorize(base_and_all_options_value,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+#reg_df[,number_of_offers_received_original:=number_of_offers_received]
+
+reg_df[,wins_number_of_offers_received:=Winsorize(number_of_offers_received,
+                                             probs=c(0.05,0.95),
+                                             na.rm=T)]
+
+# sort by contract id and date (just to be doubly sure)
+reg_df=reg_df[order(contract_award_unique_key,
+            action_date_year_quarter)]
+
+```
+
+```{r percentage_delay,include=FALSE}
+
+reg_df[,last_reported_duration:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),
+                                      as.numeric(lag(last_reported_end_date,1)-initial_start_date),
+                                      initial_duration_in_days_i)]
+
+# "period_of_performance_start_date" here comes from first reported info
+# So it is the actual start date for a project
+# get project duration as of last quarter in the denominator
+reg_df[,percentage_delay:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),
+         delay/last_reported_duration,
+         NaN)]
+
+reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+# time spent in the project so far/total time of the project
+# if project was active in previous quarter
+reg_df[,project_quarter_stage:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),as.numeric(lag(action_date_year_quarter,1)-initial_start_date)/as.numeric(lag(last_reported_end_date,1)-initial_start_date),NaN)]
+
+# (action_date_year_quarter-90) to get beginning of the quarter
+
+reg_df[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+```
+
+```{r relative_delay,include=FALSE}
+
+# get project duration as of last quarter in the denominator
+reg_df[,relative_delay:=ifelse(initial_duration_in_days_i>0,
+                               delay/(initial_duration_in_days_i),
+                               NaN)]
+
+reg_df[,wins_relative_delay:=100*Winsorize(relative_delay,na.rm=T)]
+```
+
+```{r remove_cols, include=FALSE}
+reg_df[,diff_end_date_and_action_date:=NULL]
+reg_df[,initial_end_date:=NULL]
+reg_df[,api_projects:=NULL]
+reg_df[,last_reported_start_date:=NULL]
+reg_df[,last_reported_end_date:=NULL]            
+reg_df[,last_reported_budget:=NULL]
+```
+
+```{r export_csv,include=FALSE}
+path='~/Dropbox/data_quickpay/qp_replication/input'
+write.csv(reg_df,
+          paste0(path,
+                 '/quickpay_delays.csv'),
+                 row.names=FALSE)
+```

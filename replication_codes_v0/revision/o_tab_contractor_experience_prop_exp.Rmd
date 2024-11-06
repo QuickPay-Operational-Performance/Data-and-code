@@ -173,7 +173,6 @@ project_quarter=merge(project_quarter,
                       all.x=T)
 ```
 
-
 ```{r prop_exp,include=FALSE}
 # Proportion of projects on which contractor has past experience
 project_quarter[,prop_exp:=ifelse(num_projs_past_three_qtrs>0,
