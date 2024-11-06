@@ -13,7 +13,8 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r packages,warning=FALSE,message=FALSE,include=FALSE}
@@ -23,8 +24,14 @@ library(xtable)
 library(tidyverse)
 ```
 
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
 ```{r read_data,include=FALSE}
-input_path='~/Dropbox/data_quickpay/qp_replication/input/'
 reg_df=fread(paste0(input_path,
                  'quickpay_delays.csv'))
 ```
