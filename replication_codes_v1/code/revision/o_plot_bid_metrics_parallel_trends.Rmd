@@ -1,0 +1,183 @@
+---
+title: "Bidding Metrics"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(lfe)
+library(ggpubr)
+library(fixest)
+library(tidyverse)
+library(zoo) # for year quarter
+library(DescTools) 
+```
+
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r read_data,include=FALSE}
+reg_df=fread(paste0(input_path,
+                 'quickpay_delays.csv'))
+```
+
+```{r competition_delays_subsample, echo=FALSE, results='asis'}
+reg_df[,project_signed_after_quickpay:=case_when(initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter>=as.Date('2011-04-27')~1,
+                                                 initial_start_date<as.Date('2011-04-27') ~ 0,
+                                                 initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter<as.Date('2011-04-27')~NaN)]
+
+
+reg_df[,quarter_when_project_signed:=as.Date(as.yearqtr(as.Date(initial_start_date)),
+                                                       frac = 1)]
+
+reg_df_first_reported=unique(reg_df,
+                             by='contract_award_unique_key')
+
+reg_df_first_reported=subset(reg_df_first_reported,
+                             initial_start_date>as.Date('2009-12-31') & 
+                               initial_start_date<as.Date('2012-03-31') &
+                              competitively_awarded_i==1)
+```
+
+```{r}
+mean_bids=reg_df_first_reported[#quarter_when_project_signed>as.Date('2009-09-30') 
+                #  & quarter_when_project_signed<as.Date('2012-06-30')
+  ,
+              .(avg_duration=mean(winsorized_initial_duration_in_days_i,na.rm=T),
+                avg_offers=mean(wins_number_of_offers_received,na.rm=T),
+                avg_budget=mean(winsorized_initial_budget_i,na.rm=T)
+                ),  
+              by = c('quarter_when_project_signed','treat_i')]
+mean_bids[,year_quarter:=format(quarter_when_project_signed,"%Y-%b")]
+mean_bids=mean_bids[order(quarter_when_project_signed,treat_i)]
+
+mean_bids[,business_type:=ifelse(treat_i==1,"S","O")]
+
+duration_plot=ggplot(mean_bids, aes(x=year_quarter,
+                       y=avg_duration, 
+                       group = business_type))+
+  geom_point(aes(shape=business_type),size=1.5)+
+  geom_line(aes(linetype=business_type, color=business_type),alpha=0.7) +    
+  scale_x_discrete(limits=mean_bids$year_quarter)+
+  geom_vline(xintercept =10.5,alpha=0.8,linewidth=0.15,linetype="solid")+
+  theme_minimal()+
+  labs(x="Time", 
+       y = "Average duration")+
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", "O"),
+                        labels=c("Treated","Control"),
+                        values=c("solid","dashed"))+
+  scale_color_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c('black','black'))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c(16,17))+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))
+
+bids_plot=ggplot(mean_bids, aes(x=year_quarter,
+                       y=avg_offers, 
+                       group = business_type))+
+  geom_point(aes(shape=business_type),size=1.5)+
+  geom_line(aes(linetype=business_type, color=business_type),alpha=0.7) +    
+  scale_x_discrete(limits=mean_bids$year_quarter)+
+  geom_vline(xintercept =10.5,alpha=0.8,linewidth=0.15,linetype="solid")+
+  theme_minimal()+
+  labs(x="Time", 
+       y = "Average number of offers")+
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", "O"),
+                        labels=c("Treated","Control"),
+                        values=c("solid","dashed"))+
+  scale_color_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c('black','black'))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c(16,17))+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))
+
+budget_plot=ggplot(mean_bids, aes(x=year_quarter,
+                       y=avg_budget, 
+                       group = business_type))+
+  geom_point(aes(shape=business_type),size=1.5)+
+  geom_line(aes(linetype=business_type, color=business_type),alpha=0.7) +    
+  scale_x_discrete(limits=mean_bids$year_quarter)+
+  geom_vline(xintercept =10.5,alpha=0.8,linewidth=0.15,linetype="solid")+
+  theme_minimal()+
+  labs(x="Time", 
+       y = "Average budget")+
+  scale_linetype_manual(name  ="",
+                        breaks=c("S", "O"),
+                        labels=c("Treated","Control"),
+                        values=c("solid","dashed"))+
+  scale_color_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c('black','black'))+
+  scale_shape_manual(name  ="",
+                     breaks=c("S", "O"),
+                     labels=c("Treated","Control"),
+                     values=c(16,17))+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.line = element_blank(),
+        panel.border = element_rect(fill=NA),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size=11),
+        legend.position="bottom",
+        legend.key.width=unit(2.5,"cm"))
+
+main_plot=ggarrange(duration_plot,budget_plot,bids_plot,ncol=3,common.legend = T)
+```
+
+```{r}
+ggsave(path=output_folder,
+       bg="white",
+       width = 11,
+       height = 4,
+       filename='o_plot_bids_trends.png')
+```
