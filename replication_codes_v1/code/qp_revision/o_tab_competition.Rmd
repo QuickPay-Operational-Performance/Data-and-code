@@ -1,0 +1,162 @@
+---
+title: "Competition"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(tidyverse)
+library(DescTools) 
+```
+
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r read_data,include=FALSE}
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+```
+
+```{r competition_delays_subsample, echo=FALSE, results='asis'}
+# Define
+# $$ SA_i = \begin{cases} 1, \text{ if project was signed after QuickPay}\\
+# 0, \text{ otherwise} \end{cases}$$
+
+reg_df_subset[,project_signed_after_quickpay:=case_when(initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter>=as.Date('2011-04-27')~1,
+                                                 initial_start_date<as.Date('2011-04-27') ~ 0,
+                                                 initial_start_date>=as.Date('2011-04-27') &
+                                                   action_date_year_quarter<as.Date('2011-04-27')~NaN)]
+```
+
+```{r}
+a1=reg_df_subset[,.(num_projects_given_task=
+                      n_distinct(contract_award_unique_key)),
+              by=c('recipient_duns',
+                   'product_or_service_code',
+                   'action_date_year_quarter')]
+
+a2=reg_df_subset[,.(num_projects_total=
+                      n_distinct(contract_award_unique_key)),
+              by=c('recipient_duns',
+                   'action_date_year_quarter')]
+
+a3=merge(a1,a2,by=c('recipient_duns','action_date_year_quarter'),all.x=T)
+
+a3=a3[!is.na(recipient_duns)]
+a3=a3[order(recipient_duns,action_date_year_quarter)]
+
+a3[,lag_num_projects_total:=ifelse(recipient_duns==lag(recipient_duns),
+                                         lag(num_projects_total),
+                                         NaN)]
+
+a3[,lag_num_projects_given_task:=ifelse(recipient_duns==lag(recipient_duns),
+                                         lag(num_projects_given_task),
+                                         NaN)]
+
+reg_df_subset=merge(reg_df_subset,
+                    a3,
+                    by=c('recipient_duns',
+                   'product_or_service_code',
+                   'action_date_year_quarter'),
+        all.x=T)
+
+reg_df_subset[,num_projects_given_task_excl_current:=num_projects_given_task-1]
+reg_df_subset[,num_projects_total_excl_current:=num_projects_total-1]
+reg_df_subset[,prop_projects_given_task_excl_current:=num_projects_given_task_excl_current/num_projects_total_excl_current]
+
+```
+
+```{r competition_subsample_ii, include=FALSE}
+m1=feols(prop_projects_given_task_excl_current~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            action_date_year_quarter,
+                          cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,competitively_awarded_i==1))
+
+m2=feols(prop_projects_given_task_excl_current~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            product_or_service_code+
+                            action_date_year_quarter,
+                          cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,competitively_awarded_i==1))
+
+m3=feols(prop_projects_given_task_excl_current~treat_new+
+                                  project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                          cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,competitively_awarded_i==1))
+
+competition=list(m1,m2,m3)
+```
+
+$PropSameTask_{ikt}=$ Proportion of projects of the same task as project $i$ held by the contracto in quarter $t$.
+
+```{r output, echo=FALSE, results='asis'}
+setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
+                      "prop_projects_given_task_excl_current"="$PropSameTask_{ikt}$",
+                      "positive_delay"="Log odds (Delay rate >0)",
+                      "post_t"="$Post_t$",
+                      "treat_new"="$Treat_i$",
+                      "log(wins_project_quarter_stage)"="Project stage",
+                      "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
+                      "log(1+winsorized_initial_budget_i)"="Initial budget",
+                      "wins_number_of_offers_received"="Number of offers",
+                      "contract_award_unique_key"="Project ID",
+                      "product_or_service_code"="Task",
+                      "action_date_year_quarter"="Time",
+                      "naics_code"="Industry",
+                      "project_signed_after_quickpay"="$SA_i$"
+                      ))
+
+etable(competition,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       title="Effect of QuickPay on percentage delay rates",
+       fitstat = c("pr2","n","r2"),
+       drop=c("Project stage"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="Controls include Log(project stage).",
+       tex=TRUE)
+```

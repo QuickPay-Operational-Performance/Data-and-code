@@ -1,0 +1,146 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Main Table},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Main Table}
+\author{}
+\date{\vspace{-2.5em}2025-10-20}
+
+\begin{document}
+\maketitle
+
+\begin{verbatim}
+## NOTE: 231,007 observations removed because of NA values (LHS: 209,501, RHS: 230,878, Fixed-effects: 1).
+\end{verbatim}
+
+\begin{table}[htbp]
+   \caption{Effect of QuickPay on percentage delay rates}
+   \centering
+   \small
+   \begin{tabular}{lc}
+      \toprule
+                                   & Percent delay rate\\  
+                                   & I\\  
+      \midrule 
+      Constant                     & 5.27$^{***}$\\   
+                                   & (0.10)\\   
+      $Treat_i$                    & -1.76$^{***}$\\   
+                                   & (0.11)\\   
+      $Post_t$                     & -0.21$^{*}$\\   
+                                   & (0.12)\\   
+      $Treat_i$ $\times$ $Post_t$  & 1.10$^{***}$\\   
+                                   & (0.14)\\   
+      Pseudo R$^2$                 & 0.0002\\  
+      Observations                 & 223,244\\  
+      R$^2$                        & 0.002\\  
+      \midrule
+      \multicolumn{2}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{2}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+\end{table}
+\begin{table}[htbp]
+   \caption{Effect of QuickPay on percentage delay rates}
+   \centering
+   \small
+   \begin{tabular}{lccccc}
+      \toprule
+       & \multicolumn{5}{c}{Percent delay rate}\\
+       & \multicolumn{5}{c}{Average treatment effect} \\ 
+                                                                     & I                & II               & III              & IV               & V\\  
+      \midrule 
+      $Treat_i$                                                      & -0.90748$^{***}$ & -0.94321$^{***}$ & -86.04004        &                  &   \\   
+                                                                     & (0.10715)        & (0.10717)        & (793.30705)      &                  &   \\   
+      $NumConcurrent_{k(i)t}$                                        & -0.00019         & -0.00092$^{***}$ & -0.00521$^{***}$ & -0.00521$^{***}$ & -0.00561$^{***}$\\   
+                                                                     & (0.00018)        & (0.00019)        & (0.00035)        & (0.00035)        & (0.00068)\\   
+      $Post_t$ $\times$ $Treat_i$                                    & 1.00203$^{***}$  & 1.15771$^{***}$  & 0.98748$^{***}$  & 0.98747$^{***}$  & 1.01780$^{***}$\\   
+                                                                     & (0.13427)        & (0.13448)        & (0.14527)        & (0.14527)        & (0.16720)\\   
+      $NumPastDelays_{k(i)t}$                                        &                  & 0.02328$^{***}$  & 0.00291          & 0.00291          & 0.00333\\   
+                                                                     &                  & (0.00209)        & (0.00341)        & (0.00341)        & (0.00355)\\   
+      $NumConcurrent_{k(i)t}$ $\times$ $Post_t$                      &                  &                  &                  &                  & 0.00014\\   
+                                                                     &                  &                  &                  &                  & (0.00042)\\   
+      $NumConcurrent_{k(i)t}$ $\times$ $Treat_i$                     &                  &                  &                  &                  & 0.00317$^{**}$\\   
+                                                                     &                  &                  &                  &                  & (0.00158)\\   
+      $NumConcurrent_{k(i)t}$ $\times$ $Post_t$ $\times$ $Treat_i$   &                  &                  &                  &                  & -0.00100\\   
+                                                                     &                  &                  &                  &                  & (0.00075)\\   
+      \midrule 
+      Industry FE                                                    & Yes              & Yes              & Yes              & Yes              & Yes\\  
+      Task FE                                                        & Yes              & Yes              & Yes              & Yes              & Yes\\  
+      Time FE                                                        & Yes              & Yes              & Yes              & Yes              & Yes\\  
+      Contractor FE                                                  & No               & No               & Yes              & Yes              & Yes\\  
+      Pseudo R$^2$                                                   & 0.03             & 0.03             & 0.04             & 0.04             & 0.04\\  
+      Observations                                                   & 201,738          & 201,738          & 201,738          & 201,738          & 201,738\\  
+      R$^2$                                                          & 0.21             & 0.22             & 0.30             & 0.30             & 0.30\\  
+      \midrule
+      \multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+   
+   \par \raggedright 
+   Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls
+\end{table}
+
+\end{document}

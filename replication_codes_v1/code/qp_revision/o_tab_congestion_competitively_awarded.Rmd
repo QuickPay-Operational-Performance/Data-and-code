@@ -1,0 +1,342 @@
+---
+title: "Congestion -- Restrict to competitively awarded projects"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array,makecell}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(DescTools) 
+library(ggplot2)
+```
+
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r read_data,include=FALSE}
+reg_df=fread(paste0(input_path,
+                 'quickpay_delays.csv'))
+```
+
+```{r contractor_one_type,include=FALSE}
+one_type_contractors=reg_df[!is.na(treat_i),
+                            n_distinct(treat_i),
+                            by='recipient_duns']
+
+one_type_contractors=unique(subset(one_type_contractors,
+                                   V1==1 &
+                                     !is.na(recipient_duns))$
+                              recipient_duns)
+
+reg_df_one_type=subset(reg_df,
+                       competitively_awarded_i==1 &
+                         recipient_duns%in%one_type_contractors)
+
+reg_df_one_type[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+
+# reg_df_one_type[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
+#                               probs=c(0.05,0.95),
+#                               na.rm=T)]
+
+reg_df_one_type[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(initial_duration_in_days_i,
+                    probs=c(0.05,0.95),
+                    na.rm=T)]
+
+# InitialBudget_i
+
+reg_df_one_type[,winsorized_initial_budget_i:=
+                    Winsorize(base_and_all_options_value,                    
+                              probs=c(0.05,0.95),
+                              na.rm=T)]
+```
+
+```{r num_projects_0,warning=FALSE, echo=FALSE, results='asis'}
+## Number of projects per contractor
+
+# Contractors holding only small or only large projects
+contractor_quarter=reg_df_one_type[,n_distinct(contract_award_unique_key),
+                                   by=c('recipient_duns',
+                                                            'action_date_year_quarter')]
+setnames(contractor_quarter,'V1','num_projects')
+contractor_quarter[,post_t:=ifelse(action_date_year_quarter>as.Date('2011-04-27'),1,0)]
+
+contractor_quarter=merge(contractor_quarter,
+                         unique(reg_df_one_type[,c('recipient_duns','treat_i')]),
+                         by='recipient_duns')
+
+contractor_quarter[,business_type:=ifelse(treat_i==1,"S","O")]
+
+m1=feols(num_projects~treat_i+
+          post_t:treat_i+post_t,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m2=feols(num_projects~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+total_projects=list(m1,m2)
+```
+
+```{r budget_0,warning=FALSE, echo=FALSE, results='asis'}
+## Budget
+
+contractor_quarter=reg_df_one_type[,sum(winsorized_initial_budget_i),
+                                   by=c('recipient_duns',
+                                        'action_date_year_quarter')]
+setnames(contractor_quarter,'V1','total_budget_across_projects')
+contractor_quarter[,post_t:=ifelse(action_date_year_quarter>as.Date('2011-04-27'),1,0)]
+
+contractor_quarter=merge(contractor_quarter,
+                         unique(reg_df_one_type[,c('recipient_duns','treat_i')]),
+                         by='recipient_duns')
+
+contractor_quarter[,business_type:=ifelse(treat_i==1,"S","O")]
+
+m1=feols(I(total_budget_across_projects/1000000)~treat_i+
+          post_t:treat_i+post_t,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m2=feols(I(total_budget_across_projects/1000000)~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter,
+          cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+total_budget=list(m1,m2)
+```
+
+```{r tasks_0,warning=FALSE, echo=FALSE, results='asis'}
+reg_df_one_type[,two_digit_task_code:=substr(product_or_service_code,1,2)]
+reg_df_one_type[,three_digit_task_code:=substr(product_or_service_code,1,3)]
+
+## Number of tasks
+contractor_quarter=reg_df_one_type[,.(number_of_tasks=n_distinct(product_or_service_code),
+                                      number_of_two_digit_tasks=
+                                        n_distinct(two_digit_task_code)),
+                                   by=c('recipient_duns',
+                                        'action_date_year_quarter')]
+
+contractor_quarter[,post_t:=ifelse(action_date_year_quarter>as.Date('2011-04-27'),1,0)]
+
+contractor_quarter=merge(contractor_quarter,
+                         unique(reg_df_one_type[,c('recipient_duns','treat_i')]),
+                         by='recipient_duns')
+
+contractor_quarter[,business_type:=ifelse(treat_i==1,"S","O")]
+
+m1=feols(number_of_two_digit_tasks~treat_i+
+          post_t:treat_i+post_t,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m2=feols(number_of_two_digit_tasks~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter,
+          cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+total_tasks=list(m1,m2)
+```
+
+```{r similarity_score, include=FALSE}
+# Contractors holding only small or only large projects
+contractor_quarter=reg_df_one_type[,.(list_two_digit_task_codes=
+                                        list(unique(two_digit_task_code)),
+                                      list_three_digit_task_codes=
+                                        list(unique(three_digit_task_code)),
+                                      list_task_codes=list(unique(
+                                        product_or_service_code)),
+                                      num_projects=
+                                        n_distinct(
+                                          contract_award_unique_key)),
+                                   by=c('recipient_duns',
+                                                            'action_date_year_quarter')]
+
+contractor_quarter[,post_t:=ifelse(action_date_year_quarter>as.Date('2011-04-27'),1,0)]
+
+contractor_quarter=merge(contractor_quarter,
+                         unique(reg_df_one_type[,c('recipient_duns','treat_i')]),
+                         by='recipient_duns')
+
+
+contractor_quarter=contractor_quarter[order(recipient_duns,
+                                            action_date_year_quarter)]
+
+contractor_quarter[, similarity_score := ifelse(
+    recipient_duns == lag(recipient_duns),
+    lengths(Map(intersect, list_task_codes, lag(list_task_codes))) /
+    lengths(Map(union, list_task_codes, lag(list_task_codes))),
+    NaN
+)]
+
+contractor_quarter[, similarity_score_two_digit := ifelse(
+    recipient_duns == lag(recipient_duns),
+    lengths(Map(intersect, list_two_digit_task_codes, lag(list_two_digit_task_codes))) /
+    lengths(Map(union, list_two_digit_task_codes, lag(list_two_digit_task_codes))),
+    NaN
+)]
+
+contractor_quarter[, similarity_score_two_digit := ifelse(
+    recipient_duns == lag(recipient_duns),
+    lengths(Map(intersect, list_two_digit_task_codes, lag(list_two_digit_task_codes))) /
+    lengths(Map(union, list_two_digit_task_codes, lag(list_two_digit_task_codes))),
+    NaN
+)]
+
+contractor_quarter[, similarity_score_three_digit := ifelse(
+    recipient_duns == lag(recipient_duns),
+    lengths(Map(intersect, list_three_digit_task_codes, lag(list_three_digit_task_codes))) /
+    lengths(Map(union, list_three_digit_task_codes, lag(list_three_digit_task_codes))),
+    NaN
+)]
+m1=feols(similarity_score~treat_i+
+          post_t:treat_i+post_t,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m2=feols(similarity_score~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter,
+          cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+similarity_regs=list(m1,m2)
+```
+
+```{r output, echo=FALSE, results='asis'}
+setFixest_dict(dict=c("number_of_tasks"="Number of tasks",
+                      "number_of_two_digit_tasks"="Number of 2-digit task codes",
+                      'similarity_score'="Similarity score",
+                      "I(total_budget_across_projects/1e+06)"= 
+                        "Total budget",
+                      "num_projects"="Number of projects",
+                      "post_t"="$Post_t$",
+                      "treat_i"="$Treat_i$",
+                      "log(wins_project_quarter_stage)"="Project stage",
+                      "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
+                      "log(1+winsorized_initial_budget_i)"="Initial budget",
+                      "wins_number_of_offers_received"="Number of offers",
+                      "contract_award_unique_key"="Project ID",
+                      "product_or_service_code"="Task",
+                      "action_date_year_quarter"="Time",
+                      "naics_code"="Industry",
+                      "awarding_sub_agency_code"="Subagency"
+                      ))
+
+etable(total_projects,
+       total_budget,
+       total_tasks,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       title="Congestion and the QuickPay reform",
+       fitstat = c("n","r2"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="Sample restricted to contractors holding only one type of project.",
+       tex=TRUE)
+
+etable(similarity_regs,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       title="Task similarity",
+       fitstat = c("n","r2"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="Sample restricted to contractors holding only one type of project.",
+       tex=TRUE)
+```
+
+```{r plots, include=FALSE}
+contractor_quarter[,relative_quarter:=case_when(action_date_year_quarter=="2010-03-31"~-5,
+                                                    action_date_year_quarter=="2010-06-30"~-4,
+                  action_date_year_quarter=="2010-09-30"~-3,
+                  action_date_year_quarter=="2010-12-31"~-2,
+                  action_date_year_quarter=="2011-03-31"~-1,
+                  action_date_year_quarter=="2011-06-30"~0,
+                  action_date_year_quarter=="2011-09-30"~1,
+                  action_date_year_quarter=="2011-12-31"~2,
+                  action_date_year_quarter=="2012-03-31"~3,
+                  action_date_year_quarter=="2012-06-30"~4)]
+
+es=feols(similarity_score_three_digit ~ i(relative_quarter, treat_i, ref = -1) +treat_i|
+		     action_date_year_quarter,     
+		 cluster = ~recipient_duns,
+		 data = contractor_quarter)
+
+df_summary=contractor_quarter[,.(mean_similarity=mean(similarity_score_three_digit,
+                                                      na.rm=T)),
+                              by=c('treat_i','action_date_year_quarter')]
+# Plot trends
+mean_plot=ggplot(df_summary[!is.na(mean_similarity)], aes(
+  x = as.factor(action_date_year_quarter),
+  y = mean_similarity,
+  group = as.factor(treat_i)
+)) +
+  # Lines
+  geom_line(aes(linetype = as.factor(treat_i)),
+            color = "black", size = 0.6) +
+  # Points
+  geom_point(aes(shape = as.factor(treat_i)),
+             color = "black", size = 2.5) +
+  # Custom style for 0/1
+  scale_linetype_manual(values = c("0" = "dotted", "1" = "solid")) +
+  scale_shape_manual(values = c("0" = 16, "1" = 17)) +
+  # Labels and theme
+  labs(
+    x = "Year-Quarter",
+    y = "Mean Similarity",
+    linetype = "Treatment",
+    shape = "Treatment",
+    title = "Similarity Trends by Treatment Group"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    axis.text.x = element_text(angle = 45, hjust = 1)  # slant labels
+  )
+```
+
