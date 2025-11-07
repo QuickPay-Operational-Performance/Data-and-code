@@ -68,7 +68,7 @@
 
 \title{Main Table}
 \author{}
-\date{\vspace{-2.5em}2025-10-20}
+\date{\vspace{-2.5em}2025-10-24}
 
 \begin{document}
 \maketitle
@@ -110,33 +110,70 @@
       \toprule
        & \multicolumn{5}{c}{Percent delay rate}\\
        & \multicolumn{5}{c}{Average treatment effect} \\ 
-                                                                     & I                & II               & III              & IV               & V\\  
+                                                                     & I              & II             & III            & IV             & V\\  
       \midrule 
-      $Treat_i$                                                      & -0.90748$^{***}$ & -0.94321$^{***}$ & -86.04004        &                  &   \\   
-                                                                     & (0.10715)        & (0.10717)        & (793.30705)      &                  &   \\   
-      $NumConcurrent_{k(i)t}$                                        & -0.00019         & -0.00092$^{***}$ & -0.00521$^{***}$ & -0.00521$^{***}$ & -0.00561$^{***}$\\   
-                                                                     & (0.00018)        & (0.00019)        & (0.00035)        & (0.00035)        & (0.00068)\\   
-      $Post_t$ $\times$ $Treat_i$                                    & 1.00203$^{***}$  & 1.15771$^{***}$  & 0.98748$^{***}$  & 0.98747$^{***}$  & 1.01780$^{***}$\\   
-                                                                     & (0.13427)        & (0.13448)        & (0.14527)        & (0.14527)        & (0.16720)\\   
-      $NumPastDelays_{k(i)t}$                                        &                  & 0.02328$^{***}$  & 0.00291          & 0.00291          & 0.00333\\   
-                                                                     &                  & (0.00209)        & (0.00341)        & (0.00341)        & (0.00355)\\   
-      $NumConcurrent_{k(i)t}$ $\times$ $Post_t$                      &                  &                  &                  &                  & 0.00014\\   
-                                                                     &                  &                  &                  &                  & (0.00042)\\   
-      $NumConcurrent_{k(i)t}$ $\times$ $Treat_i$                     &                  &                  &                  &                  & 0.00317$^{**}$\\   
-                                                                     &                  &                  &                  &                  & (0.00158)\\   
-      $NumConcurrent_{k(i)t}$ $\times$ $Post_t$ $\times$ $Treat_i$   &                  &                  &                  &                  & -0.00100\\   
-                                                                     &                  &                  &                  &                  & (0.00075)\\   
+      $Treat_i$                                                      & -0.907$^{***}$ & -0.943$^{***}$ & -84.376        &                &   \\   
+                                                                     & (0.107)        & (0.107)        & (781.166)      &                &   \\   
+      $NumConcurrent_{k(i)t}$                                        & 0.000          & -0.001$^{***}$ & -0.005$^{***}$ & -0.005$^{***}$ & -0.006$^{***}$\\   
+                                                                     & (0.000)        & (0.000)        & (0.000)        & (0.000)        & (0.001)\\   
+      $Post_t$ $\times$ $Treat_i$                                    & 1.002$^{***}$  & 1.158$^{***}$  & 0.987$^{***}$  & 0.987$^{***}$  & 1.018$^{***}$\\   
+                                                                     & (0.134)        & (0.134)        & (0.145)        & (0.145)        & (0.167)\\   
+      $NumPastDelays_{k(i)t}$                                        &                & 0.023$^{***}$  & 0.003          & 0.003          & 0.003\\   
+                                                                     &                & (0.002)        & (0.003)        & (0.003)        & (0.004)\\   
+      $NumConcurrent_{k(i)t}$ $\times$ $Post_t$                      &                &                &                &                & 0.000\\   
+                                                                     &                &                &                &                & (0.000)\\   
+      $NumConcurrent_{k(i)t}$ $\times$ $Treat_i$                     &                &                &                &                & 0.003$^{**}$\\   
+                                                                     &                &                &                &                & (0.002)\\   
+      $NumConcurrent_{k(i)t}$ $\times$ $Post_t$ $\times$ $Treat_i$   &                &                &                &                & -0.001\\   
+                                                                     &                &                &                &                & (0.001)\\   
       \midrule 
-      Industry FE                                                    & Yes              & Yes              & Yes              & Yes              & Yes\\  
-      Task FE                                                        & Yes              & Yes              & Yes              & Yes              & Yes\\  
-      Time FE                                                        & Yes              & Yes              & Yes              & Yes              & Yes\\  
-      Contractor FE                                                  & No               & No               & Yes              & Yes              & Yes\\  
-      Pseudo R$^2$                                                   & 0.03             & 0.03             & 0.04             & 0.04             & 0.04\\  
-      Observations                                                   & 201,738          & 201,738          & 201,738          & 201,738          & 201,738\\  
-      R$^2$                                                          & 0.21             & 0.22             & 0.30             & 0.30             & 0.30\\  
+      Industry FE                                                    & Yes            & Yes            & Yes            & Yes            & Yes\\  
+      Task FE                                                        & Yes            & Yes            & Yes            & Yes            & Yes\\  
+      Time FE                                                        & Yes            & Yes            & Yes            & Yes            & Yes\\  
+      Contractor FE                                                  & No             & No             & Yes            & Yes            & Yes\\  
+      Pseudo R$^2$                                                   & 0.03           & 0.03           & 0.04           & 0.04           & 0.04\\  
+      Observations                                                   & 201,738        & 201,738        & 201,738        & 201,738        & 201,738\\  
+      R$^2$                                                          & 0.21           & 0.22           & 0.30           & 0.30           & 0.30\\  
       \midrule
       \multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
       \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+   
+   \par \raggedright 
+   Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls
+\end{table}
+\begin{table}[htbp]
+   \caption{Effect of QuickPay on percentage delay rates}
+   \centering
+   \small
+   \begin{tabular}{lc}
+      \toprule
+                                                                     & Percent delay rate\\  
+                                                                     & I\\  
+      \midrule 
+      $NumPastDelays_{k(i)t}$                                        & 0.0033\\   
+                                                                     & (0.0036)\\   
+      $NumConcurrent_{k(i)t}$                                        & -0.0056$^{***}$\\   
+                                                                     & (0.0007)\\   
+      $Post_t$ $\times$ $Treat_i$                                    & 1.0178$^{***}$\\   
+                                                                     & (0.1672)\\   
+      $NumConcurrent_{k(i)t}$ $\times$ $Post_t$                      & 0.0001\\   
+                                                                     & (0.0004)\\   
+      $NumConcurrent_{k(i)t}$ $\times$ $Treat_i$                     & 0.0032$^{**}$\\   
+                                                                     & (0.0016)\\   
+      $NumConcurrent_{k(i)t}$ $\times$ $Post_t$ $\times$ $Treat_i$   & -0.0010\\   
+                                                                     & (0.0008)\\   
+      \midrule 
+      Industry FE                                                    & Yes\\  
+      Task FE                                                        & Yes\\  
+      Time FE                                                        & Yes\\  
+      Contractor FE                                                  & Yes\\  
+      Pseudo R$^2$                                                   & 0.04\\  
+      Observations                                                   & 201,738\\  
+      R$^2$                                                          & 0.30\\  
+      \midrule
+      \multicolumn{2}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{2}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
    \end{tabular}
    
    \par \raggedright 
