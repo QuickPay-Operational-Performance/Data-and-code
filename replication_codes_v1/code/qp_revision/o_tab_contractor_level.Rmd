@@ -1,0 +1,156 @@
+---
+title: "Congestion -- Restrict to competitively awarded projects"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: true
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array,makecell}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(DescTools) 
+library(ggplot2)
+```
+
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r read_data,include=FALSE}
+reg_df=fread(paste0(input_path,
+                 'quickpay_delays.csv'))
+```
+
+* $Treat_{k,t} = \frac{\sum Num Small Projects_{k,t}}{\sum Num Total Projects_{k,t}}$
+* $BudgetTreat_{k,t} = \frac{\sum Budget Small Projects_{k,t}}{\sum Budget Total Projects_{k,t}}$
+* $Delay_{k,t} = \beta_0 (Treat_{k,t} \times Post_t) + \beta_1 Treat_{k,t} + \beta_3 Post_t + \epsilon_{k,t}$
+
+```{r}
+contractor_quarter_delay=reg_df[,.(avg_pc_delay=mean(wins_percentage_delay,na.rm=T),
+                 num_small_projects=uniqueN(contract_award_unique_key[treat_i==1]),
+                 num_total_projects=uniqueN(contract_award_unique_key),
+                 budget_small_projects=sum(winsorized_initial_budget_i[treat_i==1],
+                                           na.rm=T),
+                 budget_all_projects=sum(winsorized_initial_budget_i)),
+              by=c('recipient_duns',
+                   'action_date_year_quarter')]
+```
+
+```{r}
+contractor_quarter_delay[,pc_small_projects:=
+                           num_small_projects/num_total_projects]
+contractor_quarter_delay[,pc_small_project_budget:=
+                           budget_small_projects/budget_all_projects]
+contractor_quarter_delay[,post_t:=ifelse(action_date_year_quarter>=
+                                           as.Date('2011-04-27'),1,0)]
+```
+
+```{r delay_regs_budget,include=FALSE}
+m1=feols(avg_pc_delay~+
+            pc_small_project_budget+
+                            pc_small_project_budget:post_t+
+                              post_t,
+                            cluster=~recipient_duns,
+                          data=contractor_quarter_delay)
+
+m2=feols(avg_pc_delay~pc_small_project_budget+
+                            pc_small_project_budget:post_t|
+                            action_date_year_quarter,
+                            cluster=~recipient_duns,
+                          data=contractor_quarter_delay)
+
+m3=feols(avg_pc_delay~pc_small_project_budget:post_t|
+                            recipient_duns+
+                            action_date_year_quarter,
+                            cluster=~recipient_duns,
+                          data=contractor_quarter_delay)
+
+delay_list_budget=list(m1,m2,m3)
+```
+
+```{r delay_regs,include=FALSE}
+m1=feols(avg_pc_delay~+
+            pc_small_projects+
+                            pc_small_projects:post_t+
+                              post_t,
+                            cluster=~recipient_duns,
+                          data=contractor_quarter_delay)
+
+m2=feols(avg_pc_delay~pc_small_projects+
+                            pc_small_projects:post_t|
+                            action_date_year_quarter,
+                            cluster=~recipient_duns,
+                          data=contractor_quarter_delay)
+
+m3=feols(avg_pc_delay~pc_small_projects:post_t|
+                            recipient_duns+
+                            action_date_year_quarter,
+                            cluster=~recipient_duns,
+                          data=contractor_quarter_delay)
+
+delay_list=list(m1,m2,m3)
+```
+
+```{r output, echo=FALSE, results='asis'}
+setFixest_dict(dict=c("avg_pc_delay"="$PercentDelayRate_{kt}$",
+                      'recipient_duns'="Contractor",
+                      "post_t"="$Post_t$",
+                      "pc_small_project_budget"="$BudgetTreat_{k,t}$",
+                      "pc_small_projects"="$Treat_{k,t}$",
+                      'action_date_year_quarter'='Time'
+                      ))
+
+etable(delay_list_budget,
+       digits='r2',
+       digits.stats = 2,
+       #fontsize = "tiny",
+       title="",
+       fitstat = c("n","r2"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="",
+       tex=TRUE)
+
+etable(delay_list,
+       digits='r2',
+       digits.stats = 2,
+       #fontsize = "tiny",
+       title="",
+       fitstat = c("n","r2"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="",
+       tex=TRUE)
+```
