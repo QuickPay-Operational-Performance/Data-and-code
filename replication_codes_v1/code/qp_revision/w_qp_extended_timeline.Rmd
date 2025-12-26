@@ -52,7 +52,8 @@ keep_cols=c('contract_award_unique_key',
             'extent_competed_code',
             'c8a_program_participant',
             'contract_bundling',
-            'contract_bundling_code')
+            'contract_bundling_code',
+            'awarding_agency_code')
 
 parent_folder='/Users/vibhutid_admin/Dropbox/USA_Spending_Downloads/award_data_archive_20200205/'
 ```
@@ -63,7 +64,7 @@ parent_folder='/Users/vibhutid_admin/Dropbox/USA_Spending_Downloads/award_data_a
 
 subfolders <- list.dirs(parent_folder, recursive = FALSE, full.names = TRUE)
 subfolders <- subfolders[
-  grepl("FY(2008|2009|2010|2011|2012)_097_Contracts_Full_20200205", subfolders)
+  grepl("FY(2008|2009|2010|2011|2012|2013)", subfolders)
 ]
 
 # Collect all CSV file paths from all subfolders
@@ -84,6 +85,8 @@ df <- rbindlist(
   use.names = TRUE,
   fill = TRUE
 )
+
+df=df[awarding_agency_code=='97']
 ```
 
 ```{r set_dates, include=FALSE}
@@ -109,45 +112,57 @@ df=df[contract_award_unique_key%in%keep_ids]
 ```{r get_start_end_qtrs, include=FALSE}
 # Get start and end quarters
 start_end_dates=df[,.(first_action_date=first(action_date),
-                      initial_start_date=first(period_of_performance_start_date),
-                      initial_end_date=first(period_of_performance_current_end_date),
-                      eventual_end_date=last(period_of_performance_current_end_date),
+                      initial_start_date=
+                        first(period_of_performance_start_date),
+                      initial_end_date=
+                        first(period_of_performance_current_end_date),
+                      eventual_end_date=
+                        last(period_of_performance_current_end_date),
                       last_action_date=last(action_date)),
                    by='contract_award_unique_key']
 
-start_end_dates[,start_time:=fifelse(as.Date(first_action_date)<=as.Date(initial_start_date),
-                                    as.Date(first_action_date),
-                                    as.Date(initial_start_date))]
+start_end_dates[,start_time:=as.Date(initial_start_date)]
+# start_end_dates[,start_time:=fifelse(as.Date(first_action_date)<=
+#                                        as.Date(initial_start_date),
+#                                     as.Date(first_action_date),
+#                                     as.Date(initial_start_date))]
 
 start_end_dates[,end_time:=as.Date(eventual_end_date)]
 #fifelse(as.Date(eventual_end_date)<=as.Date(last_action_date),
 #                                   as.Date(eventual_end_date),
 #                                   as.Date(last_action_date))]
 
-start_end_dates[,start_quarter:=as.Date(as.yearqtr(start_time)+ 0.25) - 1]
-start_end_dates[,end_quarter:=as.Date(as.yearqtr(end_time)+ 0.25) - 1]
+start_end_dates[,start_quarter:=as.Date(as.yearqtr(start_time)+ 
+                                          0.25) - 1]
+start_end_dates[,end_quarter:=as.Date(as.yearqtr(end_time)+ 
+                                        0.25) - 1]
 ```
 
 ```{r}
-start_end_dates=start_end_dates[end_quarter>=as.Date('2007-12-31')&
-                                  start_quarter>=as.Date('2007-12-31')]
+#2009-03 to 2012-03
+#start_end_dates=start_end_dates[end_quarter>=as.Date('2009-03-31')&
+#                                  start_quarter>=as.Date('2009-03-31')]
 ```
 
 ```{r}
-start_end_dates[, start_quarter:=case_when(start_quarter<as.Date('2007-12-31')~
-                                             as.Date('2007-12-31'),
-                                         start_quarter>as.Date('2012-12-31')~
-                                           as.Date('2012-12-31'),
-                                         start_quarter>=as.Date('2007-12-31') &
-                                         start_quarter<=as.Date('2012-06-30')~
+# We are interested in the timeline from 2007-12-31 to 2013-12-31
+timeline_start=as.Date('2009-03-31')
+timeline_end=as.Date('2013-03-31')
+
+start_end_dates[, start_quarter:=case_when(start_quarter<timeline_start~
+                                             timeline_start,
+                                         start_quarter>timeline_end~
+                                           timeline_end,
+                                         start_quarter>=timeline_start &
+                                         start_quarter<=timeline_end~
                                          start_quarter)]
 
-start_end_dates[, end_quarter:=case_when(end_quarter<as.Date('2007-12-31')~
-                                             as.Date('2007-12-31'),
-                                         end_quarter>as.Date('2012-12-31')~
-                                           as.Date('2012-12-31'),
-                                         end_quarter>=as.Date('2007-12-31') &
-                                         end_quarter<=as.Date('2012-06-30')~
+start_end_dates[, end_quarter:=case_when(end_quarter<timeline_start~
+                                             timeline_start,
+                                         end_quarter>timeline_end~
+                                           timeline_end,
+                                         end_quarter>=timeline_start &
+                                         end_quarter<=timeline_end~
                                          end_quarter)]
 
 start_end_dates=start_end_dates[start_quarter<=end_quarter]
@@ -201,18 +216,19 @@ df[,action_date_year_quarter:=fifelse(format(action_date_year_quarter,"%m")%in%
 df[,action_date_year_quarter:=fifelse(format(action_date_year_quarter,"%d")=='01',
                                       action_date_year_quarter-1,
                                       action_date_year_quarter)]
-
 ```
 
 ```{r get_last_reported_dates,include=FALSE}
 
-last_reported=df[,.(last_reported_end_date=last(period_of_performance_current_end_date)),
+last_reported=df[,.(last_reported_end_date=
+                      last(period_of_performance_current_end_date)),
                  by=c('contract_award_unique_key',
                       'action_date_year_quarter')]
 
 start_end_dates=merge(start_end_dates,
                       last_reported,
-                      by=c('contract_award_unique_key','action_date_year_quarter'),
+                      by=c('contract_award_unique_key',
+                           'action_date_year_quarter'),
                       all.x=T)
 
 start_end_dates=start_end_dates[order(contract_award_unique_key,
@@ -250,8 +266,10 @@ df_first=df[,.(initial_end_date = first(period_of_performance_current_end_date),
 
 df_first[,initial_duration:=as.numeric(initial_end_date-initial_start_date)]
 
-df_first[,price_structure:=case_when(type_of_contract_pricing_code%in%c('J','L','M','B','K','A')~"Fixed",
-                                     type_of_contract_pricing_code%in%c('U','R','S','T','V')~"Cost")]
+df_first[,price_structure:=case_when(type_of_contract_pricing_code
+                                     %in%c('J','L','M','B','K','A')~"Fixed",
+                                     type_of_contract_pricing_code
+                                     %in%c('U','R','S','T','V')~"Cost")]
 
 df_first[,treat_i:=case_when(contracting_officers_determination_of_business_size_code=="S" &
                                small_disadvantaged_business=="f" ~ 1,
@@ -265,19 +283,20 @@ reg_df=merge(start_end_dates,
              by='contract_award_unique_key',
              all.x=T)
 
-reg_df=reg_df[action_date_year_quarter<=as.Date('2012-06-30')]
+#reg_df=reg_df[action_date_year_quarter<=as.Date('2013-09-30')]
 
 reg_df=reg_df[order(contract_award_unique_key,action_date_year_quarter)]
 
 reg_df[,delay:=fifelse(contract_award_unique_key==lag(contract_award_unique_key),
-                       as.numeric(last_reported_end_date-lag(last_reported_end_date)),
+                       as.numeric(last_reported_end_date-
+                                    lag(last_reported_end_date)),
                        NaN)]
 reg_df[,wins_delay:=Winsorize(delay,probs=c(0.05,0.95),na.rm=T)]
 reg_df[,wins_initial_duration:=Winsorize(initial_duration,probs=c(0.05,0.95),na.rm=T)]
 reg_df[,wins_initial_budget:=Winsorize(initial_budget,probs=c(0.05,0.95),na.rm=T)]
 reg_df[,wins_offers:=Winsorize(number_of_offers_received,probs=c(0.05,0.95),na.rm=T)]
 reg_df[,relative_delay:=delay/(1+initial_duration)]
-reg_df[,wins_relative_delay:=Winsorize(relative_delay,probs=c(0.05,0.95),na.rm=T)]
+reg_df[,wins_relative_delay:=Winsorize(relative_delay,probs=c(0.025,0.975),na.rm=T)]
 reg_df[,post_t:=fifelse(action_date_year_quarter>=as.Date('2011-04-27'),1,0)]
 reg_df[,positive_delay:=ifelse(delay>0,1,0)]
 reg_df[,negative_delay:=ifelse(delay<0,1,0)]
@@ -306,7 +325,7 @@ reg_df[,percentage_delay:=ifelse(contract_award_unique_key==lag(contract_award_u
          NaN)]
 
 reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
-                              probs=c(0.05,0.95),
+                              probs=c(0.025,0.975),
                               na.rm=T)]
 ```
 
@@ -319,7 +338,167 @@ reg_df[,treat_new:=case_when(treat_i==1 ~ 1,
                              treat_i==0 & recipient_duns%in%small_contractors~NaN)]
 ```
 
-```{r export_file, include=FALSE}
- saveRDS(reg_df, 
-         file = "/Users/vibhutid_admin/Desktop/Research/QuickPay/Data-and-code/replication_codes_v1/code/qp_revision/w_qp_timeline_2008.rds")
+```{r restrict_code, include=FALSE}
+nanda_naics=c("3329",
+  "2362",
+  "2379",
+  "5311",
+  "5612",
+  "5629",
+  "5415",
+  "4831",
+  "6114",
+  "4812",
+  "3149",
+  "3325",
+  "1153",
+  "3333",
+  "4247",
+  "3159",
+  "3162",
+  "3169",
+  "3366",
+  "3112")
+
+reg_df[,four_digit_naics:=substr(naics_code,1,4)]
+reg_df[,action_date_year_quarter:=as.Date(action_date_year_quarter)]
+reg_df=reg_df[four_digit_naics%in%nanda_naics]
 ```
+
+```{r export_file, include=FALSE}
+# saveRDS(reg_df, 
+#          file = "/Users/vibhutid_admin/Desktop/Research/QuickPay/Data-and-code/replication_codes_v1/code/qp_revision/w_qp_timeline_2007_2013.rds")
+```
+
+```{r}
+reg_fp=reg_df[type_of_contract_pricing_code=="J" &
+                 !is.na(treat_new)
+              ]
+```
+
+```{r}
+pre_qp_small=mean(reg_fp[post_t==0 & treat_new==1]$wins_percentage_delay,
+                 na.rm=T)
+
+pre_qp_large=mean(reg_fp[post_t==0 & treat_new==0]$wins_percentage_delay,
+                 na.rm=T)
+
+plot_df=reg_fp[,
+   .(avg_delay=mean(wins_percentage_delay,na.rm=T)),
+   by=c('treat_new',
+        'action_date_year_quarter')]
+
+plot_df[,demeaned_delay:=case_when(treat_new==1~avg_delay-pre_qp_small,
+                                treat_new==0~avg_delay-pre_qp_large)]
+
+#plot_df=plot_df[action_date_year_quarter<=as.Date('2014-01-01')]
+# plot_df[,treat_new:=as.factor(treat_new)]
+# ggplot(plot_df,
+#        aes(x = factor(action_date_year_quarter),
+#            y = demeaned_delay,
+#            group = treat_new,
+#            linetype = treat_new == "1",
+#            shape = treat_new)) +
+#   geom_point() +
+#   geom_line()+
+#   # scale_linetype_manual(values = c("TRUE" = "solid", 
+#   #                                  "FALSE" = "dashed"))+
+#   # scale_shape_manual(values = c("TRUE" = 15, 
+#   #                                  "FALSE" = 17))+
+#   theme_minimal()+
+#   labs(x="Time",
+#        y="Average percentage delay")+
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+#   coord_fixed(ratio=1.5)
+
+# Explicit, safe recode
+plot_df[, treat_group := fifelse(treat_new == 1, "Treated", "Control")]
+plot_df[, treat_group := factor(treat_group, levels = c("Control", "Treated"))]
+
+ggplot(
+  plot_df,
+  aes(
+    x = factor(action_date_year_quarter),
+    y = demeaned_delay,
+    group = treat_group,
+    linetype = treat_group,
+    shape = treat_group
+  )
+) +
+  geom_point() +
+  geom_line() +
+  scale_linetype_manual(
+    values = c("Control" = "dashed", "Treated" = "solid")
+  ) +
+  scale_shape_manual(
+    values = c("Control" = 17, "Treated" = 15)
+  ) +
+  theme_minimal() +
+  labs(
+    x = "Time",
+    y = "Average percentage delay",
+    linetype = "",
+    shape = ""
+  ) +
+  theme(
+    panel.grid = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
+    axis.text.x = element_text(angle = 90, hjust = 1)
+  ) +
+  coord_fixed(ratio = 1.5)
+
+```
+
+```{r}
+a=unique(reg_df[,c('action_date_year_quarter')])[order(action_date_year_quarter)]
+a[,relative_time:=seq(-14,9)]
+reg_fp=merge(reg_fp,
+             a,
+             by=c('action_date_year_quarter'),
+             all.x=T)
+
+reg_fp=reg_fp[relative_time<=9 & relative_time>=-9]
+factor_levels=as.character(unique(reg_fp$relative_time))
+reg_fp[,relative_time:=factor(relative_time,
+                              levels=c("-9","-8","-7","-6",
+                                          "-5","-4","-3","-2",
+                                          "-1","0","1","2",
+                                          "3","4","5","6",
+                                          "7","8","9"))]
+
+```
+
+```{r}
+reg_fp[,wins_delay_2:=Winsorize(delay,na.rm=T)]
+reg_fp[,wins_percentage_delay_2:=Winsorize(percentage_delay,na.rm=T)]
+reg_fp[,wins_initial_duration_2:=Winsorize(initial_duration,na.rm=T)]
+reg_fp[,wins_initial_budget_2:=Winsorize(initial_budget,na.rm=T)]
+reg_fp[,wins_offers_2:=Winsorize(number_of_offers_received,na.rm=T)]
+reg_fp[,wins_project_quarter_stage_2:=Winsorize(project_quarter_stage,na.rm=T)]
+
+m=feols(wins_percentage_delay_2~i(relative_time,treat_new,ref="-1")+
+            log(wins_project_quarter_stage_2)+
+            log(wins_initial_duration_2)+
+            log(wins_initial_budget_2)+
+            wins_offers_2+
+            post_t:log(wins_initial_duration_2)+
+            post_t:log(wins_initial_budget_2)+
+            post_t:wins_offers_2
+              |
+            action_date_year_quarter+
+            product_or_service_code+
+            recipient_duns+
+            naics_code,
+        data=reg_fp,
+        cluster=~contract_award_unique_key)
+
+iplot(m,
+      xlab = "Relative quarter",
+      main="",
+      grid=F,
+      ylim.add=0.05,
+      lwd = 0.8,
+      pt.cex = 2)
+```
+
+

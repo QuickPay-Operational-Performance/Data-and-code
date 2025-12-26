@@ -42,16 +42,24 @@ reg_df=fread(paste0(input_path,
 ```
 
 ```{r competition_delays_subsample, echo=FALSE, results='asis'}
-reg_df[,project_signed_after_quickpay:=case_when(initial_start_date>=as.Date('2011-04-27') &
-                                                   action_date_year_quarter>=as.Date('2011-04-27')~1,
-                                                 initial_start_date<as.Date('2011-04-27') ~ 0,
-                                                 initial_start_date>=as.Date('2011-04-27') &
-                                                   action_date_year_quarter<as.Date('2011-04-27')~NaN)]
+reg_df[,project_signed_after_quickpay:=case_when(initial_start_date>=
+                                                   as.Date('2011-04-27') &
+                                                   action_date_year_quarter>=
+                                                   as.Date('2011-04-27')~1,
+                                                 initial_start_date<
+                                                   as.Date('2011-04-27') ~ 0,
+                                                 initial_start_date>=
+                                                   as.Date('2011-04-27') &
+                                                   action_date_year_quarter<
+                                                   as.Date('2011-04-27')~NaN)]
 
 
 reg_df[,quarter_when_project_signed:=as.Date(as.yearqtr(as.Date(initial_start_date)),
                                                        frac = 1)]
 
+```
+
+```{r}
 reg_df_first_reported=unique(reg_df,
                              by='contract_award_unique_key')
 
@@ -59,6 +67,32 @@ reg_df_first_reported=subset(reg_df_first_reported,
                              initial_start_date>as.Date('2009-12-31') & 
                                initial_start_date<as.Date('2012-03-31') &
                               competitively_awarded_i==1)
+```
+
+```{r}
+a=unique(reg_df_first_reported[,c('quarter_when_project_signed')])
+a[,relative_quarter:=seq(-5,3)]
+a=a[order(quarter_when_project_signed)]
+reg_df_first_reported=merge(reg_df_first_reported,
+                            a,
+                            by='quarter_when_project_signed',
+                            all.x=T)
+
+reg_df_first_reported[,relative_quarter:=factor(relative_quarter)]
+reg_df_first_reported[,relative_quarter:=relevel(relative_quarter,ref="-1")]
+
+```
+
+```{r}
+m=feols(winsorized_initial_duration_in_days_i~treat_i+
+          treat_i:relative_quarter|
+          quarter_when_project_signed+
+          product_or_service_code+
+          naics_code,
+        data=reg_df_first_reported,
+        cluster=~contract_award_unique_key)
+
+coefplot(m,keep=":relative_quarter")
 ```
 
 ```{r}
