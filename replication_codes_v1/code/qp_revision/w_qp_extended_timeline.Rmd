@@ -282,16 +282,43 @@ reg_df=merge(start_end_dates,
              df_first,
              by='contract_award_unique_key',
              all.x=T)
+```
 
-#reg_df=reg_df[action_date_year_quarter<=as.Date('2013-09-30')]
+```{r restrict_code, include=FALSE}
+nanda_naics=c("3329",
+  "2362",
+  "2379",
+  "5311",
+  "5612",
+  "5629",
+  "5415",
+  "4831",
+  "6114",
+  "4812",
+  "3149",
+  "3325",
+  "1153",
+  "3333",
+  "4247",
+  "3159",
+  "3162",
+  "3169",
+  "3366",
+  "3112")
 
+reg_df[,four_digit_naics:=substr(naics_code,1,4)]
+reg_df[,action_date_year_quarter:=as.Date(action_date_year_quarter)]
+reg_df=reg_df[four_digit_naics%in%nanda_naics]
+```
+
+```{r delays}
 reg_df=reg_df[order(contract_award_unique_key,action_date_year_quarter)]
 
 reg_df[,delay:=fifelse(contract_award_unique_key==lag(contract_award_unique_key),
                        as.numeric(last_reported_end_date-
                                     lag(last_reported_end_date)),
                        NaN)]
-reg_df[,wins_delay:=Winsorize(delay,probs=c(0.05,0.95),na.rm=T)]
+reg_df[,wins_delay:=Winsorize(delay,probs=c(0.025,0.975),na.rm=T)]
 reg_df[,wins_initial_duration:=Winsorize(initial_duration,probs=c(0.05,0.95),na.rm=T)]
 reg_df[,wins_initial_budget:=Winsorize(initial_budget,probs=c(0.05,0.95),na.rm=T)]
 reg_df[,wins_offers:=Winsorize(number_of_offers_received,probs=c(0.05,0.95),na.rm=T)]
@@ -321,7 +348,7 @@ reg_df[,last_reported_duration:=ifelse(contract_award_unique_key==lag(contract_a
 # So it is the actual start date for a project
 # get project duration as of last quarter in the denominator
 reg_df[,percentage_delay:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),
-         delay/last_reported_duration,
+         delay/(1+last_reported_duration),
          NaN)]
 
 reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
@@ -338,32 +365,6 @@ reg_df[,treat_new:=case_when(treat_i==1 ~ 1,
                              treat_i==0 & recipient_duns%in%small_contractors~NaN)]
 ```
 
-```{r restrict_code, include=FALSE}
-nanda_naics=c("3329",
-  "2362",
-  "2379",
-  "5311",
-  "5612",
-  "5629",
-  "5415",
-  "4831",
-  "6114",
-  "4812",
-  "3149",
-  "3325",
-  "1153",
-  "3333",
-  "4247",
-  "3159",
-  "3162",
-  "3169",
-  "3366",
-  "3112")
-
-reg_df[,four_digit_naics:=substr(naics_code,1,4)]
-reg_df[,action_date_year_quarter:=as.Date(action_date_year_quarter)]
-reg_df=reg_df[four_digit_naics%in%nanda_naics]
-```
 
 ```{r export_file, include=FALSE}
 # saveRDS(reg_df, 
