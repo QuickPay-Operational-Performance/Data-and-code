@@ -1,0 +1,223 @@
+---
+title: "Project Stage"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(DescTools) 
+```
+
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r read_data,include=FALSE}
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+```
+
+```{r define_contractor_controls,include=FALSE}
+num_contractor_qtr_projects=reg_df_subset[,.(num_contractor_projects=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
+
+num_contractor_qtr_project_delays=reg_df_subset[wins_percentage_delay>0,.(num_projects_delayed=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
+
+num_contractor_qtr_project_delays=num_contractor_qtr_project_delays[order(recipient_duns,action_date_year_quarter)]
+
+# Calculate how many projects of contractor were delayed until last quarter
+num_contractor_qtr_project_delays[, num_delayed_until_last_qtr := shift(cumsum(num_projects_delayed),fill=0), by = recipient_duns]
+
+num_contractor_qtr_projects=merge(num_contractor_qtr_projects,
+                                  num_contractor_qtr_project_delays,
+                    by=c('recipient_duns',
+                         'action_date_year_quarter'),
+                    all.x=T)
+
+num_contractor_qtr_projects[,num_projects_delayed:=ifelse(is.na(num_projects_delayed),0,num_projects_delayed)]
+
+num_contractor_qtr_projects[,num_delayed_until_last_qtr:=ifelse(is.na(num_delayed_until_last_qtr),0,num_delayed_until_last_qtr)]
+
+
+reg_df_subset=merge(reg_df_subset,
+                    num_contractor_qtr_projects,
+                    by=c('recipient_duns',
+                         'action_date_year_quarter'),
+                    all.x=T)
+
+reg_df_subset[,num_concurrent_contractor_projects:=num_contractor_projects-1]
+
+```
+
+```{r stage_regs_log, warning=FALSE, echo=FALSE, results='asis'}
+
+# Project Stage
+
+# $t$ indicates the end of the quarter
+# We want to get stage of the project at the beginning of a given quarter (before any delays materialize)
+
+# $Stage_{it}=\frac{ActionDate_{t-1}-StartDate_i}{Duration_{i,t-1}}$
+# $Stage_{it}=\frac{(t-1)-StartDate_i}{Duration_{i,t-1}}$
+
+  
+m1=feols(wins_percentage_delay~treat_new+
+          log(wins_project_quarter_stage)+
+          treat_new:post_t+
+          treat_new:log(wins_project_quarter_stage)+
+          post_t:log(wins_project_quarter_stage)+
+          treat_new:post_t:log(wins_project_quarter_stage)+
+          wins_number_of_offers_received+
+          log(1+winsorized_initial_budget_i)+
+          log(1+winsorized_initial_duration_in_days_i)+
+          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+          post_t:wins_number_of_offers_received+
+          num_concurrent_contractor_projects+
+          num_delayed_until_last_qtr|
+          action_date_year_quarter,
+         cluster=~contract_award_unique_key, # clustered at project level
+        data=reg_df_subset)
+
+m2=feols(wins_percentage_delay~treat_new+
+          log(wins_project_quarter_stage)+
+          treat_new:post_t+
+          treat_new:log(wins_project_quarter_stage)+
+          post_t:log(wins_project_quarter_stage)+
+          treat_new:post_t:log(wins_project_quarter_stage)+
+          wins_number_of_offers_received+
+          log(1+winsorized_initial_budget_i)+
+          log(1+winsorized_initial_duration_in_days_i)+
+          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+          post_t:wins_number_of_offers_received+
+          num_concurrent_contractor_projects+
+          num_delayed_until_last_qtr|
+          product_or_service_code+action_date_year_quarter,
+         cluster=~contract_award_unique_key, # clustered at project level
+        data=reg_df_subset)
+
+m3=feols(wins_percentage_delay~treat_new+
+          log(wins_project_quarter_stage)+
+          treat_new:post_t+
+          treat_new:log(wins_project_quarter_stage)+
+          post_t:log(wins_project_quarter_stage)+
+          treat_new:post_t:log(wins_project_quarter_stage)+
+          wins_number_of_offers_received+
+          log(1+winsorized_initial_budget_i)+
+          log(1+winsorized_initial_duration_in_days_i)+
+          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+          post_t:wins_number_of_offers_received+
+          num_concurrent_contractor_projects+
+          num_delayed_until_last_qtr|
+          product_or_service_code+
+           naics_code+
+           action_date_year_quarter,
+         cluster=~contract_award_unique_key, # clustered at project level
+        data=reg_df_subset)
+
+m4=feols(wins_percentage_delay~treat_new+
+          log(wins_project_quarter_stage)+
+          treat_new:post_t+
+          treat_new:log(wins_project_quarter_stage)+
+          post_t:log(wins_project_quarter_stage)+
+          treat_new:post_t:log(wins_project_quarter_stage)+
+          wins_number_of_offers_received+
+          log(1+winsorized_initial_budget_i)+
+          log(1+winsorized_initial_duration_in_days_i)+
+          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+          post_t:wins_number_of_offers_received+
+          num_concurrent_contractor_projects+
+          num_delayed_until_last_qtr|
+          product_or_service_code+
+           naics_code+
+           action_date_year_quarter+
+           recipient_duns,
+         cluster=~contract_award_unique_key, # clustered at project level
+        data=reg_df_subset)
+
+m5=feols(wins_percentage_delay~log(wins_project_quarter_stage)+
+          treat_new:post_t+
+          treat_new:log(wins_project_quarter_stage)+
+          post_t:log(wins_project_quarter_stage)+
+          treat_new:post_t:log(wins_project_quarter_stage)+
+          wins_number_of_offers_received+
+          log(1+winsorized_initial_budget_i)+
+          log(1+winsorized_initial_duration_in_days_i)+
+          post_t:log(1+winsorized_initial_budget_i)+
+          post_t:log(1+winsorized_initial_duration_in_days_i)+
+          post_t:wins_number_of_offers_received+
+          num_concurrent_contractor_projects+
+          num_delayed_until_last_qtr|
+          product_or_service_code+
+           naics_code+
+           action_date_year_quarter+
+           recipient_duns,
+         cluster=~contract_award_unique_key, # clustered at project level
+        data=reg_df_subset)
+
+stage_regs=list(m1,m2,m3,m4,m5)
+```
+
+```{r output, echo=FALSE, results='asis'}
+setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
+                      "post_t"="$Post_t$",
+                      "treat_new"="$Treat_i$",
+                      "log(wins_project_quarter_stage)"="$Ln(Stage_{it})$",
+                      "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
+                      "log(1+winsorized_initial_budget_i)"="Initial budget",
+                      "wins_number_of_offers_received"="Number of offers",
+                      "contract_award_unique_key"="Project ID",
+                      "product_or_service_code"="Task",
+                      "action_date_year_quarter"="Time",
+                      "naics_code"="Industry",
+                      "awarding_sub_agency_code"="Subagency",
+                      "num_concurrent_contractor_projects"="NumConcurrent",
+                      "num_delayed_until_last_qtr"="NumDelayed",
+                      "recipient_duns"="Contractor"
+                      ))
+
+etable(stage_regs,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       title="Project stage and the QuickPay reform",
+       fitstat = c("n","r2"),
+       drop=c("Initial duration",
+              "Initial budget",
+              "Number of offers",
+              "NumConcurrent",
+              "NumDelayed"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       extralines = list("Contractor controls"=rep("Yes",length(stage_regs))),
+       notes="Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls. Sample restricted to contractors holding only one type of project.",
+       tex=TRUE)
+```

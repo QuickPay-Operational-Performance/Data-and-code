@@ -49,83 +49,106 @@ reg_df_subset[,project_signed_after_quickpay:=case_when(initial_start_date>=as.D
                                                    action_date_year_quarter<as.Date('2011-04-27')~NaN)]
 ```
 
-```{r}
-a1=reg_df_subset[,.(num_projects_given_task=
-                      n_distinct(contract_award_unique_key)),
-              by=c('recipient_duns',
-                   'product_or_service_code',
-                   'action_date_year_quarter')]
+```{r define_contractor_controls,include=FALSE}
+num_contractor_qtr_projects=reg_df_subset[,.(num_contractor_projects=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
 
-a2=reg_df_subset[,.(num_projects_total=
-                      n_distinct(contract_award_unique_key)),
-              by=c('recipient_duns',
-                   'action_date_year_quarter')]
+num_contractor_qtr_project_delays=reg_df_subset[wins_percentage_delay>0,.(num_projects_delayed=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
 
-a3=merge(a1,a2,by=c('recipient_duns','action_date_year_quarter'),all.x=T)
+num_contractor_qtr_project_delays=num_contractor_qtr_project_delays[order(recipient_duns,action_date_year_quarter)]
 
-a3=a3[!is.na(recipient_duns)]
-a3=a3[order(recipient_duns,action_date_year_quarter)]
+# Calculate how many projects of contractor were delayed until last quarter
+num_contractor_qtr_project_delays[, num_delayed_until_last_qtr := shift(cumsum(num_projects_delayed),fill=0), by = recipient_duns]
 
-a3[,lag_num_projects_total:=ifelse(recipient_duns==lag(recipient_duns),
-                                         lag(num_projects_total),
-                                         NaN)]
+num_contractor_qtr_projects=merge(num_contractor_qtr_projects,
+                                  num_contractor_qtr_project_delays,
+                    by=c('recipient_duns',
+                         'action_date_year_quarter'),
+                    all.x=T)
 
-a3[,lag_num_projects_given_task:=ifelse(recipient_duns==lag(recipient_duns),
-                                         lag(num_projects_given_task),
-                                         NaN)]
+num_contractor_qtr_projects[,num_projects_delayed:=ifelse(is.na(num_projects_delayed),0,num_projects_delayed)]
+
+num_contractor_qtr_projects[,num_delayed_until_last_qtr:=ifelse(is.na(num_delayed_until_last_qtr),0,num_delayed_until_last_qtr)]
+
 
 reg_df_subset=merge(reg_df_subset,
-                    a3,
+                    num_contractor_qtr_projects,
                     by=c('recipient_duns',
-                   'product_or_service_code',
-                   'action_date_year_quarter'),
-        all.x=T)
+                         'action_date_year_quarter'),
+                    all.x=T)
 
-reg_df_subset[,num_projects_given_task_excl_current:=num_projects_given_task-1]
-reg_df_subset[,num_projects_total_excl_current:=num_projects_total-1]
-reg_df_subset[,prop_projects_given_task_excl_current:=num_projects_given_task_excl_current/num_projects_total_excl_current]
+reg_df_subset[,num_concurrent_contractor_projects:=num_contractor_projects-1]
 
 ```
 
-```{r competition_subsample_ii, include=FALSE}
-m1=feols(prop_projects_given_task_excl_current~treat_new+
+```{r competition_subsample_ii, echo=FALSE, results='asis'}
+m1=feols(wins_percentage_delay~treat_new+
                                   project_signed_after_quickpay+
                                   treat_new:post_t+
                                   treat_new:post_t:project_signed_after_quickpay+
-                            log(wins_project_quarter_stage)|
+                            log(wins_project_quarter_stage)+
+          num_concurrent_contractor_projects+
+          num_delayed_until_last_qtr|
                             action_date_year_quarter,
                           cluster=~contract_award_unique_key,
                           data=subset(reg_df_subset,competitively_awarded_i==1))
 
-m2=feols(prop_projects_given_task_excl_current~treat_new+
+m2=feols(wins_percentage_delay~treat_new+
                                   project_signed_after_quickpay+
                                   treat_new:post_t+
                                   treat_new:post_t:project_signed_after_quickpay+
-                            log(wins_project_quarter_stage)|
+                            log(wins_project_quarter_stage)+
+          num_concurrent_contractor_projects+
+          num_delayed_until_last_qtr|
                             product_or_service_code+
                             action_date_year_quarter,
                           cluster=~contract_award_unique_key,
                           data=subset(reg_df_subset,competitively_awarded_i==1))
 
-m3=feols(prop_projects_given_task_excl_current~treat_new+
+m3=feols(wins_percentage_delay~treat_new+
                                   project_signed_after_quickpay+
                                   treat_new:post_t+
                                   treat_new:post_t:project_signed_after_quickpay+
-                            log(wins_project_quarter_stage)|
+                            log(wins_project_quarter_stage)+
+          num_concurrent_contractor_projects+
+          num_delayed_until_last_qtr|
                             naics_code+
                             product_or_service_code+
                             action_date_year_quarter,
                           cluster=~contract_award_unique_key,
                           data=subset(reg_df_subset,competitively_awarded_i==1))
 
-competition=list(m1,m2,m3)
-```
+m4=feols(wins_percentage_delay~treat_new+
+                                project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)+
+          num_concurrent_contractor_projects+
+          num_delayed_until_last_qtr|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter+
+           recipient_duns,
+                          cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,competitively_awarded_i==1))
 
-$PropSameTask_{ikt}=$ Proportion of projects of the same task as project $i$ held by the contracto in quarter $t$.
+m5=feols(wins_percentage_delay~project_signed_after_quickpay+
+                                  treat_new:post_t+
+                                  treat_new:post_t:project_signed_after_quickpay+
+                            log(wins_project_quarter_stage)+
+          num_concurrent_contractor_projects+
+          num_delayed_until_last_qtr|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter+
+           recipient_duns,
+                          cluster=~contract_award_unique_key,
+                          data=subset(reg_df_subset,competitively_awarded_i==1))
+
+competition=list(m1,m2,m3,m4,m5)
+```
 
 ```{r output, echo=FALSE, results='asis'}
 setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
-                      "prop_projects_given_task_excl_current"="$PropSameTask_{ikt}$",
                       "positive_delay"="Log odds (Delay rate >0)",
                       "post_t"="$Post_t$",
                       "treat_new"="$Treat_i$",
@@ -137,7 +160,10 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       "product_or_service_code"="Task",
                       "action_date_year_quarter"="Time",
                       "naics_code"="Industry",
-                      "project_signed_after_quickpay"="$SA_i$"
+                      "project_signed_after_quickpay"="$SA_i$",
+                      "num_concurrent_contractor_projects"="NumConcurrent",
+                      "num_delayed_until_last_qtr"="NumDelayed",
+                      "recipient_duns"="Contractor"
                       ))
 
 etable(competition,
@@ -146,7 +172,9 @@ etable(competition,
        fontsize = "small",
        title="Effect of QuickPay on percentage delay rates",
        fitstat = c("pr2","n","r2"),
-       drop=c("Project stage"),
+       drop=c("Project stage",
+              "NumConcurrent",
+              "NumDelayed"),
        style.tex=style.tex(fixef.title = "\\midrule",
                            fixef.suffix = " FE",
                            var.title = "\\midrule ",
@@ -157,6 +185,7 @@ etable(competition,
                            yesNo = c("Yes","No"),
                            line.bottom="simple",
                            line.top="simple"),
-       notes="Controls include Log(project stage).",
+               extralines=list("Contractor controls"=rep("Yes",length(competition))),
+       notes="Controls include Log(project stage) and contractor controls.",
        tex=TRUE)
 ```

@@ -1,0 +1,278 @@
+---
+title: "Financial Liquidity"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(DescTools) 
+```
+
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r read_data,include=FALSE}
+reg_df_subset=fread(paste0(working_path,
+                 'w_clean_control.csv'))
+```
+
+```{r cf_contractor_setup, results='asis', echo=FALSE}
+# For a given contractor, 
+# $CFPercentage_i$ = (100 x Number of projects receiving CF)/(Number of projects)
+
+reg_df3=unique(reg_df_subset[,c('contract_award_unique_key',
+                                'recipient_duns',
+                                'contract_financing_i')])
+
+contract_financing_contractor=reg_df3[,sum(contract_financing_i),
+                                            by='recipient_duns']
+
+setnames(contract_financing_contractor,"V1","num_projects_receiving_financing")
+
+
+num_projects_contractor=reg_df_subset[,n_distinct(contract_award_unique_key),
+                                      by='recipient_duns']
+setnames(num_projects_contractor,'V1','num_projects_contractor')
+
+contract_financing_contractor=merge(contract_financing_contractor,
+                                    num_projects_contractor,by='recipient_duns')                     
+
+contract_financing_contractor[,pc_projects_receiving_cf:=100*num_projects_receiving_financing/num_projects_contractor]
+
+# contract_financing_contractor[,above_median_cf:=ifelse(pc_projects_receiving_cf>median(subset(contract_financing_contractor,pc_projects_receiving_cf>0)$pc_projects_receiving_cf),1,0)]
+
+
+reg_df_subset=merge(reg_df_subset,
+                    contract_financing_contractor[,c('recipient_duns',
+                                                     'pc_projects_receiving_cf')],
+                    by='recipient_duns',
+                    all.x=T)
+```
+
+```{r define_contractor_controls,include=FALSE}
+num_contractor_qtr_projects=reg_df_subset[,.(num_contractor_projects=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
+
+num_contractor_qtr_project_delays=reg_df_subset[wins_percentage_delay>0,.(num_projects_delayed=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
+
+num_contractor_qtr_project_delays=num_contractor_qtr_project_delays[order(recipient_duns,action_date_year_quarter)]
+
+# Calculate how many projects of contractor were delayed until last quarter
+num_contractor_qtr_project_delays[, num_delayed_until_last_qtr := shift(cumsum(num_projects_delayed),fill=0), by = recipient_duns]
+
+num_contractor_qtr_projects=merge(num_contractor_qtr_projects,
+                                  num_contractor_qtr_project_delays,
+                    by=c('recipient_duns',
+                         'action_date_year_quarter'),
+                    all.x=T)
+
+num_contractor_qtr_projects[,num_projects_delayed:=ifelse(is.na(num_projects_delayed),0,num_projects_delayed)]
+
+num_contractor_qtr_projects[,num_delayed_until_last_qtr:=ifelse(is.na(num_delayed_until_last_qtr),0,num_delayed_until_last_qtr)]
+
+
+reg_df_subset=merge(reg_df_subset,
+                    num_contractor_qtr_projects,
+                    by=c('recipient_duns',
+                         'action_date_year_quarter'),
+                    all.x=T)
+
+reg_df_subset[,num_concurrent_contractor_projects:=num_contractor_projects-1]
+
+```
+
+```{r cf_contractor_level, results='asis',echo=FALSE}
+m1=feols(wins_percentage_delay~treat_new+
+                           log(wins_project_quarter_stage)+
+                            post_t:treat_new+
+                            pc_projects_receiving_cf+ 
+                            treat_new:pc_projects_receiving_cf+
+                            post_t:pc_projects_receiving_cf+
+                            post_t:treat_new:pc_projects_receiving_cf+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received+
+                           num_concurrent_contractor_projects+
+                           num_delayed_until_last_qtr|
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+m2=feols(wins_percentage_delay~treat_new+
+                           log(wins_project_quarter_stage)+
+                            post_t:treat_new+
+                            pc_projects_receiving_cf+
+                             treat_new:pc_projects_receiving_cf+
+                            post_t:pc_projects_receiving_cf+
+                            post_t:treat_new:pc_projects_receiving_cf+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received+
+                           num_concurrent_contractor_projects+
+                           num_delayed_until_last_qtr|
+                            product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+m3=feols(wins_percentage_delay~treat_new+
+                           log(wins_project_quarter_stage)+
+                            post_t:treat_new+
+                            pc_projects_receiving_cf+
+                           treat_new:pc_projects_receiving_cf+
+                            post_t:pc_projects_receiving_cf+
+                            post_t:treat_new:pc_projects_receiving_cf+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received+
+                           num_concurrent_contractor_projects+
+                           num_delayed_until_last_qtr|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+m4=feols(wins_percentage_delay~treat_new+
+                           log(wins_project_quarter_stage)+
+                            post_t:treat_new+
+                            pc_projects_receiving_cf+
+                           treat_new:pc_projects_receiving_cf+
+                            post_t:pc_projects_receiving_cf+
+                            post_t:treat_new:pc_projects_receiving_cf+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received+
+                           num_concurrent_contractor_projects+
+                           num_delayed_until_last_qtr|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter+
+                            recipient_duns,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+m5=feols(wins_percentage_delay~#treat_new+
+                           log(wins_project_quarter_stage)+
+                            post_t:treat_new+
+                            pc_projects_receiving_cf+
+                           treat_new:pc_projects_receiving_cf+
+                            post_t:pc_projects_receiving_cf+
+                            post_t:treat_new:pc_projects_receiving_cf+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received+
+                           num_concurrent_contractor_projects+
+                           num_delayed_until_last_qtr|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter+
+                            recipient_duns,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+m6=feols(wins_percentage_delay~#treat_new+
+                           log(wins_project_quarter_stage)+
+                            post_t:treat_new+
+                           # pc_projects_receiving_cf+
+                           treat_new:pc_projects_receiving_cf+
+                            post_t:pc_projects_receiving_cf+
+                            post_t:treat_new:pc_projects_receiving_cf+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received+
+                           num_concurrent_contractor_projects+
+                           num_delayed_until_last_qtr|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter+
+                            recipient_duns,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+cf_regs=list(m1,m2,m3,m4,m5,m6)
+```
+
+
+```{r output, echo=FALSE, results='asis'}
+setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
+                      "positive_delay"="Log odds (Delay rate >0)",
+                      "post_t"="$Post_t$",
+                      "treat_new"="$Treat_i$",
+                      "pc_projects_receiving_cf"="$CFPercentage_i$",
+                      "log(wins_project_quarter_stage)"="Project stage",
+                      "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
+                      "log(1+winsorized_initial_budget_i)"="Initial budget",
+                      "wins_number_of_offers_received"="Number of offers",
+                      "contract_award_unique_key"="Project ID",
+                      "product_or_service_code"="Task",
+                      "action_date_year_quarter"="Time",
+                      "naics_code"="Industry",
+                      "awarding_sub_agency_code"="Subagency",
+                      "num_concurrent_contractor_projects"="NumConcurrent",
+                      "num_delayed_until_last_qtr"="NumDelayed",
+                      "recipient_duns"="Contractor"
+                      ))
+
+etable(cf_regs,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       title="Financial liquidity and the QuickPay reform",
+       fitstat = c("n","r2"),
+       drop=c("Project stage",
+              "Initial duration",
+              "Initial budget",
+              "Number of offers",
+              "NumConcurrent",
+              "NumDelayed"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+               extralines=list("Contractor controls"=rep("Yes",length(cf_regs))),
+       notes="Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls",
+       tex=TRUE)
+```

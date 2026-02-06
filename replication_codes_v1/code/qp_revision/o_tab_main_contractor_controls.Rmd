@@ -77,7 +77,7 @@ m0=feols(wins_percentage_delay~treat_new+
 ```{r regs_with_controls, include=FALSE}
 
 m1=feols(wins_percentage_delay~treat_new+
-            num_concurrent_contractor_projects+
+                            num_concurrent_contractor_projects+
                             post_t:treat_new+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
@@ -146,7 +146,7 @@ m4=feols(wins_percentage_delay~#treat_new+
 
 
 ```{r concurrent_interaction}
-m5=feols(wins_percentage_delay~+
+m5=feols(wins_percentage_delay~
             num_delayed_until_last_qtr+
             num_concurrent_contractor_projects+
                             post_t:treat_new+

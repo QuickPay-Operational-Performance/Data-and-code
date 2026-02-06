@@ -367,8 +367,8 @@ reg_df[,treat_new:=case_when(treat_i==1 ~ 1,
 
 
 ```{r export_file, include=FALSE}
-# saveRDS(reg_df, 
-#          file = "/Users/vibhutid_admin/Desktop/Research/QuickPay/Data-and-code/replication_codes_v1/code/qp_revision/w_qp_timeline_2007_2013.rds")
+saveRDS(reg_df,
+         file = "/Users/vibhutid_admin/Desktop/Research/QuickPay/Data-and-code/replication_codes_v1/code/qp_revision/w_qp_timeline_2008_2013.rds")
 ```
 
 ```{r}
@@ -411,7 +411,7 @@ x3 <- which(levels(factor(plot_df$action_date_year_quarter)) == cut_q3) - 0.25
 
 ymin <- min(plot_df$demeaned_delay, na.rm = TRUE)
 
-ggplot(
+extended_model_free_plot=ggplot(
   plot_df,
   aes(
     x = factor(action_date_year_quarter),
@@ -422,16 +422,19 @@ ggplot(
   )
 ) +
   geom_point(size = 2) +
-  geom_line(linewidth = 0.9) +
-  geom_vline(xintercept = x1, 
-             color = "darkred", 
-             linewidth = 0.6) +
-  geom_vline(xintercept = x2, 
-             color = "darkred", 
-             linewidth = 0.6) +
-  geom_vline(xintercept = x3, 
-             color = "darkred", 
-             linewidth = 0.6) +
+  geom_line(linewidth = 0.5) +
+  geom_vline(xintercept = x1,
+             color = "darkred",
+             linewidth = 0.5,
+             linetype="solid") +
+  geom_vline(xintercept = x2,
+             color = "darkred",
+             linewidth = 0.5,
+             linetype="dashed") +
+  geom_vline(xintercept = x3,
+             color = "darkred",
+             linewidth = 0.5,
+             linetype="dotted") +
   scale_linetype_manual(
     values = c("Control" = "dashed", "Treated" = "solid")
   ) +
@@ -442,7 +445,7 @@ ggplot(
   theme_minimal() +
   labs(
     x = "Time",
-    y = "Percentage delay rate \n (demeaned)",
+    y = "Percentage delay rate",
     linetype = "",
     shape = ""
   ) +
@@ -453,9 +456,20 @@ ggplot(
     legend.position = "bottom",
     legend.key.width = unit(3, "cm")
   ) +
-  coord_fixed(ratio = 1)
+  coord_fixed(ratio = 1.5)
 
+ggsave(paste0(getwd(),
+              '/extended_model_free_plot.png'),
+       extended_model_free_plot,
+       width=8,
+       height=4,
+       bg="white")
 ```
 
 ```{r}
+feols(wins_percentage_delay~treat_new:post_t|
+        contract_award_unique_key+
+        action_date_year_quarter, 
+      data=reg_fp,
+      cluster=~contract_award_unique_key)
 ```

@@ -68,51 +68,57 @@ reg_df_subset[,num_concurrent_contractor_projects:=num_contractor_projects-1]
 
 ```{r regs_with_controls, include=FALSE}
 
-m1=feols(wins_percentage_delay~#treat_new+
-            num_delayed_until_last_qtr+
-            num_concurrent_contractor_projects+
-                            post_t:treat_new+
+m1=feols(wins_percentage_delay~treat_new:post_t+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             wins_number_of_offers_received+
                             post_t:
-                log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_duration_in_days_i)+
                             post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received|
-                            naics_code+product_or_service_code+action_date_year_quarter+recipient_duns,
+                            post_t:wins_number_of_offers_received+
+                            num_concurrent_contractor_projects+
+                            num_delayed_until_last_qtr|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter+
+                            recipient_duns,
                             cluster=~recipient_duns,
                           data=reg_df_subset)
 
-m2=feols(wins_percentage_delay~#treat_new+
-            num_delayed_until_last_qtr+
-            num_concurrent_contractor_projects+
-                            post_t:treat_new+
+m2=feols(wins_percentage_delay~treat_new:post_t+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             wins_number_of_offers_received+
                             post_t:
-                log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_duration_in_days_i)+
                             post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received|
-                            naics_code+product_or_service_code+action_date_year_quarter+recipient_duns,
+                            post_t:wins_number_of_offers_received+
+                            num_concurrent_contractor_projects+
+                            num_delayed_until_last_qtr|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter+
+                            recipient_duns,
                             cluster=~product_or_service_code,
                           data=reg_df_subset)
 
-m3=feols(wins_percentage_delay~#treat_new+
-            num_delayed_until_last_qtr+
-            num_concurrent_contractor_projects+
-                            post_t:treat_new+
+m3=feols(wins_percentage_delay~treat_new:post_t+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
                             wins_number_of_offers_received+
                             post_t:
-                log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_duration_in_days_i)+
                             post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received|
-                            naics_code+product_or_service_code+action_date_year_quarter+recipient_duns,
+                            post_t:wins_number_of_offers_received+
+                            num_concurrent_contractor_projects+
+                            num_delayed_until_last_qtr|
+                            naics_code+
+                            product_or_service_code+
+                            action_date_year_quarter+
+                            recipient_duns,
                             cluster=~naics_code,
                           data=reg_df_subset)
 
@@ -148,7 +154,9 @@ etable(delay_rates,
        drop = c("Project stage",
                 "Initial duration",
                 "Initial budget",
-                "Number of offers"),
+                "Number of offers",
+                "%num_concurrent_contractor_projects",
+                "%num_delayed_until_last_qtr"),
        style.tex = style.tex(
          model.format = "I",
          fixef.suffix = " FE",
