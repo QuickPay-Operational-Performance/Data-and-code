@@ -236,7 +236,7 @@ etable(sequencing_regs,
 
 ```{r output_pvalues, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 etable(sequencing_regs,
-       digits='r3',
+       digits='r5',
        digits.stats = 2,
        coefstat="pvalue",
        fontsize = "small",

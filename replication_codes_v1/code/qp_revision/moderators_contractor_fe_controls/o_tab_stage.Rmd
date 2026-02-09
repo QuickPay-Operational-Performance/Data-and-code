@@ -224,7 +224,7 @@ etable(stage_regs,
 
 ```{r output_pvalues, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 etable(stage_regs,
-       digits='r3',
+       digits='r5',
        digits.stats = 2,
        coefstat="pvalue",
        fontsize = "small",

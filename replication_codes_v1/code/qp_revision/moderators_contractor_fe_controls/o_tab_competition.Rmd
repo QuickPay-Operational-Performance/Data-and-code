@@ -190,7 +190,7 @@ etable(competition,
        tex=TRUE)
 
 etable(competition,
-       digits='r3',
+       digits='r5',
        digits.stats = 2,
        fontsize = "small",
        caption="Effect of QuickPay on percentage delay rates (p-values)",
