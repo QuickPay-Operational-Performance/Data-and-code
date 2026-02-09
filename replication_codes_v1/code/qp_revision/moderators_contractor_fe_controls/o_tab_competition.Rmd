@@ -37,7 +37,7 @@ reg_df_subset=fread(paste0(working_path,
                  'w_clean_control.csv'))
 ```
 
-```{r competition_delays_subsample, echo=FALSE, results='asis'}
+```{r competition_delays_subsample, echo=FALSE, results='asis', message=FALSE}
 # Define
 # $$ SA_i = \begin{cases} 1, \text{ if project was signed after QuickPay}\\
 # 0, \text{ otherwise} \end{cases}$$
@@ -80,7 +80,7 @@ reg_df_subset[,num_concurrent_contractor_projects:=num_contractor_projects-1]
 
 ```
 
-```{r competition_subsample_ii, echo=FALSE, results='asis'}
+```{r competition_subsample_ii, echo=FALSE, results='asis', message=FALSE}
 m1=feols(wins_percentage_delay~treat_new+
                                   project_signed_after_quickpay+
                                   treat_new:post_t+
@@ -147,8 +147,8 @@ m5=feols(wins_percentage_delay~project_signed_after_quickpay+
 competition=list(m1,m2,m3,m4,m5)
 ```
 
-```{r output, echo=FALSE, results='asis'}
-setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
+```{r output, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+invisible(capture.output(setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       "positive_delay"="Log odds (Delay rate >0)",
                       "post_t"="$Post_t$",
                       "treat_new"="$Treat_i$",
@@ -164,13 +164,13 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       "num_concurrent_contractor_projects"="NumConcurrent",
                       "num_delayed_until_last_qtr"="NumDelayed",
                       "recipient_duns"="Contractor"
-                      ))
+                      ))))
 
 etable(competition,
        digits='r2',
        digits.stats = 2,
        fontsize = "small",
-       title="Effect of QuickPay on percentage delay rates",
+       caption="Effect of QuickPay on percentage delay rates (SE)",
        fitstat = c("pr2","n","r2"),
        drop=c("Project stage",
               "NumConcurrent",
@@ -186,6 +186,30 @@ etable(competition,
                            line.bottom="simple",
                            line.top="simple"),
                extralines=list("Contractor controls"=rep("Yes",length(competition))),
-       notes="Controls include Log(project stage) and contractor controls.",
+       notes="Additional controls not shown: Log(project stage). Contractor-level controls include the number of concurrent projects and the number of previously delayed projects.",
+       tex=TRUE)
+
+etable(competition,
+       digits='r3',
+       digits.stats = 2,
+       fontsize = "small",
+       caption="Effect of QuickPay on percentage delay rates (p-values)",
+       fitstat = c("pr2","n","r2"),
+       drop=c("Project stage",
+              "NumConcurrent",
+              "NumDelayed"),
+        coefstat = "pvalue",
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+               extralines=list("Contractor controls"=rep("Yes",length(competition))),
+       notes="Additional controls not shown: Log(project stage). Contractor-level controls include the number of concurrent projects and the number of previously delayed projects.",
        tex=TRUE)
 ```

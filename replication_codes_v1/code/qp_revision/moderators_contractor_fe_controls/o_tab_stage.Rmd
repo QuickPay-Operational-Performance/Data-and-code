@@ -67,7 +67,7 @@ reg_df_subset[,num_concurrent_contractor_projects:=num_contractor_projects-1]
 
 ```
 
-```{r stage_regs_log, warning=FALSE, echo=FALSE, results='asis'}
+```{r stage_regs_log, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
 
 # Project Stage
 
@@ -178,8 +178,8 @@ m5=feols(wins_percentage_delay~log(wins_project_quarter_stage)+
 stage_regs=list(m1,m2,m3,m4,m5)
 ```
 
-```{r output, echo=FALSE, results='asis'}
-setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
+```{r output, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+invisible(capture.output(setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       "post_t"="$Post_t$",
                       "treat_new"="$Treat_i$",
                       "log(wins_project_quarter_stage)"="$Ln(Stage_{it})$",
@@ -194,13 +194,13 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       "num_concurrent_contractor_projects"="NumConcurrent",
                       "num_delayed_until_last_qtr"="NumDelayed",
                       "recipient_duns"="Contractor"
-                      ))
+                      ))))
 
 etable(stage_regs,
        digits='r2',
        digits.stats = 2,
        fontsize = "small",
-       title="Project stage and the QuickPay reform",
+       caption="Project stage and the QuickPay reform (SE)",
        fitstat = c("n","r2"),
        drop=c("Initial duration",
               "Initial budget",
@@ -218,6 +218,34 @@ etable(stage_regs,
                            line.bottom="simple",
                            line.top="simple"),
        extralines = list("Contractor controls"=rep("Yes",length(stage_regs))),
-       notes="Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls. Sample restricted to contractors holding only one type of project.",
+       notes="Additional controls not shown: Log(1+initial duration), Log(1+initial budget), number of offers, and their interactions with $Post_t$. Contractor-level controls include the number of concurrent projects and the number of previously delayed projects.",
+       tex=TRUE)
+```
+
+```{r output_pvalues, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+etable(stage_regs,
+       digits='r3',
+       digits.stats = 2,
+       coefstat="pvalue",
+       fontsize = "small",
+       caption="Project stage and the QuickPay reform (p-values)",
+       fitstat = c("n","r2"),
+       drop=c("Initial duration",
+              "Initial budget",
+              "Number of offers",
+              "NumConcurrent",
+              "NumDelayed"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       extralines = list("Contractor controls"=rep("Yes",length(stage_regs))),
+       notes="Additional controls not shown: Log(1+initial duration), Log(1+initial budget), number of offers, and their interactions with $Post_t$. Contractor-level controls include the number of concurrent projects and the number of previously delayed projects.",
        tex=TRUE)
 ```

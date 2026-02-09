@@ -64,7 +64,7 @@ reg_df_one_type[,winsorized_initial_budget_i:=
                               na.rm=T)]
 ```
 
-```{r num_projects_0,warning=FALSE, echo=FALSE, results='asis'}
+```{r num_projects_0,warning=FALSE, echo=FALSE, results='asis', message=FALSE}
 ## Number of projects per contractor
 
 # Contractors holding only small or only large projects
@@ -96,7 +96,7 @@ total_projects=list(m1,m2)
 ```
 
 
-```{r budget_0,warning=FALSE, echo=FALSE, results='asis'}
+```{r budget_0,warning=FALSE, echo=FALSE, results='asis', message=FALSE}
 ## Budget
 
 contractor_quarter=reg_df_one_type[,sum(winsorized_initial_budget_i),
@@ -126,7 +126,7 @@ m2=feols(I(total_budget_across_projects/1000000)~treat_i+
 total_budget=list(m1,m2)
 ```
 
-```{r tasks_0,warning=FALSE, echo=FALSE, results='asis'}
+```{r tasks_0,warning=FALSE, echo=FALSE, results='asis', message=FALSE}
 ## Number of tasks
 contractor_quarter=reg_df_one_type[,n_distinct(product_or_service_code),
                                    by=c('recipient_duns',
@@ -155,9 +155,9 @@ m2=feols(number_of_tasks~treat_i+
 total_tasks=list(m1,m2)
 ```
 
-```{r output, echo=FALSE, results='asis'}
-setFixest_dict(dict=c("number_of_tasks"="Number of tasks",
-                      "I(total_budget_across_projects/1e+06)"= 
+```{r output, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+invisible(capture.output(setFixest_dict(dict=c("number_of_tasks"="Number of tasks",
+                      "I(total_budget_across_projects/1e+06)"=
                         "Total budget",
                       "num_projects"="Number of projects",
                       "post_t"="$Post_t$",
@@ -172,7 +172,7 @@ setFixest_dict(dict=c("number_of_tasks"="Number of tasks",
                       "naics_code"="Industry",
                       "awarding_sub_agency_code"="Subagency",
                       "recipient_duns"="Contractor"
-                      ))
+                      ))))
 
 etable(total_projects,
        total_budget,
@@ -180,7 +180,7 @@ etable(total_projects,
        digits='r2',
        digits.stats = 2,
        fontsize = "small",
-       title="Congestion and the QuickPay reform",
+       caption="Congestion and the QuickPay reform (SE)",
        fitstat = c("n","r2"),
        drop=c("Project stage",
               "Initial duration",
@@ -196,6 +196,34 @@ etable(total_projects,
                            yesNo = c("Yes","No"),
                            line.bottom="simple",
                            line.top="simple"),
-       notes="Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls. Sample restricted to contractors holding only one type of project.",
+       notes="Regressions at the contractor-quarter level.",
+       tex=TRUE)
+```
+
+```{r output_pvalues, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+etable(total_projects,
+       total_budget,
+       total_tasks,
+       digits='r3',
+       digits.stats = 2,
+       coefstat="pvalue",
+       fontsize = "small",
+       caption="Congestion and the QuickPay reform (p-values)",
+       fitstat = c("n","r2"),
+       drop=c("Project stage",
+              "Initial duration",
+              "Initial budget",
+              "Number of offers"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="Regressions at the contractor-quarter level.",
        tex=TRUE)
 ```
