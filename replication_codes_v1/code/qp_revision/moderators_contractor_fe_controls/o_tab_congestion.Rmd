@@ -64,15 +64,16 @@ reg_df_one_type[,winsorized_initial_budget_i:=
                               na.rm=T)]
 ```
 
-```{r num_projects_0,warning=FALSE, echo=FALSE, results='asis', message=FALSE}
-## Number of projects per contractor
-
+```{r contractor_quarter,warning=FALSE, echo=FALSE, results='asis', message=FALSE}
 # Contractors holding only small or only large projects
+contractor_quarter=reg_df_one_type[,.(num_projects=uniqueN(contract_award_unique_key),
+                                   number_of_tasks=uniqueN(product_or_service_code),
+                                   total_budget_across_projects=sum(winsorized_initial_budget_i,
+                                                                      na.rm = TRUE)
+                                   ),
+                                   by=c('recipient_duns',
+                                        'action_date_year_quarter')]
 
-active_before_qp=unique(subset(reg_df,post_t==0)$recipient_duns)
-contractor_quarter=reg_df_one_type[,n_distinct(contract_award_unique_key),by=c('recipient_duns',
-                                                            'action_date_year_quarter')]
-setnames(contractor_quarter,'V1','num_projects')
 contractor_quarter[,post_t:=ifelse(action_date_year_quarter>as.Date('2011-04-27'),1,0)]
 
 contractor_quarter=merge(contractor_quarter,
@@ -80,13 +81,23 @@ contractor_quarter=merge(contractor_quarter,
                          by='recipient_duns')
 
 contractor_quarter[,business_type:=ifelse(treat_i==1,"S","O")]
+```
 
+```{r num_projects_0,warning=FALSE, echo=FALSE, message=FALSE}
+
+## Number of projects per contractor
 m1=feols(num_projects~treat_i+
           post_t:treat_i+post_t,
          cluster=~recipient_duns, 
         data=contractor_quarter)
 
 m2=feols(num_projects~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m3=feols(num_projects~treat_i+
           post_t:treat_i|recipient_duns+
           action_date_year_quarter,
          cluster=~recipient_duns, 
@@ -96,27 +107,20 @@ total_projects=list(m1,m2)
 ```
 
 
-```{r budget_0,warning=FALSE, echo=FALSE, results='asis', message=FALSE}
+```{r budget_0,warning=FALSE, echo=FALSE, message=FALSE}
 ## Budget
-
-contractor_quarter=reg_df_one_type[,sum(winsorized_initial_budget_i),
-                                   by=c('recipient_duns',
-                                        'action_date_year_quarter')]
-setnames(contractor_quarter,'V1','total_budget_across_projects')
-contractor_quarter[,post_t:=ifelse(action_date_year_quarter>as.Date('2011-04-27'),1,0)]
-
-contractor_quarter=merge(contractor_quarter,
-                         unique(reg_df_one_type[,c('recipient_duns','treat_i')]),
-                         by='recipient_duns')
-
-contractor_quarter[,business_type:=ifelse(treat_i==1,"S","O")]
-
 m1=feols(I(total_budget_across_projects/1000000)~treat_i+
           post_t:treat_i+post_t,
          cluster=~recipient_duns, 
         data=contractor_quarter)
 
 m2=feols(I(total_budget_across_projects/1000000)~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter,
+          cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m3=feols(I(total_budget_across_projects/1000000)~treat_i+
           post_t:treat_i|
           recipient_duns+
           action_date_year_quarter,
@@ -126,26 +130,19 @@ m2=feols(I(total_budget_across_projects/1000000)~treat_i+
 total_budget=list(m1,m2)
 ```
 
-```{r tasks_0,warning=FALSE, echo=FALSE, results='asis', message=FALSE}
-## Number of tasks
-contractor_quarter=reg_df_one_type[,n_distinct(product_or_service_code),
-                                   by=c('recipient_duns',
-                                        'action_date_year_quarter')]
-setnames(contractor_quarter,'V1','number_of_tasks')
-contractor_quarter[,post_t:=ifelse(action_date_year_quarter>as.Date('2011-04-27'),1,0)]
-
-contractor_quarter=merge(contractor_quarter,
-                         unique(reg_df_one_type[,c('recipient_duns','treat_i')]),
-                         by='recipient_duns')
-
-contractor_quarter[,business_type:=ifelse(treat_i==1,"S","O")]
-
+```{r tasks_0,warning=FALSE, echo=FALSE, message=FALSE}
 m1=feols(number_of_tasks~treat_i+
           post_t:treat_i+post_t,
          cluster=~recipient_duns, 
         data=contractor_quarter)
 
 m2=feols(number_of_tasks~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter,
+          cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m3=feols(number_of_tasks~treat_i+
           post_t:treat_i|
           recipient_duns+
           action_date_year_quarter,
@@ -158,7 +155,7 @@ total_tasks=list(m1,m2)
 ```{r output, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 invisible(capture.output(setFixest_dict(dict=c("number_of_tasks"="Number of tasks",
                       "I(total_budget_across_projects/1e+06)"=
-                        "Total budget",
+                        "Total budget (millions)",
                       "num_projects"="Number of projects",
                       "post_t"="$Post_t$",
                       "treat_i"="$Treat_i$",
@@ -204,7 +201,7 @@ etable(total_projects,
 etable(total_projects,
        total_budget,
        total_tasks,
-       digits='r3',
+       digits='r6',
        digits.stats = 2,
        coefstat="pvalue",
        fontsize = "small",
