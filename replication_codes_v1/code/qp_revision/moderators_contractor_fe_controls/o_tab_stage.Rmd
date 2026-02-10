@@ -3,7 +3,7 @@ title: "Project Stage"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
-    keep_tex: false
+    keep_tex: true
     number_sections: true
 header-includes:
  \usepackage{booktabs,longtable,dcolumn}
@@ -93,6 +93,7 @@ m1=feols(wins_percentage_delay~treat_new+
           num_concurrent_contractor_projects+
           num_delayed_until_last_qtr|
           action_date_year_quarter,
+          fixef.rm = "none",
          cluster=~contract_award_unique_key, # clustered at project level
         data=reg_df_subset)
 
@@ -111,6 +112,7 @@ m2=feols(wins_percentage_delay~treat_new+
           num_concurrent_contractor_projects+
           num_delayed_until_last_qtr|
           product_or_service_code+action_date_year_quarter,
+          fixef.rm = "none",
          cluster=~contract_award_unique_key, # clustered at project level
         data=reg_df_subset)
 
@@ -131,6 +133,7 @@ m3=feols(wins_percentage_delay~treat_new+
           product_or_service_code+
            naics_code+
            action_date_year_quarter,
+          fixef.rm = "none",
          cluster=~contract_award_unique_key, # clustered at project level
         data=reg_df_subset)
 
@@ -152,6 +155,7 @@ m4=feols(wins_percentage_delay~treat_new+
            naics_code+
            action_date_year_quarter+
            recipient_duns,
+          fixef.rm = "none",
          cluster=~contract_award_unique_key, # clustered at project level
         data=reg_df_subset)
 
@@ -172,17 +176,19 @@ m5=feols(wins_percentage_delay~log(wins_project_quarter_stage)+
            naics_code+
            action_date_year_quarter+
            recipient_duns,
+          fixef.rm = "none",
          cluster=~contract_award_unique_key, # clustered at project level
         data=reg_df_subset)
 
-stage_regs=list(m1,m2,m3,m4,m5)
+stage_regs=list(m1,m2,m3)
+#stage_regs=list(m1,m2,m3,m4,m5)
 ```
 
 ```{r output, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 invisible(capture.output(setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       "post_t"="$Post_t$",
                       "treat_new"="$Treat_i$",
-                      "log(wins_project_quarter_stage)"="$Ln(Stage_{it})$",
+                      "log(wins_project_quarter_stage)"="$\\ln(Stage_{i,t})$",
                       "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
                       "log(1+winsorized_initial_budget_i)"="Initial budget",
                       "wins_number_of_offers_received"="Number of offers",

@@ -3,7 +3,7 @@ title: "Competition"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
-    keep_tex: false
+    keep_tex: true
     number_sections: true
 header-includes:
  \usepackage{booktabs,longtable,dcolumn}
@@ -90,6 +90,7 @@ m1=feols(wins_percentage_delay~treat_new+
           num_delayed_until_last_qtr|
                             action_date_year_quarter,
                           cluster=~contract_award_unique_key,
+                          fixef.rm = "none",
                           data=subset(reg_df_subset,competitively_awarded_i==1))
 
 m2=feols(wins_percentage_delay~treat_new+
@@ -102,6 +103,7 @@ m2=feols(wins_percentage_delay~treat_new+
                             product_or_service_code+
                             action_date_year_quarter,
                           cluster=~contract_award_unique_key,
+                          fixef.rm = "none",
                           data=subset(reg_df_subset,competitively_awarded_i==1))
 
 m3=feols(wins_percentage_delay~treat_new+
@@ -115,6 +117,7 @@ m3=feols(wins_percentage_delay~treat_new+
                             product_or_service_code+
                             action_date_year_quarter,
                           cluster=~contract_award_unique_key,
+                          fixef.rm = "none",
                           data=subset(reg_df_subset,competitively_awarded_i==1))
 
 m4=feols(wins_percentage_delay~treat_new+
@@ -129,6 +132,7 @@ m4=feols(wins_percentage_delay~treat_new+
                             action_date_year_quarter+
            recipient_duns,
                           cluster=~contract_award_unique_key,
+                          fixef.rm = "none",
                           data=subset(reg_df_subset,competitively_awarded_i==1))
 
 m5=feols(wins_percentage_delay~project_signed_after_quickpay+
@@ -142,9 +146,12 @@ m5=feols(wins_percentage_delay~project_signed_after_quickpay+
                             action_date_year_quarter+
            recipient_duns,
                           cluster=~contract_award_unique_key,
+                          fixef.rm = "none",
                           data=subset(reg_df_subset,competitively_awarded_i==1))
 
-competition=list(m1,m2,m3,m4,m5)
+#competition=list(m1,m2,m3,m4,m5)
+competition=list(m1,m2,m3)
+
 ```
 
 ```{r output, echo=FALSE, results='asis', message=FALSE, warning=FALSE}

@@ -3,7 +3,7 @@ title: "Project Sequence"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
-    keep_tex: false
+    keep_tex: true
     number_sections: true
 header-includes:
  \usepackage{booktabs,longtable,dcolumn}
@@ -88,6 +88,7 @@ m1=feols(wins_percentage_delay~treat_new+
                            num_delayed_until_last_qtr|
           action_date_year_quarter,
           cluster=~contract_award_unique_key,
+          fixef.rm = "none",
           data=reg_df_subset)
 
 m2=feols(wins_percentage_delay~treat_new+
@@ -106,6 +107,7 @@ m2=feols(wins_percentage_delay~treat_new+
           product_or_service_code+
            action_date_year_quarter,
           cluster=~contract_award_unique_key,
+          fixef.rm = "none",
           data=reg_df_subset)
 
 m3=feols(wins_percentage_delay~treat_new+
@@ -125,6 +127,7 @@ m3=feols(wins_percentage_delay~treat_new+
            product_or_service_code+
            action_date_year_quarter,
          cluster=~contract_award_unique_key,
+         fixef.rm = "none",
           data=reg_df_subset)
 
 m4=feols(wins_percentage_delay~treat_new+
@@ -145,6 +148,7 @@ m4=feols(wins_percentage_delay~treat_new+
            action_date_year_quarter+
            recipient_duns,
          cluster=~contract_award_unique_key,
+          fixef.rm = "none",
           data=reg_df_subset)
 
 m5=feols(wins_percentage_delay~
@@ -165,6 +169,7 @@ m5=feols(wins_percentage_delay~
            action_date_year_quarter+
            recipient_duns,
          cluster=~contract_award_unique_key,
+          fixef.rm = "none",
           data=reg_df_subset)
 
 m6=feols(wins_percentage_delay~treat_new:post_t+
@@ -183,9 +188,11 @@ m6=feols(wins_percentage_delay~treat_new:post_t+
            action_date_year_quarter+
            recipient_duns,
          cluster=~contract_award_unique_key,
+          fixef.rm = "none",
           data=reg_df_subset)
 
-sequencing_regs=list(m1,m2,m3,m4,m5,m6)
+#sequencing_regs=list(m1,m2,m3,m4,m5,m6)
+sequencing_regs=list(m1,m2,m3)
 ```
 
 ```{r output, echo=FALSE, results='asis', message=FALSE, warning=FALSE}

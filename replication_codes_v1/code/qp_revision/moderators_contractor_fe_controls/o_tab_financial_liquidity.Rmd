@@ -3,7 +3,7 @@ title: "Financial Liquidity"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
-    keep_tex: false
+    keep_tex: true
     number_sections: true
 header-includes:
  \usepackage{booktabs,longtable,dcolumn}
@@ -118,6 +118,7 @@ m1=feols(wins_percentage_delay~treat_new+
                            num_delayed_until_last_qtr|
                             action_date_year_quarter,
                             cluster=~contract_award_unique_key,
+                            fixef.rm = "none",
                           data=reg_df_subset)
 
 m2=feols(wins_percentage_delay~treat_new+
@@ -137,6 +138,7 @@ m2=feols(wins_percentage_delay~treat_new+
                            num_delayed_until_last_qtr|
                             product_or_service_code+action_date_year_quarter,
                             cluster=~contract_award_unique_key,
+                            fixef.rm = "none",
                           data=reg_df_subset)
 
 m3=feols(wins_percentage_delay~treat_new+
@@ -158,6 +160,7 @@ m3=feols(wins_percentage_delay~treat_new+
                             product_or_service_code+
                             action_date_year_quarter,
                             cluster=~contract_award_unique_key,
+                            fixef.rm = "none",
                           data=reg_df_subset)
 
 m4=feols(wins_percentage_delay~treat_new+
@@ -179,6 +182,7 @@ m4=feols(wins_percentage_delay~treat_new+
                             product_or_service_code+
                             action_date_year_quarter+
                             recipient_duns,
+                            fixef.rm = "none",
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset)
 
@@ -201,6 +205,7 @@ m5=feols(wins_percentage_delay~#treat_new+
                             product_or_service_code+
                             action_date_year_quarter+
                             recipient_duns,
+                            fixef.rm = "none",
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset)
 
@@ -223,10 +228,12 @@ m6=feols(wins_percentage_delay~#treat_new+
                             product_or_service_code+
                             action_date_year_quarter+
                             recipient_duns,
+                            fixef.rm = "none",
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset)
 
-cf_regs=list(m1,m2,m3,m4,m5,m6)
+cf_regs=list(m1,m2,m3)
+#cf_regs=list(m1,m2,m3,m4,m5,m6)
 ```
 
 
@@ -235,7 +242,7 @@ invisible(capture.output(setFixest_dict(dict=c("wins_percentage_delay"="Percent 
                       "positive_delay"="Log odds (Delay rate >0)",
                       "post_t"="$Post_t$",
                       "treat_new"="$Treat_i$",
-                      "pc_projects_receiving_cf"="$CFPercentage_i$",
+                      "pc_projects_receiving_cf"="$CFPercent_i$",
                       "log(wins_project_quarter_stage)"="Project stage",
                       "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
                       "log(1+winsorized_initial_budget_i)"="Initial budget",
