@@ -1,0 +1,230 @@
+---
+title: "Congestion"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array,makecell}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+library(dplyr)
+library(fixest)
+library(DescTools) 
+```
+
+```{r read_file_path, include=FALSE}
+source("file_paths.R", 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r read_data,include=FALSE}
+reg_df=fread(paste0(input_path,
+                 'quickpay_delays.csv'))
+```
+
+```{r contractor_one_type,include=FALSE}
+one_type_contractors=reg_df[,n_distinct(treat_i),by='recipient_duns']
+one_type_contractors=unique(subset(one_type_contractors,V1==1 &
+                                     !is.na(recipient_duns))$recipient_duns)
+
+reg_df_one_type=subset(reg_df,recipient_duns%in%one_type_contractors)
+
+reg_df_one_type[,wins_percentage_delay:=Winsorize(100*percentage_delay,
+                              val=quantile(100*percentage_delay,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
+
+reg_df_one_type[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
+                              val=quantile(project_quarter_stage,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
+
+reg_df_one_type[,winsorized_initial_duration_in_days_i:=
+                    Winsorize(initial_duration_in_days_i,
+                    val=quantile(initial_duration_in_days_i,
+                                 probs=c(0.05,0.95),
+                    na.rm=T))]
+
+# InitialBudget_i
+
+reg_df_one_type[,winsorized_initial_budget_i:=
+                    Winsorize(base_and_all_options_value,
+                              val=quantile(base_and_all_options_value,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
+```
+
+```{r contractor_quarter,warning=FALSE, echo=FALSE, results='asis', message=FALSE}
+# Contractors holding only small or only large projects
+contractor_quarter=reg_df_one_type[,.(num_projects=uniqueN(contract_award_unique_key),
+                                   number_of_tasks=uniqueN(product_or_service_code),
+                                   total_budget_across_projects=sum(winsorized_initial_budget_i,
+                                                                      na.rm = TRUE)
+                                   ),
+                                   by=c('recipient_duns',
+                                        'action_date_year_quarter')]
+
+contractor_quarter[,post_t:=ifelse(action_date_year_quarter>as.Date('2011-04-27'),1,0)]
+
+contractor_quarter=merge(contractor_quarter,
+                         unique(reg_df_one_type[,c('recipient_duns','treat_i')]),
+                         by='recipient_duns')
+
+contractor_quarter[,business_type:=ifelse(treat_i==1,"S","O")]
+```
+
+```{r num_projects_0,warning=FALSE, echo=FALSE, message=FALSE}
+
+## Number of projects per contractor
+m1=feols(num_projects~treat_i+
+          post_t:treat_i+post_t,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m2=feols(num_projects~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m3=feols(num_projects~treat_i+
+          post_t:treat_i|recipient_duns+
+          action_date_year_quarter,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+total_projects=list(m1,m2)
+```
+
+
+```{r budget_0,warning=FALSE, echo=FALSE, message=FALSE}
+## Budget
+m1=feols(I(total_budget_across_projects/1000000)~treat_i+
+          post_t:treat_i+post_t,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m2=feols(I(total_budget_across_projects/1000000)~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter,
+          cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m3=feols(I(total_budget_across_projects/1000000)~treat_i+
+          post_t:treat_i|
+          recipient_duns+
+          action_date_year_quarter,
+          cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+total_budget=list(m1,m2)
+```
+
+```{r tasks_0,warning=FALSE, echo=FALSE, message=FALSE}
+m1=feols(number_of_tasks~treat_i+
+          post_t:treat_i+post_t,
+         cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m2=feols(number_of_tasks~treat_i+
+          post_t:treat_i|
+          action_date_year_quarter,
+          cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+m3=feols(number_of_tasks~treat_i+
+          post_t:treat_i|
+          recipient_duns+
+          action_date_year_quarter,
+          cluster=~recipient_duns, 
+        data=contractor_quarter)
+
+total_tasks=list(m1,m2)
+```
+
+```{r output, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+invisible(capture.output(setFixest_dict(dict=c("number_of_tasks"="Number of tasks",
+                      "I(total_budget_across_projects/1e+06)"=
+                        "Total budget (millions)",
+                      "num_projects"="Number of projects",
+                      "post_t"="$Post_t$",
+                      "treat_i"="$Treat_i$",
+                      "log(wins_project_quarter_stage)"="Project stage",
+                      "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
+                      "log(1+winsorized_initial_budget_i)"="Initial budget",
+                      "wins_number_of_offers_received"="Number of offers",
+                      "contract_award_unique_key"="Project ID",
+                      "product_or_service_code"="Task",
+                      "action_date_year_quarter"="Time",
+                      "naics_code"="Industry",
+                      "awarding_sub_agency_code"="Subagency",
+                      "recipient_duns"="Contractor"
+                      ))))
+
+etable(total_projects,
+       total_budget,
+       total_tasks,
+       digits='r2',
+       digits.stats = 2,
+       fontsize = "small",
+       caption="Congestion and the QuickPay reform (SE)",
+       fitstat = c("n","r2"),
+       drop=c("Project stage",
+              "Initial duration",
+              "Initial budget",
+              "Number of offers"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="Regressions at the contractor-quarter level.",
+       tex=TRUE)
+```
+
+```{r output_pvalues, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+etable(total_projects,
+       total_budget,
+       total_tasks,
+       digits='r6',
+       digits.stats = 2,
+       coefstat="pvalue",
+       fontsize = "small",
+       caption="Congestion and the QuickPay reform (p-values)",
+       fitstat = c("n","r2"),
+       drop=c("Project stage",
+              "Initial duration",
+              "Initial budget",
+              "Number of offers"),
+       style.tex=style.tex(fixef.title = "\\midrule",
+                           fixef.suffix = " FE",
+                           var.title = "\\midrule ",
+                           depvar.title = "\\midrule ",
+                           model.title = "\\midrule ",
+                           stats.title = "",
+                           model.format = "I",
+                           yesNo = c("Yes","No"),
+                           line.bottom="simple",
+                           line.top="simple"),
+       notes="Regressions at the contractor-quarter level.",
+       tex=TRUE)
+```

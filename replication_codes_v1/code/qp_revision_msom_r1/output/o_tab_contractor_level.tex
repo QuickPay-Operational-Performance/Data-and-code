@@ -1,0 +1,137 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{5}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array,makecell} \usepackage{wrapfig,float} \floatplacement{figure}{H}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Congestion -- Restrict to competitively awarded projects},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Congestion -- Restrict to competitively awarded projects}
+\author{}
+\date{\vspace{-2.5em}2026-04-09}
+
+\begin{document}
+\maketitle
+
+\begin{itemize}
+\tightlist
+\item
+  \(Treat_{k,t} = \frac{\sum Num Small Projects_{k,t}}{\sum Num Total Projects_{k,t}}\)
+\item
+  \(BudgetTreat_{k,t} = \frac{\sum Budget Small Projects_{k,t}}{\sum Budget Total Projects_{k,t}}\)
+\item
+  \(Delay_{k,t} = \beta_0 (Treat_{k,t} \times Post_t) + \beta_1 Treat_{k,t} + \beta_3 Post_t + \epsilon_{k,t}\)
+\end{itemize}
+
+\begin{table}[htbp]
+   \caption{}
+   \centering
+   \begin{tabular}{lccc}
+      \toprule
+      \midrule  & \multicolumn{3}{c}{$PercentDelayRate_{kt}$}\\
+      \midrule  & I & II & III\\
+      \midrule \\
+      Constant                               & 6.55$^{***}$  &               &   \\   
+                                             & (0.22)        &               &   \\   
+      $BudgetTreat_{k,t}$                    & -1.33$^{***}$ & -1.33$^{***}$ &   \\   
+                                             & (0.26)        & (0.26)        &   \\   
+      $Post_t$                               & 0.43$^{*}$    &               &   \\   
+                                             & (0.23)        &               &   \\   
+      $BudgetTreat_{k,t}$ $\times$ $Post_t$  & 0.78$^{***}$  & 0.78$^{***}$  & 0.66$^{**}$\\   
+                                             & (0.28)        & (0.28)        & (0.27)\\   
+      \midrule 
+      Time FE                                & No            & Yes           & Yes\\  
+      Contractor FE                          & No            & No            & Yes\\  
+      Observations                           & 62,495        & 62,495        & 59,714\\  
+      R$^2$                                  & 0.002         & 0.004         & 0.31\\  
+      \midrule
+      \multicolumn{4}{l}{\emph{Clustered (Contractor) standard-errors in parentheses}}\\
+      \multicolumn{4}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+\end{table}
+\begin{table}[htbp]
+   \caption{}
+   \centering
+   \begin{tabular}{lccc}
+      \toprule
+      \midrule  & \multicolumn{3}{c}{$PercentDelayRate_{kt}$}\\
+      \midrule  & I & II & III\\
+      \midrule \\
+      Constant                         & 6.57$^{***}$  &               &   \\   
+                                       & (0.22)        &               &   \\   
+      $Treat_{k,t}$                    & -1.37$^{***}$ & -1.37$^{***}$ &   \\   
+                                       & (0.26)        & (0.26)        &   \\   
+      $Post_t$                         & 0.41$^{*}$    &               &   \\   
+                                       & (0.23)        &               &   \\   
+      $Treat_{k,t}$ $\times$ $Post_t$  & 0.80$^{***}$  & 0.80$^{***}$  & 0.69$^{**}$\\   
+                                       & (0.29)        & (0.29)        & (0.27)\\   
+      \midrule 
+      Time FE                          & No            & Yes           & Yes\\  
+      Contractor FE                    & No            & No            & Yes\\  
+      Observations                     & 62,495        & 62,495        & 59,714\\  
+      R$^2$                            & 0.002         & 0.004         & 0.31\\  
+      \midrule
+      \multicolumn{4}{l}{\emph{Clustered (Contractor) standard-errors in parentheses}}\\
+      \multicolumn{4}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+\end{table}
+
+\end{document}

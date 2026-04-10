@@ -183,10 +183,10 @@ etable(delay_rates,
        digits='r2',
        digits.stats = 2,
        fontsize = "tiny",
-       title="DiD with and without stage interaction",
-       headers=list("Excluding Stage $\\times Post_t$"=length(delay_rates),
-                    "Including Stage $\\times Post_t$"=length(stage_post),
-                    "Excluding X $\\times Post_t$"=length(no_post_interaction)),
+       caption="DiD with and without stage interaction",
+       headers=list(" "=list("Excluding Stage $\\times Post_t$"=as.numeric(length(delay_rates)),
+                    "Including Stage $\\times Post_t$"=as.numeric(length(stage_post)),
+                    "Excluding X $\\times Post_t$"=as.numeric(length(no_post_interaction)))),
        fitstat = c("pr2","n","r2"),
        drop=c("Project stage",
               "Initial duration",
@@ -205,5 +205,4 @@ etable(delay_rates,
        notes="Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls",
        tex=TRUE)
 ```
-
 

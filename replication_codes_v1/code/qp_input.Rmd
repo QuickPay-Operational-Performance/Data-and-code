@@ -85,8 +85,9 @@ df[,delay:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),
 
 # winsorize quarter-to-quarter delay
 df[,winsorized_delay:=Winsorize(delay,
-                                probs=c(0.05,0.95),
-                                na.rm=TRUE)]
+                                val=quantile(delay,
+                                             probs=c(0.05,0.95),
+                                na.rm=TRUE))]
 
 #Post_t: A dummy that period t is post-treatment
 df[,post_t:=ifelse(action_date_year_quarter>as.Date("2011-04-27"),1,0)]
@@ -102,8 +103,9 @@ df[,overrun:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1),
 
 # winsorize quarter-to-quarter overrun
 df[,winsorized_overrun:=Winsorize(overrun,
-                                probs=c(0.05,0.95),
-                                na.rm=TRUE)]
+                                val=quantile(overrun,
+                                             probs=c(0.05,0.95),
+                                na.rm=TRUE))]
 
 df[,percentage_overrun:=ifelse(contract_award_unique_key==lag(contract_award_unique_key,1) &
                                      lag(last_reported_budget,1)>0,
@@ -187,21 +189,24 @@ reg_df[,action_date_year_quarter:=as.Date(action_date_year_quarter)]
 
 reg_df[,winsorized_initial_duration_in_days_i:=
                     Winsorize(initial_duration_in_days_i,
-                    probs=c(0.05,0.95),
-                    na.rm=T)]
+                    val=quantile(initial_duration_in_days_i,
+                                 probs=c(0.05,0.95),
+                    na.rm=T))]
 
 # InitialBudget_i
 
 reg_df[,winsorized_initial_budget_i:=
-                    Winsorize(base_and_all_options_value,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+                    Winsorize(base_and_all_options_value,
+                              val=quantile(base_and_all_options_value,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 
 #reg_df[,number_of_offers_received_original:=number_of_offers_received]
 
 reg_df[,wins_number_of_offers_received:=Winsorize(number_of_offers_received,
-                                             probs=c(0.05,0.95),
-                                             na.rm=T)]
+                                             val=quantile(number_of_offers_received,
+                                                          probs=c(0.05,0.95),
+                                             na.rm=T))]
 
 # sort by contract id and date (just to be doubly sure)
 reg_df=reg_df[order(contract_award_unique_key,
@@ -222,9 +227,10 @@ reg_df[,percentage_delay:=ifelse(contract_award_unique_key==lag(contract_award_u
          delay/last_reported_duration,
          NaN)]
 
-reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,
+                              val=quantile(100*percentage_delay,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 
 # time spent in the project so far/total time of the project
 # if project was active in previous quarter
@@ -232,9 +238,10 @@ reg_df[,project_quarter_stage:=ifelse(contract_award_unique_key==lag(contract_aw
 
 # (action_date_year_quarter-90) to get beginning of the quarter
 
-reg_df[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+reg_df[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
+                              val=quantile(project_quarter_stage,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 ```
 
 ```{r relative_delay,include=FALSE}

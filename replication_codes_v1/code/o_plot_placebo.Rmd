@@ -158,23 +158,28 @@ ggsave(paste0(output_folder,
 ```{r treatment_time_placebo, include=FALSE}
 reg_df_placebo=subset(reg_df_subset,post_t==0)
 reg_df_placebo[,wins_percentage_delay:=Winsorize(100*percentage_delay,
-                               probs=c(0.05,0.95),
-                               na.rm=T)]
-reg_df_placebo[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+                               val=quantile(100*percentage_delay,
+                                            probs=c(0.05,0.95),
+                               na.rm=T))]
+reg_df_placebo[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
+                              val=quantile(project_quarter_stage,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 reg_df_placebo[,winsorized_initial_duration_in_days_i:=
                     Winsorize(initial_duration_in_days_i,
-                    probs=c(0.05,0.95),
-                    na.rm=T)]
+                    val=quantile(initial_duration_in_days_i,
+                                 probs=c(0.05,0.95),
+                    na.rm=T))]
 reg_df_placebo[,winsorized_initial_budget_i:=
-                    Winsorize(base_and_all_options_value,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+                    Winsorize(base_and_all_options_value,
+                              val=quantile(base_and_all_options_value,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 reg_df_placebo[,wins_number_of_offers_received:=
-                    Winsorize(number_of_offers_received,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+                    Winsorize(number_of_offers_received,
+                              val=quantile(number_of_offers_received,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 # Placebo Treatment Time
 reg_df_placebo[,post_t:=ifelse(action_date_year_quarter>=
                                       as.Date('2010-09-30'),

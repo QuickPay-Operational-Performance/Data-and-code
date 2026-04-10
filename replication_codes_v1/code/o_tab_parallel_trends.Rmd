@@ -146,7 +146,7 @@ etable(delay_days,
        digits='r2',
        digits.stats = 2,
        fontsize = "small",
-       title="Parallel trends test",
+       caption="Parallel trends test",
        fitstat = c("pr2","n","r2"),
        drop=c("Project stage",
               "Initial duration",
@@ -165,4 +165,3 @@ etable(delay_days,
        notes="This table measures the linear time trend between treated and control projects before QuickPay. Each specification controls for the project’s initial characteristics (such as duration, budget, and number of offers) and their interaction with QtrNum, as well as the project stage. The standard errors (reported in parentheses) are robust and clustered at the project level.",
        tex=TRUE)
 ```
-

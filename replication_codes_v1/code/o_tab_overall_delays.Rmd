@@ -133,12 +133,12 @@ full_df_tr_2=full_df_tr_2[order(contract_award_unique_key,
 # one observation per project...
 full_df_tr_2=unique(full_df_tr_2,by='contract_award_unique_key')
 
-full_df_tr_2[,wins_delay:=Winsorize(delay,probs=c(0.01,0.99),na.rm=T)]
-full_df_tr_2[,wins_relative_delay:=Winsorize(relative_delay,probs=c(0.01,0.99),na.rm=T)]
+full_df_tr_2[,wins_delay:=Winsorize(delay,val=quantile(delay,probs=c(0.01,0.99),na.rm=T))]
+full_df_tr_2[,wins_relative_delay:=Winsorize(relative_delay,val=quantile(relative_delay,probs=c(0.01,0.99),na.rm=T))]
 # To fix zero duration and zero budget
-full_df_tr_2[,wins_initial_duration:=Winsorize(initial_duration,probs=c(0.05,0.99),na.rm=T)]
-full_df_tr_2[,wins_initial_budget:=Winsorize(initial_budget,probs=c(0.05,0.99),na.rm=T)]
-full_df_tr_2[,wins_offers:=Winsorize(number_of_offers_received,probs=c(0.01,0.99),na.rm=T)]
+full_df_tr_2[,wins_initial_duration:=Winsorize(initial_duration,val=quantile(initial_duration,probs=c(0.05,0.99),na.rm=T))]
+full_df_tr_2[,wins_initial_budget:=Winsorize(initial_budget,val=quantile(initial_budget,probs=c(0.05,0.99),na.rm=T))]
+full_df_tr_2[,wins_offers:=Winsorize(number_of_offers_received,val=quantile(number_of_offers_received,probs=c(0.01,0.99),na.rm=T))]
 ```
 
 ```{r project_time, include=FALSE}
@@ -267,10 +267,10 @@ etable(clean_control_delay_days,
        digits='r2',
        digits.stats = 2,
        fontsize = "small",
-       title="Effect of QuickPay on overall project delays",
-       headers=list("OLS"=3, 
+       caption="Effect of QuickPay on overall project delays",
+       headers=list("_"=list("OLS"=3, 
                     "Logit"=3,
-                    "Conditional"=3),
+                    "Conditional"=3)),
        drop=c("Initial duration",
               "Initial budget",
               "Number of offers"),

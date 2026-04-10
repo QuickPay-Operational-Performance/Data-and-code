@@ -26,6 +26,7 @@ library(DescTools)
 library(broom)
 library(scales) # for comma in ggplot
 library(cowplot)
+library(glmnet) # for lasso
 ```
 
 ```{r read_file_path, include=FALSE}
@@ -252,8 +253,8 @@ i=1
 for(df in df_list){
   print(i)
   setDT(df)
-  df[,wins_percentage_delay:=100*Winsorize(percentage_delay,probs=c(0.025,0.975),na.rm=T)]
-  df[,winsorized_delay:=Winsorize(delay,probs=c(0.025,0.975),na.rm=T)]
+  df[,wins_percentage_delay:=100*Winsorize(percentage_delay,val=quantile(percentage_delay,probs=c(0.025,0.975),na.rm=T))]
+  df[,winsorized_delay:=Winsorize(delay,val=quantile(delay,probs=c(0.025,0.975),na.rm=T))]
   m=feols(wins_percentage_delay~treat_new+
                             post_t:treat_new+
                             log(wins_project_quarter_stage)+

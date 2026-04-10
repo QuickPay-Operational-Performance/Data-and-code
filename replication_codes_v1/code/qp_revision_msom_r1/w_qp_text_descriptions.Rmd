@@ -1,0 +1,154 @@
+---
+title: "QuickPay Delay Rate -- Text Descriptions"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+---
+title: "QuickPay Delay Rate -- All Defense Projects"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(data.table)
+```
+
+```{r read_file_path, include=FALSE}
+# Folder for other files
+source(paste0(dirname(getwd()),
+              "/file_paths.R"), 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r define_parent_folders,include=FALSE}
+parent_folder='~/Dropbox/USA_Spending_Downloads/award_data_archive_20200205'
+# Define the parent folder path
+
+# Get all matching subfolders (FYxxxx_097_Contracts_Full_20200205)
+subfolders <- list.dirs(parent_folder, recursive = FALSE, full.names = TRUE)
+# subfolders <- subfolders[grepl("FY\\d{4}_097_Contracts_Full_20200205", subfolders)]
+
+subfolders <- subfolders[
+  grepl("FY(2010|2011|2012)_097_Contracts_Full_20200205", subfolders)
+]
+
+# Collect all CSV file paths from all subfolders
+all_csvs <- list.files(
+  path = subfolders,
+  pattern = "\\.csv$",
+  full.names = TRUE,
+  recursive = TRUE
+)
+
+# Read and combine all CSVs
+df_all <- rbindlist(
+  lapply(
+    all_csvs,
+    fread,
+    select = c(
+      "contract_award_unique_key",
+      "award_description",
+      "type_of_contract_pricing_code",
+      "action_date",
+      "naics_code",
+      "contracting_officers_determination_of_business_size_code"
+    )
+  ),
+  use.names = TRUE,
+  fill = TRUE
+)
+
+df_all=unique(df_all)
+df_all[,action_date:=as.Date(action_date)]
+
+```
+
+```{r select_naics,include=FALSE}
+nanda_naics=c("3329",
+  "2362",
+  "2379",
+  "5311",
+  "5612",
+  "5629",
+  "5415",
+  "4831",
+  "6114",
+  "4812",
+  "3149",
+  "3325",
+  "1153",
+  "3333",
+  "4247",
+  "3159",
+  "3162",
+  "3169",
+  "3366",
+  "3112")
+
+df_all[,four_digit_naics:=substr(naics_code,1,4)]
+df_sub=df_all[four_digit_naics%in%nanda_naics &
+                type_of_contract_pricing_code=="J" &
+                action_date>as.Date('2011-04-27') &
+                         action_date<as.Date('2012-06-01') & contracting_officers_determination_of_business_size_code=="S"]
+```
+
+```{r quality_texts,include=FALSE}
+dt_with_quality=df_sub[grepl("project quality|contract quality", award_description, ignore.case = TRUE)][,c('contract_award_unique_key',
+                'action_date',
+                'contracting_officers_determination_of_business_size_code',
+                'award_description')]
+
+# Convert award_description to sentence case
+dt_with_quality[, award_description := paste0(
+  toupper(substr(award_description, 1, 1)),
+  tolower(substr(award_description, 2, nchar(award_description)))
+)]
+```
+
+```{r delay_texts, include=FALSE}
+dt_with_delay=df_sub[grepl("delay due to|extend period", award_description, ignore.case = TRUE)&
+  !grepl("govt|government|PER DAY OF DELAY", award_description, ignore.case = TRUE)][,c('contract_award_unique_key',
+                'action_date',
+                'contracting_officers_determination_of_business_size_code',
+                'award_description')]
+
+# Convert award_description to sentence case
+dt_with_delay[, award_description := paste0(
+  toupper(substr(award_description, 1, 1)),
+  tolower(substr(award_description, 2, nchar(award_description)))
+)]
+```
+
+```{r save_csvs,include=FALSE}
+fwrite(dt_with_quality, 
+       paste0(working_path,
+              "w_dt_with_quality.csv"))
+
+fwrite(dt_with_delay, 
+       paste0(working_path,
+               "w_dt_with_delay.csv"))
+```

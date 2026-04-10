@@ -265,12 +265,12 @@ reg_df=reg_df[order(contract_award_unique_key,action_date_year_quarter)]
 reg_df[,delay:=fifelse(contract_award_unique_key==lag(contract_award_unique_key),
                        as.numeric(last_reported_end_date-lag(last_reported_end_date)),
                        NaN)]
-reg_df[,wins_delay:=Winsorize(delay,probs=c(0.05,0.95),na.rm=T)]
-reg_df[,wins_initial_duration:=Winsorize(initial_duration,probs=c(0.05,0.95),na.rm=T)]
-reg_df[,wins_initial_budget:=Winsorize(initial_budget,probs=c(0.05,0.95),na.rm=T)]
-reg_df[,wins_offers:=Winsorize(number_of_offers_received,probs=c(0.05,0.95),na.rm=T)]
+reg_df[,wins_delay:=Winsorize(delay,val=quantile(delay,probs=c(0.05,0.95),na.rm=T))]
+reg_df[,wins_initial_duration:=Winsorize(initial_duration,val=quantile(initial_duration,probs=c(0.05,0.95),na.rm=T))]
+reg_df[,wins_initial_budget:=Winsorize(initial_budget,val=quantile(initial_budget,probs=c(0.05,0.95),na.rm=T))]
+reg_df[,wins_offers:=Winsorize(number_of_offers_received,val=quantile(number_of_offers_received,probs=c(0.05,0.95),na.rm=T))]
 reg_df[,relative_delay:=delay/(1+initial_duration)]
-reg_df[,wins_relative_delay:=Winsorize(relative_delay,probs=c(0.05,0.95),na.rm=T)]
+reg_df[,wins_relative_delay:=Winsorize(relative_delay,val=quantile(relative_delay,probs=c(0.05,0.95),na.rm=T))]
 reg_df[,post_t:=fifelse(action_date_year_quarter>=as.Date('2011-04-27'),1,0)]
 reg_df[,positive_delay:=ifelse(delay>0,1,0)]
 reg_df[,negative_delay:=ifelse(delay<0,1,0)]
@@ -298,9 +298,10 @@ reg_df[,percentage_delay:=ifelse(contract_award_unique_key==lag(contract_award_u
          delay/last_reported_duration,
          NaN)]
 
-reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+reg_df[,wins_percentage_delay:=Winsorize(100*percentage_delay,
+                              val=quantile(100*percentage_delay,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 ```
 
 ```{r clean_control,include=FALSE}

@@ -224,14 +224,14 @@ etable(no_grants,
        exclude_all,
        digits='r2',
        fontsize = 'tiny',
-       title="Alternative explanations",
-       headers=list(c("\\makecell{Excluding contractors \\\\
+       caption="Alternative explanations",
+       headers=list(" "=list(c("\\makecell{Excluding contractors \\\\
                     that receive grants}",
                     "\\makecell{Excluding set-aside \\\\ projects}",
                     "\\makecell{Excluding 8(A) \\\\ contractors}", 
                     "\\makecell{Excluding projects that\\\\ started after QuickPay}",
                     "\\makecell{Excluding all\\\\ preceding projects}"
-                    )),
+                    ))),
        drop=c("Project stage",
               "Initial duration",
               "Initial budget",

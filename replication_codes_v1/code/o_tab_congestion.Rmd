@@ -43,25 +43,29 @@ one_type_contractors=unique(subset(one_type_contractors,V1==1 &
 
 reg_df_one_type=subset(reg_df,recipient_duns%in%one_type_contractors)
 
-reg_df_one_type[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+reg_df_one_type[,wins_percentage_delay:=Winsorize(100*percentage_delay,
+                              val=quantile(100*percentage_delay,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 
-reg_df_one_type[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+reg_df_one_type[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
+                              val=quantile(project_quarter_stage,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 
 reg_df_one_type[,winsorized_initial_duration_in_days_i:=
                     Winsorize(initial_duration_in_days_i,
-                    probs=c(0.05,0.95),
-                    na.rm=T)]
+                    val=quantile(initial_duration_in_days_i,
+                                 probs=c(0.05,0.95),
+                    na.rm=T))]
 
 # InitialBudget_i
 
 reg_df_one_type[,winsorized_initial_budget_i:=
-                    Winsorize(base_and_all_options_value,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+                    Winsorize(base_and_all_options_value,
+                              val=quantile(base_and_all_options_value,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 ```
 
 ```{r num_projects_0,warning=FALSE, echo=FALSE, results='asis'}
@@ -177,7 +181,7 @@ etable(total_projects,
        digits='r2',
        digits.stats = 2,
        fontsize = "small",
-       title="Congestion and the QuickPay reform",
+       caption="Congestion and the QuickPay reform",
        fitstat = c("n","r2"),
        drop=c("Project stage",
               "Initial duration",

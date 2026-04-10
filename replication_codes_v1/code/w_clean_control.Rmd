@@ -64,36 +64,42 @@ reg_df[,treat_small_with_large_new:=case_when(treat_i==1 & !(recipient_duns%in%l
 # already adjusted above, but to be super cautius!
 reg_df_subset=subset(reg_df,!(treat_i==0 & recipient_duns%in%small_contractors))
 
-reg_df_subset[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+reg_df_subset[,wins_percentage_delay:=Winsorize(100*percentage_delay,
+                              val=quantile(100*percentage_delay,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 
-reg_df_subset[,winsorized_delay:=Winsorize(delay,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+reg_df_subset[,winsorized_delay:=Winsorize(delay,
+                              val=quantile(delay,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 
 reg_df_subset[,wins_relative_delay:=100*Winsorize(relative_delay,na.rm=T)]
 
 # (action_date_year_quarter-90) to get beginning of the quarter
-reg_df_subset[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+reg_df_subset[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
+                              val=quantile(project_quarter_stage,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 
 reg_df_subset[,winsorized_initial_duration_in_days_i:=
                     Winsorize(initial_duration_in_days_i,
-                    probs=c(0.05,0.95),
-                    na.rm=T)]
+                    val=quantile(initial_duration_in_days_i,
+                                 probs=c(0.05,0.95),
+                    na.rm=T))]
 
 # InitialBudget_i
 reg_df_subset[,winsorized_initial_budget_i:=
-                    Winsorize(base_and_all_options_value,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+                    Winsorize(base_and_all_options_value,
+                              val=quantile(base_and_all_options_value,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 
 reg_df_subset[,wins_number_of_offers_received:=
-                    Winsorize(number_of_offers_received,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+                    Winsorize(number_of_offers_received,
+                              val=quantile(number_of_offers_received,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 
 reg_df_subset[,winsorized_two_quarter_delay:=Winsorize(two_quarter_delay,na.rm=T)]
 reg_df_subset[,wins_percentage_overrun:=100*Winsorize(percentage_overrun,na.rm=T)]

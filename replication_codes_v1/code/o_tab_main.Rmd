@@ -84,28 +84,32 @@ reg_df_subset[,positive_delay:=ifelse(delay>0,1,0)]
 
 reg_df_subset_positive=subset(reg_df_subset,delay>0)
 reg_df_subset_positive[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+                              val=quantile(100*percentage_delay,
+                                           probs=c(0.05,0.95),
+                              na.rm=T))]
 
 reg_df_subset_positive[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
-                                                              probs=c(0.05,0.95),
-                                na.rm=T)]
+                                                  val=quantile(project_quarter_stage,            probs=c(0.05,0.95),
+                                na.rm=T))]
 
 reg_df_subset_positive[,winsorized_initial_duration_in_days_i:=
                     Winsorize(initial_duration_in_days_i,
-                    probs=c(0.05,0.95),
-                    na.rm=T)]
+                    val=quantile(initial_duration_in_days_i,
+                                 probs=c(0.05,0.95),
+                    na.rm=T))]
 
 # InitialBudget_i
 reg_df_subset_positive[,winsorized_initial_budget_i:=
                     Winsorize(base_and_all_options_value,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+                      val=quantile(base_and_all_options_value,        
+                                   probs=c(0.05,0.95),
+                              na.rm=T))]
 
 reg_df_subset_positive[,wins_number_of_offers_received:=
                     Winsorize(number_of_offers_received,                    
-                              probs=c(0.05,0.95),
-                              na.rm=T)]
+                        val=quantile(number_of_offers_received,
+                                     probs=c(0.05,0.95),
+                              na.rm=T))]
 ```
 
 ```{r positive_delay_logit, include=FALSE}
@@ -219,10 +223,10 @@ etable(delay_rates,
        digits='r2',
        digits.stats = 2,
        fontsize = "small",
-       title="Effect of QuickPay on percentage delay rates",
-       headers=list("Average treatment effect"=length(delay_rates),
-                    "Delay likelihood and conditional ATE"=length(positive_delay_logit)+
-                                                           length(conditional_delay_rates)),
+       caption="Effect of QuickPay on percentage delay rates",
+       headers=list(" "=list("Average treatment effect"=as.numeric(length(delay_rates)),
+                    "Delay likelihood and conditional ATE"=as.numeric(length(positive_delay_logit))+
+                                                           as.numeric(length(conditional_delay_rates)))),
        fitstat = c("pr2","n","r2"),
        drop=c("Project stage",
               "Initial duration",

@@ -1,0 +1,135 @@
+---
+title: "QuickPay Delay Rate: Extended Timeline Plot"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    keep_tex: false
+    number_sections: true
+header-includes:
+ \usepackage{booktabs,longtable,dcolumn}
+ \usepackage{multirow,array}
+ \usepackage{wrapfig,float}
+ \floatplacement{figure}{H}
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r packages,warning=FALSE,message=FALSE,include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(DescTools) 
+library(data.table)
+```
+
+```{r read_file_path, include=FALSE}
+# Folder for other files
+source(paste0(dirname(getwd()),
+              "/file_paths.R"), 
+       echo = F, 
+       prompt.echo = "", 
+       spaced = F)
+```
+
+```{r fp_projects,include=FALSE}
+reg_df=readRDS(paste0(working_path,
+                    'w_qp_timeline_2008_2013.rds'))
+
+reg_fp=reg_df[type_of_contract_pricing_code=="J" &
+                 !is.na(treat_new)
+              ]
+```
+
+```{r plot_df,include=FALSE}
+pre_qp_small=mean(reg_fp[post_t==0 & treat_new==1]$wins_percentage_delay,
+                 na.rm=T)
+
+pre_qp_large=mean(reg_fp[post_t==0 & treat_new==0]$wins_percentage_delay,
+                 na.rm=T)
+
+plot_df=reg_fp[,
+   .(avg_delay=mean(wins_percentage_delay,na.rm=T)),
+   by=c('treat_new',
+        'action_date_year_quarter')]
+
+plot_df[,demeaned_delay:=case_when(treat_new==1~avg_delay-pre_qp_small,
+                                treat_new==0~avg_delay-pre_qp_large)]
+
+plot_df[, treat_group := fifelse(treat_new == 1, "Treated", "Control")]
+plot_df[, treat_group := factor(treat_group, levels = c("Control", "Treated"))]
+
+```
+
+```{r plot, include=FALSE}
+cut_q1 <- "2011-03-31" 
+# QP launched for SB: Apr 27, 2011
+cut_q2 <- "2012-09-30"
+# QP for LB: July 11, 2012
+cut_q3 <- "2013-03-31"
+# QP for SB: Feb 21, 2013
+
+x1 <- which(levels(factor(plot_df$action_date_year_quarter)) == cut_q1) + 0.75
+x2 <- which(levels(factor(plot_df$action_date_year_quarter)) == cut_q2) - 0.5
+x3 <- which(levels(factor(plot_df$action_date_year_quarter)) == cut_q3) - 0.25
+
+ymin <- min(plot_df$demeaned_delay, na.rm = TRUE)
+
+extended_model_free_plot=ggplot(
+  plot_df,
+  aes(
+    x = factor(action_date_year_quarter),
+    y = demeaned_delay,
+    group = treat_group,
+    linetype = treat_group,
+    shape = treat_group
+  )
+) +
+  geom_point(size = 2) +
+  geom_line(linewidth = 0.5) +
+  geom_vline(xintercept = x1,
+             color = "darkred",
+             linewidth = 0.5,
+             linetype="solid") +
+  geom_vline(xintercept = x2,
+             color = "darkred",
+             linewidth = 0.5,
+             linetype="dashed") +
+  geom_vline(xintercept = x3,
+             color = "darkred",
+             linewidth = 0.5,
+             linetype="dotted") +
+  scale_linetype_manual(
+    values = c("Control" = "dashed", "Treated" = "solid")
+  ) +
+  scale_shape_manual(
+    values = c("Control" = 17, "Treated" = 16)
+  ) +
+
+  theme_minimal() +
+  labs(
+    x = "Time",
+    y = "Percentage delay rate",
+    linetype = "",
+    shape = ""
+  ) +
+  theme(
+    panel.grid = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
+    axis.text.x = element_text(angle = 90, hjust = 1),
+    legend.position = "bottom",
+    legend.key.width = unit(3, "cm")
+  ) +
+  coord_fixed(ratio = 1)
+```
+
+```{r save_plot,include=FALSE}
+ggsave(paste0(getwd(),
+              '/figures',
+              '/extended_model_free_plot.png'),
+       extended_model_free_plot,
+       width=9,
+       height=4,
+       bg="white")
+```

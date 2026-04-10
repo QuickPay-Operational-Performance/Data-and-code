@@ -1,7 +1,7 @@
 input_directory:=~/Dropbox/data_quickpay/qp_replication/input
 data_folder:=~/Dropbox/data_quickpay/qp_data
 working_directory:=~/Dropbox/data_quickpay/qp_replication/working
-output_directory:=~/Desktop/Research/QuickPay/Data-and-code/replication_codes_v1/output
+output_directory:=~/Desktop/Research/QuickPay_Data-and-code/replication_codes_v1/output
 
 # Phony target to check whether everything is up to date
 
