@@ -66,113 +66,44 @@
 
 \title{Main Table}
 \author{}
-\date{\vspace{-2.5em}2026-04-09}
+\date{\vspace{-2.5em}2026-04-27}
 
 \begin{document}
 \maketitle
 
-\begin{verbatim}
-## NOTES: 231,007 observations removed because of NA values (LHS: 209,501, RHS: 230,878, Fixed-effects: 1).
-##        4/133/0/2,721 fixed-effect singletons were removed (2,819 observations).
-\end{verbatim}
-
 \begin{table}[htbp]
    \caption{Effect of QuickPay on percentage delay rates}
    \centering
    \small
-   \begin{tabular}{lc}
+   \begin{tabular}{lccccccccc}
       \toprule
-                                   & Percent delay rate\\  
-                                   & I\\  
+      \midrule  & \multicolumn{3}{c}{Percent delay rate} & \multicolumn{3}{c}{Log odds (Delay rate >0)} & \multicolumn{3}{c}{Percent delay rate}\\
+        & \multicolumn{3}{c}{Average treatment effect} & \multicolumn{6}{c}{Delay likelihood and conditional ATE} \\ 
+      \midrule  & I & II & III & IV & V & VI & VII & VIII & IX\\
+                                               &  OLS          & OLS           & OLS           & Logit         & Logit         & gaussian("identity") & OLS            & OLS            & OLS\\  
+      \midrule \\
+      Constant                                 & 5.27$^{***}$  &               &               & -1.99$^{***}$ &               &                      & 160.76$^{***}$ &                &   \\   
+                                               & (0.10)        &               &               & (0.02)        &               &                      & (4.08)         &                &   \\   
+      Treat                                    & -1.76$^{***}$ & -0.94$^{***}$ &               & -0.44$^{***}$ & -0.26$^{***}$ &                      & -5.87          & -25.31$^{***}$ &   \\   
+                                               & (0.11)        & (0.11)        &               & (0.03)        & (0.03)        &                      & (5.42)         & (4.64)         &   \\   
+      Post                                     & -0.21$^{*}$   &               &               & 0.10$^{***}$  &               &                      & -51.73$^{***}$ &                &   \\   
+                                               & (0.12)        &               &               & (0.02)        &               &                      & (4.68)         &                &   \\   
+      Post $\times$ Treat                      & 1.10$^{***}$  & 1.16$^{***}$  & 0.99$^{***}$  & 0.21$^{***}$  & 0.29$^{***}$  & 0.02$^{***}$         & 15.61$^{**}$   & 27.87$^{***}$  & 30.28$^{***}$\\   
+                                               & (0.14)        & (0.13)        & (0.14)        & (0.03)        & (0.04)        & (0.00)               & (6.20)         & (5.03)         & (5.93)\\   
+      num\_delayed\_until\_last\_qtr           &               & 0.02$^{***}$  & 0.00          &               & 0.01$^{***}$  & 0.00$^{***}$         &                & -0.05          & 0.38$^{***}$\\   
+                                               &               & (0.00)        & (0.00)        &               & (0.00)        & (0.00)               &                & (0.04)         & (0.08)\\   
+      num\_concurrent\_contractor\_projects    &               & 0.00$^{***}$  & -0.01$^{***}$ &               & 0.00$^{***}$  & 0.00$^{***}$         &                & 0.00           & -0.20$^{***}$\\   
+                                               &               & (0.00)        & (0.00)        &               & (0.00)        & (0.00)               &                & (0.02)         & (0.06)\\   
       \midrule 
-      Constant                     & 5.27$^{***}$\\   
-                                   & (0.10)\\   
-      $Treat_i$                    & -1.76$^{***}$\\   
-                                   & (0.11)\\   
-      $Post_t$                     & -0.21$^{*}$\\   
-                                   & (0.12)\\   
-      $Treat_i$ $\times$ $Post_t$  & 1.10$^{***}$\\   
-                                   & (0.14)\\   
-      Pseudo R$^2$                 & 0.0002\\  
-      Observations                 & 223,244\\  
-      R$^2$                        & 0.002\\  
+      Industry FE                              & No            & Yes           & Yes           & No            & Yes           & Yes                  & No             & Yes            & Yes\\  
+      Task FE                                  & No            & Yes           & Yes           & No            & Yes           & Yes                  & No             & Yes            & Yes\\  
+      Time FE                                  & No            & Yes           & Yes           & No            & Yes           & Yes                  & No             & Yes            & Yes\\  
+      recipient\_duns FE                       & No            & No            & Yes           & No            & No            & Yes                  & No             & No             & Yes\\  
+      Pseudo R$^2$                             & 0.0002        & 0.03          & 0.04          & 0.005         & 0.30          & 0.60                 & 0.0007         & 0.05           & 0.06\\  
+      Observations                             & 223,244       & 201,617       & 198,919       & 223,373       & 199,470       & 199,047              & 24,084         & 23,828         & 21,201\\  
+      R$^2$                                    & 0.002         & 0.21          & 0.28          &               &               &                      & 0.010          & 0.46           & 0.57\\  
       \midrule
-      \multicolumn{2}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
-      \multicolumn{2}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
-   \end{tabular}
-\end{table}
-\begin{table}[htbp]
-   \caption{Effect of QuickPay on percentage delay rates}
-   \centering
-   \small
-   \begin{tabular}{lccccc}
-      \toprule
-       & \multicolumn{5}{c}{Percent delay rate}\\
-                                                                     & I              & II             & III            & IV             & V\\  
-       & \multicolumn{4}{c}{} & Average treatment effect \\ 
-      \midrule 
-      $Treat_i$                                                      & -0.907$^{***}$ & -0.943$^{***}$ & -466.096       &                &   \\   
-                                                                     & (0.107)        & (0.107)        & (2,116.075)    &                &   \\   
-      $NumConcurrent_{k(i)t}$                                        & 0.000          & -0.001$^{***}$ & -0.005$^{***}$ & -0.005$^{***}$ & -0.006$^{***}$\\   
-                                                                     & (0.000)        & (0.000)        & (0.000)        & (0.000)        & (0.001)\\   
-      $Post_t$ $\times$ $Treat_i$                                    & 1.002$^{***}$  & 1.158$^{***}$  & 0.987$^{***}$  & 0.987$^{***}$  & 1.017$^{***}$\\   
-                                                                     & (0.134)        & (0.134)        & (0.144)        & (0.144)        & (0.166)\\   
-      $NumPastDelays_{k(i)t}$                                        &                & 0.023$^{***}$  & 0.003          & 0.003          & 0.003\\   
-                                                                     &                & (0.002)        & (0.003)        & (0.003)        & (0.004)\\   
-      $NumConcurrent_{k(i)t}$ $\times$ $Post_t$                      &                &                &                &                & 0.000\\   
-                                                                     &                &                &                &                & (0.000)\\   
-      $NumConcurrent_{k(i)t}$ $\times$ $Treat_i$                     &                &                &                &                & 0.003$^{**}$\\   
-                                                                     &                &                &                &                & (0.002)\\   
-      $NumConcurrent_{k(i)t}$ $\times$ $Post_t$ $\times$ $Treat_i$   &                &                &                &                & -0.001\\   
-                                                                     &                &                &                &                & (0.001)\\   
-      \midrule 
-      Industry FE                                                    & Yes            & Yes            & Yes            & Yes            & Yes\\  
-      Task FE                                                        & Yes            & Yes            & Yes            & Yes            & Yes\\  
-      Time FE                                                        & Yes            & Yes            & Yes            & Yes            & Yes\\  
-      Contractor FE                                                  & No             & No             & Yes            & Yes            & Yes\\  
-      Pseudo R$^2$                                                   & 0.03           & 0.03           & 0.04           & 0.04           & 0.04\\  
-      Observations                                                   & 201,617        & 201,617        & 198,919        & 198,919        & 198,919\\  
-      R$^2$                                                          & 0.21           & 0.21           & 0.28           & 0.28           & 0.28\\  
-      \midrule
-      \multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
-      \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
-   \end{tabular}
-   
-   \par \raggedright 
-   Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls
-\end{table}
-\begin{table}[htbp]
-   \caption{Effect of QuickPay on percentage delay rates}
-   \centering
-   \small
-   \begin{tabular}{lc}
-      \toprule
-                                                                     & Percent delay rate\\  
-                                                                     & I\\  
-      \midrule 
-      $NumPastDelays_{k(i)t}$                                        & 0.0033\\   
-                                                                     & (0.0035)\\   
-      $NumConcurrent_{k(i)t}$                                        & -0.0056$^{***}$\\   
-                                                                     & (0.0007)\\   
-      $Post_t$ $\times$ $Treat_i$                                    & 1.0170$^{***}$\\   
-                                                                     & (0.1660)\\   
-      $NumConcurrent_{k(i)t}$ $\times$ $Post_t$                      & 0.0001\\   
-                                                                     & (0.0004)\\   
-      $NumConcurrent_{k(i)t}$ $\times$ $Treat_i$                     & 0.0032$^{**}$\\   
-                                                                     & (0.0016)\\   
-      $NumConcurrent_{k(i)t}$ $\times$ $Post_t$ $\times$ $Treat_i$   & -0.0010\\   
-                                                                     & (0.0007)\\   
-      \midrule 
-      Industry FE                                                    & Yes\\  
-      Task FE                                                        & Yes\\  
-      Time FE                                                        & Yes\\  
-      Contractor FE                                                  & Yes\\  
-      Pseudo R$^2$                                                   & 0.04\\  
-      Observations                                                   & 198,919\\  
-      R$^2$                                                          & 0.28\\  
-      \midrule
-      \multicolumn{2}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
-      \multicolumn{2}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+      \multicolumn{10}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
    \end{tabular}
    
    \par \raggedright 

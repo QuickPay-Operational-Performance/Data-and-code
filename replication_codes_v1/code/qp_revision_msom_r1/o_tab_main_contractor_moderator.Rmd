@@ -67,12 +67,50 @@ reg_df_subset[,num_concurrent_contractor_projects:=num_contractor_projects-1]
 
 ```
 
-```{r delay_rates,include=FALSE}
-m1=feols(wins_percentage_delay~treat_new*post_t,
+```{r reg_without_controls, include=FALSE}
+
+m0=feols(wins_percentage_delay~treat_new+
+                            post_t:treat_new+post_t,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+```
+
+```{r regs_with_controls, include=FALSE}
+
+m1=feols(wins_percentage_delay~treat_new+
+                            num_concurrent_contractor_projects+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            naics_code+
+                           product_or_service_code+
+                           action_date_year_quarter,
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset)
 
+
 m2=feols(wins_percentage_delay~treat_new+
+            num_delayed_until_last_qtr+
+            num_concurrent_contractor_projects+
+                            post_t:treat_new+
+                            log(wins_project_quarter_stage)+
+                            log(1+winsorized_initial_duration_in_days_i)+
+                            log(1+winsorized_initial_budget_i)+
+                            wins_number_of_offers_received+
+                            post_t:
+           log(1+winsorized_initial_duration_in_days_i)+
+                            post_t:log(1+winsorized_initial_budget_i)+
+                            post_t:wins_number_of_offers_received|
+                            naics_code+product_or_service_code+action_date_year_quarter,
+                            cluster=~contract_award_unique_key,
+                          data=reg_df_subset)
+
+m3=feols(wins_percentage_delay~treat_new+
             num_delayed_until_last_qtr+
             num_concurrent_contractor_projects+
                             post_t:treat_new+
@@ -85,11 +123,12 @@ m2=feols(wins_percentage_delay~treat_new+
                             post_t:wins_number_of_offers_received|
                             naics_code+
                    product_or_service_code+
-                   action_date_year_quarter,
+                   action_date_year_quarter+
+                   recipient_duns,
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset)
 
-m3=feols(wins_percentage_delay~#treat_new+
+m4=feols(wins_percentage_delay~#treat_new+
             num_delayed_until_last_qtr+
             num_concurrent_contractor_projects+
                             post_t:treat_new+
@@ -104,110 +143,17 @@ m3=feols(wins_percentage_delay~#treat_new+
                             naics_code+product_or_service_code+action_date_year_quarter+recipient_duns,
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset)
-
-
-delay_rates=list(m1,m2,m3)
 ```
 
-```{r positive_delay_setup, include=FALSE}
-reg_df_subset[,positive_delay:=ifelse(delay>0,1,0)]
 
-reg_df_subset_positive=subset(reg_df_subset,delay>0)
-reg_df_subset_positive[,wins_percentage_delay:=Winsorize(100*percentage_delay,                    
-                              val=quantile(100*percentage_delay,
-                                           probs=c(0.05,0.95),
-                              na.rm=T))]
-
-reg_df_subset_positive[,wins_project_quarter_stage:=Winsorize(project_quarter_stage,
-                                                  val=quantile(project_quarter_stage,            probs=c(0.05,0.95),
-                                na.rm=T))]
-
-reg_df_subset_positive[,winsorized_initial_duration_in_days_i:=
-                    Winsorize(initial_duration_in_days_i,
-                    val=quantile(initial_duration_in_days_i,
-                                 probs=c(0.05,0.95),
-                    na.rm=T))]
-
-# InitialBudget_i
-reg_df_subset_positive[,winsorized_initial_budget_i:=
-                    Winsorize(base_and_all_options_value,                    
-                      val=quantile(base_and_all_options_value,        
-                                   probs=c(0.05,0.95),
-                              na.rm=T))]
-
-reg_df_subset_positive[,wins_number_of_offers_received:=
-                    Winsorize(number_of_offers_received,                    
-                        val=quantile(number_of_offers_received,
-                                     probs=c(0.05,0.95),
-                              na.rm=T))]
-```
-
-```{r positive_delay_logit, include=FALSE}
-m1=feglm(positive_delay~treat_new*post_t,
-                            family='binomial',
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset)
-
-m2=feglm(positive_delay~treat_new+
-                         num_delayed_until_last_qtr+
-                           num_concurrent_contractor_projects+
-                            post_t:treat_new+
-                            log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            wins_number_of_offers_received+
-                            post_t:
-                log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received|
-                            naics_code+product_or_service_code+action_date_year_quarter,
-                            family='binomial',
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset)
-
-m3=feglm(positive_delay~#treat_new+
+```{r concurrent_interaction}
+m5=feols(wins_percentage_delay~
             num_delayed_until_last_qtr+
             num_concurrent_contractor_projects+
                             post_t:treat_new+
-                            log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            wins_number_of_offers_received+
-                            post_t:
-                log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received|
-                            naics_code+product_or_service_code+action_date_year_quarter+recipient_duns,
-                          data=reg_df_subset)
-
-positive_delay_logit=list(m1,m2,m3)
-```
-
-```{r conditional_delay_rates,include=FALSE}
-m1=feols(wins_percentage_delay~treat_new*post_t,
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset_positive)
-
-m2=feols(wins_percentage_delay~treat_new+
-            num_delayed_until_last_qtr+
-            num_concurrent_contractor_projects+
-                            post_t:treat_new+
-                            log(wins_project_quarter_stage)+
-                            log(1+winsorized_initial_duration_in_days_i)+
-                            log(1+winsorized_initial_budget_i)+
-                            wins_number_of_offers_received+
-                            post_t:
-                log(1+winsorized_initial_duration_in_days_i)+
-                            post_t:log(1+winsorized_initial_budget_i)+
-                            post_t:wins_number_of_offers_received|
-                            naics_code+product_or_service_code+action_date_year_quarter,
-                            cluster=~contract_award_unique_key,
-                          data=reg_df_subset_positive)
-
-m3=feols(wins_percentage_delay~#treat_new+
-            num_delayed_until_last_qtr+
-            num_concurrent_contractor_projects+
-                            post_t:treat_new+
+        treat_new:post_t:num_concurrent_contractor_projects+
+        post_t:num_concurrent_contractor_projects+
+          treat_new:num_concurrent_contractor_projects+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
@@ -218,16 +164,18 @@ m3=feols(wins_percentage_delay~#treat_new+
                             post_t:wins_number_of_offers_received|
                             naics_code+product_or_service_code+action_date_year_quarter+recipient_duns,
                             cluster=~contract_award_unique_key,
-                          data=reg_df_subset_positive)
+                          data=reg_df_subset)
+```
 
-conditional_delay_rates=list(m1,m2,m3)
+```{r combine_regs,include=FALSE}
+delay_rates=list(m1,m2,m3,m4,m5)
 ```
 
 ```{r output, echo=FALSE, results='asis'}
 setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       "positive_delay"="Log odds (Delay rate >0)",
-                      "post_t"="Post",
-                      "treat_new"="Treat",
+                      "post_t"="$Post_t$",
+                      "treat_new"="$Treat_i$",
                       "log(wins_project_quarter_stage)"="Project stage",
                       "log(1+winsorized_initial_duration_in_days_i)"="Initial duration",
                       "log(1+winsorized_initial_budget_i)"="Initial budget",
@@ -236,34 +184,74 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       "product_or_service_code"="Task",
                       "action_date_year_quarter"="Time",
                       "naics_code"="Industry",
-                      "awarding_sub_agency_code"="Subagency"
+                      "awarding_sub_agency_code"="Subagency",
+                      "num_concurrent_contractor_projects"="$NumConcurrent_{k(i)t}$",
+            "num_delayed_until_last_qtr"="$NumPastDelays_{k(i)t}$",
+            "recipient_duns"="Contractor"
                       ))
 
-etable(delay_rates,
-       positive_delay_logit,
-       conditional_delay_rates,
+etable(m0,
        digits='r2',
        digits.stats = 2,
        fontsize = "small",
        caption="Effect of QuickPay on percentage delay rates",
-       headers=list(" "=list("Average treatment effect"=as.numeric(length(delay_rates)),
-                    "Delay likelihood and conditional ATE"=as.numeric(length(positive_delay_logit))+
-                                                           as.numeric(length(conditional_delay_rates)))),
+       fitstat = c("pr2","n","r2"),
+       style.tex = style.tex(model.format = "I",
+                             fixef.suffix = " FE",
+                             stats.title = "",
+                             var.title = "\\midrule",
+                             fixef.title = "\\midrule",
+                             line.top = 'simple',
+                             line.bottom = 'simple',
+                             yesNo = c("Yes","No"),
+                             depvar.title = "",
+                             model.title = ''),
+       tex=TRUE)
+
+etable(delay_rates,
+       digits='r3',
+       digits.stats = 2,
+       fontsize = "small",
+       caption="Effect of QuickPay on percentage delay rates",
+       headers=list("_"=list("Average treatment effect"=length(delay_rates))),
        fitstat = c("pr2","n","r2"),
        drop=c("Project stage",
               "Initial duration",
               "Initial budget",
               "Number of offers"),
-       style.tex=style.tex(fixef.title = "\\midrule",
-                           fixef.suffix = " FE",
-                           var.title = "\\midrule ",
-                           depvar.title = "\\midrule ",
-                           model.title = "\\midrule ",
-                           stats.title = "",
-                           model.format = "I",
-                           yesNo = c("Yes","No"),
-                           line.bottom="simple",
-                           line.top="simple"),
+       style.tex = style.tex(model.format = "I",
+                             fixef.suffix = " FE",
+                             stats.title = "",
+                             var.title = "\\midrule",
+                             fixef.title = "\\midrule",
+                             line.top = 'simple',
+                             line.bottom = 'simple',
+                             yesNo = c("Yes","No"),
+                             depvar.title = "",
+                             model.title = ''),
+       notes="Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls",
+       tex=TRUE)
+
+etable(m5,
+       digits='r4',
+       digits.stats = 2,
+       fontsize = "small",
+       caption="Effect of QuickPay on percentage delay rates",
+       fitstat = c("pr2","n","r2"),
+       drop=c("Project stage",
+              "Initial duration",
+              "Initial budget",
+              "Number of offers"),
+       style.tex = style.tex(model.format = "I",
+                             fixef.suffix = " FE",
+                             stats.title = "",
+                             var.title = "\\midrule",
+                             fixef.title = "\\midrule",
+                             line.top = 'simple',
+                             line.bottom = 'simple',
+                             yesNo = c("Yes","No"),
+                             depvar.title = "",
+                             model.title = ''),
        notes="Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls",
        tex=TRUE)
 ```

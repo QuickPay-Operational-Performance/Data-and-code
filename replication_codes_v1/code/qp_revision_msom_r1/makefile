@@ -16,6 +16,7 @@ all: $(output_directory)/o_fig_event_study.pdf\
      $(output_directory)/o_tab_alt_cluster.pdf\
      $(output_directory)/o_tab_contractor_level.pdf\
      $(output_directory)/o_tab_main_contractor_controls.pdf\
+     $(output_directory)/o_tab_main_contractor_moderator.pdf\
      $(output_directory)/o_tab_task_extension.pdf\
      $(output_directory)/o_tab_task_variability.pdf\
      $(output_directory)/o_plot_timeline_2008_2013.pdf
@@ -29,6 +30,16 @@ $(output_directory)/o_tab_alt_cluster.pdf: o_tab_alt_cluster.Rmd \
 		   $(working_directory)/w_clean_control.csv
 	
 	Rscript -e 'rmarkdown::render("o_tab_alt_cluster.Rmd",output_dir = "$(output_directory)/")'
+
+######################################################################################
+# Table -- Contractor Controls
+######################################################################################
+
+$(output_directory)/o_tab_main_contractor_moderator.pdf: o_tab_main_contractor_moderator.Rmd \
+		   $(code_directory)/file_paths.R\
+		   $(working_directory)/w_clean_control.csv
+	
+	Rscript -e 'rmarkdown::render("o_tab_main_contractor_moderator.Rmd",output_dir = "$(output_directory)/")'
 
 ######################################################################################
 # Table -- Contractor Controls
