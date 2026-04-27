@@ -178,6 +178,8 @@ m3=feglm(positive_delay~#treat_new+
                             post_t:log(1+winsorized_initial_budget_i)+
                             post_t:wins_number_of_offers_received|
                             naics_code+product_or_service_code+action_date_year_quarter+recipient_duns,
+                            cluster=~contract_award_unique_key,
+                            family='binomial',
                           data=reg_df_subset)
 
 positive_delay_logit=list(m1,m2,m3)
@@ -236,6 +238,9 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       "product_or_service_code"="Task",
                       "action_date_year_quarter"="Time",
                       "naics_code"="Industry",
+                      "recipient_duns"="Contractor",
+                      "num_concurrent_contractor_projects"="$NumConcurrent_{k(i)t}$",
+                    "num_delayed_until_last_qtr"="$NumPastDelays_{k(i)t}$",
                       "awarding_sub_agency_code"="Subagency"
                       ))
 
