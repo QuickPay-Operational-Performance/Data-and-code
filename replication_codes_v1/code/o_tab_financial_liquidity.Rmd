@@ -145,7 +145,7 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       ))
 
 etable(cf_regs,
-       digits='r2',
+       digits='r3',
        digits.stats = 2,
        fontsize = "small",
        caption="Financial liquidity and the QuickPay reform",
