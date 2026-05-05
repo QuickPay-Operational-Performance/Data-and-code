@@ -149,31 +149,34 @@ full_df_tr_2[,project_quarter:=paste(contract_award_unique_key,
 
 ```{r clean_control_delay_days, include=FALSE}
 m1=feols(wins_delay~treat_new+
-                    post_t:treat_new+
+                    treat_new:post_t+
                     post_t+ 
-           wins_initial_duration+
-           wins_initial_budget+
+           log(1+wins_initial_duration)+
+           log(1+wins_initial_budget)+
            wins_offers|start_yr_qtr,
+                  cluster=~start_yr_qtr,
                   data=full_df_tr_2)
 
 m2=feols(wins_delay~treat_new+
-                    post_t:treat_new+
+                    treat_new:post_t+
                     post_t+ 
-           wins_initial_duration+
-           wins_initial_budget+
+           log(1+wins_initial_duration)+
+           log(1+wins_initial_budget)+
            wins_offers|start_yr_qtr+
                     product_or_service_code,
+                  cluster=~start_yr_qtr,
                   data=full_df_tr_2)
 
-m3=feols(wins_delay~treat_new+
-                    post_t:treat_new+
+# Add contractor FE and remove standalone treat term
+m3=feols(wins_delay~#treat_new+
+                    treat_new:post_t+
                     post_t+ 
-           wins_initial_duration+
-           wins_initial_budget+
+           log(1+wins_initial_duration)+
+           log(1+wins_initial_budget)+
            wins_offers|start_yr_qtr+
                     product_or_service_code+
-                    naics_code,
-
+                    naics_code+recipient_duns,
+                  cluster=~start_yr_qtr,
                   data=full_df_tr_2)
 
 clean_control_delay_days=list(m1,m2,m3)
@@ -181,33 +184,37 @@ clean_control_delay_days=list(m1,m2,m3)
 
 ```{r clean_logit, include=FALSE}
 m1=feglm(positive_delay~treat_new+
-                    post_t:treat_new+
+                    treat_new:post_t+
                     post_t+ 
-           wins_initial_duration+
-           wins_initial_budget+
+           log(1+wins_initial_duration)+
+           log(1+wins_initial_budget)+
            wins_offers|start_yr_qtr,
                   data=full_df_tr_2, 
+                  cluster=~start_yr_qtr,
                   family = 'binomial')
 
 m2=feglm(positive_delay~treat_new+
-                    post_t:treat_new+
+                    treat_new:post_t+
                     post_t+ 
-           wins_initial_duration+
-           wins_initial_budget+
+           log(1+wins_initial_duration)+
+           log(1+wins_initial_budget)+
            wins_offers|start_yr_qtr+
                     product_or_service_code,
                   data=full_df_tr_2, 
+                  cluster=~start_yr_qtr,
                   family = 'binomial')
 
-m3=feglm(positive_delay~treat_new+
-                    post_t:treat_new+
+# Add contractor FE and remove standalone treat term
+m3=feglm(positive_delay~#treat_new+
+                    treat_new:post_t+
                     post_t+ 
-           wins_initial_duration+
-           wins_initial_budget+
+           log(1+wins_initial_duration)+
+           log(1+wins_initial_budget)+
            wins_offers|start_yr_qtr+
                     product_or_service_code+
-                    naics_code,
+                    naics_code+recipient_duns,
          data=full_df_tr_2, 
+                  cluster=~start_yr_qtr,
                   family = 'binomial')
 
 clean_control_delay_logit=list(m1,m2,m3)
@@ -215,30 +222,34 @@ clean_control_delay_logit=list(m1,m2,m3)
 
 ```{r clean_conditional_delay, include=FALSE}
 m1=feols(wins_delay~treat_new+
-                    post_t:treat_new+
+                    treat_new:post_t+
                     post_t+ 
-           wins_initial_duration+
-           wins_initial_budget+
+           log(1+wins_initial_duration)+
+           log(1+wins_initial_budget)+
            wins_offers|start_yr_qtr,
+                  cluster=~start_yr_qtr,
                   data=full_df_tr_2[delay>0])
 
 m2=feols(wins_delay~treat_new+
-                    post_t:treat_new+
+                    treat_new:post_t+
                     post_t+ 
-           wins_initial_duration+
-           wins_initial_budget+
+           log(1+wins_initial_duration)+
+           log(1+wins_initial_budget)+
            wins_offers|start_yr_qtr+
                     product_or_service_code,
+                  cluster=~start_yr_qtr,
                   data=full_df_tr_2[delay>0])
 
-m3=feols(wins_delay~treat_new+
-                    post_t:treat_new+
+# Add contractor FE and remove standalone treat term
+m3=feols(wins_delay~#treat_new+
+                    treat_new:post_t+
                     post_t+ 
-           wins_initial_duration+
-           wins_initial_budget+
+           log(1+wins_initial_duration)+
+           log(1+wins_initial_budget)+
            wins_offers|start_yr_qtr+
                     product_or_service_code+
-                    naics_code,
+                    naics_code+recipient_duns,
+                  cluster=~start_yr_qtr,
                   data=full_df_tr_2[delay>0])
 
 clean_control_delay_conditional=list(m1,m2,m3)
@@ -250,7 +261,7 @@ setFixest_dict(c("wins_delay"="Delay days",
                  "wins_relative_delay"="Delay/Initial duration",
                  "treat_new"="$Treat_i$", 
                  "post_t"="$Post_t$",
-              "wins_initial_duration"="Initial duration",
+              "log(1+wins_initial_duration)"="Ln(1+Initial duration)",
               "wins_offers"="Number of offers",
               "positive_delay"="I(Delay>0)",
               "negative_delay"="I(Delay<0)",
@@ -259,7 +270,7 @@ setFixest_dict(c("wins_delay"="Delay days",
               "recipient_duns"="Contractor",
               "awarding_sub_agency_code"="Sub-agency",
               "contract_award_unique_key"="Project ID",
-              "wins_initial_budget"="Initial budget"))
+              "log(1+wins_initial_budget)"="Ln(1+Initial budget)"))
 
 etable(clean_control_delay_days,
        clean_control_delay_logit,
