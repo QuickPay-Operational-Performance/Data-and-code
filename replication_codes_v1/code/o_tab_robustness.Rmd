@@ -20,11 +20,11 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r packages,warning=FALSE,message=FALSE,include=FALSE}
 library(data.table)
 library(dplyr)
-library(lfe)
-library(stargazer)
+#library(lfe)
+#library(stargazer)
 library(fixest)
-library(MatchIt)
-library(tidyverse)
+#library(MatchIt)
+#library(tidyverse)
 library(DescTools) 
 ```
 
@@ -42,11 +42,44 @@ reg_df=fread(paste0(input_path,
                  'quickpay_delays.csv'))
 ```
 
+```{r define_contractor_controls,include=FALSE}
+num_contractor_qtr_projects=reg_df_subset[,.(num_contractor_projects=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
+
+num_contractor_qtr_project_delays=reg_df_subset[wins_percentage_delay>0,.(num_projects_delayed=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
+
+num_contractor_qtr_project_delays=num_contractor_qtr_project_delays[order(recipient_duns,action_date_year_quarter)]
+
+# Calculate how many projects of contractor were delayed until last quarter
+num_contractor_qtr_project_delays[, num_delayed_until_last_qtr := shift(cumsum(num_projects_delayed),fill=0), by = recipient_duns]
+
+num_contractor_qtr_projects=merge(num_contractor_qtr_projects,
+                                  num_contractor_qtr_project_delays,
+                    by=c('recipient_duns',
+                         'action_date_year_quarter'),
+                    all.x=T)
+
+num_contractor_qtr_projects[,num_projects_delayed:=ifelse(is.na(num_projects_delayed),0,num_projects_delayed)]
+
+num_contractor_qtr_projects[,num_delayed_until_last_qtr:=ifelse(is.na(num_delayed_until_last_qtr),0,num_delayed_until_last_qtr)]
+
+
+reg_df_subset=merge(reg_df_subset,
+                    num_contractor_qtr_projects,
+                    by=c('recipient_duns',
+                         'action_date_year_quarter'),
+                    all.x=T)
+
+reg_df_subset[,num_concurrent_contractor_projects:=num_contractor_projects-1]
+
+```
+
 ```{r alt_measures, include=FALSE}
 ## Days of delay
 ### One quarter
-one_quarter=feols(winsorized_delay~treat_new+
-                            post_t:treat_new+
+one_quarter=feols(winsorized_delay~#treat_new+
+                            treat_new:post_t+
+            num_delayed_until_last_qtr+
+            num_concurrent_contractor_projects+
                            log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
@@ -56,13 +89,16 @@ one_quarter=feols(winsorized_delay~treat_new+
                             post_t:wins_number_of_offers_received|
                             naics_code+
                             product_or_service_code+
-                            action_date_year_quarter,
+                            action_date_year_quarter+
+                      recipient_duns,
                           cluster=~contract_award_unique_key,
                           data=reg_df_subset)
 
 ### Two quarter
-two_quarter=feols(winsorized_two_quarter_delay~treat_new+
-                            post_t:treat_new+
+two_quarter=feols(winsorized_two_quarter_delay~#treat_new+
+                            treat_new:post_t+
+            num_delayed_until_last_qtr+
+            num_concurrent_contractor_projects+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
@@ -72,13 +108,16 @@ two_quarter=feols(winsorized_two_quarter_delay~treat_new+
                             post_t:wins_number_of_offers_received|
                             naics_code+
                             product_or_service_code+
-                            action_date_year_quarter,
+                            action_date_year_quarter+
+                      recipient_duns,
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset)
 
 ## Delay/Initial
-delay_initial=feols(wins_relative_delay~treat_new+
-                            post_t:treat_new+
+delay_initial=feols(wins_relative_delay~#treat_new+
+                            treat_new:post_t+
+            num_delayed_until_last_qtr+
+            num_concurrent_contractor_projects+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
@@ -88,7 +127,8 @@ delay_initial=feols(wins_relative_delay~treat_new+
                             post_t:wins_number_of_offers_received|
                             naics_code+
                             product_or_service_code+
-                            action_date_year_quarter,
+                            action_date_year_quarter+
+                            recipient_duns,
                             cluster=~contract_award_unique_key,
                           data=reg_df_subset)
 ```
@@ -125,8 +165,39 @@ reg_df_one_type[,winsorized_initial_budget_i:=
 # For ease of display later
 setnames(reg_df_one_type,'treat_i','treat_new')
 
-sutva=feols(wins_percentage_delay~treat_new+
-                            post_t:treat_new+
+num_contractor_qtr_projects=reg_df_one_type[,.(num_contractor_projects=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
+
+num_contractor_qtr_project_delays=reg_df_one_type[wins_percentage_delay>0,.(num_projects_delayed=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
+
+num_contractor_qtr_project_delays=num_contractor_qtr_project_delays[order(recipient_duns,action_date_year_quarter)]
+
+# Calculate how many projects of contractor were delayed until last quarter
+num_contractor_qtr_project_delays[, num_delayed_until_last_qtr := shift(cumsum(num_projects_delayed),fill=0), by = recipient_duns]
+
+num_contractor_qtr_projects=merge(num_contractor_qtr_projects,
+                                  num_contractor_qtr_project_delays,
+                    by=c('recipient_duns',
+                         'action_date_year_quarter'),
+                    all.x=T)
+
+num_contractor_qtr_projects[,num_projects_delayed:=ifelse(is.na(num_projects_delayed),0,num_projects_delayed)]
+
+num_contractor_qtr_projects[,num_delayed_until_last_qtr:=ifelse(is.na(num_delayed_until_last_qtr),0,num_delayed_until_last_qtr)]
+
+
+reg_df_one_type=merge(reg_df_one_type,
+                    num_contractor_qtr_projects,
+                    by=c('recipient_duns',
+                         'action_date_year_quarter'),
+                    all.x=T)
+
+reg_df_one_type[,num_concurrent_contractor_projects:=num_contractor_projects-1]
+
+
+sutva=feols(wins_percentage_delay~#treat_new+
+                            treat_new:post_t+
+            num_delayed_until_last_qtr+
+            num_concurrent_contractor_projects+
                             log(wins_project_quarter_stage)+
                             log(1+winsorized_initial_duration_in_days_i)+
                             log(1+winsorized_initial_budget_i)+
@@ -136,7 +207,8 @@ sutva=feols(wins_percentage_delay~treat_new+
                             post_t:wins_number_of_offers_received|
                             naics_code+
                             product_or_service_code+
-                            action_date_year_quarter,
+                            action_date_year_quarter+
+                      recipient_duns,
                             cluster=~contract_award_unique_key,
                           data=reg_df_one_type)
 ```
@@ -159,6 +231,9 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percent delay (SUTVA)",
                       "product_or_service_code"="Task",
                       "action_date_year_quarter"="Time",
                       "naics_code"="Industry",
+                      "num_concurrent_contractor_projects"="$NumConcurrent_{k(i)t}$",
+                    "num_delayed_until_last_qtr"="$NumPastDelays_{k(i)t}$",
+                      "recipient_duns"="Contractor",
                       "awarding_sub_agency_code"="Subagency"
                       ))
 

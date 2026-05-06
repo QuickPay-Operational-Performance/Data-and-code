@@ -66,7 +66,7 @@
 
 \title{Alternative explanations}
 \author{}
-\date{\vspace{-2.5em}2026-04-09}
+\date{\vspace{-2.5em}2026-05-06}
 
 \begin{document}
 \maketitle
@@ -81,17 +81,20 @@
                                    & \makecell{\makecell{Excluding contractors \\\\                    that receive grants}}       & \makecell{Excluding set-aside \\ projects}    & \makecell{Excluding 8(A) \\ contractors}    & \makecell{Excluding projects that\\ started after QuickPay}    & \makecell{Excluding all\\ preceding projects} \\      
       \midrule  & I & II & III & IV & V\\
       \midrule \\
-      $Treat_i$                    & -0.90$^{***}$                                                                                 & -1.18$^{***}$                                 & -0.92$^{***}$                               & -0.82$^{***}$                                                  & -0.94$^{***}$\\   
-                                   & (0.12)                                                                                        & (0.12)                                        & (0.11)                                      & (0.11)                                                         & (0.14)\\   
-      $Treat_i$ $\times$ $Post_t$  & 1.13$^{***}$                                                                                  & 1.05$^{***}$                                  & 0.92$^{***}$                                & 1.35$^{***}$                                                   & 1.31$^{***}$\\   
-                                   & (0.15)                                                                                        & (0.15)                                        & (0.14)                                      & (0.17)                                                         & (0.21)\\   
+      $NumPastDelays_{k(i)t}$      & 0.00                                                                                          & -0.01                                         & 0.00                                        & 0.03$^{***}$                                                   & 0.01$^{*}$\\   
+                                   & (0.00)                                                                                        & (0.00)                                        & (0.00)                                      & (0.01)                                                         & (0.01)\\   
+      $NumConcurrent_{k(i)t}$      & -0.01$^{***}$                                                                                 & 0.00$^{***}$                                  & -0.01$^{***}$                               & -0.01$^{***}$                                                  & -0.01$^{***}$\\   
+                                   & (0.00)                                                                                        & (0.00)                                        & (0.00)                                      & (0.00)                                                         & (0.00)\\   
+      $Treat_i$ $\times$ $Post_t$  & 1.14$^{***}$                                                                                  & 0.76$^{***}$                                  & 0.81$^{***}$                                & 1.39$^{***}$                                                   & 1.20$^{***}$\\   
+                                   & (0.16)                                                                                        & (0.17)                                        & (0.15)                                      & (0.18)                                                         & (0.23)\\   
       \midrule \\
       Industry FE                  & Yes                                                                                           & Yes                                           & Yes                                         & Yes                                                            & Yes\\  
       Task FE                      & Yes                                                                                           & Yes                                           & Yes                                         & Yes                                                            & Yes\\  
       Time FE                      & Yes                                                                                           & Yes                                           & Yes                                         & Yes                                                            & Yes\\  
-      Observations                 & 175,112                                                                                       & 139,744                                       & 189,774                                     & 134,087                                                        & 80,840\\  
-      R$^2$                        & 0.22                                                                                          & 0.21                                          & 0.21                                        & 0.21                                                           & 0.21\\  
-      Within R$^2$                 & 0.14                                                                                          & 0.13                                          & 0.14                                        & 0.13                                                           & 0.12\\  
+      Contractor FE                & Yes                                                                                           & Yes                                           & Yes                                         & Yes                                                            & Yes\\  
+      Observations                 & 172,729                                                                                       & 137,733                                       & 187,159                                     & 132,252                                                        & 79,647\\  
+      R$^2$                        & 0.28                                                                                          & 0.27                                          & 0.27                                        & 0.27                                                           & 0.27\\  
+      Within R$^2$                 & 0.10                                                                                          & 0.09                                          & 0.10                                        & 0.08                                                           & 0.07\\  
       \midrule
       \multicolumn{6}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
       \multicolumn{6}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
