@@ -21,7 +21,6 @@ knitr::opts_chunk$set(echo = FALSE)
 library(data.table)
 library(dplyr)
 library(fixest)
-library(tidyverse)
 library(DescTools) 
 ```
 
@@ -35,6 +34,37 @@ source("file_paths.R",
 ```{r read_data,include=FALSE}
 reg_df_subset=fread(paste0(working_path,
                  'w_clean_control.csv'))
+```
+
+```{r define_contractor_controls,include=FALSE}
+num_contractor_qtr_projects=reg_df_subset[,.(num_contractor_projects=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
+
+num_contractor_qtr_project_delays=reg_df_subset[wins_percentage_delay>0,.(num_projects_delayed=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
+
+num_contractor_qtr_project_delays=num_contractor_qtr_project_delays[order(recipient_duns,action_date_year_quarter)]
+
+# Calculate how many projects of contractor were delayed until last quarter
+num_contractor_qtr_project_delays[, num_delayed_until_last_qtr := shift(cumsum(num_projects_delayed),fill=0), by = recipient_duns]
+
+num_contractor_qtr_projects=merge(num_contractor_qtr_projects,
+                                  num_contractor_qtr_project_delays,
+                    by=c('recipient_duns',
+                         'action_date_year_quarter'),
+                    all.x=T)
+
+num_contractor_qtr_projects[,num_projects_delayed:=ifelse(is.na(num_projects_delayed),0,num_projects_delayed)]
+
+num_contractor_qtr_projects[,num_delayed_until_last_qtr:=ifelse(is.na(num_delayed_until_last_qtr),0,num_delayed_until_last_qtr)]
+
+
+reg_df_subset=merge(reg_df_subset,
+                    num_contractor_qtr_projects,
+                    by=c('recipient_duns',
+                         'action_date_year_quarter'),
+                    all.x=T)
+
+reg_df_subset[,num_concurrent_contractor_projects:=num_contractor_projects-1]
+
 ```
 
 ```{r competition_delays_subsample, echo=FALSE, results='asis'}
@@ -51,6 +81,8 @@ reg_df_subset[,project_signed_after_quickpay:=case_when(initial_start_date>=as.D
 
 ```{r competition_subsample_ii, echo=FALSE, results='asis'}
 m1=feols(wins_percentage_delay~treat_new+
+                          num_delayed_until_last_qtr+
+                          num_concurrent_contractor_projects+
                                   project_signed_after_quickpay+
                                   treat_new:post_t+
                                   treat_new:post_t:project_signed_after_quickpay+
@@ -60,6 +92,8 @@ m1=feols(wins_percentage_delay~treat_new+
                           data=subset(reg_df_subset,competitively_awarded_i==1))
 
 m2=feols(wins_percentage_delay~treat_new+
+                          num_delayed_until_last_qtr+
+                          num_concurrent_contractor_projects+
                                   project_signed_after_quickpay+
                                   treat_new:post_t+
                                   treat_new:post_t:project_signed_after_quickpay+
@@ -70,6 +104,8 @@ m2=feols(wins_percentage_delay~treat_new+
                           data=subset(reg_df_subset,competitively_awarded_i==1))
 
 m3=feols(wins_percentage_delay~treat_new+
+                          num_delayed_until_last_qtr+
+                          num_concurrent_contractor_projects+
                                   project_signed_after_quickpay+
                                   treat_new:post_t+
                                   treat_new:post_t:project_signed_after_quickpay+
@@ -96,6 +132,8 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       "product_or_service_code"="Task",
                       "action_date_year_quarter"="Time",
                       "naics_code"="Industry",
+                      "num_concurrent_contractor_projects"="$NumConcurrent_{k(i)t}$",
+                    "num_delayed_until_last_qtr"="$NumPastDelays_{k(i)t}$",
                       "project_signed_after_quickpay"="$SA_i$"
                       ))
 
@@ -105,7 +143,9 @@ etable(competition,
        fontsize = "small",
        caption="Effect of QuickPay on percentage delay rates",
        fitstat = c("pr2","n","r2"),
-       drop=c("Project stage"),
+       drop=c("Project stage",
+              "%num_delayed_until_last_qtr",
+              "%num_concurrent_contractor_projects"),
        style.tex=style.tex(fixef.title = "\\midrule",
                            fixef.suffix = " FE",
                            var.title = "\\midrule ",
@@ -116,6 +156,6 @@ etable(competition,
                            yesNo = c("Yes","No"),
                            line.bottom="simple",
                            line.top="simple"),
-       notes="Controls include Log(project stage).",
+       notes="Controls include Log(project stage) and contractor controls.",
        tex=TRUE)
 ```

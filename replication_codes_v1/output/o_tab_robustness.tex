@@ -1,0 +1,106 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{5}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{booktabs,longtable,dcolumn} \usepackage{multirow,array} \usepackage{wrapfig,float} \floatplacement{figure}{H}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Robustness Tests},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Robustness Tests}
+\author{}
+\date{\vspace{-2.5em}2026-05-06}
+
+\begin{document}
+\maketitle
+
+\begin{table}[htbp]
+   \caption{Robustness tests}
+   \centering
+   \small
+   \begin{tabular}{lcccc}
+      \toprule
+      \midrule  & Delay days (one quarter) & Delay days (semi-annual) & Delay/Initial & Percent delay (SUTVA)\\
+      \midrule  & I & II & III & IV\\
+      \midrule \\
+      $NumPastDelays_{k(i)t}$ & 0.02$^{***}$  & 0.11$^{***}$  & 0.01$^{**}$   & 0.00\\   
+                              & (0.01)        & (0.02)        & (0.00)        & (0.00)\\   
+      $NumConcurrent_{k(i)t}$ & -0.01$^{***}$ & -0.02$^{***}$ & -0.01$^{***}$ & -0.01$^{***}$\\   
+                              & (0.00)        & (0.00)        & (0.00)        & (0.00)\\   
+      Treat $\times$ Post     & 1.71$^{***}$  & 4.44$^{***}$  & 1.25$^{***}$  & 1.21$^{***}$\\   
+                              & (0.26)        & (0.85)        & (0.19)        & (0.19)\\   
+      \midrule 
+      Industry FE             & Yes           & Yes           & Yes           & Yes\\  
+      Task FE                 & Yes           & Yes           & Yes           & Yes\\  
+      Time FE                 & Yes           & Yes           & Yes           & Yes\\  
+      Contractor FE           & Yes           & Yes           & Yes           & Yes\\  
+      Pseudo R$^2$            & 0.03          & 0.04          & 0.04          & 0.04\\  
+      Observations            & 199,047       & 81,128        & 198,014       & 154,537\\  
+      R$^2$                   & 0.24          & 0.33          & 0.28          & 0.28\\  
+      \midrule
+      \multicolumn{5}{l}{\emph{Clustered (Project ID) standard-errors in parentheses}}\\
+      \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \end{tabular}
+   
+   \par \raggedright 
+   Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls
+\end{table}
+
+\end{document}

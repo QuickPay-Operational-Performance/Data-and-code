@@ -69,8 +69,42 @@ reg_df_subset=merge(reg_df_subset,
                     all.x=T)
 ```
 
+```{r define_contractor_controls,include=FALSE}
+num_contractor_qtr_projects=reg_df_subset[,.(num_contractor_projects=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
+
+num_contractor_qtr_project_delays=reg_df_subset[wins_percentage_delay>0,.(num_projects_delayed=n_distinct(contract_award_unique_key)),by=c('recipient_duns','action_date_year_quarter')]
+
+num_contractor_qtr_project_delays=num_contractor_qtr_project_delays[order(recipient_duns,action_date_year_quarter)]
+
+# Calculate how many projects of contractor were delayed until last quarter
+num_contractor_qtr_project_delays[, num_delayed_until_last_qtr := shift(cumsum(num_projects_delayed),fill=0), by = recipient_duns]
+
+num_contractor_qtr_projects=merge(num_contractor_qtr_projects,
+                                  num_contractor_qtr_project_delays,
+                    by=c('recipient_duns',
+                         'action_date_year_quarter'),
+                    all.x=T)
+
+num_contractor_qtr_projects[,num_projects_delayed:=ifelse(is.na(num_projects_delayed),0,num_projects_delayed)]
+
+num_contractor_qtr_projects[,num_delayed_until_last_qtr:=ifelse(is.na(num_delayed_until_last_qtr),0,num_delayed_until_last_qtr)]
+
+
+reg_df_subset=merge(reg_df_subset,
+                    num_contractor_qtr_projects,
+                    by=c('recipient_duns',
+                         'action_date_year_quarter'),
+                    all.x=T)
+
+reg_df_subset[,num_concurrent_contractor_projects:=num_contractor_projects-1]
+
+```
+
+
 ```{r cf_contractor_level, results='asis',echo=FALSE}
 m1=feols(wins_percentage_delay~treat_new+
+                          num_delayed_until_last_qtr+
+                          num_concurrent_contractor_projects+
                            log(wins_project_quarter_stage)+
                             post_t:treat_new+
                             pc_projects_receiving_cf+ 
@@ -88,6 +122,8 @@ m1=feols(wins_percentage_delay~treat_new+
                           data=reg_df_subset)
 
 m2=feols(wins_percentage_delay~treat_new+
+                          num_delayed_until_last_qtr+
+                          num_concurrent_contractor_projects+
                            log(wins_project_quarter_stage)+
                             post_t:treat_new+
                             pc_projects_receiving_cf+
@@ -105,6 +141,8 @@ m2=feols(wins_percentage_delay~treat_new+
                           data=reg_df_subset)
 
 m3=feols(wins_percentage_delay~treat_new+
+                          num_delayed_until_last_qtr+
+                          num_concurrent_contractor_projects+
                            log(wins_project_quarter_stage)+
                             post_t:treat_new+
                             pc_projects_receiving_cf+
@@ -141,6 +179,8 @@ setFixest_dict(dict=c("wins_percentage_delay"="Percent delay rate",
                       "product_or_service_code"="Task",
                       "action_date_year_quarter"="Time",
                       "naics_code"="Industry",
+                      "num_concurrent_contractor_projects"="$NumConcurrent_{k(i)t}$",
+                    "num_delayed_until_last_qtr"="$NumPastDelays_{k(i)t}$",
                       "awarding_sub_agency_code"="Subagency"
                       ))
 
@@ -153,7 +193,9 @@ etable(cf_regs,
        drop=c("Project stage",
               "Initial duration",
               "Initial budget",
-              "Number of offers"),
+              "Number of offers",
+              "%num_delayed_until_last_qtr",
+              "%num_concurrent_contractor_projects"),
        style.tex=style.tex(fixef.title = "\\midrule",
                            fixef.suffix = " FE",
                            var.title = "\\midrule ",
@@ -164,6 +206,6 @@ etable(cf_regs,
                            yesNo = c("Yes","No"),
                            line.bottom="simple",
                            line.top="simple"),
-       notes="Controls include Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls",
+       notes="Controls include contractor controls, Log(project stage), Log(1+initial duration), Log(1+initial budget), and number of bids. Log(1+initial duration), Log(1+initial budget), and number of bids are also interacted with Post are also included as controls",
        tex=TRUE)
 ```

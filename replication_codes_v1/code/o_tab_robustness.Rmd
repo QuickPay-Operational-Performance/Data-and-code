@@ -3,7 +3,7 @@ title: "Robustness Tests"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
-    keep_tex: false
+    keep_tex: true
     number_sections: true
 header-includes:
  \usepackage{booktabs,longtable,dcolumn}
@@ -20,11 +20,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r packages,warning=FALSE,message=FALSE,include=FALSE}
 library(data.table)
 library(dplyr)
-#library(lfe)
-#library(stargazer)
 library(fixest)
-#library(MatchIt)
-#library(tidyverse)
 library(DescTools) 
 ```
 

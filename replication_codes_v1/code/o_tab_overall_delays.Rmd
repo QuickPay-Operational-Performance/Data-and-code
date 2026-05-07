@@ -3,7 +3,7 @@ title: "Project level delays"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
-    keep_tex: false
+    keep_tex: true
     number_sections: true
 header-includes:
  \usepackage{booktabs,longtable,dcolumn}
@@ -179,7 +179,7 @@ m3=feols(wins_delay~#treat_new+
                   cluster=~start_yr_qtr,
                   data=full_df_tr_2)
 
-clean_control_delay_days=list(m1,m2,m3)
+clean_control_delay_days=list(m3)
 ```
 
 ```{r clean_logit, include=FALSE}
@@ -217,7 +217,7 @@ m3=feglm(positive_delay~#treat_new+
                   cluster=~start_yr_qtr,
                   family = 'binomial')
 
-clean_control_delay_logit=list(m1,m2,m3)
+clean_control_delay_logit=list(m3)
 ```
 
 ```{r clean_conditional_delay, include=FALSE}
@@ -252,7 +252,7 @@ m3=feols(wins_delay~#treat_new+
                   cluster=~start_yr_qtr,
                   data=full_df_tr_2[delay>0])
 
-clean_control_delay_conditional=list(m1,m2,m3)
+clean_control_delay_conditional=list(m3)
 ```
 
 ```{r output, echo=FALSE,results='asis'}
@@ -279,9 +279,9 @@ etable(clean_control_delay_days,
        digits.stats = 2,
        fontsize = "small",
        caption="Effect of QuickPay on overall project delays",
-       headers=list("_"=list("OLS"=3, 
-                    "Logit"=3,
-                    "Conditional"=3)),
+       # headers=list("_"=list("OLS"=3, 
+       #              "Logit"=3,
+       #              "Conditional"=3)),
        drop=c("Initial duration",
               "Initial budget",
               "Number of offers"),
